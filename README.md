@@ -77,8 +77,3 @@ Contributions are welcome! Please open an issue or submit a pull request to impr
 
 ## License
 This project is licensed under the MIT License.
-
----
-Gaia is your smart virtual assistant for streamlined task management and work optimization.
-
-
