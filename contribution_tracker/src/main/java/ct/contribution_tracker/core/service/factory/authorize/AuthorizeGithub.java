@@ -21,5 +21,4 @@ public class AuthorizeGithub extends AuthorizeService {
         log.info("Handling github platform");
         return true;
     }
-    
 }

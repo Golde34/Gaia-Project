@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class AuthorizeService implements AuthorizeConnector {
     @Override
-    public boolean handlePlatform(String userId, String platform) {
+    public boolean handleAuthorize(String userId, String platform) {
         try {
             log.info("Handling platform: " + platform);
             return doPlatform(userId, platform);
