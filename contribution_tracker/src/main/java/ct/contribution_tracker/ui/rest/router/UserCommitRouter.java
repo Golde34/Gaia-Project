@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import ct.contribution_tracker.core.domain.dto.request.GetUserCommitInfoRequest;
 import ct.contribution_tracker.core.domain.dto.request.github.GithubAuthorizationRequest;
 import ct.contribution_tracker.core.domain.dto.response.base.GeneralResponse;
 
@@ -14,7 +15,7 @@ import ct.contribution_tracker.core.domain.dto.response.base.GeneralResponse;
 public interface UserCommitRouter {
 
     @GetMapping("/get-user-github-info/:userId")
-    ResponseEntity<GeneralResponse<?>> getUserCommit(@RequestParam String userId);
+    ResponseEntity<GeneralResponse<?>> getUserCommit(@RequestParam GetUserCommitInfoRequest request);
 
     @PostMapping("/authorize")
     ResponseEntity<GeneralResponse<?>> authorize(@RequestBody GithubAuthorizationRequest request);

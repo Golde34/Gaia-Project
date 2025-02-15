@@ -1,4 +1,4 @@
-package ct.contribution_tracker.core.service.factory;
+package ct.contribution_tracker.core.usecase;
 
 import java.util.List;
 import java.util.Map;
@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import ct.contribution_tracker.core.exception.BusinessException;
-import ct.contribution_tracker.core.service.factory.authorize.connector.AuthorizeConnector;
-import ct.contribution_tracker.core.service.factory.authorize.connector.AuthorizeFactory;
+import ct.contribution_tracker.core.usecase.authorize.connector.AuthorizeConnector;
+import ct.contribution_tracker.core.usecase.authorize.connector.AuthorizeFactory;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 

@@ -1,8 +1,9 @@
-package ct.contribution_tracker.core.service.factory.authorize;
+package ct.contribution_tracker.core.usecase.authorize;
 
 import org.springframework.stereotype.Service;
 
-import ct.contribution_tracker.core.service.factory.authorize.connector.AuthorizeService;
+import ct.contribution_tracker.core.domain.dto.response.base.GeneralResponse;
+import ct.contribution_tracker.core.usecase.authorize.connector.AuthorizeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,8 +18,7 @@ public class AuthorizeGithub extends AuthorizeService {
     }
 
     @Override
-    public boolean doPlatform(String userId, String platform) {
-        log.info("Handling github platform");
-        return true;
+    public GeneralResponse<?> doAuthorize(Integer userId) {
+        return null;
     }
 }
