@@ -34,7 +34,7 @@ public class ProjectCommitEntity {
     private Boolean userSynced;
     private Integer userNumberSynced;
     private Date firstTimeSynced;
-    private Date githublastTimeSynced;
+    private Date githubLastTimeSynced;
     private Date createdAt;
     private Date updatedAt; 
 }

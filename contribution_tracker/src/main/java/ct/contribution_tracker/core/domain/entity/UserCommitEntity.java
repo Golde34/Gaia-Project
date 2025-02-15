@@ -29,7 +29,7 @@ public class UserCommitEntity {
     private String githubSha;
     private String githubAccessToken;
     private String githubLoginName;
-    private String userConsent;
+    private Boolean userConsent;
     private String userState;
     private String platform;
 }
