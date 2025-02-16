@@ -35,7 +35,7 @@ class PostgresDatabase {
                 acquire: postgresqlConfig.pool.acquire,
                 idle: postgresqlConfig.pool.idle
             },
-            models: [CommitEntity]
+            models: [__dirname + '/../../core/domain/entities/*.entity.ts']
         });
         await this.sequelize
             .authenticate()

@@ -1,23 +1,67 @@
-import { ProjectCommitEntity } from "../../core/domain/entities/project-commit.entity";
-import Repository from "../database/repository";
+import { Op } from "sequelize";
+import ProjectCommitEntity from "../../core/domain/entities/project-commit.entity";
 
-export class ProjectCommitRepository extends Repository {
-    private static instance: ProjectCommitRepository;
-
-    public static getInstance(): ProjectCommitRepository {
-        if (!ProjectCommitRepository.instance) {
-            ProjectCommitRepository.instance = new ProjectCommitRepository();
-        }
-        return ProjectCommitRepository.instance;
-    }
-
-    constructor() {
-        super('project_commit');
-    }
-
+export class ProjectCommitRepository {
     async resetSyncedTime(): Promise<void> {
-        const query = `UPDATE ${this.tableName} SET last_time_synced = ?, updated_at = ?, user_synced = ?, user_number_synced = ? where last_time_synced < ?`;
-        const [result] = await this.pool.query(query, [new Date(), new Date(), false, 0, new Date()]);
-        console.log("Reset synced time result: ", result);
+        try {
+            const affectedRows = await ProjectCommitEntity.update(
+                { lastTimeSynced: new Date(), userSynced: false, userNumberSynced: 0 },
+                { where: { lastTimeSynced: { [Op.lt]: new Date() } } }
+            )
+            console.log('Reset synced time affected rows: ', affectedRows);
+        } catch (error) {
+            throw new Error('Failed to reset synced time');
+        }
+    }
+
+    async findByUserCommitId(userCommitId: number): Promise<ProjectCommitEntity[]> {
+        try {
+            return await ProjectCommitEntity.findAll({ where: { userCommitId } });
+        } catch (error) {
+            throw new Error('Failed to find project commit by user commit id');
+        }
+    }
+
+    async findByUserCommitIdAndId(userCommitId: number, id: string): Promise<ProjectCommitEntity[]> {
+        try {
+            return await ProjectCommitEntity.findAll({ where: { userCommitId, id } });
+        } catch (error) {
+            throw new Error('Failed to find project commit by user commit id and id');
+        }
+    }
+
+    async findById(id: string): Promise<ProjectCommitEntity | null> {
+        try {
+            return await ProjectCommitEntity.findByPk(id);
+        } catch (error) {
+            throw new Error('Failed to find project commit by id');
+        }
+    }
+
+    async delete(id: string): Promise<void> {
+        try {
+            await ProjectCommitEntity.destroy({ where: { id } });
+        } catch (error) {
+            throw new Error('Failed to delete project commit');
+        }
+    }
+
+    async findBatch(limit: number, order: 'DESC' | 'ASC'): Promise<ProjectCommitEntity[]> {
+        try {
+            return await ProjectCommitEntity.findAll({
+                limit,
+                order: [['last_time_synced', order]]
+            });
+        } catch (error) {
+            throw new Error('Failed to find project commit by batch');
+        }
+    }
+
+    async update(id: string, data: Partial<ProjectCommitEntity>): Promise<void> {
+        try {
+            await ProjectCommitEntity.update(data, { where: { id } });
+        } catch (error) {
+            throw new Error('Failed to update project commit');
+        }
     }
 }

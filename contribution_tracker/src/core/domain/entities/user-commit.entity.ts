@@ -42,15 +42,27 @@ export default class UserCommitEntity extends Model {
     githubLoginName?: string;
 
     @Column({
-        type: DataType.BOOLEAN,
+        type: DataType.INTEGER,
         field: "user_consent",
     })
-    userConsent!: boolean;
+    userConsent!: number;
 
     @Column({
         type: DataType.STRING(100),
         field: "user_state",
     })
     userState!: string;
+
+    @Column({
+        type: DataType.DATE,
+        field: "created_at",
+    })
+    createdAt?: Date;
+
+    @Column({
+        type: DataType.DATE,
+        field: "updated_at",
+    })
+    updatedAt?: Date;
 }
 

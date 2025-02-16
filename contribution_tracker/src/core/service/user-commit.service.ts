@@ -9,7 +9,7 @@ import { TimeUnit } from "../domain/enums/enums";
 class UserCommitService {
     constructor(
         private userCommitRepository = new UserCommitRepository(),
-        private ctServiceConfigRepo: CTServiceConfigRepository = CTServiceConfigRepository.getInstance(),
+        private ctServiceConfigRepo = new CTServiceConfigRepository(),
         private userCommitCache = CacheSingleton.getInstance().getCache(),
         private githubClient = githubClientAdapter,
     ) { }
@@ -23,8 +23,12 @@ class UserCommitService {
                 return cachedUserGithubInfo;
             }
             console.log("Returning user info from db");
-            const userGithubInfo = await this.userCommitRepository.findByUserId(userId);
-            console.log("User info: ", userGithubInfo);
+            let userGithubInfo = await this.userCommitRepository.findByUserId(userId);
+            if (userGithubInfo === null || userGithubInfo === undefined) {
+                userGithubInfo = await this.userCommitRepository.initUser(userId);
+            } else {
+                userGithubInfo = await this.userCommitRepository.updateUserState(userGithubInfo);
+            }
             this.userCommitCache.set(InternalCacheConstants.USER_INFO_CACHE_KEY + userId, userGithubInfo);
             return userGithubInfo;
         } catch (error) {

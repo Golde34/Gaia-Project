@@ -1,25 +1,28 @@
-import { CTServiceConfigurationEntity } from "../../core/domain/entities/ct-service-configuration.entity";
-import Repository from "../database/repository";
+import CTServiceConfigurationEntity from "../../core/domain/entities/ct-service-configuration.entity";
 
-export class CTServiceConfigRepository extends Repository {
-    private static instance: CTServiceConfigRepository;
-
-    public static getInstance(): CTServiceConfigRepository {
-        if (!CTServiceConfigRepository.instance) {
-            CTServiceConfigRepository.instance = new CTServiceConfigRepository();
-        }
-        return CTServiceConfigRepository.instance;
-    }
-
-    constructor() {
-        super('ct_service_configuration');
-    }
-
+export class CTServiceConfigRepository {
     async findActiveConfigByParamType(paramType: string): Promise<CTServiceConfigurationEntity[]> {
-        return await this.findByCondition('param_type = ? and status = ?', [paramType, true]);
+        try {
+            return await CTServiceConfigurationEntity.findAll({
+                where: {
+                    paramType: paramType,
+                    status: true,
+                },
+            });
+        } catch (error) {
+            throw new Error('Failed to find active config by param type');
+        }
     }
 
     async findConfigByParamType(paramType: string): Promise<CTServiceConfigurationEntity[]> {
-        return await this.findByCondition('param_type = ?', [paramType]);
+        try {
+            return await CTServiceConfigurationEntity.findAll({
+                where: {
+                    paramType: paramType,
+                },
+            });
+        } catch (error) {
+            throw new Error('Failed to find config by param');
+        }
     }
 }
