@@ -3,7 +3,7 @@ import CTServiceConfigurationEntity from "../domain/entities/ct-service-configur
 
 class CTConfigurationService {
     constructor(
-        private ctServiceConfigurationRepository: CTServiceConfigRepository = CTServiceConfigRepository.getInstance(),
+        private ctServiceConfigurationRepository = new CTServiceConfigRepository(),
     ) { }
 
     async getConfigByParamType(paramType: string): Promise<any> {

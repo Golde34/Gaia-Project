@@ -5,15 +5,14 @@ import ProjectCommitEntity from "../domain/entities/project-commit.entity";
 
 class ProjectCommitService {
     constructor(
-        private projectCommitRepository: ProjectCommitRepository = ProjectCommitRepository.getInstance(),
+        private projectCommitRepository= new ProjectCommitRepository,
     ) { }
 
     async syncProjectRepo(request: SyncProjectRepoDto): Promise<string> {
         try {
             // find project commit by projectId and githubUrl, if it exists, return error
             console.log("Syncing project repo: ", request);
-            const projectEntity: ProjectCommitEntity = {
-                id: ulid(),
+            await ProjectCommitEntity.create({
                 userCommitId: request.userId,
                 githubRepo: request.repoName,
                 githubRepoUrl: request.repoUrl,
@@ -23,8 +22,7 @@ class ProjectCommitService {
                 updatedAt: new Date(),
                 userSynced: false,
                 userNumberSynced: 0,
-            }
-            await this.projectCommitRepository.insert(projectEntity);
+            })
             return "Project repo synced";
         } catch (error) {
             console.error("Error on syncProjectRepo: ", error);
@@ -35,7 +33,7 @@ class ProjectCommitService {
     async getProjectCommitsByUserId(userId: number): Promise<ProjectCommitEntity[]> {
         try {
             console.log("Getting project commits for user: ", userId);
-            return await this.projectCommitRepository.findByCondition("user_commit_id = ?", [userId]);
+            return await this.projectCommitRepository.findByUserCommitId(userId); 
         } catch (error) {
             console.error("Error on getProjectCommits: ", error);
             return [];
@@ -44,7 +42,7 @@ class ProjectCommitService {
 
     async deleteProjectCommit(userId: number, projectId: string): Promise<ProjectCommitEntity | undefined> {
         try {
-            const projectCommits: ProjectCommitEntity[] = await this.projectCommitRepository.findByCondition("user_commit_id = ? AND id = ?", [userId, projectId]);
+            const projectCommits: ProjectCommitEntity[] = await this.projectCommitRepository.findByUserCommitIdAndId(userId, projectId);
             const projectCommit: ProjectCommitEntity | undefined = projectCommits[0];
             if (!projectCommit || !projectCommit.id) {
                 console.error("Project commit not found for user: ", userId, " and project: ", projectId);
@@ -70,7 +68,7 @@ class ProjectCommitService {
     async getBatchProjectCommits(limit: number): Promise<ProjectCommitEntity[]> {
         try {
             console.log("Getting batch project commits");
-            return await this.projectCommitRepository.findBatch(limit, ["last_time_synced"], "ASC");
+            return await this.projectCommitRepository.findBatch(limit, "ASC");
         } catch (error) {
             console.error("Error on getBatchProjectCommits: ", error);
             return [];
@@ -88,14 +86,14 @@ class ProjectCommitService {
             }
             if (firstTimeSynced) {
                 await this.projectCommitRepository.update(projectId, {
-                    lastTimeSynced: lastTimeSynced,
+                    lastTimeSynced: new Date(lastTimeSynced),
                     userSynced: isProcess ? false : userSynced,
                     userNumberSynced: isProcess ? syncedNumber : syncedNumber + 1,
                     firstTimeSynced: new Date(),
                 });
             } else {
                 await this.projectCommitRepository.update(projectId, {
-                    lastTimeSynced: lastTimeSynced,
+                    lastTimeSynced: new Date(lastTimeSynced),
                     userSynced: isProcess ? false : userSynced,
                     userNumberSynced: isProcess ? syncedNumber : syncedNumber + 1,
                 });
@@ -109,8 +107,12 @@ class ProjectCommitService {
     async getProjectCommitsByProjectId(projectId: string): Promise<ProjectCommitEntity | undefined> {
         try {
             console.log("Getting project commits by project id: ", projectId);
-            const projectCommits: ProjectCommitEntity[] = await this.projectCommitRepository.findByCondition("id = ?", [projectId]);
-            return projectCommits[0];
+            const projectCommit = await this.projectCommitRepository.findById(projectId);
+            if (!projectCommit || !projectCommit.id) {
+                console.error("Project commit not found for project: ", projectId);
+                return undefined;
+            }
+            return projectCommit;
         } catch (error) {
             console.error("Error on getProjectCommitsByProjectId: ", error);
             return undefined;

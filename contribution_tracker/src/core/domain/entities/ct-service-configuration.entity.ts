@@ -1,7 +1,7 @@
 import { Column, DataType, Model, Table } from "sequelize-typescript";
 
 @Table({
-    tableName: "ct_service_configurations",
+    tableName: "ct_service_configuration",
 })
 export default class CTServiceConfigurationEntity extends Model {
     @Column({
@@ -46,4 +46,16 @@ export default class CTServiceConfigurationEntity extends Model {
         field: "status",
     })
     status!: boolean;
+
+    @Column({
+        type: DataType.DATE,
+        field: "created_at",
+    })
+    createdAt?: Date;
+
+    @Column({
+        type: DataType.DATE,
+        field: "updated_at",
+    })
+    updatedAt?: Date;
 }
