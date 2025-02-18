@@ -13,6 +13,7 @@ class ProjectCommitService {
             // find project commit by projectId and githubUrl, if it exists, return error
             console.log("Syncing project repo: ", request);
             await ProjectCommitEntity.create({
+                id: ulid(),
                 userCommitId: request.userId,
                 githubRepo: request.repoName,
                 githubRepoUrl: request.repoUrl,
