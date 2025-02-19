@@ -12,5 +12,5 @@ type ProjectCommit {
     projectName: String!
     githubRepo: String!
     githubRepoUrl: String!
-    userCommitId: Float!
+    userCommitId: String!
 }

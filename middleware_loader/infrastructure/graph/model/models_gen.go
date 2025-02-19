@@ -201,12 +201,12 @@ type Project struct {
 }
 
 type ProjectCommit struct {
-	ID            string  `json:"id"`
-	ProjectID     string  `json:"projectId"`
-	ProjectName   string  `json:"projectName"`
-	GithubRepo    string  `json:"githubRepo"`
-	GithubRepoURL string  `json:"githubRepoUrl"`
-	UserCommitID  float64 `json:"userCommitId"`
+	ID            string `json:"id"`
+	ProjectID     string `json:"projectId"`
+	ProjectName   string `json:"projectName"`
+	GithubRepo    string `json:"githubRepo"`
+	GithubRepoURL string `json:"githubRepoUrl"`
+	UserCommitID  string `json:"userCommitId"`
 }
 
 type ProjectGroupTaskIDInput struct {
