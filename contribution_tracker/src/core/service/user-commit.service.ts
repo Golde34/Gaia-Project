@@ -93,13 +93,12 @@ class UserCommitService {
             if (githubCommits !== null) {
                 userGithubInfo.githubUrl = githubCommits.html_url;
                 userGithubInfo.githubLoginName = githubCommits.login;
-                const updatedUser = await this.userCommitRepository.updateUser(userGithubInfo);
-                if (updatedUser === null) {
+                const updatedUser = await this.userCommitRepository.synchronizeUserGithub(githubCommits.html_url, githubCommits.login,userGithubInfo.id);
+                if (updatedUser === undefined) {
                     console.log('Something happened when synchronizing user in Github')
                     return null;
                 }
                 this.clearUserCache(updatedUser.userId);
-                console.log("User info: ", updatedUser);
                 return updatedUser;
             }
             return null;

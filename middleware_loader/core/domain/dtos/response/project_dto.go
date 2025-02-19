@@ -65,12 +65,12 @@ func (in *GithubRepoResponseDTO) MapperListToGraphQLModel(input []GithubRepoResp
 }
 
 type ProjectCommitResponseDTO struct {
-	Id            string  `json:"id"`
-	ProjectId     string  `json:"projectId"`
-	ProjectName   string  `json:"projectName"`
-	GithubRepo    string  `json:"githubRepo"`
-	GithubRepoUrl string  `json:"githubRepoUrl"`
-	UserCommitId  float64 `json:"userCommitId"`
+	Id            string `json:"id"`
+	ProjectId     string `json:"projectId"`
+	ProjectName   string `json:"projectName"`
+	GithubRepo    string `json:"githubRepo"`
+	GithubRepoUrl string `json:"githubRepoUrl"`
+	UserCommitId  string `json:"userCommitId"`
 }
 
 func NewProjectCommitResponseDTO() *ProjectCommitResponseDTO {

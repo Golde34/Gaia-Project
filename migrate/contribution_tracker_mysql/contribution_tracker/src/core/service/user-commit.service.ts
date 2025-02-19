@@ -24,7 +24,6 @@ class UserCommitService {
             }
             console.log("Returning user info from db");
             const userGithubInfo = await this.userCommitRepository.findByUserId(userId);
-            console.log("User info: ", userGithubInfo);
             this.userCommitCache.set(InternalCacheConstants.USER_INFO_CACHE_KEY + userId, userGithubInfo);
             return userGithubInfo;
         } catch (error) {

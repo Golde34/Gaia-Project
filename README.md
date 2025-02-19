@@ -60,6 +60,9 @@ The Gaia system is built as a collection of interconnected microservices:
 
 ## Getting Started
 
+## New feature available
+- **Contribution Calendar**: Count user commits each projects or total commits.
+
 ## Future Roadmap
 - **Automatic Task Recognition**: Proactively identify user tasks during natural conversations.
 - **Interactive Recommendations**: Enhance engagement with notifications and real-time task suggestions.

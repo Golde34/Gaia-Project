@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { ulid } from "ulid";
 import CacheSingleton from "../../infrastructure/cache/cache-singleton";
 import { KafkaConfig } from "../../infrastructure/kafka/kafka-config";
 import { githubClientAdapter } from "../../infrastructure/client/github-client.adapter";
@@ -98,8 +99,8 @@ class CommitService {
 
     async addGithubCommit(userId: number, commit: any): Promise<void> {
         try {
-            console.log("Github commmit date: ", format(new Date(commit.commit.committer.date), 'yyyy-MM-dd HH:mm:ss'));
             await CommitEntity.create({
+                id: ulid(),
                 content: commit.commit.message,
                 commitTime: new Date(),
                 userId: userId,

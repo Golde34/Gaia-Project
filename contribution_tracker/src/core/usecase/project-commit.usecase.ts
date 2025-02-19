@@ -1,5 +1,6 @@
 import { msg200, msg400 } from "../common/response-helpers";
 import { SyncProjectRepoDto } from "../domain/dtos/github-object.dto";
+import ProjectCommitEntity from "../domain/entities/project-commit.entity";
 import { githubRepoMapper, syncProjectRepoMapper } from "../mapper/project-commit.mapper";
 import { commitService } from "../service/commit.service";
 import { projectCommitService } from "../service/project-commit.service";
@@ -36,7 +37,7 @@ class ProjectCommitUsecase {
 
     async getProjectCommits(userId: number): Promise<any> {
         try {
-            const projectCommits = await this.projectCommitServiceImpl.getProjectCommitsByUserId(userId);
+            const projectCommits: ProjectCommitEntity[] = await this.projectCommitServiceImpl.getProjectCommitsByUserId(userId);
             return msg200({
                 projectCommits: projectCommits
             });

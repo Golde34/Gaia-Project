@@ -48,7 +48,7 @@ func ReturnProjectCommitObjectMapper(body map[string]interface{}) *response_dtos
 	input.GithubRepo = body["githubRepo"].(string)
 	input.GithubRepoUrl = body["githubRepoUrl"].(string)
 	if body["userCommitId"] != nil {
-		input.UserCommitId = body["userCommitId"].(float64)
+		input.UserCommitId = body["userCommitId"].(string)
 	}
 	return &input
 }

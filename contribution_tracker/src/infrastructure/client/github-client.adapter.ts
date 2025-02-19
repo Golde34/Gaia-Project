@@ -64,7 +64,24 @@ class GithubClientAdapter {
     async getGithubAccessToken(body: any): Promise<string | null> {
         try {
             console.log('Github token url: ', this.githubTokenUrl);
-            const data = await this.getDataGithubApi(this.githubTokenUrl, 'POST', body, null);
+            const response = await fetch(this.githubTokenUrl, {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(body)
+            });
+            if (response.status !== 200) {
+                console.error(`Github API returned status: ${response.status}`);
+                return null;
+            }
+
+            const data = await response.json();
+            if (data.error) {
+                console.error(`Error from Github API: ${data.error}`);
+                return null;
+            }
             return data.access_token;
         } catch (error: any) {
             console.error("Exception when calling Github API", error);
@@ -110,7 +127,7 @@ class GithubClientAdapter {
 
                 allCommits = allCommits.concat(commits);
 
-                const linkHeader = response.headers.get('link') || ''; 
+                const linkHeader = response.headers.get('link') || '';
                 const links = this.parseLinkHeader(linkHeader);
                 if (links['next']) {
                     nextPageUrl = links['next'];

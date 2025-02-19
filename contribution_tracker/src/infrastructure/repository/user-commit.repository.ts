@@ -6,7 +6,6 @@ export class UserCommitRepository {
         try {
             console.log("userId", userId)
             const result = await UserCommitEntity.findAll({ where: { userId: userId } });
-            console.log("result", result)
             if (!result) {
                 console.error("User not found")
                 return undefined;
@@ -39,7 +38,6 @@ export class UserCommitRepository {
             const affectedRows = await UserCommitEntity.update(
                 { userState: ulid(), },
                 { where: { id: userCommit.id } })
-                console.log("affectedRows", affectedRows)
             const updatedUser = affectedRows[0] > 0 ? await UserCommitEntity.findByPk(userCommit.id) : null;
             return updatedUser || userCommit;
         } catch (error) {
@@ -69,7 +67,7 @@ export class UserCommitRepository {
         try {
             await UserCommitEntity.update(
                 {
-                    userConsent: true,
+                    userConsent: 1,
                     githubSha: code,
                     githubAccessToken: accessToken,
                 },
@@ -78,18 +76,29 @@ export class UserCommitRepository {
             const updatedUser = await UserCommitEntity.findByPk(user.id);
             return updatedUser || null;
         } catch (error) {
+            console.log(error);
             throw new Error("Failed to update user consent");
         }
     }
 
-    async updateUser(user: UserCommitEntity): Promise<UserCommitEntity | null> {
-        if (!user.id) return null;
+    async synchronizeUserGithub(githubUrl: string, githubLoginName: string, id: string): Promise<UserCommitEntity | undefined> {
         try {
-            await UserCommitEntity.update(user, { where: { id: user.id } });
-            const updatedUser = await UserCommitEntity.findByPk(user.id);
-            return updatedUser || null;
+            await UserCommitEntity.update(
+                {
+                    githubUrl: githubUrl,
+                    githubLoginName: githubLoginName,
+                },
+                { where: { id: id } }
+            );
+
+            const result = await UserCommitEntity.findAll({ where: { id: id } });
+            if (!result) {
+                console.error('User not found');
+                return undefined;
+            }
+            return result.at(0);
         } catch (error) {
-            throw new Error("Failed to update user");
+            throw new Error('Failed to synchronize user github');
         }
     }
 
