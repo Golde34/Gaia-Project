@@ -38,7 +38,6 @@ class ProjectCommitUsecase {
     async getProjectCommits(userId: number): Promise<any> {
         try {
             const projectCommits: ProjectCommitEntity[] = await this.projectCommitServiceImpl.getProjectCommitsByUserId(userId);
-            console.log("Project commits: ", projectCommits);
             return msg200({
                 projectCommits: projectCommits
             });

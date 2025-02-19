@@ -61,18 +61,6 @@ class GithubClientAdapter {
         }
     }
 
-    // async getGithubAccessToken(body: any): Promise<string | null> {
-    //     try {
-    //         console.log('Github token url: ', this.githubTokenUrl + ' body: ', body);
-    //         const data = await this.getDataGithubApi(this.githubTokenUrl, 'POST', body, null);
-    //         console.log('Github token data: ', data);
-    //         return data.access_token;
-    //     } catch (error: any) {
-    //         console.error("Exception when calling Github API", error);
-    //         return null;
-    //     }
-    // }
-
     async getGithubAccessToken(body: any): Promise<string | null> {
         try {
             console.log('Github token url: ', this.githubTokenUrl);

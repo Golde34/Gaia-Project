@@ -38,7 +38,6 @@ export class UserCommitRepository {
             const affectedRows = await UserCommitEntity.update(
                 { userState: ulid(), },
                 { where: { id: userCommit.id } })
-            console.log("affectedRows", affectedRows)
             const updatedUser = affectedRows[0] > 0 ? await UserCommitEntity.findByPk(userCommit.id) : null;
             return updatedUser || userCommit;
         } catch (error) {
