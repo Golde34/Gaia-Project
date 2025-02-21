@@ -3,3 +3,7 @@
 - Example: `gaia.create-task.topic` ; `task-manager.get-tasks.topic`
 - Message Cmd: camelCase
 - Example: `createTask` ; `getTasks`
+
+### Redis Convention
+- Name: Major-Service.Function-Name.cache-key/lock-key
+- Example: gaia.find-task.user-id.1
