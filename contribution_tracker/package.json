@@ -37,6 +37,7 @@
     "nodemon": "^3.0.2",
     "pg": "^8.13.3",
     "protoc-gen-js": "^3.21.2",
+    "redis": "^4.7.0",
     "sequelize": "^6.37.5",
     "sequelize-typescript": "^2.1.6",
     "ulid": "^2.3.0"
