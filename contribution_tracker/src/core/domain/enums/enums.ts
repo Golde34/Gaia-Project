@@ -5,9 +5,7 @@ export enum DatabaseType {
 
 export enum CommitType {
     TASK = "task",
-    SUBTASK = "subTask",
-    GITHUB = "githubCommit",
-    SCHEDULETASK = "scheduleTask",
+    GITHUB = "github",
 }
 
 export enum HttpCodeMessage {

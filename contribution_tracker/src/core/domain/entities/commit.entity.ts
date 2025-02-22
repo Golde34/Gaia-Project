@@ -63,43 +63,43 @@ export default class CommitEntity extends Model {
         type: DataType.STRING(100),
         field: "github_commit_id"
     })
-    githubCommitId!: string;
+    githubCommitId?: string;
 
     @Column({
         type: DataType.STRING(100),
         field: "commit_author"
     })
-    commitAuthor!: string;
+    commitAuthor?: string;
 
     @Column({
         type: DataType.STRING(500),
         field: "committer_name"
     })
-    committerName!: string;
+    committerName?: string;
 
     @Column({
         type: DataType.STRING(200),
         field: "committer_email"
     })
-    committerEmail!: string;
+    committerEmail?: string;
 
     @Column({
         type: DataType.DATE,
         field: "github_commit_date"
     })
-    githubCommitDate!: Date;
+    githubCommitDate?: Date;
 
     @Column({
         type: DataType.STRING(3000),
         field: "commit_message"
     })
-    commitMessage!: string;
+    commitMessage?: string;
 
     @Column({
         type: DataType.STRING(1000),
         field: "commit_url"
     })
-    commitUrl!: string;
+    commitUrl?: string;
 
     @Column({
         type: DataType.DATE,

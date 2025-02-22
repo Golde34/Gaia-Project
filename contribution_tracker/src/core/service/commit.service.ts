@@ -6,6 +6,7 @@ import { githubClientAdapter } from "../../infrastructure/client/github-client.a
 import CommitEntity from "../domain/entities/commit.entity";
 import UserCommitEntity from "../domain/entities/user-commit.entity";
 import ProjectCommitEntity from "../domain/entities/project-commit.entity";
+import { CommitType } from "../domain/enums/enums";
 
 class CommitService {
     constructor(
@@ -104,7 +105,7 @@ class CommitService {
                 content: commit.commit.message,
                 commitTime: new Date(),
                 userId: userId,
-                type: "github",
+                type: CommitType.GITHUB,
                 projectId: "",
                 taskId: "",
                 subTaskId: "",
@@ -122,6 +123,27 @@ class CommitService {
         }
     }
 
+    async createCommit(commitObject: any): Promise<CommitEntity | null> {
+        try {
+            const commit = await CommitEntity.create({
+                id: ulid(),
+                content: commitObject.content,
+                commitTime: commitObject.commitTime,
+                userId: commitObject.userId,
+                type: CommitType.TASK,
+                projectId: commitObject.projectId,
+                taskId: commitObject.taskId,
+                subTaskId: commitObject.subTaskId == null ? "" : commitObject.subTaskId,
+                scheduleTaskId: commitObject.scheduleTaskId == null ? "" : commitObject.scheduleTaskId,
+            })
+
+            return commit;
+        } catch (error: any) {
+            console.error("Failed to create commit: ", error);
+            return null;
+        }
+    }
+
     async getUserCommits(userId: number): Promise<CommitEntity[] | null> {
         return null;
     }
@@ -130,9 +152,7 @@ class CommitService {
         return null;
     }
 
-    async createCommit(commitObject: any): Promise<CommitEntity | null> {
-        return null;
-    }
+
 }
 
 export const commitService = new CommitService();
