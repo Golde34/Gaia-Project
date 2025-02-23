@@ -95,12 +95,17 @@ func (adapter *UserGithubAdapter) SyncProjectRepo(userId string, project, repo m
 		"project": project,
 		"repo":    repo,
 	}
-	bodyResult, err := utils.BaseAPIV2(syncProjectRepoURL, "POST", body, &syncResult, headers)
+	_, err := utils.BaseAPIV2(syncProjectRepoURL, "POST", body, &syncResult, headers)
 	if err != nil {
 		return utils.ReturnErrorResponse(400, "Cannot sync project repo from Contribution Tracker"), err
 	}
 
-	return bodyResult.(base_dtos.ErrorResponse), nil
+	return base_dtos.ErrorResponse{
+		Status: 	  "success",
+		StatusMessage: "Sync project repo success",
+		ErrorCode:    200,
+		ErrorMessage: syncResult,
+	}, nil
 }
 
 
@@ -112,10 +117,10 @@ func (adapter *UserGithubAdapter) DeleteProjectRepo(userId, projectId string) (r
 		"projectId": projectId,
 	}
 	headers := utils.BuildDefaultHeaders()
-	bodyResult, err := utils.BaseAPIV2(deleteProjectRepoURL, "DELETE", request, &deleteResult, headers)
+	_, err := utils.BaseAPIV2(deleteProjectRepoURL, "DELETE", request, &deleteResult, headers)
 	if err != nil {
 		return response_dtos.ProjectCommitResponseDTO{}, err
 	}
-	
-	return bodyResult.(response_dtos.ProjectCommitResponseDTO), nil
+
+	return deleteResult, nil
 }

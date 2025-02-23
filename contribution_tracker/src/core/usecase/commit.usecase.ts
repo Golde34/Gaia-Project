@@ -10,7 +10,7 @@ class CommitUsecase {
         public commitServiceImpl = commitService,
         public userCommitServiceImpl = userCommitService,
         public projectCommitServiceImpl = projectCommitService,
-        public contributionCalendarServiceImpl = new ContributionCalendarUsecase()
+        // public contributionCalendarServiceImpl = new ContributionCalendarUsecase()
     ) { }
 
     // TODO
@@ -43,7 +43,7 @@ class CommitUsecase {
             if (!commit) {
                 return msg400("Failed to create commit");
             }
-            const contribution = this.contributionCalendarServiceImpl.createContribution(commit);
+            // const contribution = this.contributionCalendarServiceImpl.createContribution(commit);
 
             return msg200({
                 commit
