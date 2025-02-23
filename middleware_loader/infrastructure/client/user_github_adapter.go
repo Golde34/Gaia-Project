@@ -2,7 +2,6 @@ package client_adapter
 
 import (
 	"encoding/json"
-	base_dtos "middleware_loader/core/domain/dtos/base"
 	response_dtos "middleware_loader/core/domain/dtos/response"
 	"middleware_loader/infrastructure/client/base"
 	"middleware_loader/kernel/utils"
@@ -86,9 +85,9 @@ func (adapter *UserGithubAdapter) SynchronizeUserGithub(userId string) (response
 	return userGithubInfo, nil
 }
 
-func (adapter *UserGithubAdapter) SyncProjectRepo(userId string, project, repo map[string]interface{}) (base_dtos.ErrorResponse, error) {
+func (adapter *UserGithubAdapter) SyncProjectRepo(userId string, project, repo map[string]interface{}) (interface{}, error) {
 	syncProjectRepoURL := base.ContributionTrackerURL + "/contribution-tracker/project-commit/synchronize-project-repo"
-	var syncResult string
+	var syncResult interface{}
 	headers := utils.BuildDefaultHeaders()
 	body := map[string]interface{}{
 		"userId":  userId,
@@ -100,14 +99,8 @@ func (adapter *UserGithubAdapter) SyncProjectRepo(userId string, project, repo m
 		return utils.ReturnErrorResponse(400, "Cannot sync project repo from Contribution Tracker"), err
 	}
 
-	return base_dtos.ErrorResponse{
-		Status: 	  "success",
-		StatusMessage: "Sync project repo success",
-		ErrorCode:    200,
-		ErrorMessage: syncResult,
-	}, nil
+	return syncResult, nil
 }
-
 
 func (adapter *UserGithubAdapter) DeleteProjectRepo(userId, projectId string) (response_dtos.ProjectCommitResponseDTO, error) {
 	deleteProjectRepoURL := base.ContributionTrackerURL + "/contribution-tracker/project-commit/delete-project-commit"
