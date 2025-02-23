@@ -33,7 +33,7 @@ export default class CommitEntity extends Model {
         type: DataType.STRING(50),
         field: "project_id"
     })
-    projectId?: string;
+    projectId!: string;
 
     @Column({
         type: DataType.STRING(20),

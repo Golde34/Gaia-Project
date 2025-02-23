@@ -55,7 +55,7 @@ class CommitService {
                 if (committerName !== user.githubLoginName) {
                     continue;
                 }
-                await this.addGithubCommit(user.userId, commit);
+                await this.addGithubCommit(user.userId, project.id, commit);
             }
 
             return {
@@ -98,7 +98,7 @@ class CommitService {
         }
     }
 
-    async addGithubCommit(userId: number, commit: any): Promise<void> {
+    async addGithubCommit(userId: number, projectId: string, commit: any): Promise<void> {
         try {
             await CommitEntity.create({
                 id: ulid(),
@@ -106,7 +106,7 @@ class CommitService {
                 commitTime: new Date(),
                 userId: userId,
                 type: CommitType.GITHUB,
-                projectId: "",
+                projectId: projectId,
                 taskId: "",
                 subTaskId: "",
                 scheduleTaskId: "",
