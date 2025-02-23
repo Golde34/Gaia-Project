@@ -2,10 +2,12 @@ import { ulid } from "ulid";
 import { ProjectCommitRepository } from "../../infrastructure/repository/project-commit.repository";
 import { SyncProjectRepoDto } from "../domain/dtos/github-object.dto";
 import ProjectCommitEntity from "../domain/entities/project-commit.entity";
+import { CommitRepository } from "../../infrastructure/repository/commit.repository";
 
 class ProjectCommitService {
     constructor(
-        private projectCommitRepository= new ProjectCommitRepository,
+        private projectCommitRepository = new ProjectCommitRepository,
+        private commitRepository = new CommitRepository,
     ) { }
 
     async syncProjectRepo(request: SyncProjectRepoDto): Promise<string> {
@@ -50,6 +52,7 @@ class ProjectCommitService {
             }
             console.log("Deleting project commit for user: ", userId, " and project: ", projectId);
             await this.projectCommitRepository.delete(projectCommit.id);
+            await this.commitRepository.deleteAllCommitsByProjectId(projectCommit.id);
             return projectCommit;
         } catch (error) {
             console.error("Error on deleteProjectCommit: ", error);
