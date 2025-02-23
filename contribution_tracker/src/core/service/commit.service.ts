@@ -103,7 +103,7 @@ class CommitService {
             await CommitEntity.create({
                 id: ulid(),
                 content: commit.commit.message,
-                commitTime: new Date(),
+                commitTime: new Date(format(new Date(commit.commit.committer.date), 'yyyy-MM-dd HH:mm:ss')),
                 userId: userId,
                 type: CommitType.GITHUB,
                 projectId: projectId,

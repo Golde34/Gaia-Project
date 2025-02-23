@@ -115,6 +115,10 @@ class CommitUsecase {
         }
         console.log("Finished syncing GitHub commits for batch:", data);
     }
+
+    syncGithubCommitsByProjectId(projectId: string): void {
+        
+    }
 }
 
 export const commitUsecase = new CommitUsecase();

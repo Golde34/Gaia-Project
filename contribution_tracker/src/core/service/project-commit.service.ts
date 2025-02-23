@@ -3,18 +3,23 @@ import { ProjectCommitRepository } from "../../infrastructure/repository/project
 import { SyncProjectRepoDto } from "../domain/dtos/github-object.dto";
 import ProjectCommitEntity from "../domain/entities/project-commit.entity";
 import { CommitRepository } from "../../infrastructure/repository/commit.repository";
+import { KafkaConfig } from "../../infrastructure/kafka/kafka-config";
+import { KafkaCommand, ProducerKafkaTopic } from "../domain/enums/kafka.enums";
+import { createMessage } from "../../infrastructure/kafka/create-message";
 
 class ProjectCommitService {
     constructor(
         private projectCommitRepository = new ProjectCommitRepository,
         private commitRepository = new CommitRepository,
+        private kafkaHandler = new KafkaConfig(),
     ) { }
 
     async syncProjectRepo(request: SyncProjectRepoDto): Promise<string> {
         try {
             console.log("Syncing project repo: ", request);
+            const id = ulid();
             await ProjectCommitEntity.create({
-                id: ulid(),
+                id: id,
                 userCommitId: request.userId,
                 githubRepo: request.repoName,
                 githubRepoUrl: request.repoUrl,
@@ -25,6 +30,9 @@ class ProjectCommitService {
                 userSynced: false,
                 userNumberSynced: 0,
             })
+
+            await this.syncGithubCommit(request.userId, id);
+            console.log("Project repo synced successfully");
             return "Project repo synced";
         } catch (error) {
             console.error("Error on syncProjectRepo: ", error);
@@ -32,10 +40,24 @@ class ProjectCommitService {
         }
     }
 
+    async syncGithubCommit(userId: number, projectId: string): Promise<void> {
+        try {
+            const messages = [{
+                value: JSON.stringify(createMessage(
+                    KafkaCommand.FULL_SYNC_GITHUB_COMMIT, '00', 'Successful', { userId, projectId } 
+                ))
+            }]
+            console.log("Syncing github commit for project: ", projectId);
+            await this.kafkaHandler.produce(ProducerKafkaTopic.FULL_SYNC_GITHUB_COMMIT, messages); 
+        } catch (error) {
+            console.error("Error on syncGithubCommit: ", error);
+        }
+    }
+
     async getProjectCommitsByUserId(userId: number): Promise<ProjectCommitEntity[]> {
         try {
             console.log("Getting project commits for user: ", userId);
-            return await this.projectCommitRepository.findByUserCommitId(userId); 
+            return await this.projectCommitRepository.findByUserCommitId(userId);
         } catch (error) {
             console.error("Error on getProjectCommits: ", error);
             return [];

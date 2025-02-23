@@ -1,6 +1,6 @@
 import * as dotenv from 'dotenv';
 import { KafkaConfig } from './kafka-config';
-import { KafkaTopic } from '../../core/domain/enums/kafka.enums';
+import { ConsumerKafkaTopic } from '../../core/domain/enums/kafka.enums';
 import { githubCommitConsumerMessageHandler } from '../../ui/kafka/github-commit.consumer';
 
 dotenv.config({ path: './src/.env' });
@@ -36,5 +36,5 @@ const getKafkaTopicsFromEnv = (): string[] => {
 };
 
 const kafkaTopicHandlers: Record<string, (message: string) => void> = {
-    [KafkaTopic.SYNC_GITHUB_COMMIT]: (message: string) => githubCommitConsumerMessageHandler(message)
+    [ConsumerKafkaTopic.SYNC_GITHUB_COMMIT]: (message: string) => githubCommitConsumerMessageHandler(message)
 };
