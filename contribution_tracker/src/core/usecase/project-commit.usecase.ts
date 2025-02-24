@@ -29,7 +29,11 @@ class ProjectCommitUsecase {
     async syncProjectRepo(body: any): Promise<any> {
         try {
             const request: SyncProjectRepoDto = syncProjectRepoMapper(body);
-            return await this.projectCommitServiceImpl.syncProjectRepo(request);
+            const syncedProject = await this.projectCommitServiceImpl.syncProjectRepo(request);
+            
+            return msg200({
+                syncedProject
+            });
         } catch (error: any) {
             return msg400(error.message.toString());
         }
@@ -48,7 +52,8 @@ class ProjectCommitUsecase {
 
     async deleteProjectCommit(userId: number, projectId: string): Promise<any> {
         try {
-            return await this.projectCommitServiceImpl.deleteProjectCommit(userId, projectId);
+            const deletedProjectCommit = await this.projectCommitServiceImpl.deleteProjectCommit(userId, projectId);
+            return msg200(deletedProjectCommit);
         } catch (error: any) {
             return msg400(error.message.toString());
         }

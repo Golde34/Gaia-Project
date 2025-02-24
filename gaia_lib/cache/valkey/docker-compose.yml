@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  redis_insight:
+    image: redislabs/redisinsight:1.14.0
+    container_name: redis_insight
+    restart: always
+    ports:
+      - 8001:8001
+    volumes:
+      - redis_insight_volume_data:/db
+    networks:
+      - valkey-cluster-network
+
+  valkey-node-0:
+    image: docker.io/bitnami/valkey-cluster:8.0
+    container_name: valkey-node-0
+    environment:
+      - VALKEY_PASSWORD=bitnami
+      - VALKEY_NODES=valkey-node-0 valkey-node-1 valkey-node-2 valkey-node-3 valkey-node-4 valkey-node-5
+      - VALKEY_CLUSTER_ANNOUNCE_IP=valkey-node-0
+    networks:
+      - valkey-cluster-network
+
+  valkey-node-1:
+    image: docker.io/bitnami/valkey-cluster:8.0
+    container_name: valkey-node-1
+    environment:
+      - VALKEY_PASSWORD=bitnami
+      - VALKEY_NODES=valkey-node-0 valkey-node-1 valkey-node-2 valkey-node-3 valkey-node-4 valkey-node-5
+      - VALKEY_CLUSTER_ANNOUNCE_IP=valkey-node-1
+    networks:
+      - valkey-cluster-network
+
+  valkey-node-2:
+    image: docker.io/bitnami/valkey-cluster:8.0
+    container_name: valkey-node-2
+    environment:
+      - VALKEY_PASSWORD=bitnami
+      - VALKEY_NODES=valkey-node-0 valkey-node-1 valkey-node-2 valkey-node-3 valkey-node-4 valkey-node-5
+      - VALKEY_CLUSTER_ANNOUNCE_IP=valkey-node-2
+    networks:
+      - valkey-cluster-network
+
+  valkey-node-3:
+    image: docker.io/bitnami/valkey-cluster:8.0
+    container_name: valkey-node-3
+    environment:
+      - VALKEY_PASSWORD=bitnami
+      - VALKEY_NODES=valkey-node-0 valkey-node-1 valkey-node-2 valkey-node-3 valkey-node-4 valkey-node-5
+      - VALKEY_CLUSTER_ANNOUNCE_IP=valkey-node-3
+    networks:
+      - valkey-cluster-network
+
+  valkey-node-4:
+    image: docker.io/bitnami/valkey-cluster:8.0
+    container_name: valkey-node-4
+    environment:
+      - VALKEY_PASSWORD=bitnami
+      - VALKEY_NODES=valkey-node-0 valkey-node-1 valkey-node-2 valkey-node-3 valkey-node-4 valkey-node-5
+      - VALKEY_CLUSTER_ANNOUNCE_IP=valkey-node-4
+    networks:
+      - valkey-cluster-network
+
+  valkey-node-5:
+    image: docker.io/bitnami/valkey-cluster:8.0
+    container_name: valkey-node-5
+    depends_on:
+      - valkey-node-0
+      - valkey-node-1
+      - valkey-node-2
+      - valkey-node-3
+      - valkey-node-4
+    environment:
+      - VALKEY_PASSWORD=bitnami
+      - REDISCLI_AUTH=bitnami
+      - VALKEY_CLUSTER_REPLICAS=1
+      - VALKEY_CLUSTER_CREATOR=yes
+      - VALKEY_NODES=valkey-node-0 valkey-node-1 valkey-node-2 valkey-node-3 valkey-node-4 valkey-node-5
+      - VALKEY_CLUSTER_ANNOUNCE_IP=valkey-node-5
+    ports:
+      - 6379:6379
+    networks:
+      - valkey-cluster-network
+
+volumes:
+  redis_insight_volume_data:
+
+networks:
+  valkey-cluster-network:
+    driver: bridge

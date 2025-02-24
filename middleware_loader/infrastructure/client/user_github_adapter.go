@@ -2,7 +2,6 @@ package client_adapter
 
 import (
 	"encoding/json"
-	base_dtos "middleware_loader/core/domain/dtos/base"
 	response_dtos "middleware_loader/core/domain/dtos/response"
 	"middleware_loader/infrastructure/client/base"
 	"middleware_loader/kernel/utils"
@@ -86,23 +85,22 @@ func (adapter *UserGithubAdapter) SynchronizeUserGithub(userId string) (response
 	return userGithubInfo, nil
 }
 
-func (adapter *UserGithubAdapter) SyncProjectRepo(userId string, project, repo map[string]interface{}) (base_dtos.ErrorResponse, error) {
+func (adapter *UserGithubAdapter) SyncProjectRepo(userId string, project, repo map[string]interface{}) (interface{}, error) {
 	syncProjectRepoURL := base.ContributionTrackerURL + "/contribution-tracker/project-commit/synchronize-project-repo"
-	var syncResult string
+	var syncResult interface{}
 	headers := utils.BuildDefaultHeaders()
 	body := map[string]interface{}{
 		"userId":  userId,
 		"project": project,
 		"repo":    repo,
 	}
-	bodyResult, err := utils.BaseAPIV2(syncProjectRepoURL, "POST", body, &syncResult, headers)
+	_, err := utils.BaseAPIV2(syncProjectRepoURL, "POST", body, &syncResult, headers)
 	if err != nil {
 		return utils.ReturnErrorResponse(400, "Cannot sync project repo from Contribution Tracker"), err
 	}
 
-	return bodyResult.(base_dtos.ErrorResponse), nil
+	return syncResult, nil
 }
-
 
 func (adapter *UserGithubAdapter) DeleteProjectRepo(userId, projectId string) (response_dtos.ProjectCommitResponseDTO, error) {
 	deleteProjectRepoURL := base.ContributionTrackerURL + "/contribution-tracker/project-commit/delete-project-commit"
@@ -112,10 +110,10 @@ func (adapter *UserGithubAdapter) DeleteProjectRepo(userId, projectId string) (r
 		"projectId": projectId,
 	}
 	headers := utils.BuildDefaultHeaders()
-	bodyResult, err := utils.BaseAPIV2(deleteProjectRepoURL, "DELETE", request, &deleteResult, headers)
+	_, err := utils.BaseAPIV2(deleteProjectRepoURL, "DELETE", request, &deleteResult, headers)
 	if err != nil {
 		return response_dtos.ProjectCommitResponseDTO{}, err
 	}
-	
-	return bodyResult.(response_dtos.ProjectCommitResponseDTO), nil
+
+	return deleteResult, nil
 }
