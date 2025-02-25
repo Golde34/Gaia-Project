@@ -24,11 +24,13 @@ func (h *FullSyncGithubCommitHandler) HandleMessage(topic string, key, value []b
 		return
 	}
 
-	executeKafka(data, "fullSyncGithubCommit", topic, "localhost:9094")
+	executeKafka(data)
 }
 
-func executeKafka(data map[string]interface{}, name, topic, bootstrapServers string) {
+func executeKafka(data map[string]interface{}) {
+	topic := "contribution-tracker.github-commit.topic"
+	name := "projectSyncGithubCommit"
 	kafkaMessage := kafka.CreateKafkaObjectMessage(name, data)
 	log.Printf("Executing job '%s' and sending message to topic '%s'", name, topic)
-	kafka.Producer(bootstrapServers, topic, kafkaMessage, 100_000)
+	kafka.Producer("localhost:9094", topic, kafkaMessage, 100_000)
 }
