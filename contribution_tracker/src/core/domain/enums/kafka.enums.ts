@@ -13,6 +13,7 @@ export enum KafkaCommand {
     SYNC_GITHUB_COMMIT = 'githubCommit',
     FULL_SYNC_GITHUB_COMMIT = 'fullSyncGithubCommit',
     RESET_SYNCED_NUMBER = 'resetSyncedNumber',
+    PROJECT_SYNC_GITHUB_COMMIT = 'projectSyncGithubCommit',
 }
 
 export class KafkaMessage {

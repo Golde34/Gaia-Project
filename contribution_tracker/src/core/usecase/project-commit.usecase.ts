@@ -30,7 +30,7 @@ class ProjectCommitUsecase {
         try {
             const request: SyncProjectRepoDto = syncProjectRepoMapper(body);
             const syncedProject = await this.projectCommitServiceImpl.syncProjectRepo(request);
-            
+
             return msg200({
                 syncedProject
             });
@@ -90,6 +90,40 @@ class ProjectCommitUsecase {
             });
         } catch (error: any) {
             return msg400(error.message.toString());
+        }
+    }
+
+    async syncProjectGithubCommits(data: any): Promise<void> {
+        try {
+            const projectId = data.projectId;
+            const userId = data.userId;
+            const user = await this.userCommitServiceImpl.getUserGithubInfo(userId);
+            const project = await this.projectCommitServiceImpl.getProjectCommitsByProjectId(projectId);
+            if (!project) {
+                throw new Error("Project not found");
+            }
+            const result = await this.commitServiceImpl.syncGithubCommit(user, project);
+            if (result === undefined) {
+                throw new Error("Error on syncGithubCommit");
+            }
+
+            if (result === null) {
+                console.log(`No need to sync in project ${project.projectName} of user ${user.githubLoginName}`);
+                return;
+            }
+
+            const { lastTimeSynced, firstTimeSynced } = result;
+
+            await this.projectCommitServiceImpl.updateProjectCommitSynced(
+                project.id,
+                project.userNumberSynced,
+                lastTimeSynced,
+                false,
+                firstTimeSynced
+            );
+            console.log(`Project ${project.projectName} of user ${user.githubLoginName} synced successfully`);
+        } catch (error: any) {
+            console.error("Failed to sync user github commits: ", error);
         }
     }
 }

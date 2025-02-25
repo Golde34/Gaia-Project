@@ -19,7 +19,7 @@ class CommitService {
     async syncGithubCommit(user: UserCommitEntity, project: ProjectCommitEntity): Promise<any | null | undefined> {
         try {
             if (!user.githubAccessToken || !user.githubLoginName) {
-                return null;
+                return undefined;
             }
 
             let commits: any[] = [];

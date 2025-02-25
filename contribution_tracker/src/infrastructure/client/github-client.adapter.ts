@@ -165,7 +165,7 @@ class GithubClientAdapter {
         const now = format(new Date(), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
 
         let nextPageUrl = `https://api.github.com/repos/${githubLoginName}/${githubRepo}/commits?per_page=100&since=${lastTimeSynced}&until=${now}`;
-
+        console.log('Next page URL: ', nextPageUrl);
         try {
             while (nextPageUrl) {
                 const response = await this.callGithubApi(nextPageUrl, 'GET', null, githubAccessToken);
