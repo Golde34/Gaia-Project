@@ -7,6 +7,7 @@ import (
 	"gaia_cron_jobs/internal/kafka"
 	"gaia_cron_jobs/ui"
 	"log"
+	"sync"
 )
 
 func main() {
@@ -21,11 +22,22 @@ func main() {
 	}
 	consumerGroupHandler := kafka.NewConsumerGroupHandler(kafkaCfg.Name, handlers)
 
+	// Use WaitGroup to handle goroutines
+	var wg sync.WaitGroup
+	wg.Add(2)
+
 	go func() {
+		defer wg.Done()
+		log.Println("Starting Kafka consumer...")
 		kafka.ConsumerGroup(kafkaCfg.BootstrapServers, kafkaCfg.Topics, kafkaCfg.GroupID, consumerGroupHandler)
 	}()
 
 	// Start scheduler
-	log.Println("Dynamic cron job service started...")
-	cron.ExecuteJob()
+	go func() {
+		defer wg.Done()
+		log.Println("Dynamic cron job service started...")
+		cron.ExecuteJob()
+	}()
+
+	wg.Wait()
 }
