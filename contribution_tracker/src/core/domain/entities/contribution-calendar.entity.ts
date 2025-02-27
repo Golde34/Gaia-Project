@@ -36,21 +36,11 @@ export default class ContributionCalendarEntity extends Model {
     })
     commitCount!: number;
 
-    @Column({
-        type: DataType.INTEGER,
-        field: "total_user_commits",
-    })
-
-    @Column({
-        type: DataType.INTEGER,
-        field: "total_project_commits",
-    })
-
-    @Column({
-        type: DataType.INTEGER,
-        field: "level",
-    })
-    level!: number;
+    // @Column({
+    //     type: DataType.INTEGER,
+    //     field: "level",
+    // })
+    // level!: number;
 
     @Column({
         type: DataType.DATE,
@@ -61,6 +51,6 @@ export default class ContributionCalendarEntity extends Model {
     @Column({
         type: DataType.DATE,
         field: "updated_at",
-    }) 
+    })
     updatedAt?: Date;
 }

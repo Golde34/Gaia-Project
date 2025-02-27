@@ -44,11 +44,11 @@ class ProjectCommitService {
         try {
             const messages = [{
                 value: JSON.stringify(createMessage(
-                    KafkaCommand.FULL_SYNC_GITHUB_COMMIT, '00', 'Successful', { userId, projectId } 
+                    KafkaCommand.FULL_SYNC_GITHUB_COMMIT, '00', 'Successful', { userId, projectId }
                 ))
             }]
             console.log("Syncing github commit for project: ", projectId);
-            await this.kafkaHandler.produce(ProducerKafkaTopic.FULL_SYNC_GITHUB_COMMIT, messages); 
+            await this.kafkaHandler.produce(ProducerKafkaTopic.FULL_SYNC_GITHUB_COMMIT, messages);
         } catch (error) {
             console.error("Error on syncGithubCommit: ", error);
         }
@@ -141,6 +141,18 @@ class ProjectCommitService {
         } catch (error) {
             console.error("Error on getProjectCommitsByProjectId: ", error);
             return undefined;
+        }
+    }
+
+    async updateTotalCommits(userId: number, projectId: string, totalCommitInDay: number, type: string): Promise<void> {
+        try {
+            if (type === "fullSyncMode") {
+                this.projectCommitRepository.updateTotalCommit(projectId, totalCommitInDay);
+            } else {
+                this.projectCommitRepository.updateTotalCommitWithProjectId(userId, projectId, totalCommitInDay);
+            }
+        } catch (error) {
+            console.error("Error on updateTotalCommits");
         }
     }
 }

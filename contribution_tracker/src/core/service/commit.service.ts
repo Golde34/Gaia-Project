@@ -7,6 +7,7 @@ import CommitEntity from "../domain/entities/commit.entity";
 import UserCommitEntity from "../domain/entities/user-commit.entity";
 import ProjectCommitEntity from "../domain/entities/project-commit.entity";
 import { CommitType } from "../domain/enums/enums";
+import { commitValidation } from "../validation/commit.validation";
 
 class CommitService {
     constructor(
@@ -14,7 +15,26 @@ class CommitService {
         private commitCache = CacheSingleton.getInstance().getCache(),
         // private commitRepository = commitReposi
         private githubClient = githubClientAdapter,
+        private commitValidationImpl = commitValidation
     ) { }
+
+    async getAllCommitsRepo(userLoginName: string, githubAccessToken: string, githubRepo: string): Promise<any[]> {
+        try {
+            return await this.githubClient.getAllCommitsRepo(userLoginName, githubAccessToken, githubRepo);
+        } catch (error) {
+            console.error("Failed to get all commits for repo: ", githubRepo, error);
+            return [];
+        }
+    }
+
+    async getLatestCommitsRepo(userLoginName: string, githubAccessToken: string, githubRepo: string, lastTimeSynced: string): Promise<any[]> {
+        try {
+            return await this.githubClient.getLatestCommitsRepo(userLoginName, githubAccessToken, githubRepo, lastTimeSynced);
+        } catch (error) {
+            console.error("Failed to get latest commits for repo: ", githubRepo, error);
+            return [];
+        }
+    }
 
     async syncGithubCommit(user: UserCommitEntity, project: ProjectCommitEntity): Promise<any | null | undefined> {
         try {
@@ -69,7 +89,7 @@ class CommitService {
         }
     }
 
-    private async isProjectNeedSync(lastGithubCommit: any, projectCommit: ProjectCommitEntity): Promise<boolean> {
+    async isProjectNeedSync(lastGithubCommit: any, projectCommit: ProjectCommitEntity): Promise<boolean> {
         try {
             if (!projectCommit || !projectCommit.id) {
                 console.error("Project commit not found for project: ", projectCommit.id);
@@ -98,8 +118,11 @@ class CommitService {
         }
     }
 
-    async addGithubCommit(userId: number, projectId: string, commit: any): Promise<void> {
+    async addGithubCommit(userId: number, projectId: string, commit: any, githubLoginName: string): Promise<boolean> {
         try {
+            if (!this.commitValidationImpl.validateGithubCommitCreation(commit, githubLoginName)) {
+                return false;
+            }
             await CommitEntity.create({
                 id: ulid(),
                 content: commit.commit.message,
@@ -115,8 +138,10 @@ class CommitService {
                 commitMessage: commit.commit.message,
                 commitUrl: commit.html_url,
             })
+            return true;
         } catch (error: any) {
             console.error("Failed to sync github commit: ", error);
+            return false;
         }
     }
 

@@ -60,8 +60,39 @@ export class ProjectCommitRepository {
     async update(id: string, data: Partial<ProjectCommitEntity>): Promise<void> {
         try {
             await ProjectCommitEntity.update(data, { where: { id } });
+            await ProjectCommitEntity.save();
         } catch (error) {
             throw new Error('Failed to update project commit');
+        }
+    }
+
+    async updateTotalCommit(projectId: string, totalCommit: number): Promise<ProjectCommitEntity | null> {
+        try {
+            const project = await ProjectCommitEntity.findByPk(projectId);
+            if (!project) {
+                throw new Error("User not found");
+            }
+            await project.increment('total_project_commits', { by: totalCommit });
+            await project.reload();
+            return project;
+        } catch (error) {
+            console.error("Error updating user total commit:", error);
+            throw new Error("Failed to update user total commit");
+        }
+    }
+
+    async updateTotalCommitWithProjectId(userId: number, projectId: string, totalCommit: number): Promise<ProjectCommitEntity | null> {
+        try {
+            const project = await ProjectCommitEntity.findOne({ where: { userId: userId, projectId: projectId } });
+            if (!project) {
+                throw new Error("User not found");
+            }
+            await project.increment('total_project_commits', { by: totalCommit });
+            await project.reload();
+            return project;
+        } catch (error) {
+            console.error("Error updating user total commit:", error);
+            throw new Error("Failed to update user total commit");
         }
     }
 }

@@ -137,7 +137,16 @@ class UserCommitService {
             console.error("Error on getUserGithubRepo: ", error);
             return null;
         }
+    }
 
+    async updateTotalCommits(userId: number, totalCommitInDay: number, type: string): Promise<void> {
+        try {
+            if (type === "fullSyncMode") {
+                this.userCommitRepository.updateTotalCommit(userId, totalCommitInDay);
+            } 
+        } catch (error) {
+            console.error("Error on updateTotalCommits");
+        }
     }
 }
 

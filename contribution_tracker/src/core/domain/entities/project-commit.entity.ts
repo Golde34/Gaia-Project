@@ -66,6 +66,12 @@ export default class ProjectCommitEntity extends Model {
     lastTimeSynced?: Date;
 
     @Column({
+        type: DataType.INTEGER,
+        field: "total_project_commits",
+    })
+    totalProjectCommits?: number;
+
+    @Column({
         type: DataType.DATE,
         field: "created_at",
     })

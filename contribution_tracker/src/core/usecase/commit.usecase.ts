@@ -1,16 +1,20 @@
 import { IResponse } from "../common/response";
 import { msg200, msg400 } from "../common/response-helpers";
+import ProjectCommitEntity from "../domain/entities/project-commit.entity";
+import UserCommitEntity from "../domain/entities/user-commit.entity";
 import { commitService } from "../service/commit.service";
 import { projectCommitService } from "../service/project-commit.service";
 import { userCommitService } from "../service/user-commit.service";
 import { chunk } from "lodash";
+import { format } from "date-fns";
+import { contributionCalendarService } from "../service/contribution-calendar.service";
 
 class CommitUsecase {
     constructor(
-        public commitServiceImpl = commitService,
-        public userCommitServiceImpl = userCommitService,
-        public projectCommitServiceImpl = projectCommitService,
-        // public contributionCalendarServiceImpl = new ContributionCalendarUsecase()
+        private commitServiceImpl = commitService,
+        private userCommitServiceImpl = userCommitService,
+        private projectCommitServiceImpl = projectCommitService,
+        private contributionCalendarServiceImpl = contributionCalendarService,
     ) { }
 
     // TODO
@@ -90,7 +94,7 @@ class CommitUsecase {
                     if (!project.id || !project.userCommitId) return;
                     try {
                         const user = await this.userCommitServiceImpl.getUserGithubInfo(project.userCommitId);
-                        const result = await this.commitServiceImpl.syncGithubCommit(user, project);
+                        const result = await this.syncGithubCommit(user, project);
                         if (result === undefined) {
                             throw new Error("Error on syncGithubCommit");
                         }
@@ -114,6 +118,63 @@ class CommitUsecase {
             );
         }
         console.log("Finished syncing GitHub commits for batch:", data);
+    }
+
+    async syncGithubCommit(user: UserCommitEntity, project: ProjectCommitEntity): Promise<any | null | undefined> {
+        try {
+            if (!user.githubAccessToken || !user.githubLoginName) {
+                return undefined;
+            }
+
+            let commits: any[] = [];
+            let firstTimeSynced: boolean = false;
+            if (!project.firstTimeSynced) {
+                console.log("Get all commits for user: ", user.githubLoginName);
+                commits = await this.commitServiceImpl.getAllCommitsRepo(user.githubLoginName, user.githubAccessToken, project.githubRepo);
+                firstTimeSynced = true;
+            } else {
+                if (!project.lastTimeSynced) {
+                    throw new Error("Project has firstTimeSynced=true but lastTimeSynced is missing");
+                }
+                console.log("Get latest commits for user: ", user.githubLoginName);
+                const lastTimeSynced = format(new Date(project.lastTimeSynced), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\'');
+                commits = await this.commitServiceImpl.getLatestCommitsRepo(user.githubLoginName, user.githubAccessToken, project.githubRepo, lastTimeSynced);
+            }
+
+            if (!commits || commits.length === 0) {
+                console.log("No new commits or failed to get commits for user:", user.githubLoginName);
+                return null;
+            }
+
+            const isProjectNeedSync = await this.commitServiceImpl.isProjectNeedSync(commits[0], project);
+            if (!isProjectNeedSync) {
+                return null;
+            }
+
+            let timeStamp = new Date(commits[0].commit.committer.date);
+            let commitCount = 0;
+            for (const commit of commits) {
+                await this.commitServiceImpl.addGithubCommit(user.userId, project.id, commit, user.githubLoginName);
+                if (timeStamp != new Date(commit.commit.committer.date)) {
+                    timeStamp = new Date(commit.commit.committer.date);
+                    commitCount = 0;
+                } else {
+                    commitCount += 1;
+                }
+                await this.contributionCalendarServiceImpl.createContribution(user.userId, project.id, timeStamp, commitCount);
+            }
+            await this.userCommitServiceImpl.updateTotalCommits(user.userId, commits.length, "fullSyncMode");
+            await this.projectCommitServiceImpl.updateTotalCommits(user.userId, project.id, commits.length, "fullSyncMode");
+
+            return {
+                lastTimeSynced: format(new Date(commits[0].commit.committer.date), 'yyyy-MM-dd HH:mm:ss'),
+                firstTimeSynced: firstTimeSynced,
+            }
+
+        } catch (error) {
+            console.error("Error on syncGithubCommit:", error);
+            return undefined;
+        }
     }
 }
 
