@@ -49,6 +49,9 @@ class CommitUsecase {
             }
 
             const contribution = await this.contributionCalendarServiceImpl.upsertContribution(data.userId, data.projectId, data.date, data.commitCount);
+            if (!contribution) {
+                return msg400("Failed to create contribution");
+            }
 
             return msg200({
                 commit,

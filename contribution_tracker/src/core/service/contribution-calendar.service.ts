@@ -8,7 +8,7 @@ class ContributionCalendarService {
         private contributionCalendarRepoImpl = contributionCalendarRepository,
     ) { }
 
-    async upsertContribution(userId: number, projectId: string, date: Date, commitCount: number): Promise<ContributionCalendarEntity | undefined> {
+    async upsertContribution(userId: number, projectId: string, date: Date, commitCount: number): Promise<ContributionCalendarEntity | null> {
         try {
             const contribution = await this.contributionCalendarRepoImpl.findByUserIdAndProjectIdAndDate(userId, projectId, date);
             if (!contribution || contribution == null) {
@@ -25,7 +25,25 @@ class ContributionCalendarService {
             return contribution;
         } catch (error) {
             console.error("Failed to create contribution: ", error);
-            return undefined;
+            return null;
+        }
+    }
+
+    async getContributionCalendar(userId: number): Promise<ContributionCalendarEntity[]> {
+        try {
+            return await this.contributionCalendarRepoImpl.findByUserId(userId);
+        } catch (error) {
+            console.error("Failed to get contribution calendar: ", error);
+            return [];
+        }
+    }
+
+    async getContributionCalendarByProject(userId: number, projectId: string): Promise<ContributionCalendarEntity[]> {
+        try {
+            return await this.contributionCalendarRepoImpl.findByUserIdAndProjectId(userId, projectId);
+        } catch (error) {
+            console.error("Failed to get contribution calendar by project: ", error);
+            return [];
         }
     }
 }
