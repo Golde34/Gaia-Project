@@ -156,12 +156,12 @@ class CommitUsecase {
             for (const commit of commits) {
                 await this.commitServiceImpl.addGithubCommit(user.userId, project.id, commit, user.githubLoginName);
                 if (timeStamp != new Date(commit.commit.committer.date)) {
+                    await this.contributionCalendarServiceImpl.createContribution(user.userId, project.id, timeStamp, commitCount);
                     timeStamp = new Date(commit.commit.committer.date);
                     commitCount = 0;
                 } else {
                     commitCount += 1;
                 }
-                await this.contributionCalendarServiceImpl.createContribution(user.userId, project.id, timeStamp, commitCount);
             }
             await this.userCommitServiceImpl.updateTotalCommits(user.userId, commits.length, "fullSyncMode");
             await this.projectCommitServiceImpl.updateTotalCommits(user.userId, project.id, commits.length, "fullSyncMode");

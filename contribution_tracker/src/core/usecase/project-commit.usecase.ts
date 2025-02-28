@@ -5,12 +5,14 @@ import { githubRepoMapper, syncProjectRepoMapper } from "../mapper/project-commi
 import { commitService } from "../service/commit.service";
 import { projectCommitService } from "../service/project-commit.service";
 import { userCommitService } from "../service/user-commit.service";
+import { commitUsecase } from "./commit.usecase";
 
 class ProjectCommitUsecase {
     constructor(
         private userCommitServiceImpl = userCommitService,
         private projectCommitServiceImpl = projectCommitService,
         private commitServiceImpl = commitService,
+        private commitUsecaseImpl = commitUsecase,
     ) { }
 
     async getRepoGithubInfo(userId: number): Promise<any> {
@@ -66,7 +68,7 @@ class ProjectCommitUsecase {
             if (!project) {
                 return msg400("Project not found");
             }
-            const result = await this.commitServiceImpl.syncGithubCommit(user, project);
+            const result = await this.commitUsecaseImpl.syncGithubCommit(user, project);
             if (result === undefined) {
                 return msg400("Error on syncGithubCommit");
             }
@@ -102,7 +104,7 @@ class ProjectCommitUsecase {
             if (!project) {
                 throw new Error("Project not found");
             }
-            const result = await this.commitServiceImpl.syncGithubCommit(user, project);
+            const result = await this.commitUsecaseImpl.syncGithubCommit(user, project);
             if (result === undefined) {
                 throw new Error("Error on syncGithubCommit");
             }
