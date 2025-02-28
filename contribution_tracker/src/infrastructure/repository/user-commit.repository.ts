@@ -117,7 +117,7 @@ export class UserCommitRepository {
                 throw new Error("User not found");
             }
             await user.increment('total_user_commits', { by: totalCommit });
-            await user.reload();
+            await user.save();
             return user;
         } catch (error) {
             console.error("Error updating user total commit:", error);

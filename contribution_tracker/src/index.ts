@@ -12,6 +12,7 @@ import { KafkaConfig } from "./infrastructure/kafka/kafka-config";
 import { kafkaController } from "./infrastructure/kafka/kafka-controller";
 import { projectCommitRouter } from "./ui/rest/router/project-commit.router";
 import PostgresDatabase from "./infrastructure/database/postgresql.db";
+import { contributionRouter } from "./ui/rest/router/contribution-calendar.router";
 
 async function main(): Promise<void> {
     validateEnvironmentVars()
@@ -41,6 +42,7 @@ async function main(): Promise<void> {
     app.use("/contribution-tracker/commit", commitRouter)
     app.use("/contribution-tracker/user-commit", userCommitRouter)
     app.use("/contribution-tracker/project-commit", projectCommitRouter)
+    app.use("/contribution-tracker/contribution", contributionRouter)
 
     app.use((req: Request, res: Response, next: NextFunction) => {
         sendResponse(msg405("Method Not Allowed"), res, next);

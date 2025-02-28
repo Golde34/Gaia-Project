@@ -9,7 +9,7 @@ const contributionControllerImpl = contributionCalendarController;
 
 contributionRouter.get("/:userId", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const userCommits = await contributionControllerImpl.getUserCommits(req, next);
+        const userCommits = await contributionControllerImpl.getContributionCalendar(req, next);
         returnResult(userCommits, USER_NOT_FOUND, res, next);
     } catch (err) {
         next(err);
@@ -18,7 +18,7 @@ contributionRouter.get("/:userId", async (req: Request, res: Response, next: Nex
 
 contributionRouter.get("/:userId/:projectId", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const userCommits = await contributionControllerImpl.getProjectCommits(req, next);
+        const userCommits = await contributionControllerImpl.getContributionCalendarByProject(req, next);
         returnResult(userCommits, PROJECT_NOT_FOUND, res, next);
     } catch (err) {
         next(err);

@@ -1,3 +1,4 @@
+import { or } from "sequelize";
 import ContributionCalendarEntity from "../../core/domain/entities/contribution-calendar.entity";
 
 export class ContributionCalendarRepository {
@@ -22,7 +23,8 @@ export class ContributionCalendarRepository {
             return await ContributionCalendarEntity.findAll({
                 where: {
                     userId
-                }
+                },
+                order: [['date', 'DESC']]
             });
         } catch (error) {
             throw new Error('Failed to get contribution calendar');

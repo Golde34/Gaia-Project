@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { ContributionCalendarRepository } from "../../infrastructure/repository/contribution-calendar.repository";
 import ContributionCalendarEntity from "../domain/entities/contribution-calendar.entity";
 import { ulid } from "ulid";
@@ -30,7 +31,7 @@ class ContributionCalendarService {
         }
     }
 
-    async getContributionCalendar(userId: number): Promise<{ [key: string]: { level: number; commitCount: number } }[]> {
+    async getContributionCalendar(userId: number): Promise<any[]> {
         try {
             const contributions = await this.contributionCalendarRepoImpl.findByUserId(userId);
 
@@ -38,12 +39,18 @@ class ContributionCalendarService {
                 return [];
             }
 
-            const sortedContributions = contributions.sort((a, b) => b.date.getTime() - a.date.getTime());
-            const endDate = new Date(sortedContributions[0].date); // Ngày commit mới nhất
+            const endDate = new Date();
             const startDate = new Date(endDate);
             startDate.setDate(startDate.getDate() - 365);
+            console.log("startDate", startDate);
+            console.log("endDate", endDate);
 
-            const totalCommits = contributions.reduce((sum, contribution) => sum + contribution.commitCount, 0);
+            const filteredContributions = contributions.filter((contribution) => {
+                const contributionDate = new Date(contribution.date);
+                return contributionDate >= startDate && contributionDate <= endDate;
+            });
+
+            const totalCommits = filteredContributions.reduce((sum, contribution) => sum + contribution.commitCount, 0);
             const averageCommitPerDay = totalCommits / 365;
 
             const calculateLevel = (commitCount: number): number => {
@@ -56,7 +63,7 @@ class ContributionCalendarService {
 
             const data: { [key: string]: { level: number; commitCount: number } }[] = [];
 
-            contributions.forEach((contribution) => {
+            filteredContributions.forEach((contribution) => {
                 const dateString = contribution.date.toISOString().slice(0, 10);
                 data.push({
                     [dateString]: {
@@ -66,7 +73,7 @@ class ContributionCalendarService {
                 });
             });
 
-            return data;
+            return [data, format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd')];
         } catch (error) {
             console.error("Failed to get contribution calendar: ", error);
             return [];
