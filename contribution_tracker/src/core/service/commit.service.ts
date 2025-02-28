@@ -75,7 +75,7 @@ class CommitService {
                 if (committerName !== user.githubLoginName) {
                     continue;
                 }
-                await this.addGithubCommit(user.userId, project.id, commit);
+                await this.addGithubCommit(user.userId, project.id, commit, user.githubLoginName);
             }
 
             return {

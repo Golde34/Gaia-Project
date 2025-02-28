@@ -6,11 +6,13 @@ import { CommitRepository } from "../../infrastructure/repository/commit.reposit
 import { KafkaConfig } from "../../infrastructure/kafka/kafka-config";
 import { KafkaCommand, ProducerKafkaTopic } from "../domain/enums/kafka.enums";
 import { createMessage } from "../../infrastructure/kafka/create-message";
+import { ContributionCalendarRepository } from "../../infrastructure/repository/contribution-calendar.repository";
 
 class ProjectCommitService {
     constructor(
         private projectCommitRepository = new ProjectCommitRepository,
         private commitRepository = new CommitRepository,
+        private contributionRepository = new ContributionCalendarRepository,
         private kafkaHandler = new KafkaConfig(),
     ) { }
 
@@ -75,6 +77,7 @@ class ProjectCommitService {
             console.log("Deleting project commit for user: ", userId, " and project: ", projectId);
             await this.projectCommitRepository.delete(projectCommit.id);
             await this.commitRepository.deleteAllCommitsByProjectId(projectCommit.id);
+            await this.contributionRepository.deleteAllContributionsByProjectId(projectCommit.id);
             return projectCommit;
         } catch (error) {
             console.error("Error on deleteProjectCommit: ", error);

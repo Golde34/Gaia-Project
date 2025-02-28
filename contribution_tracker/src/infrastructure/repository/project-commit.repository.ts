@@ -59,8 +59,13 @@ export class ProjectCommitRepository {
 
     async update(id: string, data: Partial<ProjectCommitEntity>): Promise<void> {
         try {
-            await ProjectCommitEntity.update(data, { where: { id } });
-            await ProjectCommitEntity.save();
+            const project = await ProjectCommitEntity.findOne({ where: { id } });
+            if (project) {
+                project.update(data, { where: { id } });
+                await project.save();
+            } else {
+                throw new Error('Project not found');
+            }
         } catch (error) {
             throw new Error('Failed to update project commit');
         }
@@ -91,8 +96,8 @@ export class ProjectCommitRepository {
             await project.reload();
             return project;
         } catch (error) {
-            console.error("Error updating user total commit:", error);
-            throw new Error("Failed to update user total commit");
+            console.error("Error updating project total commit:", error);
+            throw new Error("Failed to update project total commit");
         }
     }
 }

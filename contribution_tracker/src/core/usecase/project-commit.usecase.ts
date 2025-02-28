@@ -11,13 +11,15 @@ class ProjectCommitUsecase {
     constructor(
         private userCommitServiceImpl = userCommitService,
         private projectCommitServiceImpl = projectCommitService,
-        private commitServiceImpl = commitService,
         private commitUsecaseImpl = commitUsecase,
     ) { }
 
     async getRepoGithubInfo(userId: number): Promise<any> {
         try {
             const user = await this.userCommitServiceImpl.getUserGithubInfo(userId);
+            if (!user) {
+                return msg400("User not found");
+            }
             const repos = await this.userCommitServiceImpl.getUserGithubRepo(user);
             const githubRepos = repos.map((repo: any) => githubRepoMapper(repo));
             return msg200({
@@ -64,6 +66,9 @@ class ProjectCommitUsecase {
     async refreshProjectCommits(userId: number, projectId: string, githubRepoUrl: string | null): Promise<any> {
         try {
             const user = await this.userCommitServiceImpl.getUserGithubInfo(userId);
+            if (!user) {
+                return msg400("User not found");
+            }
             const project = await this.projectCommitServiceImpl.getProjectCommitsByProjectId(projectId);
             if (!project) {
                 return msg400("Project not found");
@@ -100,6 +105,9 @@ class ProjectCommitUsecase {
             const projectId = data.projectId;
             const userId = data.userId;
             const user = await this.userCommitServiceImpl.getUserGithubInfo(userId);
+            if (!user) {
+                throw new Error("User not found");
+            }
             const project = await this.projectCommitServiceImpl.getProjectCommitsByProjectId(projectId);
             if (!project) {
                 throw new Error("Project not found");

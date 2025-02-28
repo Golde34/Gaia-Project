@@ -1,6 +1,6 @@
 import ContributionCalendarEntity from "../../core/domain/entities/contribution-calendar.entity";
 
-class ContributionCalendarRepository {
+export class ContributionCalendarRepository {
 
     async findByUserIdAndProjectIdAndDate(userId: number, projectId: string, date: Date): Promise<ContributionCalendarEntity | null> {
         try {
@@ -41,6 +41,12 @@ class ContributionCalendarRepository {
             throw new Error('Failed to get contribution calendar by project');
         }
     }
-}
 
-export const contributionCalendarRepository = new ContributionCalendarRepository();
+    async deleteAllContributionsByProjectId(projectId: string): Promise<void> {
+        try {
+            await ContributionCalendarEntity.destroy({ where: { projectId } });
+        } catch (error) {
+            throw new Error('Failed to delete all contributions by project id');
+        }
+    }
+}

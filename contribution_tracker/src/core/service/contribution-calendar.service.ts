@@ -1,16 +1,17 @@
-import { contributionCalendarRepository } from "../../infrastructure/repository/contribution-calendar.repository";
+import { ContributionCalendarRepository } from "../../infrastructure/repository/contribution-calendar.repository";
 import ContributionCalendarEntity from "../domain/entities/contribution-calendar.entity";
 import { ulid } from "ulid";
 
 
 class ContributionCalendarService {
     constructor(
-        private contributionCalendarRepoImpl = contributionCalendarRepository,
+        private contributionCalendarRepoImpl = new ContributionCalendarRepository,
     ) { }
 
-    async upsertContribution(userId: number, projectId: string, date: Date, commitCount: number): Promise<ContributionCalendarEntity | null> {
+    async upsertContribution(userId: number, projectId: string, date: string, commitCount: number): Promise<ContributionCalendarEntity | null> {
         try {
-            const contribution = await this.contributionCalendarRepoImpl.findByUserIdAndProjectIdAndDate(userId, projectId, date);
+            const formattedDate = new Date(date)
+            const contribution = await this.contributionCalendarRepoImpl.findByUserIdAndProjectIdAndDate(userId, projectId, formattedDate);
             if (!contribution || contribution == null) {
                 await ContributionCalendarEntity.create({
                     id: ulid(),

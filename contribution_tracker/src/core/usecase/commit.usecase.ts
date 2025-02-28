@@ -6,7 +6,7 @@ import { commitService } from "../service/commit.service";
 import { projectCommitService } from "../service/project-commit.service";
 import { userCommitService } from "../service/user-commit.service";
 import { chunk } from "lodash";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { contributionCalendarService } from "../service/contribution-calendar.service";
 
 class CommitUsecase {
@@ -99,6 +99,9 @@ class CommitUsecase {
                     if (!project.id || !project.userCommitId) return;
                     try {
                         const user = await this.userCommitServiceImpl.getUserGithubInfo(project.userCommitId);
+                        if (user === undefined) {
+                            throw new Error("Error on getUserGithubInfo");
+                        }
                         const result = await this.syncGithubCommit(user, project);
                         if (result === undefined) {
                             throw new Error("Error on syncGithubCommit");
@@ -156,13 +159,14 @@ class CommitUsecase {
                 return null;
             }
 
-            let timeStamp = new Date(commits[0].commit.committer.date);
+            let timeStamp = format(new Date(commits[0].commit.committer.date), 'yyyy-MM-dd');
             let commitCount = 0;
             for (const commit of commits) {
                 await this.commitServiceImpl.addGithubCommit(user.userId, project.id, commit, user.githubLoginName);
-                if (timeStamp != new Date(commit.commit.committer.date)) {
+                let commitDate = format(new Date(commit.commit.committer.date), 'yyyy-MM-dd');
+                if (timeStamp !== commitDate) {
                     await this.contributionCalendarServiceImpl.upsertContribution(user.userId, project.id, timeStamp, commitCount);
-                    timeStamp = new Date(commit.commit.committer.date);
+                    timeStamp = commitDate;
                     commitCount = 0;
                 } else {
                     commitCount += 1;
