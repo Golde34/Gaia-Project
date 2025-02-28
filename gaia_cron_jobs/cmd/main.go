@@ -15,9 +15,9 @@ func main() {
 	// Kafka Initialization
 	kafkaConfig := config.KafkaConfig{}
 	kafkaCfg, _ := kafkaConfig.LoadEnv()
-	log.Println("Kafka configuration loaded: ", kafkaCfg.GroupID)
+	log.Println("Kafka Config: ", kafkaCfg.GroupID)
 
-	handlers := map[string]kafka.MessageHandler{
+	handlers := map[string] kafka.MessageHandler {
 		domain.FullSyncGithubCommitTopic: &ui.FullSyncGithubCommitHandler{},
 	}
 	consumerGroupHandler := kafka.NewConsumerGroupHandler(kafkaCfg.Name, handlers)

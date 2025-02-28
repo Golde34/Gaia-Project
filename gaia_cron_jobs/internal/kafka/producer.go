@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func Producer(bootstrapServer, topic string, message *domain.KafkaMessage, limit int) {
+func Producer(bootstrapServer, topic string, message *domain.KafkaMessage) {
 	config := sarama.NewConfig()
 
 	config.Producer.Return.Errors = true
@@ -20,7 +20,7 @@ func Producer(bootstrapServer, topic string, message *domain.KafkaMessage, limit
 	if err != nil {
 		log.Fatal("Failed to create producer:", err)
 	}
-	defer producer.AsyncClose() 
+	defer producer.AsyncClose()
 
 	var wg sync.WaitGroup
 	var enqueued, timeout, successed, errors int
@@ -62,6 +62,4 @@ func Producer(bootstrapServer, topic string, message *domain.KafkaMessage, limit
 		timeout++
 		log.Printf("Timeout while enqueueing message to topic '%s': %s", topic, message)
 	}
-
-	wg.Wait() 
 }

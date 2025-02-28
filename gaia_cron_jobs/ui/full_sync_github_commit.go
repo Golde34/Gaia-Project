@@ -3,6 +3,7 @@ package ui
 import (
 	"encoding/json"
 	"fmt"
+	"gaia_cron_jobs/config"
 	"gaia_cron_jobs/domain"
 	"gaia_cron_jobs/internal/kafka"
 	"log"
@@ -24,13 +25,16 @@ func (h *FullSyncGithubCommitHandler) HandleMessage(topic string, key, value []b
 		return
 	}
 
-	executeKafka(data)
+	producerTopic := domain.SyncGithubCommitTopic
+	cmd := domain.ProjectSyncGithubCommitCommand
+	executeKafka(data, producerTopic, cmd)
 }
 
-func executeKafka(data map[string]interface{}) {
-	topic := "contribution-tracker.github-commit.topic"
-	name := "projectSyncGithubCommit"
-	kafkaMessage := kafka.CreateKafkaObjectMessage(name, data)
-	log.Printf("Executing job '%s' and sending message to topic '%s'", name, topic)
-	kafka.Producer("localhost:9094", topic, kafkaMessage, 100_000)
+func executeKafka(data map[string]interface{}, topic, cmd string) {
+	kafkaConfig := config.KafkaConfig{}
+	kafkaCfg, _ := kafkaConfig.LoadEnv()
+	bootstrapServer := kafkaCfg.ProducerBootstrapServers
+	kafkaMessage := kafka.CreateKafkaObjectMessage(cmd, data)
+	log.Printf("Executing cmd '%s' and sending message to topic '%s'", cmd, topic)
+	kafka.Producer(bootstrapServer, topic, kafkaMessage)
 }

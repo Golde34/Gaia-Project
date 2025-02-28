@@ -58,5 +58,5 @@ func runJobByTimeUnit(scheduler *gocron.Scheduler, job config.JobConfig, message
 func executeKafkaJob(message, name, topic, bootstrapServers string) {
 	kafkaMessage := kafka.CreateKafkaMessage(name, message)
 	log.Printf("Executing job '%s' and sending message to topic '%s'", name, topic)
-	kafka.Producer(bootstrapServers, topic, kafkaMessage, 100_000)
+	kafka.Producer(bootstrapServers, topic, kafkaMessage)
 }
