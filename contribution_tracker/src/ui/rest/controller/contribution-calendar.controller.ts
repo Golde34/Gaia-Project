@@ -8,7 +8,7 @@ class ContributionCalendarController {
     async getContributionCalendar(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = Number(req.params.userId);
-            const userCommits = await commitUsecase.getUserCommits(userId);
+            const userCommits = await contributionCalendarUsecase.getContributionCalendar(userId);
             return userCommits; 
         } catch (err) {
             next(err);
@@ -19,10 +19,12 @@ class ContributionCalendarController {
         try {
             const userId = Number(req.params.userId);
             const projectId = req.params.projectId;
-            const commits = await commitUsecase.getProjectCommits(userId, projectId);
+            const commits = await contributionCalendarUsecase.getContributionCalendarByProject(userId, projectId);
             return commits;
         } catch (err) {
             next(err);
         }
     }
 }
+
+export const contributionCalendarController = new ContributionCalendarController();

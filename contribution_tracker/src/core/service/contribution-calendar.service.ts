@@ -29,9 +29,43 @@ class ContributionCalendarService {
         }
     }
 
-    async getContributionCalendar(userId: number): Promise<ContributionCalendarEntity[]> {
+    async getContributionCalendar(userId: number): Promise<{ [key: string]: { level: number; commitCount: number } }[]> {
         try {
-            return await this.contributionCalendarRepoImpl.findByUserId(userId);
+            const contributions = await this.contributionCalendarRepoImpl.findByUserId(userId);
+
+            if (!contributions || contributions.length === 0) {
+                return [];
+            }
+
+            const sortedContributions = contributions.sort((a, b) => b.date.getTime() - a.date.getTime());
+            const endDate = new Date(sortedContributions[0].date); // Ngày commit mới nhất
+            const startDate = new Date(endDate);
+            startDate.setDate(startDate.getDate() - 365);
+
+            const totalCommits = contributions.reduce((sum, contribution) => sum + contribution.commitCount, 0);
+            const averageCommitPerDay = totalCommits / 365;
+
+            const calculateLevel = (commitCount: number): number => {
+                if (commitCount === 0) return 0;
+                if (commitCount > 0 && commitCount <= averageCommitPerDay * 1) return 1;
+                if (commitCount > averageCommitPerDay * 1 && commitCount <= averageCommitPerDay * 2) return 2;
+                if (commitCount > averageCommitPerDay * 2 && commitCount <= averageCommitPerDay * 3) return 3;
+                return 4;
+            };
+
+            const data: { [key: string]: { level: number; commitCount: number } }[] = [];
+
+            contributions.forEach((contribution) => {
+                const dateString = contribution.date.toISOString().slice(0, 10);
+                data.push({
+                    [dateString]: {
+                        level: calculateLevel(contribution.commitCount),
+                        commitCount: contribution.commitCount,
+                    },
+                });
+            });
+
+            return data;
         } catch (error) {
             console.error("Failed to get contribution calendar: ", error);
             return [];
