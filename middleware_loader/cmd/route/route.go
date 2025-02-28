@@ -38,6 +38,7 @@ func Setup(router *chi.Mux, db database_mongo.Database) {
 	taskOptimizationService := work_optim.NewTaskOptimizationService()
 	scheduleTaskService := schedule_plan.NewScheduleTaskService()
 	userGithubService := contribution_tracker.NewUserGithubService()
+	contributionService := contribution_tracker.NewContributionService()
 
 	// GRAPHQL FEDERATION
 	router.Handle("/graphql", playground.Handler("GraphQL playground", "/query"))
@@ -92,5 +93,6 @@ func Setup(router *chi.Mux, db database_mongo.Database) {
 
 	router.Group(func (r chi.Router) {
 		contribution_tracker_router.NewUserGithubRouter(userGithubService, router)
+		contribution_tracker_router.NewContributionRouter(contributionService, router)
 	})
 }
