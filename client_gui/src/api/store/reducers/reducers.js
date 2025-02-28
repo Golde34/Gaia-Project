@@ -38,6 +38,7 @@ import { optimizeTaskByUserReducer } from "./work_optimization/optimize-task.red
 import { chooseTaskBatchReducer, scheduleTaskListReducer, taskBatchListReducer } from "./schedule_plan/schedule-task.reducers";
 import { getUserGithubInfoReducer } from "./contribution_tracker/user-commit.reducer";
 import { getProjectAndRepoRequestReducer } from "./contribution_tracker/project-commit.reducer";
+import { getUserContributionsReducer } from "./contribution_tracker/contribution.reducer";
 
 export const reducer = combineReducers({
     // auth service
@@ -100,5 +101,7 @@ export const reducer = combineReducers({
     // work optimization 
     registerTaskConfig: registerTaskConfigReducer,
     queryTaskConfig: queryTaskConfigReducer,
-    optimizeTaskByUser: optimizeTaskByUserReducer
+    optimizeTaskByUser: optimizeTaskByUserReducer,
+    // contribution tracker
+    userContributions: getUserContributionsReducer
 })

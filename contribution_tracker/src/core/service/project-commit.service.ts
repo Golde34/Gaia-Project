@@ -6,11 +6,13 @@ import { CommitRepository } from "../../infrastructure/repository/commit.reposit
 import { KafkaConfig } from "../../infrastructure/kafka/kafka-config";
 import { KafkaCommand, ProducerKafkaTopic } from "../domain/enums/kafka.enums";
 import { createMessage } from "../../infrastructure/kafka/create-message";
+import { ContributionCalendarRepository } from "../../infrastructure/repository/contribution-calendar.repository";
 
 class ProjectCommitService {
     constructor(
         private projectCommitRepository = new ProjectCommitRepository,
         private commitRepository = new CommitRepository,
+        private contributionRepository = new ContributionCalendarRepository,
         private kafkaHandler = new KafkaConfig(),
     ) { }
 
@@ -44,11 +46,11 @@ class ProjectCommitService {
         try {
             const messages = [{
                 value: JSON.stringify(createMessage(
-                    KafkaCommand.FULL_SYNC_GITHUB_COMMIT, '00', 'Successful', { userId, projectId } 
+                    KafkaCommand.FULL_SYNC_GITHUB_COMMIT, '00', 'Successful', { userId, projectId }
                 ))
             }]
             console.log("Syncing github commit for project: ", projectId);
-            await this.kafkaHandler.produce(ProducerKafkaTopic.FULL_SYNC_GITHUB_COMMIT, messages); 
+            await this.kafkaHandler.produce(ProducerKafkaTopic.FULL_SYNC_GITHUB_COMMIT, messages);
         } catch (error) {
             console.error("Error on syncGithubCommit: ", error);
         }
@@ -75,6 +77,7 @@ class ProjectCommitService {
             console.log("Deleting project commit for user: ", userId, " and project: ", projectId);
             await this.projectCommitRepository.delete(projectCommit.id);
             await this.commitRepository.deleteAllCommitsByProjectId(projectCommit.id);
+            await this.contributionRepository.deleteAllContributionsByProjectId(projectCommit.id);
             return projectCommit;
         } catch (error) {
             console.error("Error on deleteProjectCommit: ", error);
@@ -141,6 +144,18 @@ class ProjectCommitService {
         } catch (error) {
             console.error("Error on getProjectCommitsByProjectId: ", error);
             return undefined;
+        }
+    }
+
+    async updateTotalCommits(userId: number, projectId: string, totalCommitInDay: number, type: string): Promise<void> {
+        try {
+            if (type === "fullSyncMode") {
+                this.projectCommitRepository.updateTotalCommit(projectId, totalCommitInDay);
+            } else {
+                this.projectCommitRepository.updateTotalCommitWithProjectId(userId, projectId, totalCommitInDay);
+            }
+        } catch (error) {
+            console.error("Error on updateTotalCommits");
         }
     }
 }

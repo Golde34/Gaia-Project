@@ -14,7 +14,7 @@ class UserCommitService {
         private githubClient = githubClientAdapter,
     ) { }
 
-    async getUserGithubInfo(userId: number): Promise<any> {
+    async getUserGithubInfo(userId: number): Promise<UserCommitEntity | undefined> {
         try {
             console.log("Getting user info: " + userId);
             const cachedUserGithubInfo = this.userCommitCache.get(InternalCacheConstants.USER_INFO_CACHE_KEY + userId);
@@ -33,7 +33,7 @@ class UserCommitService {
             return userGithubInfo;
         } catch (error) {
             console.error("Error on getUserGithubInfo: ", error);
-            return null;
+            return undefined;
         }
     }
 
@@ -137,7 +137,16 @@ class UserCommitService {
             console.error("Error on getUserGithubRepo: ", error);
             return null;
         }
+    }
 
+    async updateTotalCommits(userId: number, totalCommitInDay: number, type: string): Promise<void> {
+        try {
+            if (type === "fullSyncMode") {
+                this.userCommitRepository.updateTotalCommit(userId, totalCommitInDay);
+            } 
+        } catch (error) {
+            console.error("Error on updateTotalCommits");
+        }
     }
 }
 

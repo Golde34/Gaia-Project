@@ -1,18 +1,93 @@
-import RedisClient from "../../infrastructure/cache/redis-cache";
+import { format } from "date-fns";
 import { ContributionCalendarRepository } from "../../infrastructure/repository/contribution-calendar.repository";
+import ContributionCalendarEntity from "../domain/entities/contribution-calendar.entity";
+import { ulid } from "ulid";
+
 
 class ContributionCalendarService {
-    private valkeyCache: any;
+    constructor(
+        private contributionCalendarRepoImpl = new ContributionCalendarRepository,
+    ) { }
 
-    constructor() {
-        this.initialize();
+    async upsertContribution(userId: number, projectId: string, date: string, commitCount: number): Promise<ContributionCalendarEntity | null> {
+        try {
+            const formattedDate = new Date(date)
+            const contribution = await this.contributionCalendarRepoImpl.findByUserIdAndProjectIdAndDate(userId, projectId, formattedDate);
+            if (!contribution || contribution == null) {
+                await ContributionCalendarEntity.create({
+                    id: ulid(),
+                    userId: userId,
+                    projectId: projectId,
+                    date: date,
+                    commitCount: commitCount,
+                })
+            } else {
+                await contribution.increment('commit_count', { by: commitCount });
+            }
+            return contribution;
+        } catch (error) {
+            console.error("Failed to create contribution: ", error);
+            return null;
+        }
     }
 
-    private async initialize() {
-        this.valkeyCache = await RedisClient.getInstance();
+    async getContributionCalendar(userId: number): Promise<any[]> {
+        try {
+            const contributions = await this.contributionCalendarRepoImpl.findByUserId(userId);
+
+            if (!contributions || contributions.length === 0) {
+                return [];
+            }
+
+            const endDate = new Date();
+            const startDate = new Date(endDate);
+            startDate.setDate(startDate.getDate() - 365);
+            console.log("startDate", startDate);
+            console.log("endDate", endDate);
+
+            const filteredContributions = contributions.filter((contribution) => {
+                const contributionDate = new Date(contribution.date);
+                return contributionDate >= startDate && contributionDate <= endDate;
+            });
+
+            const totalCommits = filteredContributions.reduce((sum, contribution) => sum + contribution.commitCount, 0);
+            const averageCommitPerDay = totalCommits / 365;
+
+            const calculateLevel = (commitCount: number): number => {
+                if (commitCount === 0) return 0;
+                if (commitCount > 0 && commitCount <= averageCommitPerDay * 1) return 1;
+                if (commitCount > averageCommitPerDay * 1 && commitCount <= averageCommitPerDay * 2) return 2;
+                if (commitCount > averageCommitPerDay * 2 && commitCount <= averageCommitPerDay * 3) return 3;
+                return 4;
+            };
+
+            const data: { [key: string]: { level: number; commitCount: number } }[] = [];
+
+            filteredContributions.forEach((contribution) => {
+                const dateString = contribution.date.toISOString().slice(0, 10);
+                data.push({
+                    [dateString]: {
+                        level: calculateLevel(contribution.commitCount),
+                        commitCount: contribution.commitCount,
+                    },
+                });
+            });
+
+            return [data, format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd')];
+        } catch (error) {
+            console.error("Failed to get contribution calendar: ", error);
+            return [];
+        }
     }
 
-    async getFromValkey(key: string) {
-        return this.valkeyCache.get(key);
+    async getContributionCalendarByProject(userId: number, projectId: string): Promise<ContributionCalendarEntity[]> {
+        try {
+            return await this.contributionCalendarRepoImpl.findByUserIdAndProjectId(userId, projectId);
+        } catch (error) {
+            console.error("Failed to get contribution calendar by project: ", error);
+            return [];
+        }
     }
 }
+
+export const contributionCalendarService = new ContributionCalendarService();

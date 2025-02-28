@@ -22,7 +22,7 @@ export const AlertDialog = (props) => {
 
     const actionsMap = {
         "Delete": () => {
-            deleteComponentDispatch(props.elementId, elementName);
+            deleteComponentDispatch(props.elementId, props.elementName);
             localStorage.setItem('activeTab', 'none');
         },
         "Archive": () => {

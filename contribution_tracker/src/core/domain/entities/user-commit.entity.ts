@@ -54,6 +54,12 @@ export default class UserCommitEntity extends Model {
     userState!: string;
 
     @Column({
+        type: DataType.INTEGER,
+        field: "total_user_commits",
+    })
+    totalUserCommits?: number;
+
+    @Column({
         type: DataType.DATE,
         field: "created_at",
     })

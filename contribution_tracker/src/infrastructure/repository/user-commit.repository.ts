@@ -109,4 +109,19 @@ export class UserCommitRepository {
             throw new Error("Failed to find all users");
         }
     }
+
+    async updateTotalCommit(userId: number, totalCommit: number): Promise<UserCommitEntity | null> {
+        try {
+            const user = await UserCommitEntity.findOne({ where: { userId: userId } });
+            if (!user) {
+                throw new Error("User not found");
+            }
+            await user.increment('total_user_commits', { by: totalCommit });
+            await user.save();
+            return user;
+        } catch (error) {
+            console.error("Error updating user total commit:", error);
+            throw new Error("Failed to update user total commit");
+        }
+    }
 }

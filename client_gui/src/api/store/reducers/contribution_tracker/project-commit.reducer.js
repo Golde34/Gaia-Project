@@ -3,7 +3,7 @@ import {
     DELETE_PROJECT_COMMIT_REQUEST,
     DELETE_PROJECT_COMMIT_SUCCESS,
     GET_PROJECT_AND_REPO_FAILURE, GET_PROJECT_AND_REPO_REQUEST, GET_PROJECT_AND_REPO_SUCCESS
-} from "../../constants/contribution_tracker/user-project.constants";
+} from "../../constants/contribution_tracker/project-commit.constants";
 
 export const getProjectAndRepoRequestReducer = (
     state = { loading: true }, action) => {
