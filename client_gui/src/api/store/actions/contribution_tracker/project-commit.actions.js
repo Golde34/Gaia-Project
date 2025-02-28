@@ -2,7 +2,7 @@ import { HttpMethods, serverRequest } from "../../../baseAPI";
 import { DELETE_PROJECT_COMMIT_FAILURE, DELETE_PROJECT_COMMIT_REQUEST, DELETE_PROJECT_COMMIT_SUCCESS, 
     GET_PROJECT_AND_REPO_FAILURE, GET_PROJECT_AND_REPO_REQUEST, GET_PROJECT_AND_REPO_SUCCESS, 
     SYNC_PROJECT_AND_REPO_FAILURE, SYNC_PROJECT_AND_REPO_REQUEST, SYNC_PROJECT_AND_REPO_SUCCESS 
-} from "../../constants/contribution_tracker/user-project.constants";
+} from "../../constants/contribution_tracker/project-commit.constants";
 
 const portName = {
     middlewarePort: 'middlewarePort'
