@@ -43,14 +43,16 @@ class CommitUsecase {
 
     async createCommit(data: any): Promise<IResponse> {
         try {
-            const commit = this.commitServiceImpl.createCommit(data);
+            const commit = await this.commitServiceImpl.createCommit(data);
             if (!commit) {
                 return msg400("Failed to create commit");
             }
-            // const contribution = this.contributionCalendarServiceImpl.createContribution(commit);
+
+            const contribution = await this.contributionCalendarServiceImpl.upsertContribution(data.userId, data.projectId, data.date, data.commitCount);
 
             return msg200({
-                commit
+                commit,
+                contribution
             })
         } catch (error: any) {
             return msg400(error.message.toString());
@@ -156,7 +158,7 @@ class CommitUsecase {
             for (const commit of commits) {
                 await this.commitServiceImpl.addGithubCommit(user.userId, project.id, commit, user.githubLoginName);
                 if (timeStamp != new Date(commit.commit.committer.date)) {
-                    await this.contributionCalendarServiceImpl.createContribution(user.userId, project.id, timeStamp, commitCount);
+                    await this.contributionCalendarServiceImpl.upsertContribution(user.userId, project.id, timeStamp, commitCount);
                     timeStamp = new Date(commit.commit.committer.date);
                     commitCount = 0;
                 } else {

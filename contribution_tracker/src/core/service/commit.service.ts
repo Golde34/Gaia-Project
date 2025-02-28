@@ -150,7 +150,7 @@ class CommitService {
             const commit = await CommitEntity.create({
                 id: ulid(),
                 content: commitObject.content,
-                commitTime: commitObject.commitTime,
+                commitTime: commitObject.date,
                 userId: commitObject.userId,
                 type: CommitType.TASK,
                 projectId: commitObject.projectId,

@@ -1,5 +1,4 @@
 import { Column, DataType, Model, Table } from "sequelize-typescript";
-import { Col } from "sequelize/types/utils";
 
 @Table({
     tableName: "contribution_calendar",
