@@ -88,6 +88,67 @@ class ContributionCalendarService {
             return [];
         }
     }
+
+    async compareCommits(userId: number): Promise<any> {
+        try {
+            const endDate = new Date();
+            let startDate = new Date();
+            let previousStartDate = new Date();
+
+            startDate.setDate(endDate.getDate() - 7);
+            previousStartDate.setDate(endDate.getDate() - 14);
+
+            console.log(`Time Range - startDate: ${startDate.toISOString()}, endDate: ${endDate.toISOString()}, previousStartDate: ${previousStartDate.toISOString()}`);
+
+            const [contributions, previousContributions] = await Promise.all([
+                this.contributionCalendarRepoImpl.findByUserIdAndBetweenDate(userId, startDate, endDate),
+                this.contributionCalendarRepoImpl.findByUserIdAndBetweenDate(userId, previousStartDate, startDate),
+            ]);
+
+            console.log(`contributions: ${contributions.length}, previousContributions: ${previousContributions.length}`);
+
+            return this.formatChartData(contributions, previousContributions, endDate.toISOString());
+
+        } catch (error) {
+            console.error("Failed to compare commits: ", error);
+            return null;
+        }
+    }
+
+    private formatChartData(contributions: any[], previousContributions: any[], endDate: string): any[] {
+        const dataMap = new Map<string, { date: string, "Weekly Commit": number, "Previous Weekly Commit": number }>();
+
+        const formatDate = (dateStr: string): string => new Date(dateStr).toLocaleString('en-US', { weekday: 'short' });
+
+        [...contributions, ...previousContributions].forEach(commit => {
+            const formattedDate = formatDate(commit.date);
+            if (!dataMap.has(formattedDate)) {
+                dataMap.set(formattedDate, { date: formattedDate, "Weekly Commit": 0, "Previous Weekly Commit": 0 });
+            }
+            const entry = dataMap.get(formattedDate)!;
+            if (contributions.includes(commit)) {
+                entry["Weekly Commit"] += commit.commitCount;
+            } else {
+                entry["Previous Weekly Commit"] += commit.commitCount;
+            }
+        });
+
+        const fullWeekData: any[] = [];
+        let currentDate = new Date(endDate);
+        currentDate.setDate(currentDate.getDate() - 6);
+
+        Array.from({ length: 7 }).forEach(() => {
+            const formattedDate = formatDate(currentDate.toISOString());
+            if (!dataMap.has(formattedDate)) {
+                dataMap.set(formattedDate, { date: formattedDate, "Weekly Commit": 0, "Previous Weekly Commit": 0 });
+            }
+            fullWeekData.push(dataMap.get(formattedDate)!);
+            currentDate.setDate(currentDate.getDate() + 1);
+        });
+
+        return fullWeekData;
+    }
+
 }
 
 export const contributionCalendarService = new ContributionCalendarService();

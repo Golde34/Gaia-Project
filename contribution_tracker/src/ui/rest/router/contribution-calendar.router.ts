@@ -7,6 +7,15 @@ export const contributionRouter = Router();
 
 const contributionControllerImpl = contributionCalendarController;
 
+contributionRouter.get("/compare-commits/:userId", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const userCommits = await contributionControllerImpl.compareCommits(req, next);
+        returnResult(userCommits, USER_NOT_FOUND, res, next);
+    } catch (err) {
+        next(err);
+    }
+});
+
 contributionRouter.get("/:userId", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const userCommits = await contributionControllerImpl.getContributionCalendar(req, next);

@@ -25,6 +25,16 @@ class ContributionCalendarController {
             next(err);
         }
     }
+
+    async compareCommits(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const userId = Number(req.params.userId);
+            const commits = await contributionCalendarUsecase.compareCommits(userId);
+            return commits;
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export const contributionCalendarController = new ContributionCalendarController();
