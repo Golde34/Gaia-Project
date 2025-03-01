@@ -169,17 +169,17 @@ class CommitUsecase {
                     await this.contributionCalendarServiceImpl.upsertContribution(user.userId, project.id, timeStamp, commitCount);
                     timeStamp = commitDate;
                     commitCount = 0;
-                } else {
-                    commitCount += 1;
                 }
+                commitCount += 1;
             }
+            await this.contributionCalendarServiceImpl.upsertContribution(user.userId, project.id, timeStamp, commitCount);
             await this.userCommitServiceImpl.updateTotalCommits(user.userId, commits.length, "fullSyncMode");
             await this.projectCommitServiceImpl.updateTotalCommits(user.userId, project.id, commits.length, "fullSyncMode");
 
             return {
                 lastTimeSynced: format(new Date(commits[0].commit.committer.date), 'yyyy-MM-dd HH:mm:ss'),
                 firstTimeSynced: firstTimeSynced,
-            }
+            };
 
         } catch (error) {
             console.error("Error on syncGithubCommit:", error);
