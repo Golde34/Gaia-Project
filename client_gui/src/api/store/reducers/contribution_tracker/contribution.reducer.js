@@ -6,7 +6,7 @@ export const getUserContributionsReducer = (
         case USER_CONTRIBUTIONS_REQUEST:
             return { loading: true };
         case USER_CONTRIBUTIONS_SUCCESS:
-            return { loading: false, userContributions: action.payload }
+            return { loading: false, contributions: action.payload }
         case USER_CONTRIBUTIONS_FAILURE:
             return { loading: false, error: action.payload };
         default:
