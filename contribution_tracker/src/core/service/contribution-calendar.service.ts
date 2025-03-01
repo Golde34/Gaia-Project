@@ -42,8 +42,8 @@ class ContributionCalendarService {
             const endDate = new Date();
             const startDate = new Date(endDate);
             startDate.setDate(startDate.getDate() - 365);
-            console.log("startDate", startDate);
-            console.log("endDate", endDate);
+            console.log(`startDate contribution calendar of user ${userId}: `, startDate);
+            console.log(`endDate contribution calendar of user ${userId}: `, endDate);
 
             const filteredContributions = contributions.filter((contribution) => {
                 const contributionDate = new Date(contribution.date);

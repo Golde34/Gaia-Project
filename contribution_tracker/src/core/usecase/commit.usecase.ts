@@ -165,6 +165,7 @@ class CommitUsecase {
                 await this.commitServiceImpl.addGithubCommit(user.userId, project.id, commit, user.githubLoginName);
                 let commitDate = format(new Date(commit.commit.committer.date), 'yyyy-MM-dd');
                 if (timeStamp !== commitDate) {
+                    commitCount += 1;
                     await this.contributionCalendarServiceImpl.upsertContribution(user.userId, project.id, timeStamp, commitCount);
                     timeStamp = commitDate;
                     commitCount = 0;
