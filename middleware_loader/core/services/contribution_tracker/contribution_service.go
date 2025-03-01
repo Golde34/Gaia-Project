@@ -22,3 +22,13 @@ func (s *ContributionService) GetUserContribution(userId string) (base_dtos.Erro
 	response := utils.ReturnSuccessResponse("Get user contribution success", contribution)
 	return response, nil
 }
+
+func (s *ContributionService) CompareCommits(userId string) (base_dtos.ErrorResponse, error) {
+	compoareCommits, err := client.IContributionAdapter(&adapter.ContributionAdapter{}).CompareCommits(userId)
+	if err != nil {
+		return utils.ReturnErrorResponse(400, "Cannot compare commits from Contribution Tracker"), err
+	}
+
+	response := utils.ReturnSuccessResponse("Compare commits success", compoareCommits)
+	return response, nil
+}

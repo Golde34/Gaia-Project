@@ -1,4 +1,4 @@
-import { or } from "sequelize";
+import { Op, or } from "sequelize";
 import ContributionCalendarEntity from "../../core/domain/entities/contribution-calendar.entity";
 
 export class ContributionCalendarRepository {
@@ -49,6 +49,22 @@ export class ContributionCalendarRepository {
             await ContributionCalendarEntity.destroy({ where: { projectId } });
         } catch (error) {
             throw new Error('Failed to delete all contributions by project id');
+        }
+    }
+
+    async findByUserIdAndBetweenDate(userId: number, startDate: Date, endDate: Date): Promise<ContributionCalendarEntity[]> {
+        try {
+            return await ContributionCalendarEntity.findAll({
+                where: {
+                    userId,
+                    date: {
+                        [Op.gte]: startDate, 
+                        [Op.lte]: endDate    
+                    }
+                }
+            });
+        } catch (error) {
+            throw new Error('Failed to get contribution calendar by user id and between date');
         }
     }
 }
