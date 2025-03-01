@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type WebSocketService struct {}
+type WebSocketService struct{}
 
 func NewWebSocketService() *WebSocketService {
 	return &WebSocketService{}
@@ -21,10 +21,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-var userConnections = struct {
-	sync.Mutex
-	connections map[string]*websocket.Conn
-}{connections: make(map[string]*websocket.Conn)}
+var userConnections sync.Map
 
 func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -42,39 +39,43 @@ func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 
 	log.Println("Client connected, userId:", userId)
 
-	// Ghi đè kết nối cũ nếu tồn tại
-	userConnections.Lock()
-	if existingConn, exists := userConnections.connections[userId]; exists {
+	if existingConn, ok := userConnections.Load(userId); ok {
 		log.Println("Closing existing connection for user:", userId)
-		existingConn.Close()
+		existingConn.(*websocket.Conn).Close()
 	}
-	userConnections.connections[userId] = conn
-	log.Println("Updated userConnections for userId:", userId)
-	userConnections.Unlock()
+	userConnections.Store(userId, conn)
 
-	
+	conn.SetPingHandler(func(appData string) error {
+		log.Println("Received ping from user:", userId)
+		err := conn.WriteMessage(websocket.PongMessage, nil)
+		if err != nil {
+			log.Println("Error sending pong:", err)
+		}
+		return err
+	})
+
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
 			log.Println("Connection closed for userId:", userId)
-			userConnections.Lock()
-			delete(userConnections.connections, userId)
-			userConnections.Unlock()
+			userConnections.Delete(userId)
 			break
 		}
 		log.Printf("Message received from userId %s: %s", userId, message)
 	}
 }
+
 func SendToUser(userId string, message []byte) {
 	log.Println("Attempting to send message to user:", userId)
 
-	if conn, ok := userConnections.connections[userId]; ok {
-		log.Println("Connection found for user:", userId)
-		err := conn.WriteMessage(websocket.TextMessage, message)
+	if conn, ok := userConnections.Load(userId); ok {
+		wsConn := conn.(*websocket.Conn)
+
+		err := wsConn.WriteMessage(websocket.TextMessage, message)
 		if err != nil {
 			log.Println("Error sending message to user:", userId, "Error:", err)
-			conn.Close()
-			delete(userConnections.connections, userId)
+			wsConn.Close()
+			userConnections.Delete(userId)
 		} else {
 			log.Println("Message sent successfully to user:", userId)
 		}
@@ -91,7 +92,7 @@ func (s *WebSocketService) HandleOptimizeTask(userId string, status bool) {
 		"userId": userId,
 		"status": "success",
 	}
-	if !status{
+	if !status {
 		response["status"] = "failed"
 		response["type"] = "task_failed"
 	}
@@ -108,11 +109,9 @@ func (s *WebSocketService) HandleOptimizeTask(userId string, status bool) {
 }
 
 func LogActiveConnections() {
-	userConnections.Lock()
-	defer userConnections.Unlock()
-
 	log.Println("Active connections:")
-	for userId := range userConnections.connections {
-		log.Println("- UserId:", userId)
-	}
+	userConnections.Range(func(key, value interface{}) bool {
+		log.Println("- UserId:", key.(string))
+		return true
+	})
 }
