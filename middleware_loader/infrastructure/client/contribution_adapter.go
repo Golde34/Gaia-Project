@@ -33,3 +33,25 @@ func (adapter *ContributionAdapter) GetUserContribution(userId string) (interfac
 
 	return contribution, nil
 }
+
+func (adapter *ContributionAdapter) CompareCommits(userId string) (interface{}, error) {
+	compareCommitsURL := base.ContributionTrackerURL + "/contribution-tracker/contribution/compare-commits/" + userId
+	var compareCommits interface{}
+	headers := utils.BuildDefaultHeaders()
+	bodyResult, err := utils.BaseAPI(compareCommitsURL, "GET", nil, headers)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := json.Marshal(bodyResult)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(data, &compareCommits)
+	if err != nil {
+		return nil, err
+	}
+
+	return compareCommits, nil
+}
