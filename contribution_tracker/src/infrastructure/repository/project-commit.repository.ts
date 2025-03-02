@@ -77,8 +77,10 @@ export class ProjectCommitRepository {
             if (!project) {
                 throw new Error("User not found");
             }
-            await project.increment('total_project_commits', { by: totalCommit });
-            await project.save();
+            if (!project.totalProjectCommits) {
+                project.totalProjectCommits = 0;
+            }
+            await ProjectCommitEntity.increment('totalProjectCommits', { by: totalCommit, where: { id: projectId } });
             return project;
         } catch (error) {
             console.error("Error updating user total commit:", error);
