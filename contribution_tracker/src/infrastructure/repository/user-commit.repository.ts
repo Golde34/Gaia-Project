@@ -116,12 +116,33 @@ export class UserCommitRepository {
             if (!user) {
                 throw new Error("User not found");
             }
-            await user.increment('total_user_commits', { by: totalCommit });
+            if (user.totalUserCommits === null || user.totalUserCommits === undefined) {
+                user.totalUserCommits = 0;
+            }
+            user.totalUserCommits += totalCommit;
             await user.save();
             return user;
         } catch (error) {
             console.error("Error updating user total commit:", error);
             throw new Error("Failed to update user total commit");
+        }
+    }
+
+    async decrementUserCommits(userId: number, totalCommit: number): Promise<UserCommitEntity | null> {
+        try {
+            const user = await UserCommitEntity.findOne({ where: { userId: userId } });
+            if (!user) {
+                throw new Error("User not found");
+            }
+            if (user.totalUserCommits === null || user.totalUserCommits === undefined) {
+                user.totalUserCommits = 0;
+            }
+            user.totalUserCommits -= totalCommit;
+            await user.save();
+            return user;
+        } catch (error) {
+            console.error("Error decrementing user commits:", error);
+            return null;
         }
     }
 }

@@ -159,6 +159,24 @@ class CommitUsecase {
                 return null;
             }
 
+            await this.addCommits(commits, user, project);
+
+            return {
+                lastTimeSynced: format(new Date(commits[0].commit.committer.date), 'yyyy-MM-dd HH:mm:ss'),
+                firstTimeSynced: firstTimeSynced,
+            };
+
+        } catch (error) {
+            console.error("Error on syncGithubCommit:", error);
+            return undefined;
+        }
+    }
+
+    async addCommits(commits: any, user: UserCommitEntity, project: ProjectCommitEntity): Promise<void> {
+        try {
+            if (!user.githubLoginName) {
+                return undefined;
+            }
             let timeStamp = format(new Date(commits[0].commit.committer.date), 'yyyy-MM-dd');
             let commitCount = 0;
             for (const commit of commits) {
@@ -169,22 +187,16 @@ class CommitUsecase {
                     await this.contributionCalendarServiceImpl.upsertContribution(user.userId, project.id, timeStamp, commitCount);
                     timeStamp = commitDate;
                     commitCount = 0;
-                } else {
-                    commitCount += 1;
                 }
+                commitCount += 1;
             }
+            await this.contributionCalendarServiceImpl.upsertContribution(user.userId, project.id, timeStamp, commitCount);
+            console.log("Update total commits")
             await this.userCommitServiceImpl.updateTotalCommits(user.userId, commits.length, "fullSyncMode");
             await this.projectCommitServiceImpl.updateTotalCommits(user.userId, project.id, commits.length, "fullSyncMode");
-
-            return {
-                lastTimeSynced: format(new Date(commits[0].commit.committer.date), 'yyyy-MM-dd HH:mm:ss'),
-                firstTimeSynced: firstTimeSynced,
-            }
-
         } catch (error) {
-            console.error("Error on syncGithubCommit:", error);
-            return undefined;
-        }
+            console.error("Error on addCommits:", error);
+        } 
     }
 }
 

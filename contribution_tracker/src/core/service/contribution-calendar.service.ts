@@ -149,6 +149,13 @@ class ContributionCalendarService {
         return fullWeekData;
     }
 
+    async deleteContributionByProjectId(projectId: string): Promise<any> {
+        try {
+            await this.contributionCalendarRepoImpl.deleteAllContributionsByProjectId(projectId);
+        } catch (error) {
+            console.error("Failed to delete contribution by project id: ", error);
+        }
+    }
 }
 
 export const contributionCalendarService = new ContributionCalendarService();

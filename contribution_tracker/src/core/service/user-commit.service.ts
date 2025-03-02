@@ -148,6 +148,21 @@ class UserCommitService {
             console.error("Error on updateTotalCommits");
         }
     }
+
+    async decrementUserCommits(userId: number, projectTotalCommits: number): Promise<any> {
+        try {
+            const updatedUser = await this.userCommitRepository.decrementUserCommits(userId, projectTotalCommits);
+            console.log("Updated user: ", updatedUser);
+            if (!updatedUser) {
+                return null;
+            }
+            this.clearUserCache(updatedUser.userId);
+            return updatedUser;
+        } catch (error) {
+            console.error("Error on decrementUserCommits: ", error);
+            return null;
+        }
+    }
 }
 
 export const userCommitService = new UserCommitService();

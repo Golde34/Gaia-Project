@@ -77,7 +77,10 @@ export class ProjectCommitRepository {
             if (!project) {
                 throw new Error("User not found");
             }
-            await project.increment('total_project_commits', { by: totalCommit });
+            if (project.totalProjectCommits === null || project.totalProjectCommits === undefined) {
+                project.totalProjectCommits = 0;
+            }
+            project.totalProjectCommits += totalCommit;
             await project.save();
             return project;
         } catch (error) {

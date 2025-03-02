@@ -76,8 +76,6 @@ class ProjectCommitService {
             }
             console.log("Deleting project commit for user: ", userId, " and project: ", projectId);
             await this.projectCommitRepository.delete(projectCommit.id);
-            await this.commitRepository.deleteAllCommitsByProjectId(projectCommit.id);
-            await this.contributionRepository.deleteAllContributionsByProjectId(projectCommit.id);
             return projectCommit;
         } catch (error) {
             console.error("Error on deleteProjectCommit: ", error);

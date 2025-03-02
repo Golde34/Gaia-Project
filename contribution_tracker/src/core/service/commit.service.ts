@@ -8,12 +8,13 @@ import UserCommitEntity from "../domain/entities/user-commit.entity";
 import ProjectCommitEntity from "../domain/entities/project-commit.entity";
 import { CommitType } from "../domain/enums/enums";
 import { commitValidation } from "../validation/commit.validation";
+import { CommitRepository } from "../../infrastructure/repository/commit.repository";
 
 class CommitService {
     constructor(
         private kafkaConfig = new KafkaConfig(),
         private commitCache = CacheSingleton.getInstance().getCache(),
-        // private commitRepository = commitReposi
+        private commitRepository = new CommitRepository(),
         private githubClient = githubClientAdapter,
         private commitValidationImpl = commitValidation
     ) { }
@@ -142,6 +143,15 @@ class CommitService {
         } catch (error: any) {
             console.error("Failed to sync github commit: ", error);
             return false;
+        }
+    }
+
+    async deleteCommitsByProjectId(projectId: string): Promise<void> {
+        try {
+            await this.commitRepository.deleteAllCommitsByProjectId(projectId);
+        }
+        catch (error: any) {
+            console.error("Failed to delete commits by project id: ", error);
         }
     }
 
