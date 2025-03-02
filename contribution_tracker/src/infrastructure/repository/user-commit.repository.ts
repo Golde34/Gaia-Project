@@ -119,7 +119,6 @@ export class UserCommitRepository {
             if (user.totalUserCommits === null || user.totalUserCommits === undefined) {
                 user.totalUserCommits = 0;
             }
-            console.log("User: ", user);
             user.totalUserCommits += totalCommit;
             await user.save();
             return user;
@@ -135,10 +134,10 @@ export class UserCommitRepository {
             if (!user) {
                 throw new Error("User not found");
             }
-            if (!user.totalUserCommits) {
+            if (user.totalUserCommits === null || user.totalUserCommits === undefined) {
                 user.totalUserCommits = 0;
             }
-            await user.decrement('totalUserCommits', { by: totalCommit });
+            user.totalUserCommits -= totalCommit;
             await user.save();
             return user;
         } catch (error) {
