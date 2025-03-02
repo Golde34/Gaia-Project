@@ -3,6 +3,7 @@ import { SyncProjectRepoDto } from "../domain/dtos/github-object.dto";
 import ProjectCommitEntity from "../domain/entities/project-commit.entity";
 import { githubRepoMapper, syncProjectRepoMapper } from "../mapper/project-commit.mapper";
 import { commitService } from "../service/commit.service";
+import { contributionCalendarService } from "../service/contribution-calendar.service";
 import { projectCommitService } from "../service/project-commit.service";
 import { userCommitService } from "../service/user-commit.service";
 import { commitUsecase } from "./commit.usecase";
@@ -12,6 +13,8 @@ class ProjectCommitUsecase {
         private userCommitServiceImpl = userCommitService,
         private projectCommitServiceImpl = projectCommitService,
         private commitUsecaseImpl = commitUsecase,
+        private commitServiceImpl = commitService,
+        private contributionServiceImpl = contributionCalendarService,
     ) { }
 
     async getRepoGithubInfo(userId: number): Promise<any> {
@@ -57,6 +60,14 @@ class ProjectCommitUsecase {
     async deleteProjectCommit(userId: number, projectId: string): Promise<any> {
         try {
             const deletedProjectCommit = await this.projectCommitServiceImpl.deleteProjectCommit(userId, projectId);
+            if (deletedProjectCommit) {
+                await this.commitServiceImpl.deleteCommitsByProjectId(projectId);
+                await this.contributionServiceImpl.deleteContributionByProjectId(projectId);
+                if (deletedProjectCommit.totalProjectCommits !== undefined) {
+                    await this.userCommitServiceImpl.decrementUserCommits(userId, deletedProjectCommit.totalProjectCommits);
+                }
+                return msg200(deletedProjectCommit);
+            }
             return msg200(deletedProjectCommit);
         } catch (error: any) {
             return msg400(error.message.toString());
