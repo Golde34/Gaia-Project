@@ -35,6 +35,11 @@ class ProjectCommitUsecase {
 
     async syncProjectRepo(body: any): Promise<any> {
         try {
+            const existedProject = await this.projectCommitServiceImpl.getProjectCommitsByProjectId(body.project.id);
+            if (existedProject) {
+                return msg400("Project already synced");
+            }
+
             const request: SyncProjectRepoDto = syncProjectRepoMapper(body);
             const syncedProject = await this.projectCommitServiceImpl.syncProjectRepo(request);
 
