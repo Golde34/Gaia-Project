@@ -1,4 +1,5 @@
 import CacheSingleton from "../../infrastructure/cache/cache-singleton";
+import RedisClient from "../../infrastructure/cache/redis-cache";
 import { githubClientAdapter } from "../../infrastructure/client/github-client.adapter";
 import { CTServiceConfigRepository } from "../../infrastructure/repository/ct-service-config.repository";
 import { UserCommitRepository } from "../../infrastructure/repository/user-commit.repository";
@@ -12,6 +13,7 @@ class UserCommitService {
         private ctServiceConfigRepo = new CTServiceConfigRepository(),
         private userCommitCache = CacheSingleton.getInstance().getCache(),
         private githubClient = githubClientAdapter,
+        private redisClient = RedisClient.getInstance()
     ) { }
 
     async getUserGithubInfo(userId: number): Promise<UserCommitEntity | undefined> {
@@ -121,17 +123,20 @@ class UserCommitService {
 
     async getUserGithubRepo(user: UserCommitEntity): Promise<any> {
         try {
-            const cachedRepos = this.userCommitCache.get(InternalCacheConstants.GITHUB_REPOS_CACHE_KEY + user.userId);
-            if (cachedRepos !== undefined) {
+            const redisCache = await this.redisClient;
+            const cachedRepos = await redisCache.get(InternalCacheConstants.GITHUB_REPOS_CACHE_KEY + user.userId);
+            // const cachedRepos = this.userCommitCache.get(InternalCacheConstants.GITHUB_REPOS_CACHE_KEY + user.userId);
+            if (cachedRepos !== undefined || cachedRepos !== null) {
                 console.log("Returning cached user repos");
-                return cachedRepos;
+                return cachedRepos ? JSON.parse(cachedRepos) : null;
             }
             if (user.githubAccessToken === undefined) {
                 console.error("User has not authorized github");
                 return null;
             }
             const repos = await this.githubClient.getGithubRepositories(user.githubAccessToken);
-            this.userCommitCache.setKeyWithExpiry(InternalCacheConstants.GITHUB_REPOS_CACHE_KEY + user.userId, repos, 5, TimeUnit.MINUTE);
+            // this.userCommitCache.setKeyWithExpiry(InternalCacheConstants.GITHUB_REPOS_CACHE_KEY + user.userId, repos, 5, TimeUnit.MINUTE);
+            await redisCache.set(InternalCacheConstants.GITHUB_REPOS_CACHE_KEY + user.userId, JSON.stringify(repos), { EX: 300 });
             return repos;
         } catch (error) {
             console.error("Error on getUserGithubRepo: ", error);
