@@ -6,7 +6,7 @@ import { commitService } from "../service/commit.service";
 import { projectCommitService } from "../service/project-commit.service";
 import { userCommitService } from "../service/user-commit.service";
 import { chunk } from "lodash";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { contributionCalendarService } from "../service/contribution-calendar.service";
 
 class CommitUsecase {

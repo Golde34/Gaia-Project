@@ -87,3 +87,13 @@ export enum CRUDType {
     UPDATE_TYPE = "UPDATE",
     UPDATE_DIALOG_TYPE = "UPDATE_DIALOG"
 }
+
+export enum TimeUnit {
+    SECOND = "seconds",
+    MINUTE = "minutes",
+    HOUR = "hours",
+    DAY = "days",
+    WEEK = "weeks",
+    MONTH = "months",
+    YEAR = "years",
+}

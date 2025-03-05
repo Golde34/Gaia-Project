@@ -1,11 +1,13 @@
 import { authServiceAdapter } from "../../infrastructure/client/auth-service.adapter";
+import CacheSingleton from "../../infrastructure/internal-cache/cache-singleton";
 import { levenshteinDistanceProject } from "../../kernel/util/levenshtein-algo";
 import { returnInternalServiceErrorResponse } from "../../kernel/util/return-result";
 import { IResponse } from "../common/response";
 import { msg200, msg400 } from "../common/response-helpers";
+import { InternalCacheConstants } from "../domain/constants/constants";
 import { EXCEPTION_PREFIX, PROJECT_EXCEPTION, PROJECT_NOT_FOUND } from "../domain/constants/error.constant";
 import { IProjectEntity } from "../domain/entities/project.entity";
-import { ActiveStatus, BooleanStatus } from "../domain/enums/enums";
+import { ActiveStatus, BooleanStatus, TimeUnit } from "../domain/enums/enums";
 import { projectStore } from "../port/store/project.store";
 import { projectValidation } from "../validations/project.validation";
 import { groupTaskService } from "./group-task.service";
@@ -13,7 +15,9 @@ import { groupTaskService } from "./group-task.service";
 const projectValidationImpl = projectValidation;
 
 class ProjectService {
-    constructor() { }
+    constructor(
+        private projectCache = CacheSingleton.getInstance().getCache()
+    ) { }
 
     // Add Authen mechanism and try catch
     async createProject(project: any): Promise<IResponse> {
@@ -29,19 +33,25 @@ class ProjectService {
             console.log("User does not have default project");
             project.isDefault = BooleanStatus.true;
         }
-        
+
         const createProject = await projectStore.createProject(project);
+        this.clearProjectCache(project.ownerId);
 
         return msg200({
             message: (createProject as any)
         });
     }
 
+    async clearProjectCache(userId: number): Promise<void> {
+        this.projectCache.clear(InternalCacheConstants.TASK_LIST + userId);
+    }
+
     async updateProject(projectId: string, project: any): Promise<IResponse> {
         try {
-            if (await projectValidationImpl.checkExistedProjectById(projectId) === true) {
+            const existedProject = await projectValidationImpl.checkExistedProjectById(projectId);
+            if (existedProject !== null) {
                 const updateProject = await projectStore.updateOneProject(projectId, project);
-
+                this.projectCache.clear(InternalCacheConstants.TASK_LIST + existedProject.ownerId);
                 return msg200({
                     message: JSON.stringify(updateProject)
                 });
@@ -55,7 +65,8 @@ class ProjectService {
 
     async deleteProject(projectId: string): Promise<IResponse> {
         try {
-            if (await projectValidationImpl.checkExistedProjectById(projectId) === true) {
+            const existedProject = await projectValidationImpl.checkExistedProjectById(projectId);
+            if (existedProject !== null) {
 
                 // delete all group tasks in project
                 const groupTasks = await projectStore.findOneProjectWithGroupTasks(projectId);
@@ -67,6 +78,7 @@ class ProjectService {
 
                 const deleteProject = await projectStore.deleteOneProject(projectId);
 
+                this.projectCache.clear(InternalCacheConstants.TASK_LIST + existedProject.ownerId);
                 return msg200({
                     message: JSON.stringify(deleteProject)
                 });
@@ -87,11 +99,23 @@ class ProjectService {
     }
 
     async getAllProjects(userId: number): Promise<IResponse> {
-        const projects = await projectStore.findAllProjectsByOwnerId(userId);
+        try {
+            const cacheProjects = this.projectCache.get(InternalCacheConstants.TASK_LIST + userId);
+            if (cacheProjects !== undefined) {
+                console.log('Returning cached all projects of userId: ', userId);
+                return msg200({
+                    projects: cacheProjects
+                });
+            }
 
-        return msg200({
-            projects
-        });
+            const projects = await projectStore.findAllProjectsByOwnerId(userId);
+            this.projectCache.setKeyWithExpiry(InternalCacheConstants.TASK_LIST + userId, projects, 5, TimeUnit.MINUTE);
+            return msg200({
+                projects
+            });
+        } catch (err: any) {
+            return msg400(err.message.toString());
+        }
     }
 
     async getGroupTasksInProject(projectId: string): Promise<IResponse> {
@@ -125,17 +149,14 @@ class ProjectService {
 
     async updateProjectName(projectId: string, name: string): Promise<IResponse> {
         try {
-            if (await projectValidationImpl.checkExistedProjectById(projectId) === true) {
-                const project = await projectStore.findOneProjectById(projectId);
-                if (project === null) {
-                    return msg400("Project not found");
-                } else {
-                    project.name = name;
-                    await projectStore.updateOneProject(projectId, project);
-                    return msg200({
-                        message: "Project name updated successfully"
-                    });
-                }
+            const project = await projectValidationImpl.checkExistedProjectById(projectId);
+            if (project !== null) {
+                project.name = name;
+                await projectStore.updateOneProject(projectId, project);
+                this.clearProjectCache(project.ownerId);
+                return msg200({
+                    message: "Project name updated successfully"
+                });
             }
             return msg400("Project not found");
         } catch (err: any) {
@@ -145,17 +166,14 @@ class ProjectService {
 
     async updateProjectColor(projectId: string, color: string): Promise<IResponse> {
         try {
-            if (await projectValidationImpl.checkExistedProjectById(projectId) === true) {
-                const project = await projectStore.findOneProjectById(projectId);
-                if (project === null) {
-                    return msg400("Project not found");
-                } else {
-                    project.color = color;
-                    await projectStore.updateOneProject(projectId, project);
-                    return msg200({
-                        message: "Project color updated successfully"
-                    });
-                }
+            const project = await projectValidationImpl.checkExistedProjectById(projectId);
+            if (project !== null) {
+                project.color = color;
+                await projectStore.updateOneProject(projectId, project);
+                this.clearProjectCache(project.ownerId);
+                return msg200({
+                    message: "Project name updated successfully"
+                });
             }
             return msg400("Project not found");
         } catch (err: any) {

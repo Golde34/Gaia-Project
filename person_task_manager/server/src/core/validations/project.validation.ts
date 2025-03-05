@@ -1,13 +1,13 @@
 import { ProjectEntity } from "../../infrastructure/database/model-repository/project.model";
+import { IProjectEntity } from "../domain/entities/project.entity";
 
 export const projectValidation = {
-    async checkExistedProjectById(projectId: string): Promise<boolean> {
+    async checkExistedProjectById(projectId: string): Promise<IProjectEntity | null> {
         try {
-            const existedProject = await ProjectEntity.findOne({ _id: projectId }) != null
-            return existedProject;
+            return await ProjectEntity.findOne({ _id: projectId }) 
         } catch (error: any) {
             console.log(error.message.toString());
-            return false;
+            return null;
         }
     },
 
