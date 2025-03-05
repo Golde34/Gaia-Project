@@ -11,7 +11,7 @@ class GithubClientAdapter {
     constructor() {
         this.githubTokenUrl = process.env.GITHUB_TOKEN_URL ?? "https://github.com/login/oauth/access_token",
             this.githubUserInfoUrl = process.env.GITHUB_USER_INFO_URL ?? "https://api.github.com/user",
-            this.githubRepositoriesUrl = process.env.GITHUB_REPOSITORIES_URL ?? "https://api.github.com/user/repos"
+            this.githubRepositoriesUrl = process.env.GITHUB_REPOSITORIES_URL ?? "https://api.github.com/user/repos?per_page=100&page=0"
     }
 
     private async getDataGithubApi(url: string, method: string, body: any, accessToken: string | null): Promise<any> {
