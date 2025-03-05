@@ -125,8 +125,7 @@ class UserCommitService {
         try {
             const redisCache = await this.redisClient;
             const cachedRepos = await redisCache.get(InternalCacheConstants.GITHUB_REPOS_CACHE_KEY + user.userId);
-            // const cachedRepos = this.userCommitCache.get(InternalCacheConstants.GITHUB_REPOS_CACHE_KEY + user.userId);
-            if (cachedRepos !== undefined || cachedRepos !== null) {
+            if (cachedRepos !== undefined && cachedRepos !== null) {
                 console.log("Returning cached user repos");
                 return cachedRepos ? JSON.parse(cachedRepos) : null;
             }
