@@ -15,4 +15,5 @@ export class InternalCacheConstants {
     public static TASK_COMPLETED = `task-completed.`;
     public static NOTE_LIST = `note-list.`;
     public static NOTE_DETAIL = `note-detail.`;
+    public static TASK_LIST = `task-list.`;
 }

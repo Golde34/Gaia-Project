@@ -53,6 +53,39 @@ class InternalCache<T> {
     }
 
     /**
+     * Set the value in the cache with a custom expiry time
+     * If the expiry time is negative or zero, the key will not be added
+     *
+     * @param key The cache key
+     * @param value The value to store in the cache
+     * @param duration The duration after which the key should expire
+     * @param timeUnit The unit of time (e.g., 'seconds', 'minutes', 'hours')
+     */
+    public setKeyWithExpiry(key: string, value: T, duration: number, timeUnit: 'seconds' | 'minutes' | 'hours'): void {
+        if (duration <= 0) {
+            console.warn(`Attempted to set cache key '${key}' with non-positive duration.`);
+            return;
+        }
+        let expiryTime = Date.now();
+        switch (timeUnit) {
+            case 'seconds': 
+                expiryTime += duration * 1000;
+                break;
+            case 'minutes':
+                expiryTime += duration * 60 * 1000;
+                break;
+            case 'hours':
+                expiryTime += duration * 60 * 60 * 1000;
+                break;
+            default:
+                console.warn(`Invalid time unit '${timeUnit}' provided for cache key '${key}'.`);
+                return;
+        }
+        const internalKey = this.generateInternalCacheKey(key);
+        this.cache.set(internalKey, { value, expiry: expiryTime });
+    }
+
+    /**
      * Remove the value from the cache
      * 
      * @param key 
