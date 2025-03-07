@@ -135,7 +135,6 @@ class ContributionCalendarService {
 
         const fullWeekData: any[] = [];
         let currentDate = new Date(endDate);
-        currentDate.setDate(currentDate.getDate() - 6);
 
         Array.from({ length: 7 }).forEach(() => {
             const formattedDate = formatDate(currentDate.toISOString());
