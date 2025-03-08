@@ -98,14 +98,12 @@ class ContributionCalendarService {
             startDate.setDate(endDate.getDate() - 7);
             previousStartDate.setDate(endDate.getDate() - 14);
 
-            console.log(`Time Range - startDate: ${startDate.toISOString()}, endDate: ${endDate.toISOString()}, previousStartDate: ${previousStartDate.toISOString()}`);
+            console.log(`Time Range - startDate: ${startDate.toString()}, endDate: ${endDate.toString()}, previousStartDate: ${previousStartDate.toString()}`);
 
             const [contributions, previousContributions] = await Promise.all([
                 this.contributionCalendarRepoImpl.findByUserIdAndBetweenDate(userId, startDate, endDate),
                 this.contributionCalendarRepoImpl.findByUserIdAndBetweenDate(userId, previousStartDate, startDate),
             ]);
-
-            console.log(`contributions: ${contributions.length}, previousContributions: ${previousContributions.length}`);
 
             return this.formatChartData(contributions, previousContributions, endDate.toISOString());
 
@@ -133,6 +131,8 @@ class ContributionCalendarService {
             }
         });
 
+        console.log("dataMap: ", dataMap);
+
         const fullWeekData: any[] = [];
         let currentDate = new Date(endDate);
         currentDate.setDate(currentDate.getDate() - 6);
@@ -145,6 +145,8 @@ class ContributionCalendarService {
             fullWeekData.push(dataMap.get(formattedDate)!);
             currentDate.setDate(currentDate.getDate() + 1);
         });
+
+        console.log("fullWeekData: ", fullWeekData);
 
         return fullWeekData;
     }
