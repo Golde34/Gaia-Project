@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Card, Title, AreaChart } from "@tremor/react";
+import { Card, Title } from "@tremor/react";
 import { ContributionCalendar, createTheme } from 'react-contribution-calendar';
 import { useDispatch, useSelector } from "react-redux";
 import MessageBox from "./MessageBox";
-import { getCompareCommits, getUserContributions } from "../../api/store/actions/contribution_tracker/contribution.actions";
+import { getUserContributions } from "../../api/store/actions/contribution_tracker/contribution.actions";
 
 const customTheme = createTheme({
     level0: '#20263c',
@@ -74,18 +74,6 @@ const AreaChartComponent = () => {
         }, 200);
     }, [])
 
-    const compareCommits = useSelector((state) => state.compareCommits);
-    const { commits } = compareCommits;
-
-    const debounceChartRef = useRef(null);
-
-    useEffect(() => {
-        clearTimeout(debounceChartRef.current);
-        debounceChartRef.current = setTimeout(() => {
-            dispatch(getCompareCommits(userId));
-        }, 200);
-    }, []);
-
     return (
         <>
             <div>
@@ -116,17 +104,7 @@ const AreaChartComponent = () => {
                                 />
                             </div>
                         </Card>
-
-                        <Card className="mb-4">
-                            <Title>Your commits in 2 weeks</Title>
-                            <AreaChart
-                                className="h-72 mt-4"
-                                data={commits}
-                                index="date"
-                                categories={["Weekly Commit", "Previous Weekly Commit"]}
-                                colors={["cyan", "indigo"]}
-                            />
-                        </Card>
+                        
                     </>
                 )}
 
