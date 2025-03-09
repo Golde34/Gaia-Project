@@ -20,6 +20,7 @@ import CacheSingleton from "../../infrastructure/internal-cache/cache-singleton"
 import { ITaskEntity } from "../domain/entities/task.entity";
 import { IGroupTaskEntity } from "../domain/entities/group-task.entity";
 import { schedulePlanAdapter } from "../../infrastructure/client/schedule-plan.adapter";
+import { Status } from "../domain/enums/enums";
 
 class TaskService {
     constructor(
@@ -113,6 +114,9 @@ class TaskService {
 
         const updateTaskMessage = await kafkaUpdateTaskMapper(updateTask, task);
         this.pushUpdateTaskMessage(updateTaskMessage);
+        if (updateTaskMessage.status === Status.done) {
+            this.pushContributionMessage(updateTaskMessage);
+        }
 
         return msg200({
             message: (updateTask as any)
@@ -144,6 +148,16 @@ class TaskService {
         const messages = [{
             value: JSON.stringify(createMessage(
                 KafkaCommand.UPDATE_TASK, '00', 'Successful', updateTask
+            ))
+        }]
+        this.kafkaConfig.produce(KafkaTopic.UPDATE_TASK, messages);
+    }
+
+    private pushContributionMessage(updateTask: any): void {
+        // push kafka message
+        const messages = [{
+            value: JSON.stringify(createMessage(
+                KafkaCommand.CREATE_COMMIT, '00', 'Successful', updateTask
             ))
         }]
         this.kafkaConfig.produce(KafkaTopic.UPDATE_TASK, messages);

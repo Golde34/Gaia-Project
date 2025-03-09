@@ -236,6 +236,17 @@ class TaskController {
             next(err);
         }
     }
+
+    async getProjectByTaskId(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const taskId = req.params.id;
+            const projectResult = await taskUsecase.getProjectByTaskId(taskId);
+
+            return projectResult;
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export const taskController = new TaskController();

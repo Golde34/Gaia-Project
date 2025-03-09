@@ -12,6 +12,7 @@ export enum KafkaCommand {
     UPLOAD_UPDATED_FILE = 'uploadUpdatedFile',
     UPDATE_TASK = 'updateTask',
     DELETE_TASK = 'deleteTask',
+    CREATE_COMMIT = 'createCommit',
 }
 
 export class KafkaMessage {
