@@ -1,7 +1,5 @@
 import { format } from "date-fns";
 import { ulid } from "ulid";
-import CacheSingleton from "../../infrastructure/cache/cache-singleton";
-import { KafkaConfig } from "../../infrastructure/kafka/kafka-config";
 import { githubClientAdapter } from "../../infrastructure/client/github-client.adapter";
 import CommitEntity from "../domain/entities/commit.entity";
 import UserCommitEntity from "../domain/entities/user-commit.entity";
@@ -9,14 +7,14 @@ import ProjectCommitEntity from "../domain/entities/project-commit.entity";
 import { CommitType } from "../domain/enums/enums";
 import { commitValidation } from "../validation/commit.validation";
 import { CommitRepository } from "../../infrastructure/repository/commit.repository";
+import { taskManagerAdapter } from "../../infrastructure/client/task-manager.adapter";
 
 class CommitService {
     constructor(
-        private kafkaConfig = new KafkaConfig(),
-        private commitCache = CacheSingleton.getInstance().getCache(),
         private commitRepository = new CommitRepository(),
         private githubClient = githubClientAdapter,
-        private commitValidationImpl = commitValidation
+        private commitValidationImpl = commitValidation,
+        private taskManagerClient = taskManagerAdapter,
     ) { }
 
     async getAllCommitsRepo(userLoginName: string, githubAccessToken: string, githubRepo: string): Promise<any[]> {
@@ -152,6 +150,17 @@ class CommitService {
         }
         catch (error: any) {
             console.error("Failed to delete commits by project id: ", error);
+        }
+    }
+
+    async getProjectAndUserCommit(taskId: string): Promise<any> {
+        try {
+            const project = await this.taskManagerClient.getProjectInfoByTaskId(taskId);
+            console.log("Project info: ", project);
+            return project;
+        } catch (error: any) {
+            console.error("Failed to get project and user commit: ", error);
+            return null;
         }
     }
 

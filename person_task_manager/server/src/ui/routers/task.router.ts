@@ -184,6 +184,16 @@ taskRouter.post("/:id/get-grouptask-project", async (req: Request, res: Response
     }
 });
 
+// get project by taskId
+taskRouter.get("/:id/project", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const result = await taskControllerImpl.getProjectByTaskId(req, next);
+        return returnResult(result, GROUPTASK_AND_PROJECT_NOT_FOUND, res, next);
+    } catch (err) {
+        next(err);
+    }
+});
+
 // create subtask
 
 // update subtask

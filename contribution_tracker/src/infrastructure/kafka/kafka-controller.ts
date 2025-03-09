@@ -38,5 +38,5 @@ const getKafkaTopicsFromEnv = (): string[] => {
 
 const kafkaTopicHandlers: Record<string, (message: string) => void> = {
     [ConsumerKafkaTopic.SYNC_GITHUB_COMMIT]: (message: string) => githubCommitConsumerMessageHandler(message),
-    [ConsumerKafkaTopic.CREATE_COMMIT]: (message: string) => commitConsumerMessageHandler(message)
+    [ConsumerKafkaTopic.CREATE_COMMIT]: (message: string) => commitConsumerMessageHandler(message),
 };

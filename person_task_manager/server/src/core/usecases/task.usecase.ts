@@ -115,6 +115,18 @@ class TaskUsecase {
             return msg400(err.message.toString());
         }
     }
+
+    async getProjectByTaskId(taskId: string): Promise<IResponse> {
+        try {
+            const groupTask = await groupTaskService.getGroupTaskObjectByTaskId(taskId);
+            if (!groupTask) return msg400('Group task not found');
+            const project = await projectService.findProjectByGroupTaskId(groupTask._id);
+            if (!project) return msg400('Project not found');
+            return msg200(project);
+        } catch (err: any) {
+            return msg400(err.message.toString());
+        }
+    }
 }
 
 export const taskUsecase = new TaskUsecase();
