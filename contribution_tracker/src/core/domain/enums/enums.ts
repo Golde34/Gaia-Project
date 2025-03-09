@@ -19,6 +19,13 @@ export enum HttpCodeMessage {
     INTERNAL_SERVER_ERROR = 500
 }
 
+export enum HttpMethod {
+    GET = "GET",
+    POST = "POST",
+    PUT = "PUT",
+    DELETE = "DELETE",
+}
+
 export enum TimeUnit {
     SECOND = "seconds",
     MINUTE = "minutes",

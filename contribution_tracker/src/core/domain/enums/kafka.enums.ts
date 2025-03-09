@@ -1,5 +1,5 @@
 export enum ConsumerKafkaTopic {
-    CREATE_COMMIT = 'task-manager.create-commit.topic',
+    CREATE_COMMIT = 'task-manager.update-task.topic',
     SYNC_GITHUB_COMMIT= "contribution-tracker.github-commit.topic",
 }
 
@@ -8,12 +8,11 @@ export enum ProducerKafkaTopic {
 }
 
 export enum KafkaCommand {
-    TM_CREATE_COMMIT = 'taskManagerCreateCommit',
-    SP_CREATE_COMMIT = 'schedulePlanCreateCommit',
     SYNC_GITHUB_COMMIT = 'githubCommit',
     FULL_SYNC_GITHUB_COMMIT = 'fullSyncGithubCommit',
     RESET_SYNCED_NUMBER = 'resetSyncedNumber',
     PROJECT_SYNC_GITHUB_COMMIT = 'projectSyncGithubCommit',
+    CREATE_COMMIT = 'createCommit',
 }
 
 export class KafkaMessage {

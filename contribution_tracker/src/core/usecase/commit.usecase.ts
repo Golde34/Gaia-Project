@@ -41,22 +41,25 @@ class CommitUsecase {
         }
     }
 
-    async createCommit(data: any): Promise<IResponse> {
+    async createCommit(data: any): Promise<any> {
         try {
-            const commit = await this.commitServiceImpl.createCommit(data);
-            if (!commit) {
-                return msg400("Failed to create commit");
-            }
+            console.log("Creating commit: ", data);
+            const projectAndUserCommit = await this.commitServiceImpl.getProjectAndUserCommit(data.taskId);            
+            console.log("Project and user commit: ", projectAndUserCommit);
+            // const commit = await this.commitServiceImpl.createCommit(data);
+            // if (!commit) {
+            //     return msg400("Failed to create commit");
+            // }
 
-            const contribution = await this.contributionCalendarServiceImpl.upsertContribution(data.userId, data.projectId, data.date, data.commitCount);
-            if (!contribution) {
-                return msg400("Failed to create contribution");
-            }
+            // const contribution = await this.contributionCalendarServiceImpl.upsertContribution(data.userId, data.projectId, data.date, data.commitCount);
+            // if (!contribution) {
+            //     return msg400("Failed to create contribution");
+            // }
 
-            return msg200({
-                commit,
-                contribution
-            })
+            // return msg200({
+            //     commit,
+            //     contribution
+            // })
         } catch (error: any) {
             return msg400(error.message.toString());
         }
