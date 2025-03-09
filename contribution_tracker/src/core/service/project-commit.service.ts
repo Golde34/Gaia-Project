@@ -31,6 +31,7 @@ class ProjectCommitService {
                 updatedAt: new Date(),
                 userSynced: false,
                 userNumberSynced: 0,
+                totalProjectCommits: 0,
             })
 
             await this.syncGithubCommit(request.userId, id);

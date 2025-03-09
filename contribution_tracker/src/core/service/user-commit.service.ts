@@ -146,6 +146,7 @@ class UserCommitService {
     async updateTotalCommits(userId: number, totalCommitInDay: number, type: string): Promise<void> {
         try {
             if (type === "fullSyncMode") {
+                console.log("Updating total commits: ", userId);
                 this.userCommitRepository.updateTotalCommit(userId, totalCommitInDay);
             } 
         } catch (error) {
@@ -155,7 +156,7 @@ class UserCommitService {
 
     async decrementUserCommits(userId: number, projectTotalCommits: number): Promise<any> {
         try {
-            const updatedUser = await this.userCommitRepository.decrementUserCommits(userId, projectTotalCommits);
+            const updatedUser = await this.userCommitRepository.updateTotalCommit(userId, projectTotalCommits);
             console.log("Updated user: ", updatedUser);
             if (!updatedUser) {
                 return null;
