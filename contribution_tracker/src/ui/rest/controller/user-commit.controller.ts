@@ -3,7 +3,7 @@ import { IResponse } from "../../../core/common/response";
 import { userCommitUsecase } from "../../../core/usecase/user-commit.usecase";
 
 class UserCommitController {
-    constructor() {}
+    constructor() { }
 
     async getUserGithubInfo(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {

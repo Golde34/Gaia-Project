@@ -114,20 +114,20 @@ class ContributionCalendarService {
     }
 
     private formatChartData(contributions: any[], previousContributions: any[], endDate: string): any[] {
-        const dataMap = new Map<string, { date: string, "Weekly Commit": number, "Previous Weekly Commit": number }>();
+        const dataMap = new Map<string, { date: string, "Week Commit": number, "Previous Week Commit": number }>();
 
         const formatDate = (dateStr: string): string => new Date(dateStr).toLocaleString('en-US', { weekday: 'short' });
 
         [...contributions, ...previousContributions].forEach(commit => {
             const formattedDate = formatDate(commit.date);
             if (!dataMap.has(formattedDate)) {
-                dataMap.set(formattedDate, { date: formattedDate, "Weekly Commit": 0, "Previous Weekly Commit": 0 });
+                dataMap.set(formattedDate, { date: formattedDate, "Week Commit": 0, "Previous Week Commit": 0 });
             }
             const entry = dataMap.get(formattedDate)!;
             if (contributions.includes(commit)) {
-                entry["Weekly Commit"] += commit.commitCount;
+                entry["Week Commit"] += commit.commitCount;
             } else {
-                entry["Previous Weekly Commit"] += commit.commitCount;
+                entry["Previous Week Commit"] += commit.commitCount;
             }
         });
 
@@ -140,7 +140,7 @@ class ContributionCalendarService {
         Array.from({ length: 7 }).forEach(() => {
             const formattedDate = formatDate(currentDate.toISOString());
             if (!dataMap.has(formattedDate)) {
-                dataMap.set(formattedDate, { date: formattedDate, "Weekly Commit": 0, "Previous Weekly Commit": 0 });
+                dataMap.set(formattedDate, { date: formattedDate, "Week Commit": 0, "Previous Week Commit": 0 });
             }
             fullWeekData.push(dataMap.get(formattedDate)!);
             currentDate.setDate(currentDate.getDate() + 1);
