@@ -8,6 +8,7 @@ import { userCommitService } from "../service/user-commit.service";
 import { chunk } from "lodash";
 import { format } from "date-fns";
 import { contributionCalendarService } from "../service/contribution-calendar.service";
+import { createCommitMapper } from "../mapper/project-commit.mapper";
 
 class CommitUsecase {
     constructor(
@@ -43,23 +44,27 @@ class CommitUsecase {
 
     async createCommit(data: any): Promise<any> {
         try {
-            console.log("Creating commit: ", data);
             const projectAndUserCommit = await this.commitServiceImpl.getProjectAndUserCommit(data.taskId);            
-            console.log("Project and user commit: ", projectAndUserCommit);
-            // const commit = await this.commitServiceImpl.createCommit(data);
-            // if (!commit) {
-            //     return msg400("Failed to create commit");
-            // }
+            if (!projectAndUserCommit === null) {
+                console.error(`Failed to get project and user commit: ${data}`);
+                console.error("Need to insert to LT for retry");
+                return msg400("Failed to get project and user commit");
+            }
+            const commit = createCommitMapper(data, projectAndUserCommit); 
+            console.log("Creating commit: ", commit);
+            const createdCommit = await this.commitServiceImpl.createCommit(commit);
+            if (!createdCommit) {
+                return msg400("Failed to create commit");
+            }
 
             // const contribution = await this.contributionCalendarServiceImpl.upsertContribution(data.userId, data.projectId, data.date, data.commitCount);
             // if (!contribution) {
             //     return msg400("Failed to create contribution");
             // }
-
-            // return msg200({
-            //     commit,
-            //     contribution
-            // })
+            
+            return msg200({
+                createdCommit
+            });
         } catch (error: any) {
             return msg400(error.message.toString());
         }

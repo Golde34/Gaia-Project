@@ -19,3 +19,13 @@ export const syncProjectRepoMapper = (body: any): SyncProjectRepoDto => {
         repoUrl: body.repo.htmlUrl
     }
 } 
+
+export const createCommitMapper = (kafkaMessage: any, projectAndUserCommit: any): any => {
+    return {
+        taskId: kafkaMessage.taskId,
+        content: kafkaMessage.title,
+        date: new Date(),
+        userId: projectAndUserCommit.data.ownerId,
+        projectId: projectAndUserCommit.data.id, 
+    }
+}
