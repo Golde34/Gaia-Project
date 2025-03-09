@@ -35,7 +35,7 @@ const CompareCommitChart = () => {
                                 className="h-72 mt-4"
                                 data={commits}
                                 index="date"
-                                categories={["Weekly Commit", "Previous Weekly Commit"]}
+                                categories={["Week Commit", "Previous Week Commit"]}
                                 colors={["cyan", "indigo"]}
                             />
                         </Card>
