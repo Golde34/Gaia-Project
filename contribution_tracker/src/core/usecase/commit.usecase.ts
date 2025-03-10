@@ -44,7 +44,7 @@ class CommitUsecase {
 
     async createCommit(kafkaMessage: any): Promise<any> {
         try {
-            const projectAndUserCommit = await this.commitServiceImpl.getProjectAndUserCommit(kafkaMessage.taskId);            
+            const projectAndUserCommit = await this.commitServiceImpl.getProjectAndUserCommit(kafkaMessage.taskId);
             if (!projectAndUserCommit === null) {
                 console.error(`Failed to get project and user commit: ${kafkaMessage}`);
                 console.error("Need to insert to LT for retry");
@@ -55,7 +55,7 @@ class CommitUsecase {
                 console.error("Failed to get project commit");
                 return msg400("Failed to get project commit");
             }
-            const commit = createCommitMapper(kafkaMessage, projectCommit.id, projectAndUserCommit.data.ownerId); 
+            const commit = createCommitMapper(kafkaMessage, projectCommit.id, projectAndUserCommit.data.ownerId);
             if (commit === null) {
                 console.error("Something happen so taskId is null");
                 return msg400("Failed to create commit");
@@ -66,11 +66,12 @@ class CommitUsecase {
                 return msg400("Failed to create commit");
             }
 
-            const contribution = await this.contributionCalendarServiceImpl.upsertContribution(commit.userId, projectCommit.id, commit.date, 1);
+            const contribution = await this.contributionCalendarServiceImpl.upsertContribution(
+                commit.userId, projectCommit.id, format(new Date(commit.date), "yyyy-MM-dd"), 1);
             if (!contribution) {
                 return msg400("Failed to create contribution");
             }
-            
+
             return msg200({
                 createdCommit
             });
@@ -214,7 +215,7 @@ class CommitUsecase {
             await this.projectCommitServiceImpl.updateTotalCommits(user.userId, project.id, commits.length, "fullSyncMode");
         } catch (error) {
             console.error("Error on addCommits:", error);
-        } 
+        }
     }
 }
 

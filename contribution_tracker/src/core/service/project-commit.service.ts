@@ -156,7 +156,6 @@ class ProjectCommitService {
 
     async getProjectCommitsByProjectId(projectId: string): Promise<ProjectCommitEntity | null> {
         try {
-            console.log("Getting project commits by project id");
             return await this.projectCommitRepository.findByProjectId(projectId);
         } catch (error) {
             console.error("Error on getProjectCommitsByProjectId: ", error);
