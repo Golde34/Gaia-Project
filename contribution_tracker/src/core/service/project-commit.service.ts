@@ -2,17 +2,13 @@ import { ulid } from "ulid";
 import { ProjectCommitRepository } from "../../infrastructure/repository/project-commit.repository";
 import { SyncProjectRepoDto } from "../domain/dtos/github-object.dto";
 import ProjectCommitEntity from "../domain/entities/project-commit.entity";
-import { CommitRepository } from "../../infrastructure/repository/commit.repository";
 import { KafkaConfig } from "../../infrastructure/kafka/kafka-config";
 import { KafkaCommand, ProducerKafkaTopic } from "../domain/enums/kafka.enums";
 import { createMessage } from "../../infrastructure/kafka/create-message";
-import { ContributionCalendarRepository } from "../../infrastructure/repository/contribution-calendar.repository";
 
 class ProjectCommitService {
     constructor(
         private projectCommitRepository = new ProjectCommitRepository,
-        private commitRepository = new CommitRepository,
-        private contributionRepository = new ContributionCalendarRepository,
         private kafkaHandler = new KafkaConfig(),
     ) { }
 
