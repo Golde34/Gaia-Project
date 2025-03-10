@@ -66,10 +66,10 @@ class CommitUsecase {
                 return msg400("Failed to create commit");
             }
 
-            // const contribution = await this.contributionCalendarServiceImpl.upsertContribution(data.userId, data.projectId, data.date, data.commitCount);
-            // if (!contribution) {
-            //     return msg400("Failed to create contribution");
-            // }
+            const contribution = await this.contributionCalendarServiceImpl.upsertContribution(commit.userId, projectCommit.id, commit.date, 1);
+            if (!contribution) {
+                return msg400("Failed to create contribution");
+            }
             
             return msg200({
                 createdCommit

@@ -155,6 +155,7 @@ class TaskService {
 
     private pushContributionMessage(updateTask: any): void {
         // push kafka message
+        updateTask.finishDate = new Date();
         const messages = [{
             value: JSON.stringify(createMessage(
                 KafkaCommand.CREATE_COMMIT, '00', 'Successful', updateTask

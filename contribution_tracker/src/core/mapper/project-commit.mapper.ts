@@ -28,7 +28,7 @@ export const createCommitMapper = (kafkaMessage: any, projectCommitId: string, p
     return {
         taskId: kafkaMessage.taskId,
         content: kafkaMessage.title,
-        date: new Date(),
+        date: kafkaMessage.finishDate,
         userId: projectAndUserCommit.data.ownerId,
         projectId: projectCommitId, 
     }
