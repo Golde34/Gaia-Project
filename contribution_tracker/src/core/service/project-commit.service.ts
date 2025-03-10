@@ -2,17 +2,13 @@ import { ulid } from "ulid";
 import { ProjectCommitRepository } from "../../infrastructure/repository/project-commit.repository";
 import { SyncProjectRepoDto } from "../domain/dtos/github-object.dto";
 import ProjectCommitEntity from "../domain/entities/project-commit.entity";
-import { CommitRepository } from "../../infrastructure/repository/commit.repository";
 import { KafkaConfig } from "../../infrastructure/kafka/kafka-config";
 import { KafkaCommand, ProducerKafkaTopic } from "../domain/enums/kafka.enums";
 import { createMessage } from "../../infrastructure/kafka/create-message";
-import { ContributionCalendarRepository } from "../../infrastructure/repository/contribution-calendar.repository";
 
 class ProjectCommitService {
     constructor(
         private projectCommitRepository = new ProjectCommitRepository,
-        private commitRepository = new CommitRepository,
-        private contributionRepository = new ContributionCalendarRepository,
         private kafkaHandler = new KafkaConfig(),
     ) { }
 
@@ -131,17 +127,17 @@ class ProjectCommitService {
         }
     }
 
-    async getProjectCommitsByProjectId(projectId: string): Promise<ProjectCommitEntity | undefined> {
+    async getProjectCommitsById(id: string): Promise<ProjectCommitEntity | undefined> {
         try {
-            console.log("Getting project commits by project id: ", projectId);
-            const projectCommit = await this.projectCommitRepository.findById(projectId);
+            console.log("Getting project commits by id: ", id);
+            const projectCommit = await this.projectCommitRepository.findById(id);
             if (!projectCommit || !projectCommit.id) {
-                console.error("Project commit not found for project: ", projectId);
+                console.error("Project commit not found for project: ", id);
                 return undefined;
             }
             return projectCommit;
         } catch (error) {
-            console.error("Error on getProjectCommitsByProjectId: ", error);
+            console.error("Error on getProjectCommitsById: ", error);
             return undefined;
         }
     }
@@ -155,6 +151,24 @@ class ProjectCommitService {
             }
         } catch (error) {
             console.error("Error on updateTotalCommits");
+        }
+    }
+
+    async getProjectCommitsByProjectId(projectId: string): Promise<ProjectCommitEntity | null> {
+        try {
+            return await this.projectCommitRepository.findByProjectId(projectId);
+        } catch (error) {
+            console.error("Error on getProjectCommitsByProjectId: ", error);
+            return null; 
+        }
+    }
+
+    async getProjectCommitsByProjectIdAndRepo(projectId: string, githubRepoName: string): Promise<ProjectCommitEntity | null> {
+        try {
+            return await this.projectCommitRepository.findByProjectIdAndRepo(projectId, githubRepoName);
+        } catch (error) {
+            console.error("Error on getProjectCommitsByProjectIdAndRepo: ", error);
+            return null;
         }
     }
 }

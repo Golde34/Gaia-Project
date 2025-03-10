@@ -8,7 +8,7 @@ export const githubRepoMapper = (githubRepo: any): GithubRepoDto => {
         owner: githubRepo.owner.login,
         language: githubRepo.language
     }
-} 
+}
 
 export const syncProjectRepoMapper = (body: any): SyncProjectRepoDto => {
     return {
@@ -18,14 +18,18 @@ export const syncProjectRepoMapper = (body: any): SyncProjectRepoDto => {
         repoName: body.repo.name,
         repoUrl: body.repo.htmlUrl
     }
-} 
+}
 
-export const createCommitMapper = (kafkaMessage: any, projectAndUserCommit: any): any => {
+export const createCommitMapper = (kafkaMessage: any, projectCommitId: string, userId: string): any => {
+    if (kafkaMessage.taskId === null || kafkaMessage.taskId === undefined) {
+        console.error("TaskId is required");
+        return null;
+    }
     return {
         taskId: kafkaMessage.taskId,
         content: kafkaMessage.title,
-        date: new Date(),
-        userId: projectAndUserCommit.data.ownerId,
-        projectId: projectAndUserCommit.data.id, 
+        date: new Date(kafkaMessage.finishDate),
+        userId: userId,
+        projectId: projectCommitId,
     }
 }

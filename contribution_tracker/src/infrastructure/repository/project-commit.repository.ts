@@ -77,10 +77,7 @@ export class ProjectCommitRepository {
             if (!project) {
                 throw new Error("User not found");
             }
-            if (project.totalProjectCommits === null || project.totalProjectCommits === undefined) {
-                project.totalProjectCommits = 0;
-            }
-            project.totalProjectCommits += totalCommit;
+            await project.increment('totalProjectCommits', { by: totalCommit });
             await project.save();
             return project;
         } catch (error) {
@@ -101,6 +98,24 @@ export class ProjectCommitRepository {
         } catch (error) {
             console.error("Error updating project total commit:", error);
             throw new Error("Failed to update project total commit");
+        }
+    }
+
+    async findByProjectId(projectId: string): Promise<ProjectCommitEntity | null> {
+        try {
+            return await ProjectCommitEntity.findOne({ where: { projectId } });
+        } catch (error: any) {
+            console.error("Error on findByProjectId: ", error);
+            return null;
+        }
+    }
+
+    async findByProjectIdAndRepo(projectId: string, githubRepo: string): Promise<ProjectCommitEntity | null> {
+        try {
+            return await ProjectCommitEntity.findOne({ where: { projectId, githubRepo } });
+        } catch (error: any) {
+            console.error("Error on findByProjectId: ", error);
+            return null;
         }
     }
 }

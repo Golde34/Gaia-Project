@@ -17,8 +17,7 @@ class ProjectCommitController {
 
     async syncProjectRepo(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
-            const syncResult = await projectCommitUsecase.syncProjectRepo(req.body);
-            return syncResult;
+            return await projectCommitUsecase.syncProjectRepo(req.body);
         } catch (err) {
             next(err);
         }

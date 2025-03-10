@@ -23,6 +23,7 @@ class ContributionCalendarService {
                 })
             } else {
                 await contribution.increment('commit_count', { by: commitCount });
+                await contribution.save();
             }
             return contribution;
         } catch (error) {
