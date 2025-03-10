@@ -131,17 +131,17 @@ class ProjectCommitService {
         }
     }
 
-    async getProjectCommitsByProjectId(projectId: string): Promise<ProjectCommitEntity | undefined> {
+    async getProjectCommitsById(id: string): Promise<ProjectCommitEntity | undefined> {
         try {
-            console.log("Getting project commits by project id: ", projectId);
-            const projectCommit = await this.projectCommitRepository.findById(projectId);
+            console.log("Getting project commits by id: ", id);
+            const projectCommit = await this.projectCommitRepository.findById(id);
             if (!projectCommit || !projectCommit.id) {
-                console.error("Project commit not found for project: ", projectId);
+                console.error("Project commit not found for project: ", id);
                 return undefined;
             }
             return projectCommit;
         } catch (error) {
-            console.error("Error on getProjectCommitsByProjectId: ", error);
+            console.error("Error on getProjectCommitsById: ", error);
             return undefined;
         }
     }
@@ -155,6 +155,25 @@ class ProjectCommitService {
             }
         } catch (error) {
             console.error("Error on updateTotalCommits");
+        }
+    }
+
+    async getProjectCommitsByProjectId(projectId: string): Promise<ProjectCommitEntity | null> {
+        try {
+            console.log("Getting project commits by project id");
+            return await this.projectCommitRepository.findByProjectId(projectId);
+        } catch (error) {
+            console.error("Error on getProjectCommitsByProjectId: ", error);
+            return null; 
+        }
+    }
+
+    async getProjectCommitsByProjectIdAndRepo(projectId: string, githubRepoName: string): Promise<ProjectCommitEntity | null> {
+        try {
+            return await this.projectCommitRepository.findByProjectIdAndRepo(projectId, githubRepoName);
+        } catch (error) {
+            console.error("Error on getProjectCommitsByProjectIdAndRepo: ", error);
+            return null;
         }
     }
 }

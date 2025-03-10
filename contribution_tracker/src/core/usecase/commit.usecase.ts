@@ -42,15 +42,24 @@ class CommitUsecase {
         }
     }
 
-    async createCommit(data: any): Promise<any> {
+    async createCommit(kafkaMessage: any): Promise<any> {
         try {
-            const projectAndUserCommit = await this.commitServiceImpl.getProjectAndUserCommit(data.taskId);            
+            const projectAndUserCommit = await this.commitServiceImpl.getProjectAndUserCommit(kafkaMessage.taskId);            
             if (!projectAndUserCommit === null) {
-                console.error(`Failed to get project and user commit: ${data}`);
+                console.error(`Failed to get project and user commit: ${kafkaMessage}`);
                 console.error("Need to insert to LT for retry");
                 return msg400("Failed to get project and user commit");
             }
-            const commit = createCommitMapper(data, projectAndUserCommit); 
+            const projectCommit = await this.projectCommitServiceImpl.getProjectCommitsByProjectId(projectAndUserCommit.data.id)
+            if (projectCommit === null) {
+                console.error("Failed to get project commit");
+                return msg400("Failed to get project commit");
+            }
+            const commit = createCommitMapper(kafkaMessage, projectCommit.id, projectAndUserCommit.data.ownerId); 
+            if (commit === null) {
+                console.error("Something happen so taskId is null");
+                return msg400("Failed to create commit");
+            }
             console.log("Creating commit: ", commit);
             const createdCommit = await this.commitServiceImpl.createCommit(commit);
             if (!createdCommit) {

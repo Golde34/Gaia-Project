@@ -35,9 +35,9 @@ class ProjectCommitUsecase {
 
     async syncProjectRepo(body: any): Promise<any> {
         try {
-            const existedProject = await this.projectCommitServiceImpl.getProjectCommitsByProjectId(body.project.id);
-            if (existedProject) {
-                return msg400("Project already synced");
+            const existedProject = await this.projectCommitServiceImpl.getProjectCommitsByProjectIdAndRepo(body.project.id, body.repo.name);
+            if (existedProject || existedProject !== null) {
+                return msg400("Project or repo are already synced");
             }
 
             const request: SyncProjectRepoDto = syncProjectRepoMapper(body);
@@ -85,7 +85,7 @@ class ProjectCommitUsecase {
             if (!user) {
                 return msg400("User not found");
             }
-            const project = await this.projectCommitServiceImpl.getProjectCommitsByProjectId(projectId);
+            const project = await this.projectCommitServiceImpl.getProjectCommitsById(projectId);
             if (!project) {
                 return msg400("Project not found");
             }
@@ -124,7 +124,7 @@ class ProjectCommitUsecase {
             if (!user) {
                 throw new Error("User not found");
             }
-            const project = await this.projectCommitServiceImpl.getProjectCommitsByProjectId(projectId);
+            const project = await this.projectCommitServiceImpl.getProjectCommitsById(projectId);
             if (!project) {
                 throw new Error("Project not found");
             }
