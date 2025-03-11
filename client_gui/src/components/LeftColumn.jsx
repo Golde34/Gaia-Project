@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useRef } from "react";
 import { getTopTasks } from "../api/store/actions/task_manager/task.actions";
 import MessageBox from "./subComponents/MessageBox";
-import { Grid } from "@tremor/react";
+import { Card, Grid } from "@tremor/react";
 
 const LeftColumn = () => {
     const dispatch = useDispatch();
@@ -27,24 +27,26 @@ const LeftColumn = () => {
                     loading ? (
                         <div>Loading...</div>
                     ) : error ? (
-                        <div><MessageBox message={error}/></div>
+                        <div><MessageBox message={error} /></div>
                     ) : (
                         topTasks.length === 0 ? (
                             // <div><MessageBox message="No tasks found"/></div>
                             <div></div>
                         ) :
-                        <Grid numItems={3}>
-                        {topTasks.map((topTask) => (
-                            <CardItem key={topTask.task._id} task={topTask.task} 
-                                groupTaskId={topTask.groupTaskId} projectId={topTask.projectId} 
-                                taskId={topTask.task._id} navigateWord={"project"}/>
-                        ))}
-                        </Grid>
+                            <Grid numItems={3}>
+                                {topTasks.map((topTask) => (
+                                    <CardItem key={topTask.task._id} task={topTask.task}
+                                        groupTaskId={topTask.groupTaskId} projectId={topTask.projectId}
+                                        taskId={topTask.task._id} navigateWord={"project"} />
+                                ))}
+                            </Grid>
                     )
                 }
             </div>
             <div className="flex-auto w-full">
-                <AreaChartComponent />
+                <Card className="mb-4">
+                    <AreaChartComponent />
+                </Card>
                 <TableComponent />
             </div>
         </div>

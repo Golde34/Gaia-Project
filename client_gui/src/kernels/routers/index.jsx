@@ -21,6 +21,7 @@ import TaskIntroduction from '../../views/introduction/TaskIntroduction';
 import TaskRegistration from '../../views/task_manager/TaskRegistration';
 import TaskDetail from '../../views/task_manager/TaskDetail';
 import GitHubCallback from '../context/GithubCallback';
+import ProjectDetail from '../../views/task_manager/ProjectDetail';
 
 // Guest is public
 // User is protected, only logged in when the Role higher than User
@@ -68,7 +69,8 @@ const routeList = [
     {
         path: '/project/:id',
         key: 'project-id',
-        element: <TaskDashboard />,
+        element: <ProjectDetail />,
+        // element: <TaskDashboard />,
     },
     {
         path: '/microservices',

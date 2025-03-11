@@ -1,19 +1,17 @@
 import { useDispatch, useSelector } from "react-redux";
-import Template from "../../components/template/Template";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getGroupTaskList } from "../../api/store/actions/task_manager/group-task.actions";
-import { useParams } from "react-router-dom";
-import { Button, Card, Col, Flex, Grid, Metric, Switch, Text } from "@tremor/react";
+import { Button, Card, Col, Flex, Grid, Switch, Text } from "@tremor/react";
 import TabGroupTask from "../../screens/groupTaskScreen/TabGroupTask";
 import { CreateTaskDialog } from "../../screens/taskScreen/CreateTaskDialog";
 import { CreateNewGroupTask } from "../../screens/groupTaskScreen/CreateNewGroupTask";
 import MessageBox from "../../components/subComponents/MessageBox";
 import { useCookies } from "react-cookie";
 
-function ContentArea() {
+const TaskDashboard = (props) => {
     const dispatch = useDispatch();
 
-    const projectId = useParams().id;
+    const projectId = props.projectId;
     const [cookies] = useCookies(['accessToken'])
     console.log("my cookie: " + cookies.accessToken)
 
@@ -55,30 +53,25 @@ function ContentArea() {
                 <MessageBox message={error} />
             ) : (
                 <>
-                    <Metric style={{ marginBottom: '30px', marginTop: '30px' }}
-                        className="text-2xl font-bold text-gray-800"> Task Dashboard
-                    </Metric>
-                    <Card>
-                        <div className="flex justify-end">
-                            <Switch
-                                id="table-view-switch"
-                                name="table-view-switch"
-                                checked={isTableView}
-                                className="me-2"
-                                onChange={() => {
-                                    setTableView(!isTableView);
-                                    handleTableViewChange();
-                                }} />
-                            <label htmlFor="table-view-switch" className="me-5 ms-2"
-                            ><Text className="mt-2 me-4">Table View</Text></label>
-                            <button
-                                type="button"
-                                className="mr-2 inline-flex justify-center rounded-md border border-transparent bg-yellow-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
-                            >
-                                <a href="/client-gui/schedule">Schedule Plan</a>
-                            </button>
-                        </div>
-                    </Card>
+                    <div className="flex justify-end">
+                        <Switch
+                            id="table-view-switch"
+                            name="table-view-switch"
+                            checked={isTableView}
+                            className="me-2"
+                            onChange={() => {
+                                setTableView(!isTableView);
+                                handleTableViewChange();
+                            }} />
+                        <label htmlFor="table-view-switch" className="me-5 ms-2"
+                        ><Text className="mt-2 me-4">Table View</Text></label>
+                        <button
+                            type="button"
+                            className="mr-2 inline-flex justify-center rounded-md border border-transparent bg-yellow-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
+                        >
+                            <a href="/client-gui/schedule">Schedule Plan</a>
+                        </button>
+                    </div>
                     {
                         groupTasks.length === 0 ? (
                             <>
@@ -119,14 +112,6 @@ function ContentArea() {
             }
         </div>
     )
-}
-
-const TaskDashboard = () => {
-    return (
-        <Template>
-            <ContentArea />
-        </Template>
-    );
 }
 
 export default TaskDashboard;
