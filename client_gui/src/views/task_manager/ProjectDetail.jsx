@@ -1,8 +1,9 @@
-import { Card, Metric, Tab, TabGroup, TabList, TabPanel, TabPanels } from "@tremor/react"
+import { Card, Col, Grid, Metric, Tab, TabGroup, TabList, TabPanel, TabPanels } from "@tremor/react"
 import Template from "../../components/template/Template"
 import { useParams } from "react-router-dom"
 import TaskDashboard from "./TaskDashboard";
 import AreaChartComponent from "../../components/subComponents/AreaChartComponent";
+import CompareCommitChart from "../../components/subComponents/CompareCommitsChart";
 
 function ContentArea() {
     const projectId = useParams().id;
@@ -30,7 +31,16 @@ function ContentArea() {
                             <TaskDashboard projectId={projectId} />
                         </TabPanel>
                         <TabPanel>
-                            <AreaChartComponent projectId={projectId} />
+                            <Grid numItems={12}>
+                                <Col numColSpan={8} className="me-4">
+                                    <Card>
+                                        <AreaChartComponent projectId={projectId} />
+                                    </Card>
+                                </Col>
+                                <Col numColSpan={4}>
+                                    <CompareCommitChart />
+                                </Col>
+                            </Grid>
                         </TabPanel>
                     </TabPanels>
                 </TabGroup>
