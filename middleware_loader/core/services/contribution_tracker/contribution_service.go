@@ -32,3 +32,13 @@ func (s *ContributionService) CompareCommits(userId string) (base_dtos.ErrorResp
 	response := utils.ReturnSuccessResponse("Compare commits success", compoareCommits)
 	return response, nil
 }
+
+func (s *ContributionService) GetUserProjectContribution(userId, projectId string) (base_dtos.ErrorResponse, error) {
+	contribution, err := client.IContributionAdapter(&adapter.ContributionAdapter{}).GetUserContribution(userId)
+	if err != nil {
+		return utils.ReturnErrorResponse(400, "Cannot get user contribution from Contribution Tracker"), err
+	}
+
+	response := utils.ReturnSuccessResponse("Get user contribution success", contribution)
+	return response, nil
+}
