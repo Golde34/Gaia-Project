@@ -4,7 +4,7 @@ import Template from "../../components/template/Template";
 import { Button, Card, CategoryBar, Col, Flex, Grid, Legend, Metric, NumberInput, Subtitle, Text, TextInput, Title } from "@tremor/react";
 import { formatHourNumber } from "../../kernels/utils/date-picker";
 import { queryTaskConfig, registerTaskConfig } from "../../api/store/actions/work_optimization/task-registration.actions";
-import Project from "./Project";
+import ProjectList from "./ProjectList";
 import SchedulingTable from "../schedule_plan/SchedulingTable";
 import { isAccessTokenCookieValid } from "../../kernels/utils/cookie-utils";
 import { useNavigate } from "react-router-dom";
@@ -303,7 +303,7 @@ const TaskRegistration = (props) => {
             ) : error ? (
                 <div>Error: {error}</div>
             ) : taskRegistry && redirectToScreen(taskRegistry, redirectPage) === "TM" ? (
-                <Project />
+                <ProjectList />
             ) : taskRegistry && redirectToScreen(taskRegistry, redirectPage) === "SP" ? (
                 <SchedulingTable />
             ) : taskRegistry && redirectToScreen(taskRegistry, redirectPage) === null ? (

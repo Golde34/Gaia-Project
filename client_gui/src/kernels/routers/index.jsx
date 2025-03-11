@@ -2,7 +2,6 @@ import React, { lazy, Suspense } from 'react';
 import { Navigate, useRoutes } from 'react-router-dom';
 
 import Dashboard from '../../views/Dashboard';
-import Project from '../../views/task_manager/Project';
 import SchedulingTable from '../../views/schedule_plan/SchedulingTable';
 import TaskDashboard from '../../views/task_manager/TaskDashboard';
 import SignIn from '../../screens/authScreen/Signin';
@@ -22,6 +21,7 @@ import TaskIntroduction from '../../views/introduction/TaskIntroduction';
 import TaskRegistration from '../../views/task_manager/TaskRegistration';
 import TaskDetail from '../../views/task_manager/TaskDetail';
 import GitHubCallback from '../context/GithubCallback';
+import ProjectDetail from '../../views/task_manager/ProjectDetail';
 
 // Guest is public
 // User is protected, only logged in when the Role higher than User
@@ -69,7 +69,8 @@ const routeList = [
     {
         path: '/project/:id',
         key: 'project-id',
-        element: <TaskDashboard />,
+        element: <ProjectDetail />,
+        // element: <TaskDashboard />,
     },
     {
         path: '/microservices',

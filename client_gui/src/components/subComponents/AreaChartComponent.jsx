@@ -83,28 +83,25 @@ const AreaChartComponent = () => {
                     <MessageBox variant="danger">{error}</MessageBox>
                 ) : (
                     <>
-                        <Card className="mb-4">
-                            <Title>Total {contributions.totalUserCommits} contributions</Title>
-                            <div className="dark">
-                                <ContributionCalendar
-                                    start={contributions.startDate}
-                                    end={contributions.endDate}
-                                    theme={customTheme}
-                                    textColor="#4b5364"
-                                    data={contributions.userCommits}
-                                    daysOfTheWeek={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]}
-                                    includeBoundary={false}
-                                    startsOnSunday={true}
-                                    cx={calendarSize.cx}
-                                    cy={calendarSize.cy}
-                                    cr={calendarSize.cr}
-                                    // theme="purquoise"
-                                    onCellClick={(_, data) => console.log(data)}
-                                    scroll={false}
-                                />
-                            </div>
-                        </Card>
-                        
+                        <Title>Total {contributions.userTotalCommits} contributions</Title>
+                        <div className="dark">
+                            <ContributionCalendar
+                                start={contributions.startDate}
+                                end={contributions.endDate}
+                                theme={customTheme}
+                                textColor="#4b5364"
+                                data={contributions.userCommits}
+                                daysOfTheWeek={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]}
+                                includeBoundary={false}
+                                startsOnSunday={true}
+                                cx={calendarSize.cx}
+                                cy={calendarSize.cy}
+                                cr={calendarSize.cr}
+                                // theme="purquoise"
+                                onCellClick={(_, data) => console.log(data)}
+                                scroll={false}
+                            />
+                        </div>
                     </>
                 )}
 

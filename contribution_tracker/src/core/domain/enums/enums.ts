@@ -1,6 +1,7 @@
 export enum DatabaseType {
     MYSQL = "mysql",
     MONGODB = "mongodb",
+    POSTGRES = "postgres",
 }
 
 export enum CommitType {

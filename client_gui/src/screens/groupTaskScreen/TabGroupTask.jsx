@@ -1,5 +1,5 @@
 import { ArrowCircleRightIcon } from "@heroicons/react/solid";
-import { Card, Col, Flex, Grid, Tab, TabGroup, TabList, TabPanels } from "@tremor/react"
+import { Col, Flex, Grid, Tab, TabGroup, TabList, TabPanels } from "@tremor/react"
 import { useState } from "react";
 import EllipsisMenu from "../../components/EllipsisMenu";
 import { CreateNewGroupTask } from "./CreateNewGroupTask";
@@ -30,67 +30,65 @@ const TabGroupTask = (props) => {
     }
 
     return (
-        <Card>
-            <TabGroup className="mt-3" color="indigo">
-                <TabList>
-                    {groupTasks.map((groupTask) => (
-                        <div key={groupTask.id}>
-                            <Flex>
-                                <Tab
-                                    key={groupTask.id}
-                                    icon={activeTab === groupTask.id ? ArrowCircleRightIcon : null}
-                                    onClick={() => handleTabChange(groupTask.id)}
-                                    style={
-                                        activeTab === groupTask.id
-                                            ? { color: "#6366f1", fontSize: "20px" }
-                                            : { color: "white", fontSize: "20px" }
-                                    }
-                                >
-                                    <div className="grid grid-flow-col gap-4">
-                                        <div className="col-span-2 mt-1" >{groupTask.title}</div>
-                                    </div>
-                                </Tab>
-                                <EllipsisMenu elementName="Group Task" elementId={groupTask.id} projectId={projectId} />
-                            </Flex>
-                        </div>
-                    ))}
-                    <CreateNewGroupTask />
-                </TabList>
-                <TabPanels>
-                    {groupTasks.map((groupTask) => (
-                        <div key={groupTask.id}>
-                            {activeTab && activeTab === groupTask.id ? (
+        <TabGroup className="mt-3" color="indigo">
+            <TabList>
+                {groupTasks.map((groupTask) => (
+                    <div key={groupTask.id}>
+                        <Flex>
+                            <Tab
+                                key={groupTask.id}
+                                icon={activeTab === groupTask.id ? ArrowCircleRightIcon : null}
+                                onClick={() => handleTabChange(groupTask.id)}
+                                style={
+                                    activeTab === groupTask.id
+                                        ? { color: "#6366f1", fontSize: "20px" }
+                                        : { color: "white", fontSize: "20px" }
+                                }
+                            >
+                                <div className="grid grid-flow-col gap-4">
+                                    <div className="col-span-2 mt-1" >{groupTask.title}</div>
+                                </div>
+                            </Tab>
+                            <EllipsisMenu elementName="Group Task" elementId={groupTask.id} projectId={projectId} />
+                        </Flex>
+                    </div>
+                ))}
+                <CreateNewGroupTask />
+            </TabList>
+            <TabPanels>
+                {groupTasks.map((groupTask) => (
+                    <div key={groupTask.id}>
+                        {activeTab && activeTab === groupTask.id ? (
+                            <>
+                                <div className="mt-10">
+                                    <Grid numItems={12} className="gap-2">
+                                        <Col numColSpan={10}>
+                                            {activeTab && activeTab === groupTask.id && (
+                                                <TaskProgress groupTaskId={groupTasks[0].id} activeTab={activeTab} />
+                                            )}
+                                        </Col>
+                                        <Col numColSpan={2} className="mt-4">
+                                            <div className="flex justify-center">
+                                                <CreateTaskDialog groupTaskId={activeTab} />
+                                            </div>
+                                        </Col>
+                                    </Grid>
+                                </div>
                                 <>
-                                    <div className="mt-10">
-                                        <Grid numItems={12} className="gap-2">
-                                            <Col numColSpan={10}>
-                                                {activeTab && activeTab === groupTask.id && (
-                                                    <TaskProgress groupTaskId={groupTasks[0].id} activeTab={activeTab} />
-                                                )}
-                                            </Col>
-                                            <Col numColSpan={2} className="mt-4">
-                                                <div className="flex justify-center">
-                                                    <CreateTaskDialog groupTaskId={activeTab} />
-                                                </div>
-                                            </Col>
-                                        </Grid>
-                                    </div>
-                                    <>
-                                        {isTableView ? (
-                                            <TaskTable groupTaskId={activeTab} />
-                                        ) : (
-                                            <TaskList groupTaskId={activeTab} projectId={projectId} />
-                                        )}
-                                    </>
+                                    {isTableView ? (
+                                        <TaskTable groupTaskId={activeTab} />
+                                    ) : (
+                                        <TaskList groupTaskId={activeTab} projectId={projectId} />
+                                    )}
                                 </>
-                            ) : (
-                                <></>
-                            )}
-                        </div>
-                    ))}
-                </TabPanels>
-            </TabGroup>
-        </Card>
+                            </>
+                        ) : (
+                            <></>
+                        )}
+                    </div>
+                ))}
+            </TabPanels>
+        </TabGroup>
     )
 }
 

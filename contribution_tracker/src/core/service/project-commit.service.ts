@@ -65,9 +65,8 @@ class ProjectCommitService {
 
     async deleteProjectCommit(userId: number, projectId: string): Promise<ProjectCommitEntity | undefined> {
         try {
-            const projectCommits: ProjectCommitEntity[] = await this.projectCommitRepository.findByUserCommitIdAndId(userId, projectId);
-            const projectCommit: ProjectCommitEntity | undefined = projectCommits[0];
-            if (!projectCommit || !projectCommit.id) {
+            const projectCommit = await this.getProjectCommitsByUserIdAndProjectId(userId, projectId);
+            if (projectCommit === null) {
                 console.error("Project commit not found for user: ", userId, " and project: ", projectId);
                 return undefined;
             }
@@ -159,7 +158,7 @@ class ProjectCommitService {
             return await this.projectCommitRepository.findByProjectId(projectId);
         } catch (error) {
             console.error("Error on getProjectCommitsByProjectId: ", error);
-            return null; 
+            return null;
         }
     }
 
@@ -168,6 +167,21 @@ class ProjectCommitService {
             return await this.projectCommitRepository.findByProjectIdAndRepo(projectId, githubRepoName);
         } catch (error) {
             console.error("Error on getProjectCommitsByProjectIdAndRepo: ", error);
+            return null;
+        }
+    }
+
+    async getProjectCommitsByUserIdAndProjectId(userId: number, projectId: string): Promise<ProjectCommitEntity | null> {
+        try {
+            const projectCommits: ProjectCommitEntity[] = await this.projectCommitRepository.findByUserCommitIdAndId(userId, projectId);
+            const projectCommit: ProjectCommitEntity | undefined = projectCommits[0];
+            if (!projectCommit || !projectCommit.id) {
+                console.error("getProjectCommitsByUserIdAndProjectId: Project commit not found for user: ", userId, " and project: ", projectId);
+                return null;
+            }
+            return projectCommit;
+        } catch (error) {
+            console.error("Error on getProjectCommitsByProjectId: ", error);
             return null;
         }
     }

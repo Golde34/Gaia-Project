@@ -20,6 +20,9 @@ func NewContributionRouter(contributionService *services.ContributionService, r 
 		r.Get("/{userId}/compare-commits", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.CompareCommits(w, r, contributionService)
 		})
+		r.Get("/{userId}/{projectId}", func(w http.ResponseWriter, r *http.Request) {
+			controller_services.GetUserProjectContribution(w, r, contributionService)
+		})
 	})
 	return &ContributionRouter{
 		ContributionService: contributionService,
