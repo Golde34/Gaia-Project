@@ -2,7 +2,6 @@ import React, { lazy, Suspense } from 'react';
 import { Navigate, useRoutes } from 'react-router-dom';
 
 import Dashboard from '../../views/Dashboard';
-import Project from '../../views/task_manager/Project';
 import SchedulingTable from '../../views/schedule_plan/SchedulingTable';
 import TaskDashboard from '../../views/task_manager/TaskDashboard';
 import SignIn from '../../screens/authScreen/Signin';

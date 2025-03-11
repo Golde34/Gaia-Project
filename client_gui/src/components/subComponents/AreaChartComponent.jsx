@@ -84,7 +84,7 @@ const AreaChartComponent = () => {
                 ) : (
                     <>
                         <Card className="mb-4">
-                            <Title>Total {contributions.totalUserCommits} contributions</Title>
+                            <Title>Total {contributions.userTotalCommits} contributions</Title>
                             <div className="dark">
                                 <ContributionCalendar
                                     start={contributions.startDate}

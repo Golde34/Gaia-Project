@@ -69,7 +69,7 @@ function ContentArea() {
     )
 }
 
-const Project = () => {
+const ProjectList = () => {
     return (
         <Template>
             <ContentArea />
@@ -77,4 +77,4 @@ const Project = () => {
     )
 }
 
-export default Project;
+export default ProjectList;
