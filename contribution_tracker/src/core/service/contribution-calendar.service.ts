@@ -35,7 +35,15 @@ class ContributionCalendarService {
     async getContributionCalendar(userId: number): Promise<any[]> {
         try {
             const contributions = await this.contributionCalendarRepoImpl.findByUserId(userId);
+            return this.formatContributionCalendar(userId, contributions);
+        } catch (error) {
+            console.error("Failed to get contribution calendar: ", error);
+            return [];
+        }
+    }
 
+    async formatContributionCalendar(userId: number, contributions: ContributionCalendarEntity[]): Promise<any[]> {
+        try {
             if (!contributions || contributions.length === 0) {
                 return [];
             }
@@ -76,14 +84,15 @@ class ContributionCalendarService {
 
             return [data, format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd')];
         } catch (error) {
-            console.error("Failed to get contribution calendar: ", error);
+            console.error("Failed to format contribution calendar: ", error);
             return [];
         }
     }
 
     async getContributionCalendarByProject(userId: number, projectId: string): Promise<ContributionCalendarEntity[]> {
         try {
-            return await this.contributionCalendarRepoImpl.findByUserIdAndProjectId(userId, projectId);
+            const contributions = await this.contributionCalendarRepoImpl.findByUserIdAndProjectId(userId, projectId);
+            return this.formatContributionCalendar(userId, contributions);
         } catch (error) {
             console.error("Failed to get contribution calendar by project: ", error);
             return [];
