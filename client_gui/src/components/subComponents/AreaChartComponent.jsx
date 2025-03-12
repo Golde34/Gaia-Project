@@ -1,9 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Card, Title } from "@tremor/react";
+import { Title } from "@tremor/react";
 import { ContributionCalendar, createTheme } from 'react-contribution-calendar';
-import { useDispatch, useSelector } from "react-redux";
-import MessageBox from "./MessageBox";
-import { getUserContributions } from "../../api/store/actions/contribution_tracker/contribution.actions";
 
 const customTheme = createTheme({
     level0: '#20263c',
@@ -13,7 +10,8 @@ const customTheme = createTheme({
     level4: '#2dd4bf',
 });
 
-const AreaChartComponent = () => {
+const AreaChartComponent = (props) => {
+    const contributions = props.contributions;
     const [calendarSize, setCalendarSize] = useState({
         cx: 12,
         cy: 12,
@@ -59,52 +57,26 @@ const AreaChartComponent = () => {
 
     }, []);
 
-    const userId = "1";
-    const dispatch = useDispatch();
-
-    const userContributionList = useSelector((state) => state.userContributions);
-    const { loading, error, contributions } = userContributionList;
-
-    const debounceRef = useRef(null);
-
-    useEffect(() => {
-        clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            dispatch(getUserContributions(userId));
-        }, 200);
-    }, [])
-
     return (
         <>
-            <div>
-                {loading ? (
-                    <p> Loading... </p>
-                ) : error ? (
-                    <MessageBox variant="danger">{error}</MessageBox>
-                ) : (
-                    <>
-                        <Title>Total {contributions.userTotalCommits} contributions</Title>
-                        <div className="dark">
-                            <ContributionCalendar
-                                start={contributions.startDate}
-                                end={contributions.endDate}
-                                theme={customTheme}
-                                textColor="#4b5364"
-                                data={contributions.userCommits}
-                                daysOfTheWeek={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]}
-                                includeBoundary={false}
-                                startsOnSunday={true}
-                                cx={calendarSize.cx}
-                                cy={calendarSize.cy}
-                                cr={calendarSize.cr}
-                                // theme="purquoise"
-                                onCellClick={(_, data) => console.log(data)}
-                                scroll={false}
-                            />
-                        </div>
-                    </>
-                )}
-
+            <Title>Total {contributions.userTotalCommits} contributions</Title>
+            <div className="dark">
+                <ContributionCalendar
+                    start={contributions.startDate}
+                    end={contributions.endDate}
+                    theme={customTheme}
+                    textColor="#4b5364"
+                    data={contributions.userCommits}
+                    daysOfTheWeek={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]}
+                    includeBoundary={false}
+                    startsOnSunday={true}
+                    cx={calendarSize.cx}
+                    cy={calendarSize.cy}
+                    cr={calendarSize.cr}
+                    // theme="purquoise"
+                    onCellClick={(_, data) => console.log(data)}
+                    scroll={false}
+                />
             </div>
         </>
     );

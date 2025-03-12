@@ -1,6 +1,6 @@
-import LeftColumn from "../../components/LeftColumn";
-import RightColumn from "../../components/RightColumn";
 import ManagerTemplate from "../../components/template/ManagerTemplate"
+import LeftColumn from "../../screens/dashboardScreen/LeftColumn";
+import RightColumn from "../../screens/dashboardScreen/RightColumn";
 
 function ContentArea() {
     return (

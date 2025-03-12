@@ -1,13 +1,11 @@
-import CardItem from "../components/subComponents/CardItem"
-import AreaChartComponent from "../components/subComponents/AreaChartComponent"
-import TableComponent from "../components/subComponents/TableComponent"
-import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useRef } from "react";
-import { getTopTasks } from "../api/store/actions/task_manager/task.actions";
-import MessageBox from "./subComponents/MessageBox";
-import { Card, Grid } from "@tremor/react";
+import { useDispatch, useSelector } from "react-redux";
+import { getTopTasks } from "../../api/store/actions/task_manager/task.actions";
+import MessageBox from "../../components/subComponents/MessageBox";
+import { Grid } from "@tremor/react";
+import CardItem from "../../components/subComponents/CardItem";
 
-const LeftColumn = () => {
+const TopTask = () => {
     const dispatch = useDispatch();
 
     const taskList = useSelector((state) => state.topTask);
@@ -43,14 +41,22 @@ const LeftColumn = () => {
                     )
                 }
             </div>
-            <div className="flex-auto w-full">
+            {/* <div className="flex-auto w-full">
                 <Card className="mb-4">
-                    <AreaChartComponent />
+                    {
+                        ctLoading ? (
+                            <div>Loading...</div>
+                        ) : ctError ? (
+                            <div><MessageBox message={ctError} /></div>
+                        ) : (
+                            <AreaChartComponent contributions={contributions} />
+                        )
+                    }
                 </Card>
                 <TableComponent />
-            </div>
+            </div> */}
         </div>
     );
-};
+}
 
-export default LeftColumn;
+export default TopTask;
