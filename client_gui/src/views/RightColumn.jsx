@@ -1,6 +1,6 @@
 import Item from "../components/subComponents/Item";
+import CompareCommitChart from "../components/subComponents/CompareCommitsChart";
 import ScoreList from "../components/subComponents/ScoreList";
-import CompareCommitChart from "./subComponents/CompareCommitsChart";
 
 const RightColumn = () => {
 	return (

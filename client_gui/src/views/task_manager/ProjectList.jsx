@@ -63,8 +63,7 @@ function ContentArea() {
                     </div>
 
                 </>
-            )
-            }
+            )}
         </div>
     )
 }
