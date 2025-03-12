@@ -2,8 +2,8 @@ import { Card, Col, Grid, Metric, Tab, TabGroup, TabList, TabPanel, TabPanels } 
 import Template from "../../components/template/Template"
 import { useParams } from "react-router-dom"
 import TaskDashboard from "./TaskDashboard";
-import AreaChartComponent from "../../components/subComponents/AreaChartComponent";
 import CompareCommitChart from "../../components/subComponents/CompareCommitsChart";
+import ProjectContributionCalendar from "../../screens/dashboardScreen/ProjectContributionCalendar";
 
 function ContentArea() {
     const projectId = useParams().id;
@@ -33,9 +33,7 @@ function ContentArea() {
                         <TabPanel>
                             <Grid numItems={12}>
                                 <Col numColSpan={8} className="me-4">
-                                    <Card>
-                                        <AreaChartComponent projectId={projectId} />
-                                    </Card>
+                                    <ProjectContributionCalendar projectId={projectId} />
                                 </Col>
                                 <Col numColSpan={4}>
                                     <CompareCommitChart />

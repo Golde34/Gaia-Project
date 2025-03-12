@@ -1,4 +1,5 @@
 import { COMPARE_COMMTIS_FAILURE, COMPARE_COMMTIS_REQUEST, COMPARE_COMMTIS_SUCCESS, 
+    PROJECT_CONTRIBUTIONS_FAILURE, PROJECT_CONTRIBUTIONS_REQUEST, PROJECT_CONTRIBUTIONS_SUCCESS, 
     USER_CONTRIBUTIONS_FAILURE, USER_CONTRIBUTIONS_REQUEST, USER_CONTRIBUTIONS_SUCCESS 
 } from "../../constants/contribution_tracker/contribution.constants";
 
@@ -24,6 +25,20 @@ export const compareCommitsReducer = (
         case COMPARE_COMMTIS_SUCCESS:
             return { loading: false, commits: action.payload }
         case COMPARE_COMMTIS_FAILURE:
+            return { loading: false, error: action.payload };
+        default:
+            return state;
+    }
+}
+
+export const getProjectContributionReducer = (
+    state = { loading: true }, action) => {
+    switch (action.type) {
+        case PROJECT_CONTRIBUTIONS_REQUEST:
+            return { loading: true };
+        case PROJECT_CONTRIBUTIONS_SUCCESS:
+            return { loading: false, contributions: action.payload }
+        case PROJECT_CONTRIBUTIONS_FAILURE:
             return { loading: false, error: action.payload };
         default:
             return state;
