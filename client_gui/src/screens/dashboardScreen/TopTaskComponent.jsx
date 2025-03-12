@@ -41,20 +41,6 @@ const TopTask = () => {
                     )
                 }
             </div>
-            {/* <div className="flex-auto w-full">
-                <Card className="mb-4">
-                    {
-                        ctLoading ? (
-                            <div>Loading...</div>
-                        ) : ctError ? (
-                            <div><MessageBox message={ctError} /></div>
-                        ) : (
-                            <AreaChartComponent contributions={contributions} />
-                        )
-                    }
-                </Card>
-                <TableComponent />
-            </div> */}
         </div>
     );
 }
