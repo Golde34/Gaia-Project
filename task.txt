@@ -30,7 +30,7 @@ auth service: 4001
 task manager: 3000
 work optimization: 3001
 schedule plan: 3002
-camera_cv: 3003
+contribution_tracker: 3003
 
 notification: 3007
 health care: 3004
