@@ -8,6 +8,7 @@ import { getScheduleTaskBatchList, getScheduleTaskList } from '../../api/store/a
 import MessageBox from '../../components/subComponents/MessageBox';
 import TaskBatchScreen from '../../screens/scheduleTaskScreen/TaskBatchScreen';
 import CalendarChart from '../../screens/scheduleTaskScreen/CalendarChart';
+import { ScheduleTasks } from '../../screens/scheduleTaskScreen/ScheduleTasks';
 
 function ContentArea() {
     const userId = "1";
@@ -123,12 +124,7 @@ function ContentArea() {
                             </div>
                         </div>
                     </Card>
-                    <Card>
-                        <div className="flex gap-10 justify-center mt-5">
-                            <Subtitle className="text-xl font-bold text-gray-800"> Create new Schedule Task </Subtitle> 
-                            <p className='text-white'>Choose Project</p>
-                        </div>
-                    </Card>
+                    <ScheduleTasks />    
 
                     <Dialog
                         open={isOpen}
