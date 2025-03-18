@@ -16,7 +16,7 @@ func NewScheduleTaskAdapter() *ScheduleTaskAdapter {
 }
 
 func (adapter *ScheduleTaskAdapter) GetScheduleTaskListByUserId(userId string) ([]response_dtos.ScheduleTaskResponseDTO, error) {
-	listScheduleTaskURL := base.SchedulePlanServiceURL+ "/schedule-plan/schedule/get-schedule-task-list/" + userId
+	listScheduleTaskURL := base.SchedulePlanServiceURL+ "/schedule-plan/schedule/get-task-list/" + userId
 	var scheduleTasks []response_dtos.ScheduleTaskResponseDTO
 	headers := utils.BuildDefaultHeaders()
 	bodyResult, err := utils.BaseAPI(listScheduleTaskURL, "GET", nil, headers)
@@ -45,7 +45,7 @@ func (adapter *ScheduleTaskAdapter) GetScheduleTaskListByUserId(userId string) (
 }
 
 func (adapter *ScheduleTaskAdapter) GetTaskBatchListByUserId(userId string) (response_dtos.ScheduleTaskBatchListResponseDTO, error) {
-	listTaskBatchURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule/get-schedule-batch-task/" + userId
+	listTaskBatchURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule/get-batch-task/" + userId
 	headers := utils.BuildDefaultHeaders()
 	bodyResult, err := utils.BaseAPI(listTaskBatchURL, "GET", nil, headers)
 	if err != nil {
@@ -67,7 +67,7 @@ func (adapter *ScheduleTaskAdapter) GetTaskBatchListByUserId(userId string) (res
 }
 
 func (adapter *ScheduleTaskAdapter) ChooseTaskBatch(userId, batchNumber float64) (response_dtos.ScheduleTaskBatchListResponseDTO, error) {
-	chooseTaskBatchURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule/choose-schedule-batch-task"
+	chooseTaskBatchURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule/choose-batch-task"
 	headers := utils.BuildDefaultHeaders()
 
 	request := request_dtos.NewChooseTaskBatchDTO()

@@ -25,10 +25,10 @@ class ScheduleController {
         }
     }
 
-    async getScheduleTaskList(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+    async getTaskList(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = parseInt(req.params.userId, 10);
-            const scheduleTaskList = await scheduleTaskUsecase.getListScheduleTaskByUserId(userId);
+            const scheduleTaskList = await scheduleTaskUsecase.getListTaskByUserId(userId);
             return msg200({
                 scheduleTaskList
             })
@@ -37,10 +37,10 @@ class ScheduleController {
         }
     }
 
-    async getScheduleBatchTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+    async getBatchTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = parseInt(req.params.userId, 10);
-            const scheduleBatchTask = await scheduleTaskUsecase.getScheduleBatchTask(userId);
+            const scheduleBatchTask = await scheduleTaskUsecase.getBatchTask(userId);
             if (!scheduleBatchTask) {
                 return msg200({
                     message: "No schedule batch task found!"
@@ -54,11 +54,11 @@ class ScheduleController {
         }
     } 
 
-    async chooseScheduleBatchTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+    async chooseBatchTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const batchNumber = req.body.batchNumber;
             const userId = req.body.userId;
-            return await scheduleTaskUsecase.chooseScheduleBatchTask(userId, batchNumber);
+            return await scheduleTaskUsecase.chooseBatchTask(userId, batchNumber);
         } catch (error) {
             next(error);
         }
@@ -69,6 +69,15 @@ class ScheduleController {
             const taskId = req.body.taskId;
             const scheduleTaskId = req.body.scheduleTaskId;
             return await scheduleTaskUsecase.getScheduleTask(taskId, scheduleTaskId);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getScheduleTaskList(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const userId = Number(req.body.userId);
+            return await scheduleTaskUsecase.getScheduleTaskList(userId);
         } catch (error) {
             next(error);
         }

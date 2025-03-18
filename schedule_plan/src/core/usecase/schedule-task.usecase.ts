@@ -31,14 +31,15 @@ class ScheduleTaskUsecase {
             console.error("Error on createScheduleTask: ", error);
         }
     }
-    async createScheduleTaskByRest(scheduleTask: any): Promise<IResponse> {
-        try {
-            return await scheduleTaskService.createScheduleTask(scheduleTask);
-        } catch (error) {
-            console.error("Error on createScheduleTask: ", error);
-            return msg400("Cannot create schedule task!");
-        }
-    }
+
+    // async createScheduleTaskByRest(scheduleTask: any): Promise<IResponse> {
+    //     try {
+    //         return await scheduleTaskService.createScheduleTask(scheduleTask);
+    //     } catch (error) {
+    //         console.error("Error on createScheduleTask: ", error);
+    //         return msg400("Cannot create schedule task!");
+    //     }
+    // }
 
     async syncScheduleTask(schedulePlanSyncMessage: SyncScheduleTaskRequest): Promise<void> {
         try {
@@ -101,7 +102,7 @@ class ScheduleTaskUsecase {
         }
     }
 
-    async getListScheduleTaskByUserId(userId: number): Promise<IScheduleTaskEntity[] | undefined> {
+    async getListTaskByUserId(userId: number): Promise<IScheduleTaskEntity[] | undefined> {
         try {
             const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
             if (!schedulePlan) {
@@ -138,7 +139,7 @@ class ScheduleTaskUsecase {
         }
     }
 
-    async getScheduleBatchTask(userId: number): Promise<any | undefined> {
+    async getBatchTask(userId: number): Promise<any | undefined> {
         try {
             const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
             if (!schedulePlan) {
@@ -154,7 +155,7 @@ class ScheduleTaskUsecase {
         }
     }
 
-    async chooseScheduleBatchTask(userId: number, batchNumber: number): Promise<IResponse | undefined> {
+    async chooseBatchTask(userId: number, batchNumber: number): Promise<IResponse | undefined> {
         try {
             const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
             if (!schedulePlan) {
@@ -197,6 +198,21 @@ class ScheduleTaskUsecase {
         } catch (error) {
             console.error("Error on getScheduleTask: ", error);
             return msg400("Cannot get schedule task!");
+        }
+    }
+
+    async getScheduleTaskList(userId: number): Promise<IResponse | undefined> {
+        try {
+            const scheduleTaskList = await scheduleTaskService.getScheduleTaskList(userId);
+            if (scheduleTaskList) {
+                return msg200({
+                    scheduleTaskList
+                })
+            }
+            return msg400("Cannot get schedule task list!");
+        } catch (error) {
+            console.error("Error on getScheduleTaskList: ", error);
+            return msg400("Cannot get schedule task list!");
         }
     }
 }

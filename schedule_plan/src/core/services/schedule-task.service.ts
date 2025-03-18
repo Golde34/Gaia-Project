@@ -2,7 +2,7 @@ import { IScheduleTaskEntity } from "../../infrastructure/entities/schedule-task
 import { createMessage } from "../../infrastructure/kafka/create-message";
 import { KafkaHandler } from "../../infrastructure/kafka/kafka-handler";
 import { scheduleTaskRepository } from "../../infrastructure/repository/schedule-task.repository";
-import { convertErrorCodeToBoolean, revertPriority } from "../../kernel/utils/convert-fields";
+import { convertErrorCodeToBoolean } from "../../kernel/utils/convert-fields";
 import { IResponse, msg200, msg400, msg500 } from "../common/response";
 import { ErrorStatus } from "../domain/enums/enums";
 import { KafkaCommand, KafkaTopic } from "../domain/enums/kafka.enum";
@@ -181,6 +181,15 @@ class ScheduleTaskService {
             return taskList;
         } catch (error) {
             console.error("Error on getScheduleBatchTask: ", error);
+            return [];
+        }
+    }
+
+    async getScheduleTaskList(userId: number): Promise<any> {
+        try {
+            return [];
+        } catch (error) {
+            console.error("Error on getScheduleTaskList: ", error);
             return [];
         }
     }
