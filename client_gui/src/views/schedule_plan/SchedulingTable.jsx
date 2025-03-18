@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Template from '../../components/template/Template';
 import CardItem from '../../components/subComponents/CardItem';
 import dayjs from 'dayjs';
-import { Button, Card, Col, Dialog, DialogPanel, Flex, Grid, Metric, Text } from '@tremor/react';
+import { Button, Card, Col, Dialog, DialogPanel, Flex, Grid, Metric, Subtitle, Text } from '@tremor/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getScheduleTaskBatchList, getScheduleTaskList } from '../../api/store/actions/schedule_plan/schedule-task.action';
 import MessageBox from '../../components/subComponents/MessageBox';
@@ -88,7 +88,7 @@ function ContentArea() {
                     <Metric style={{ marginBottom: '30px', marginTop: '30px' }}
                         className="text-2xl font-bold text-gray-800"> Schedule Calendar
                     </Metric>
-                    <Card>
+                    <Card className='mb-4'>
                         <div className="flex gap-10 sm:divide-x justify-center mt-10">
                             <CalendarChart currentDate={currentDate} selectDate={selectDate}
                                 checkEmptyScheduleTaskList={checkEmptyTaskListAndOpenModal}
@@ -117,10 +117,16 @@ function ContentArea() {
                                     )
                                 }
                                 {scheduleTasks.map((task, index) => (
-                                    <CardItem key={index} task={task} taskId={task.taskId}/>
+                                    <CardItem key={index} task={task} taskId={task.taskId} />
                                 ))}
 
                             </div>
+                        </div>
+                    </Card>
+                    <Card>
+                        <div className="flex gap-10 justify-center mt-5">
+                            <Subtitle className="text-xl font-bold text-gray-800"> Create new Schedule Task </Subtitle> 
+                            <p className='text-white'>Choose Project</p>
                         </div>
                     </Card>
 
@@ -140,7 +146,7 @@ function ContentArea() {
                                 >
                                 </button>
                             </div>
-                                <TaskBatchScreen taskBatchList={taskBatchList} />
+                            <TaskBatchScreen taskBatchList={taskBatchList} />
                         </DialogPanel>
                     </Dialog>
                 </>
