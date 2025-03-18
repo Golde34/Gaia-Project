@@ -1,4 +1,4 @@
-import { Card, Col, Grid, Subtitle, Text } from "@tremor/react"
+import { Button, Card, Col, Flex, Grid, Subtitle, Text } from "@tremor/react"
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -17,9 +17,23 @@ export const ScheduleTasks = () => {
 
     return (
         <Card>
-            <div className="flex gap-10 justify-center mt-5">
-                <Subtitle className="text-xl font-bold text-gray-800"> Your Schedule Tasks </Subtitle>
-            </div>
+            <Grid numItems={12}>
+                <Col numColSpan={7}>
+                    <Flex justifyContent="end">
+                        <Subtitle className="text-xl font-bold text-gray-800">
+                            Your Schedule Tasks
+                        </Subtitle>
+                    </Flex>
+                </Col>
+                <Col numColSpan={5}>
+                    <Flex justifyContent='end'>
+                        <Button type='button' className="col-span-5 mb-10"
+                            color='indigo' onClick={() => navigate('/create-schedule-task')}>
+                            Create Schedule Task
+                        </Button>
+                    </Flex>
+                </Col>
+            </Grid>
             <Grid numItems={3} className="gap-7 mt-5">
                 <Col numColSpan={1}>
                     <Card className="w-xs hover:cursor-pointer transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-105 duration-300"
