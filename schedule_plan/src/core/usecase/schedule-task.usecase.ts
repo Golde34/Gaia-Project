@@ -5,20 +5,15 @@ import { scheduleTaskMapper } from "../mapper/schedule-task.mapper";
 import { notificationService } from "../services/notifi-agent.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
 import { scheduleTaskService } from "../services/schedule-task.service";
-import { schedulePlanUsecase } from "./schedule-plan.usecase";
 
 class ScheduleTaskUsecase {
     constructor() { }
 
     async createScheduleTaskByKafka(scheduleTask: any): Promise<void> {
         try {
-            let schedulePlan = await schedulePlanService.findSchedulePlanByUserId(scheduleTask.userId);
+            const schedulePlan = await schedulePlanService.createSchedulePlan(scheduleTask.userId);
             if (!schedulePlan) {
-                console.error("Cannot find schedule plan by user id: ", scheduleTask.userId);
-                schedulePlan = await schedulePlanUsecase.createSchedulePlan(scheduleTask.userId);
-                if (!schedulePlan) {
-                    throw new Error("Failed to create schedule plan");
-                }
+                throw new Error("Failed to create schedule plan");
             }
 
             const task = scheduleTaskMapper.kafkaCreateTaskMapper(scheduleTask, schedulePlan._id);

@@ -1,6 +1,5 @@
 import { ISchedulePlanEntity } from "../../infrastructure/entities/schedule-plan.entity";
 import { IResponse, msg200 } from "../common/response";
-import { ActiveStatus } from "../domain/enums/enums";
 import { schedulePlanService } from "../services/schedule-plan.service";
 
 class SchedulePlanUsercase {
@@ -23,16 +22,16 @@ class SchedulePlanUsercase {
         }
     }
 
-    async createSchedulePlan(userId: number): Promise<ISchedulePlanEntity | null> {
-        try {
-            const result = await schedulePlanService.createSchedulePlan(userId);
-            console.log('Result: ', result);
-            return result;
-        } catch (error) {
-            console.error("Error on create Schedule plan: ", error);
-            return null;
-        }
-    }
+    // async createSchedulePlan(userId: number): Promise<ISchedulePlanEntity | null> {
+    //     try {
+    //         const result = await schedulePlanService.createSchedulePlan(userId);
+    //         console.log('Result: ', result);
+    //         return result;
+    //     } catch (error) {
+    //         console.error("Error on create Schedule plan: ", error);
+    //         return null;
+    //     }
+    // }
 }
 
 export const schedulePlanUsecase = new SchedulePlanUsercase;
