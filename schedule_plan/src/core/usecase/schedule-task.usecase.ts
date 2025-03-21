@@ -27,10 +27,10 @@ class ScheduleTaskUsecase {
         }
     }
 
-    async createScheduleTask(scheduleTask: any): Promise<IResponse | undefined> {
+    async createScheduleTask(scheduleTask: any, schedulePlanId: string): Promise<IResponse | undefined> {
         try {
-            const task = scheduleTaskMapper.kafkaCreateTaskMapper(scheduleTask, scheduleTask._id);
-            const createdScheduleTask = await scheduleTaskService.createScheduleTask(scheduleTask);
+            const task = scheduleTaskMapper.restCreateTaskMapper(scheduleTask, schedulePlanId);
+            const createdScheduleTask = await scheduleTaskService.createScheduleTask(task);
             return msg200({
                 createdScheduleTask
             })
