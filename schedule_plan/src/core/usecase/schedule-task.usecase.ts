@@ -27,14 +27,18 @@ class ScheduleTaskUsecase {
         }
     }
 
-    // async createScheduleTaskByRest(scheduleTask: any): Promise<IResponse> {
-    //     try {
-    //         return await scheduleTaskService.createScheduleTask(scheduleTask);
-    //     } catch (error) {
-    //         console.error("Error on createScheduleTask: ", error);
-    //         return msg400("Cannot create schedule task!");
-    //     }
-    // }
+    async createScheduleTask(scheduleTask: any): Promise<IResponse | undefined> {
+        try {
+            const task = scheduleTaskMapper.kafkaCreateTaskMapper(scheduleTask, scheduleTask._id);
+            const createdScheduleTask = await scheduleTaskService.createScheduleTask(scheduleTask);
+            return msg200({
+                createdScheduleTask
+            })
+        } catch (error) {
+            console.error("Error on createScheduleTask: ", error);
+            return msg400("Cannot create schedule task!");
+        }
+    }
 
     async syncScheduleTask(schedulePlanSyncMessage: SyncScheduleTaskRequest): Promise<void> {
         try {
