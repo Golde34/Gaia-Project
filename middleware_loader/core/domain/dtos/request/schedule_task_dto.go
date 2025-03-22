@@ -21,7 +21,7 @@ type CreateScheduleTaskRequestDTO struct {
 	Duration       float64  `json:"duration"`
 	ActiveStatus   string   `json:"activeStatus"`
 	Priority       []string `json:"priority"`
-	SchedulePlanId string   `json:"schedulePlanId"`
+	UserId string   `json:"userId"`
 	Repeat         string   `json:"repeat"`
 	IsNotify       bool     `json:"isNotify"`
 }

@@ -30,7 +30,7 @@ func CreateScheduleTaskRequestDTOMapper(body map[string]interface{}) request_dto
 	input.Duration = bodyMap["duration"].(float64)
 	input.ActiveStatus = bodyMap["activeStatus"].(string)
 	input.Priority = utils.ConvertStringToStringArray(bodyMap["priority"].([]interface{}))
-	input.SchedulePlanId = bodyMap["schedulePlanId"].(string)
+	input.UserId = bodyMap["userId"].(string)
 	input.Repeat = bodyMap["repeat"].(string)
 	input.IsNotify = bodyMap["isNotify"].(bool)	
 	return input
