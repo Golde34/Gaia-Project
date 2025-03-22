@@ -48,3 +48,11 @@ export enum ErrorStatus {
     FAIL = "FAIL",
     TIMEOUT = "TIMEOUT",
 }
+
+export enum RepeatLevel {
+    NONE = "NONE",
+    DAILY = "DAILY",
+    WEEKLY = "WEEKLY",
+    MONTHLY = "MONTHLY",
+    YEARLY = "YEARLY",
+}

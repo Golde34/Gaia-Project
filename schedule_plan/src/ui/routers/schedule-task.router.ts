@@ -6,10 +6,10 @@ export const scheduleTaskRouter = Router();
 
 const scheduleTaskControllerImpl = scheduleController;
 
-scheduleTaskRouter.get("/get-schedule-task-list/:userId",
+scheduleTaskRouter.get("/get-task-list/:userId",
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const scheduleTaskResult = await scheduleTaskControllerImpl.getScheduleTaskList(req, next);
+            const scheduleTaskResult = await scheduleTaskControllerImpl.getTaskList(req, next);
             return returnResult(scheduleTaskResult, "FAIL", res, next);
         } catch (error) {
             next(error);
@@ -17,10 +17,10 @@ scheduleTaskRouter.get("/get-schedule-task-list/:userId",
     }
 );
 
-scheduleTaskRouter.get("/get-schedule-batch-task/:userId", 
+scheduleTaskRouter.get("/get-batch-task/:userId", 
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const scheduleTaskResult = await scheduleTaskControllerImpl.getScheduleBatchTask(req, next);
+            const scheduleTaskResult = await scheduleTaskControllerImpl.getBatchTask(req, next);
             return returnResult(scheduleTaskResult, "FAIL", res, next);
         } catch (error) {
             next(error);
@@ -28,10 +28,10 @@ scheduleTaskRouter.get("/get-schedule-batch-task/:userId",
     }
 )
 
-scheduleTaskRouter.post("/choose-schedule-batch-task", 
+scheduleTaskRouter.post("/choose-batch-task", 
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const scheduleTaskResult = await scheduleTaskControllerImpl.chooseScheduleBatchTask(req, next);
+            const scheduleTaskResult = await scheduleTaskControllerImpl.chooseBatchTask(req, next);
             return returnResult(scheduleTaskResult, "FAIL", res, next);
         } catch (error) {
             next(error);
@@ -44,6 +44,28 @@ scheduleTaskRouter.post("/get-schedule-task",
         try {
             const sheduleTaskResult = await scheduleTaskControllerImpl.getScheduleTask(req, next);
             return returnResult(sheduleTaskResult, "FAIL", res, next);
+        } catch (error) {
+            next(error);
+        }
+    }
+)
+
+scheduleTaskRouter.get("/get-schedule-task-list",
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const scheduleTaskResult = await scheduleTaskControllerImpl.getScheduleTaskList(req, next);
+            return returnResult(scheduleTaskResult, "FAIL", res, next);
+        } catch (error) {
+            next(error);
+        }
+    }
+)
+
+scheduleTaskRouter.post("/create-task",
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const scheduleTaskResult = await scheduleTaskControllerImpl.createScheduleTask(req, next);
+            return returnResult(scheduleTaskResult, "FAIL", res, next); 
         } catch (error) {
             next(error);
         }

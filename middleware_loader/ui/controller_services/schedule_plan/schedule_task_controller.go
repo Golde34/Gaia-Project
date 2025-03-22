@@ -69,3 +69,27 @@ func ChooseTaskBatch(w http.ResponseWriter, r *http.Request, scheduleTaskService
 		return
 	}
 }
+
+func CreateScheduleTask(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
+	var body map[string]interface{}
+	body, err := controller_utils.MappingBody(w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	scheduleTaskDto := mapper.CreateScheduleTaskRequestDTOMapper(body)	
+	
+	scheduleTask, err := services.NewScheduleTaskService().CreateScheduleTask(scheduleTaskDto)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(scheduleTask); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}

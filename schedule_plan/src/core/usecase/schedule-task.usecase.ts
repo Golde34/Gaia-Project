@@ -5,20 +5,15 @@ import { scheduleTaskMapper } from "../mapper/schedule-task.mapper";
 import { notificationService } from "../services/notifi-agent.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
 import { scheduleTaskService } from "../services/schedule-task.service";
-import { schedulePlanUsecase } from "./schedule-plan.usecase";
 
 class ScheduleTaskUsecase {
     constructor() { }
 
     async createScheduleTaskByKafka(scheduleTask: any): Promise<void> {
         try {
-            let schedulePlan = await schedulePlanService.findSchedulePlanByUserId(scheduleTask.userId);
+            const schedulePlan = await schedulePlanService.createSchedulePlan(scheduleTask.userId);
             if (!schedulePlan) {
-                console.error("Cannot find schedule plan by user id: ", scheduleTask.userId);
-                schedulePlan = await schedulePlanUsecase.createSchedulePlan(scheduleTask.userId);
-                if (!schedulePlan) {
-                    throw new Error("Failed to create schedule plan");
-                }
+                throw new Error("Failed to create schedule plan");
             }
 
             const task = scheduleTaskMapper.kafkaCreateTaskMapper(scheduleTask, schedulePlan._id);
@@ -31,9 +26,19 @@ class ScheduleTaskUsecase {
             console.error("Error on createScheduleTask: ", error);
         }
     }
-    async createScheduleTaskByRest(scheduleTask: any): Promise<IResponse> {
+
+    async createScheduleTask(scheduleTask: any): Promise<IResponse | undefined> {
         try {
-            return await scheduleTaskService.createScheduleTask(scheduleTask);
+            const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(scheduleTask.userId);
+            if (schedulePlan === undefined || schedulePlan === null) {
+                console.error(`Cannot find schedule plan by user id: ${scheduleTask.userId}`);
+                return msg400(`Cannot find schedule plan by user id: ${scheduleTask.userId}`);
+            }
+            const task = scheduleTaskMapper.restCreateTaskMapper(scheduleTask, schedulePlan._id);
+            const createdScheduleTask = await scheduleTaskService.createScheduleTask(task);
+            return msg200({
+                createdScheduleTask
+            })
         } catch (error) {
             console.error("Error on createScheduleTask: ", error);
             return msg400("Cannot create schedule task!");
@@ -101,7 +106,7 @@ class ScheduleTaskUsecase {
         }
     }
 
-    async getListScheduleTaskByUserId(userId: number): Promise<IScheduleTaskEntity[] | undefined> {
+    async getListTaskByUserId(userId: number): Promise<IScheduleTaskEntity[] | undefined> {
         try {
             const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
             if (!schedulePlan) {
@@ -138,7 +143,7 @@ class ScheduleTaskUsecase {
         }
     }
 
-    async getScheduleBatchTask(userId: number): Promise<any | undefined> {
+    async getBatchTask(userId: number): Promise<any | undefined> {
         try {
             const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
             if (!schedulePlan) {
@@ -154,7 +159,7 @@ class ScheduleTaskUsecase {
         }
     }
 
-    async chooseScheduleBatchTask(userId: number, batchNumber: number): Promise<IResponse | undefined> {
+    async chooseBatchTask(userId: number, batchNumber: number): Promise<IResponse | undefined> {
         try {
             const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
             if (!schedulePlan) {
@@ -197,6 +202,21 @@ class ScheduleTaskUsecase {
         } catch (error) {
             console.error("Error on getScheduleTask: ", error);
             return msg400("Cannot get schedule task!");
+        }
+    }
+
+    async getScheduleTaskList(userId: number): Promise<IResponse | undefined> {
+        try {
+            const scheduleTaskList = await scheduleTaskService.getScheduleTaskList(userId);
+            if (scheduleTaskList) {
+                return msg200({
+                    scheduleTaskList
+                })
+            }
+            return msg400("Cannot get schedule task list!");
+        } catch (error) {
+            console.error("Error on getScheduleTaskList: ", error);
+            return msg400("Cannot get schedule task list!");
         }
     }
 }

@@ -1,5 +1,6 @@
 import { IScheduleTaskEntity, ScheduleTaskEntity } from "../../infrastructure/entities/schedule-task.entity"
 import { convertPriority } from "../../kernel/utils/convert-fields";
+import { ActiveStatus, RepeatLevel } from "../domain/enums/enums";
 import { KafkaCreateTaskMessage, KafkaOptimizeTaskMessage, SyncScheduleTaskRequest } from "../domain/request/task.dto";
 
 export const scheduleTaskMapper = {
@@ -16,7 +17,23 @@ export const scheduleTaskMapper = {
             activeStatus: data.task.activeStatus,
             preferenceLevel: convertPriority(data.task.priority),
             schedulePlanId: schedulePlanId,
+            repeat: RepeatLevel.NONE, 
+            isNotify: false,
         });
+    },
+
+    restCreateTaskMapper(scheduleTask: any, schedulePlanId: string): IScheduleTaskEntity {
+        return new ScheduleTaskEntity({
+            title: scheduleTask.title,
+            startDate: scheduleTask.startDate,
+            deadline: scheduleTask.deadline,
+            duration: scheduleTask.duration,
+            activeStatus: ActiveStatus.active,
+            preferenceLevel: scheduleTask.priority,
+            schedulePlanId: schedulePlanId,
+            repeat: scheduleTask.repeat,
+            isNotify: true,
+        })
     },
 
     buildKafkaCreateTaskMapper(taskId: string, scheduleTaskId: string, scheduleTaskName: string ) {

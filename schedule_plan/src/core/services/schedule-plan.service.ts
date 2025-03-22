@@ -9,6 +9,10 @@ class SchedulePlanService {
     constructor() { }
 
     async createSchedulePlan(userId: number): Promise<any> {
+        const existedSchedulePlan = await schedulePlanRepository.findSchedulePlanByUserId(userId);
+        if (existedSchedulePlan !== null) {
+            return existedSchedulePlan;
+        }
         const schedulePlan = {
             userId: userId,
             startDate: new Date(),

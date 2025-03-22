@@ -1,7 +1,6 @@
 import { NextFunction, Request } from "express";
 import { IResponse, msg200 } from "../../core/common/response";
 import { schedulePlanService } from "../../core/services/schedule-plan.service";
-import { schedulePlanUsecase } from "../../core/usecase/schedule-plan.usecase";
 import { scheduleTaskUsecase } from "../../core/usecase/schedule-task.usecase";
 
 class ScheduleController {
@@ -16,19 +15,10 @@ class ScheduleController {
         }
     }
 
-    async registerSchedulePlan(req: Request, next: NextFunction): Promise<IResponse | undefined> {
-        try {
-            const schedulePlan = req.body.userId;
-            return await schedulePlanUsecase.registerSchedulePlan(schedulePlan);
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    async getScheduleTaskList(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+    async getTaskList(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = parseInt(req.params.userId, 10);
-            const scheduleTaskList = await scheduleTaskUsecase.getListScheduleTaskByUserId(userId);
+            const scheduleTaskList = await scheduleTaskUsecase.getListTaskByUserId(userId);
             return msg200({
                 scheduleTaskList
             })
@@ -37,10 +27,10 @@ class ScheduleController {
         }
     }
 
-    async getScheduleBatchTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+    async getBatchTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = parseInt(req.params.userId, 10);
-            const scheduleBatchTask = await scheduleTaskUsecase.getScheduleBatchTask(userId);
+            const scheduleBatchTask = await scheduleTaskUsecase.getBatchTask(userId);
             if (!scheduleBatchTask) {
                 return msg200({
                     message: "No schedule batch task found!"
@@ -54,11 +44,11 @@ class ScheduleController {
         }
     } 
 
-    async chooseScheduleBatchTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+    async chooseBatchTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const batchNumber = req.body.batchNumber;
             const userId = req.body.userId;
-            return await scheduleTaskUsecase.chooseScheduleBatchTask(userId, batchNumber);
+            return await scheduleTaskUsecase.chooseBatchTask(userId, batchNumber);
         } catch (error) {
             next(error);
         }
@@ -69,6 +59,24 @@ class ScheduleController {
             const taskId = req.body.taskId;
             const scheduleTaskId = req.body.scheduleTaskId;
             return await scheduleTaskUsecase.getScheduleTask(taskId, scheduleTaskId);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getScheduleTaskList(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const userId = Number(req.body.userId);
+            return await scheduleTaskUsecase.getScheduleTaskList(userId);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async createScheduleTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const scheduleTask = req.body.scheduleTask;
+            return await scheduleTaskUsecase.createScheduleTask(scheduleTask);
         } catch (error) {
             next(error);
         }
