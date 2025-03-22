@@ -25,7 +25,6 @@ export const scheduleTaskMapper = {
     restCreateTaskMapper(scheduleTask: any, schedulePlanId: string): IScheduleTaskEntity {
         return new ScheduleTaskEntity({
             title: scheduleTask.title,
-            status: scheduleTask.status,
             startDate: scheduleTask.startDate,
             deadline: scheduleTask.deadline,
             duration: scheduleTask.duration,
