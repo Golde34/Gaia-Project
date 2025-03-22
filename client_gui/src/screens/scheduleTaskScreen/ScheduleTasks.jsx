@@ -1,8 +1,10 @@
 import { Button, Card, Col, Flex, Grid, Subtitle, Text } from "@tremor/react"
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { CreateScheduleTaskDialog } from "./CreateScheduleTask";
 
-export const ScheduleTasks = () => {
+export const ScheduleTasks = (props) => {
+    const schedulePlanId = props.schedulePlanId;
     const userId = "1";
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -27,10 +29,7 @@ export const ScheduleTasks = () => {
                 </Col>
                 <Col numColSpan={5}>
                     <Flex justifyContent='end'>
-                        <Button type='button' className="col-span-5 mb-10"
-                            color='indigo' onClick={() => navigate('/create-schedule-task')}>
-                            Create Schedule Task
-                        </Button>
+                        <CreateScheduleTaskDialog userId={userId} />  
                     </Flex>
                 </Col>
             </Grid>
