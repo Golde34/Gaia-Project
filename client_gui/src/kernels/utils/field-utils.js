@@ -62,3 +62,60 @@ export const pullPriority = (priorities) => {
     }
     return [isHighPriority, isMediumPriority, isLowPriority, isStarPriority]
 }
+
+export const pushRepeat = (isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday) => {
+    let repeat = []
+    if (isMonday) {
+        repeat.push(Weekday.MONDAY)
+    }
+    if (isTuesday) {
+        repeat.push(Weekday.TUESDAY)
+    }
+    if (isWednesday) {
+        repeat.push(Weekday.WEDNESDAY)
+    }
+    if (isThursday) {
+        repeat.push(Weekday.THURSDAY)
+    }
+    if (isFriday) {
+        repeat.push(Weekday.FRIDAY)
+    }
+    if (isSaturday) {
+        repeat.push(Weekday.SATURDAY)
+    }
+    if (isSunday) {
+        repeat.push(Weekday.SUNDAY)
+    }
+    return repeat 
+}
+
+export const pullRepeat = (repeats) => {
+    let isMonday = false
+    let isTuesday = false
+    let isWednesday = false
+    let isThursday = false
+    let isFriday = false
+    let isSaturday = false
+    let isSunday = false
+    if (repeats === undefined || repeats === null) {
+        return [isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday]
+    }
+    for (let repeat of repeats) {
+        if (repeat === Weekday.MONDAY) {
+            isMonday = true
+        } else if (repeat === Weekday.TUESDAY) {
+            isTuesday = true
+        } else if (repeat === Weekday.WEDNESDAY) {
+            isWednesday = true
+        } else if (repeat === Weekday.THURSDAY) {
+            isThursday = true
+        } else if (repeat === Weekday.FRIDAY) {
+            isFriday = true
+        } else if (repeat === Weekday.SATURDAY) {
+            isSaturday = true
+        } else if (repeat === Weekday.SUNDAY) {
+            isSunday = true
+        }
+    }
+    return [isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday]
+}

@@ -117,3 +117,14 @@ export const useUpdateTaskDispatch = () => {
 
     return updateTaskDispatch;
 }
+
+export const useCreateScheduletaskDispatch = () => {
+    const dispatch = useDispatch();
+
+    const createScheduleTaskDispatch = (scheduleTask) => {
+        // dispatch(createScheduleTask(scheduleTask));
+        console.log("createScheduleTaskDispatch", scheduleTask);
+    }
+
+    return createScheduleTaskDispatch;
+}
