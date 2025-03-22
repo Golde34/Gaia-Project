@@ -27,9 +27,14 @@ class ScheduleTaskUsecase {
         }
     }
 
-    async createScheduleTask(scheduleTask: any, schedulePlanId: string): Promise<IResponse | undefined> {
+    async createScheduleTask(scheduleTask: any): Promise<IResponse | undefined> {
         try {
-            const task = scheduleTaskMapper.restCreateTaskMapper(scheduleTask, schedulePlanId);
+            const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(scheduleTask.userId);
+            if (schedulePlan === undefined || schedulePlan === null) {
+                console.error(`Cannot find schedule plan by user id: ${scheduleTask.userId}`);
+                return msg400(`Cannot find schedule plan by user id: ${scheduleTask.userId}`);
+            }
+            const task = scheduleTaskMapper.restCreateTaskMapper(scheduleTask, schedulePlan._id);
             const createdScheduleTask = await scheduleTaskService.createScheduleTask(task);
             return msg200({
                 createdScheduleTask
