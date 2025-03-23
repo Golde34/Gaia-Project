@@ -27,6 +27,7 @@ export const scheduleTaskMapper = {
             title: scheduleTask.title,
             duration: scheduleTask.duration,
             activeStatus: ActiveStatus.active,
+            priority: scheduleTask.priority,
             preferenceLevel: convertPriority(scheduleTask.priority),
             schedulePlanId: schedulePlanId,
             repeat: scheduleTask.repeat,

@@ -50,7 +50,7 @@ scheduleTaskRouter.post("/get-schedule-task",
     }
 )
 
-scheduleTaskRouter.get("/get-schedule-task-list",
+scheduleTaskRouter.get("/get-schedule-task-list/:userId",
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const scheduleTaskResult = await scheduleTaskControllerImpl.getScheduleTaskList(req, next);
