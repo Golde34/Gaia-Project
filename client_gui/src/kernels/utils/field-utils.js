@@ -1,4 +1,4 @@
-import { BadgeDeltaType, ColorConstants, TaskPriority, TaskStatus } from "../constants/constants"
+import { BadgeDeltaType, ColorConstants, TaskPriority, TaskStatus, Weekday } from "../constants/constants"
 
 export const statusColor = (status) => {
     if (status === TaskStatus.TODO) {

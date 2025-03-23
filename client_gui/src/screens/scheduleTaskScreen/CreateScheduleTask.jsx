@@ -1,9 +1,8 @@
-import { Dialog, Transition } from "@headlessui/react";
-import { Button, Col, DatePicker, Grid, TextInput } from "@tremor/react";
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
+import { Button, TextInput } from "@tremor/react";
 import { Fragment, useState } from "react";
 import CheckBoxIcon from "../../components/icons/CheckboxIcon";
-import RadioButtonIcon from "../../components/icons/RadioButtonIcon";
-import { pushPriority } from "../../kernels/utils/field-utils";
+import { pushPriority, pushRepeat } from "../../kernels/utils/field-utils";
 import { useCreateScheduletaskDispatch } from "../../kernels/utils/write-dialog-api-requests";
 
 export const CreateScheduleTaskDialog = (props) => {
@@ -19,8 +18,6 @@ export const CreateScheduleTaskDialog = (props) => {
 
     const [scheduleTask] = useState({});
     const [title, setTitle] = useState('');
-    const [startDate, setStartDate] = useState(new Date());
-    const [deadline, setDeadline] = useState(new Date());
     const [duration, setDuration] = useState(0);
     // Priority check boxes
     const [isHighPriority, setIsHighPriority] = useState(false);
@@ -36,16 +33,13 @@ export const CreateScheduleTaskDialog = (props) => {
     const [isSaturday, setIsSaturday] = useState(false);
     const [isSunday, setIsSunday] = useState(false);
 
-    const setObjectTask = (title, startDate, deadline, duration,
-        isHighPriority, isMediumPriority, isLowPriority, isStarPriority,
+    const setObjectTask = (title, duration, isHighPriority, isMediumPriority, isLowPriority, isStarPriority,
         isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday) => {
         scheduleTask.userId = userId;
         scheduleTask.title = title;
-        scheduleTask.startDate = startDate;
-        scheduleTask.deadline = deadline;
         scheduleTask.duration = duration;
         scheduleTask.priority = pushPriority(isHighPriority, isMediumPriority, isLowPriority, isStarPriority);
-        scheduleTask.repeat = [isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday];
+        scheduleTask.repeat = pushRepeat(isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday);
         scheduleTask.isNotify = true;
         scheduleTask.activeStatus = 'ACTIVE';
 
@@ -62,7 +56,7 @@ export const CreateScheduleTaskDialog = (props) => {
 
             <Transition appear show={isOpen} as={Fragment}>
                 <Dialog as="div" className="relative z-10" onClose={closeModal}>
-                    <Transition.Child
+                    <TransitionChild
                         as={Fragment}
                         enter="ease-out duration-300"
                         enterFrom="opacity-0"
@@ -72,11 +66,11 @@ export const CreateScheduleTaskDialog = (props) => {
                         leaveTo="opacity-0"
                     >
                         <div className="fixed inset-0 bg-black/25" />
-                    </Transition.Child>
+                    </TransitionChild>
 
                     <div className="fixed inset-0 overflow-y-auto">
                         <div className="flex min-h-full items-center justify-center p-4 text-center">
-                            <Transition.Child
+                            <TransitionChild
                                 as={Fragment}
                                 enter="ease-out duration-300"
                                 enterFrom="opacity-0 scale-95"
@@ -85,13 +79,13 @@ export const CreateScheduleTaskDialog = (props) => {
                                 leaveFrom="opacity-100 scale-100"
                                 leaveTo="opacity-0 scale-95"
                             >
-                                <Dialog.Panel className="w-full max-w-md transform rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                                    <Dialog.Title
+                                <DialogPanel className="w-full max-w-md transform rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                                    <DialogTitle
                                         as="h3"
                                         className="text-lg font-medium leading-6 text-gray-900"
                                     >
                                         Create New Task
-                                    </Dialog.Title>
+                                    </DialogTitle>
 
                                     <div className="mt-5">
                                         <label htmlFor="task-title" className="block text-md font-medium text-gray-700 mb-3">Task Title</label>
@@ -103,39 +97,6 @@ export const CreateScheduleTaskDialog = (props) => {
                                             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                             placeholder="Task Title"
                                         />
-                                    </div>
-
-                                    <div className="mt-6">
-                                        <Grid numItems={6}>
-                                            <Col numColSpan={3}>
-                                                <p className="block text-md font-medium text-gray-700 mb-3">Start Date</p>
-                                                <div className="grid grid-cols-1 m-1">
-                                                    <div className="inline-flex items-center bg-white">
-                                                        <DatePicker
-                                                            className="max-w-md mx-auto"
-                                                            onValueChange={setStartDate}
-                                                            minDate={new Date()}
-                                                            value={startDate}
-                                                            displayFormat="dd/MM/yyyy"
-                                                        ></DatePicker>
-                                                    </div>
-                                                </div>
-                                            </Col>
-                                            <Col numColSpan={3}>
-                                                <p className="block text-md font-medium text-gray-700 mb-3">Due Date</p>
-                                                <div className="grid grid-cols-1 m-1">
-                                                    <div className="inline-flex items-center bg-white">
-                                                        <DatePicker
-                                                            className="max-w-md mx-auto"
-                                                            onValueChange={setDeadline}
-                                                            minDate={new Date()}
-                                                            value={deadline}
-                                                            displayFormat="dd/MM/yyyy"
-                                                        ></DatePicker>
-                                                    </div>
-                                                </div>
-                                            </Col>
-                                        </Grid>
                                     </div>
 
                                     <div className="mt-2">
@@ -355,8 +316,7 @@ export const CreateScheduleTaskDialog = (props) => {
                                             type="button"
                                             className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                             onClick={() => {
-                                                setObjectTask(title, startDate, deadline, duration, 
-                                                    isHighPriority, isMediumPriority, isLowPriority, isStarPriority, 
+                                                setObjectTask(title, duration, isHighPriority, isMediumPriority, isLowPriority, isStarPriority, 
                                                     isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday);
                                                 closeModal();
                                             }}
@@ -364,9 +324,8 @@ export const CreateScheduleTaskDialog = (props) => {
                                             Create
                                         </button>
                                     </div>
-
-                                </Dialog.Panel>
-                            </Transition.Child>
+                                </DialogPanel>
+                            </TransitionChild>
                         </div>
                     </div>
                 </Dialog>
