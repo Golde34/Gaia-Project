@@ -75,8 +75,8 @@ class ScheduleController {
 
     async createScheduleTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
-            const scheduleTask = req.body.scheduleTask;
-            return await scheduleTaskUsecase.createScheduleTask(scheduleTask);
+            console.log(req.body);
+            return await scheduleTaskUsecase.createScheduleTask(req.body);
         } catch (error) {
             next(error);
         }

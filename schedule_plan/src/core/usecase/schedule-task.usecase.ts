@@ -36,6 +36,7 @@ class ScheduleTaskUsecase {
             }
             const task = scheduleTaskMapper.restCreateTaskMapper(scheduleTask, schedulePlan._id);
             const createdScheduleTask = await scheduleTaskService.createScheduleTask(task);
+            console.log('Created schedule task: ', createdScheduleTask);
             return msg200({
                 createdScheduleTask
             })
