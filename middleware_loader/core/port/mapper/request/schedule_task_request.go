@@ -21,17 +21,15 @@ func ChooseTaskBatch(body map[string]interface{}) (float64, float64) {
 	return userFloat, batchFloat 
 }
 
-func CreateScheduleTaskRequestDTOMapper(body map[string]interface{}) request_dtos.CreateScheduleTaskRequestDTO {
+func CreateScheduleTaskRequestDTOMapper(body map[string]any) request_dtos.CreateScheduleTaskRequestDTO {
 	var input request_dtos.CreateScheduleTaskRequestDTO
 	bodyMap := body["body"].(map[string]interface{})
 	input.Title = bodyMap["title"].(string)
-	input.StartDate = bodyMap["startDate"].(string)
-	input.Deadline = bodyMap["deadline"].(string)
 	input.Duration = bodyMap["duration"].(float64)
 	input.ActiveStatus = bodyMap["activeStatus"].(string)
 	input.Priority = utils.ConvertStringToStringArray(bodyMap["priority"].([]interface{}))
 	input.UserId = bodyMap["userId"].(string)
-	input.Repeat = bodyMap["repeat"].(string)
+	input.Repeat = utils.ConvertStringToStringArray(bodyMap["repeat"].([]interface{}))
 	input.IsNotify = bodyMap["isNotify"].(bool)	
 	return input
 }
