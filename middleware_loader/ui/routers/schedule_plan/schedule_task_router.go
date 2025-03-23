@@ -26,6 +26,9 @@ func NewScheduleTaskRouter(scheduleTaskService *services.ScheduleTaskService, r 
 		r.Post("/create", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.CreateScheduleTask(w, r, scheduleTaskService)
 		})
+		r.Get("/get-schedule-list/{userId}", func(w http.ResponseWriter, r *http.Request) {
+			controller_services.GetScheduleListByUserId(w, r, scheduleTaskService)
+		})
 	})
 	return &ScheduleTaskRouter{
 		ScheduleTaskService: scheduleTaskService,
