@@ -9,8 +9,8 @@ export const ScheduleTasks = (props) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    // const listScheduleTasks = useSelector(state => state.scheduleTaskList);
-    // const { loading, error, scheduleTasks } = listScheduleTasks;
+    const listScheduleTasks = useSelector(state => state.scheduleTaskList);
+    const { loading, error, scheduleTasks } = listScheduleTasks;
 
     function randomDecoration() {
         const colors = ["indigo", "red", "green", "blue", "yellow", "purple", "pink", "gray"];

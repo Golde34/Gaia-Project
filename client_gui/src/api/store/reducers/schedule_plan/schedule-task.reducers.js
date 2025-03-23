@@ -1,8 +1,7 @@
 import {
     CHOOSE_TASK_BATCH_FAILURE, CHOOSE_TASK_BATCH_REQUEST, CHOOSE_TASK_BATCH_SUCCESS,
-    CREATE_SCHEDULE_TASK_FAILURE,
-    CREATE_SCHEDULE_TASK_REQUEST,
-    CREATE_SCHEDULE_TASK_SUCCESS,
+    CREATE_SCHEDULE_TASK_FAILURE, CREATE_SCHEDULE_TASK_REQUEST, CREATE_SCHEDULE_TASK_SUCCESS,
+    REPEAT_SCHEDULE_TASK_LIST_FAILURE, REPEAT_SCHEDULE_TASK_LIST_REQUEST, REPEAT_SCHEDULE_TASK_LIST_SUCCESS,
     SCHEDULE_TASK_LIST_FAILURE, SCHEDULE_TASK_LIST_REQUEST, SCHEDULE_TASK_LIST_SUCCESS,
     TASK_BATCH_LIST_FAILURE, TASK_BATCH_LIST_REQUEST, TASK_BATCH_LIST_SUCCESS
 } from "../../constants/schedule_plan/schedule-task.constants";
@@ -57,6 +56,20 @@ export const createScheduleTaskReducer = (
         case CREATE_SCHEDULE_TASK_SUCCESS:
             return { loading: false, scheduleTask: action.payload.scheduleTask };
         case CREATE_SCHEDULE_TASK_FAILURE:
+            return { loading: false, error: action.payload };
+        default:
+            return state;
+    }
+}
+
+export const repeatScheduleTaskListReducer = (
+    state = { loading: true }, action) => {
+    switch (action.type) {
+        case REPEAT_SCHEDULE_TASK_LIST_REQUEST:
+            return { loading: true };
+        case REPEAT_SCHEDULE_TASK_LIST_SUCCESS:
+            return { loading: false, scheduleTask: action.payload.scheduleTask };
+        case REPEAT_SCHEDULE_TASK_LIST_FAILURE:
             return { loading: false, error: action.payload };
         default:
             return state;
