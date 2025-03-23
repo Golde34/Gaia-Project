@@ -68,7 +68,7 @@ export const repeatScheduleTaskListReducer = (
         case REPEAT_SCHEDULE_TASK_LIST_REQUEST:
             return { loading: true };
         case REPEAT_SCHEDULE_TASK_LIST_SUCCESS:
-            return { loading: false, scheduleTask: action.payload.scheduleTask };
+            return { loading: false, scheduleTasks: action.payload.scheduleTasks };
         case REPEAT_SCHEDULE_TASK_LIST_FAILURE:
             return { loading: false, error: action.payload };
         default:
