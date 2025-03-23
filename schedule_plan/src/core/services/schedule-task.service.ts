@@ -15,6 +15,7 @@ class ScheduleTaskService {
 
     async createScheduleTask(scheduleTask: any): Promise<IResponse> {
         try {
+            scheduleTask.createDate = new Date();
             const createScheduleTask = await scheduleTaskRepository.createScheduleTask(scheduleTask);
             return msg200({
                 message: (createScheduleTask as any)
@@ -185,9 +186,9 @@ class ScheduleTaskService {
         }
     }
 
-    async getScheduleTaskList(userId: number): Promise<any> {
+    async getScheduleTaskList(schedulePlanId: string): Promise<any> {
         try {
-            return [];
+            return await scheduleTaskRepository.findScheduleTasksByUserId(schedulePlanId);
         } catch (error) {
             console.error("Error on getScheduleTaskList: ", error);
             return [];

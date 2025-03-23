@@ -17,8 +17,9 @@ export interface IScheduleTaskEntity extends Document {
     stopTime: Number;
     taskBatch: Number;
     schedulePlanId: string;
-    repeat: string;
+    repeat: string[];
     isNotify: boolean;
+    createDate: Date;
 }
 
 export const scheduleTaskSchema = new mongoose.Schema(
@@ -33,15 +34,15 @@ export const scheduleTaskSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            required: true,
+            required: false,
         },
         startDate: {
             type: Date,
-            required: true,
+            required: false,
         },
         deadline: {
             type: Date,
-            required: true,
+            required: false,
         },
         duration: {
             type: Number,
@@ -57,7 +58,7 @@ export const scheduleTaskSchema = new mongoose.Schema(
         },
         taskId: {
             type: String,
-            required: true,
+            required: false,
         },
         isSynchronizedWithWO: {
             type: Boolean,
@@ -84,13 +85,18 @@ export const scheduleTaskSchema = new mongoose.Schema(
             required: true,
         },
         repeat: {
-            type: String,
+            type: [String],
             required: false,
         },
         isNotify: {
             type: Boolean,
             required: false,
         },
+        createDate: {
+            type: Date,
+            required: true,
+            default: Date.now,
+        }
     }, 
     {
         toJSON: { virtuals: true },

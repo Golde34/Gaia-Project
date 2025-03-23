@@ -36,6 +36,7 @@ class ScheduleTaskUsecase {
             }
             const task = scheduleTaskMapper.restCreateTaskMapper(scheduleTask, schedulePlan._id);
             const createdScheduleTask = await scheduleTaskService.createScheduleTask(task);
+            console.log('Created schedule task: ', createdScheduleTask);
             return msg200({
                 createdScheduleTask
             })
@@ -207,10 +208,16 @@ class ScheduleTaskUsecase {
 
     async getScheduleTaskList(userId: number): Promise<IResponse | undefined> {
         try {
-            const scheduleTaskList = await scheduleTaskService.getScheduleTaskList(userId);
-            if (scheduleTaskList) {
+            const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
+            if (!schedulePlan) {
+                console.error(`Cannot find schedule plan by user id: ${userId}`);
+                throw new Error(`Cannot find schedule plan by user id: ${userId}`);
+            }
+            console.log('Get schedule task list by schedule plan: ', schedulePlan._id);
+            const scheduleTasks = await scheduleTaskService.getScheduleTaskList(schedulePlan._id);
+            if (scheduleTasks) {
                 return msg200({
-                    scheduleTaskList
+                    scheduleTasks
                 })
             }
             return msg400("Cannot get schedule task list!");

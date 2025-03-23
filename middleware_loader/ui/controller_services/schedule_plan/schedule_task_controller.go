@@ -93,3 +93,23 @@ func CreateScheduleTask(w http.ResponseWriter, r *http.Request, scheduleTaskServ
 		return
 	}
 }
+
+func GetScheduleListByUserId(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
+	userId := chi.URLParam(r, "userId")
+	scheduleList, err := services.NewScheduleTaskService().GetScheduleListByUserId(userId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	scheduleTasks := map[string]interface{}{
+		"scheduleTasks": scheduleList,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(scheduleTasks); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}

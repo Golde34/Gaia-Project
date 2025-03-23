@@ -44,3 +44,11 @@ func (s *ScheduleTaskService) CreateScheduleTask(request request_dtos.CreateSche
 	}
 	return scheduleTask, nil
 }
+
+func (s *ScheduleTaskService) GetScheduleListByUserId(userId string) ([]response_dtos.ScheduleResponseDTO, error) {
+	scheduleTasks, err := client.IScheduleTaskAdapter(&adapter.ScheduleTaskAdapter{}).GetScheduleListByUserId(userId)
+	if err != nil {
+		return nil, err
+	}
+	return scheduleTasks, nil
+}

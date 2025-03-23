@@ -25,11 +25,10 @@ export const scheduleTaskMapper = {
     restCreateTaskMapper(scheduleTask: any, schedulePlanId: string): IScheduleTaskEntity {
         return new ScheduleTaskEntity({
             title: scheduleTask.title,
-            startDate: scheduleTask.startDate,
-            deadline: scheduleTask.deadline,
             duration: scheduleTask.duration,
             activeStatus: ActiveStatus.active,
-            preferenceLevel: scheduleTask.priority,
+            priority: scheduleTask.priority,
+            preferenceLevel: convertPriority(scheduleTask.priority),
             schedulePlanId: schedulePlanId,
             repeat: scheduleTask.repeat,
             isNotify: true,

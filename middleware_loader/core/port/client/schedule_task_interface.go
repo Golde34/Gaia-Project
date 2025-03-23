@@ -10,4 +10,5 @@ type IScheduleTaskAdapter interface {
     GetTaskBatchListByUserId(userId string) (response_dtos.ScheduleTaskBatchListResponseDTO, error) 
     ChooseTaskBatch(userId, batchNumber float64) (response_dtos.ScheduleTaskBatchListResponseDTO, error)
     CreateScheduleTask(scheduleTask request_dtos.CreateScheduleTaskRequestDTO) (response_dtos.ScheduleTaskResponseDTO, error)
+    GetScheduleListByUserId(userId string) ([]response_dtos.ScheduleResponseDTO, error)
 }

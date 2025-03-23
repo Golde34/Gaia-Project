@@ -37,3 +37,15 @@ func ReturnScheduleTaskObjectMapper(body map[string]interface{}) *response_dtos.
 	}
 	return &input
 }
+
+func ReturnScheduleObjectMapper(body map[string]interface{}) *response_dtos.ScheduleResponseDTO {
+	var input response_dtos.ScheduleResponseDTO
+	input.ID = body["_id"].(string)
+	input.Title = body["title"].(string)
+	input.Priority = utils.ConvertStringToStringArray(body["priority"].([]interface{}))
+	input.Duration = body["duration"].(float64)
+	input.ActiveStatus = body["activeStatus"].(string)
+	input.PreferenceLevel = body["preferenceLevel"].(float64)
+	input.Repeat = utils.ConvertStringToStringArray(body["repeat"].([]interface{}))
+	return &input
+}
