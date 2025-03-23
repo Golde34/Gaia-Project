@@ -102,8 +102,12 @@ func GetScheduleListByUserId(w http.ResponseWriter, r *http.Request, scheduleTas
 		return
 	}
 
+	scheduleTasks := map[string]interface{}{
+		"scheduleTasks": scheduleList,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(scheduleList); err != nil {
+	if err := json.NewEncoder(w).Encode(scheduleTasks); err != nil {
 		log.Printf("Error encoding response: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

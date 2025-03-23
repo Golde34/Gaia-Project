@@ -53,6 +53,36 @@ export const ScheduleTasks = (props) => {
                             </Col>
                         </Grid>
                         <Grid numItems={3} className="gap-7 mt-5">
+                            {scheduleTasks.map((task) => (
+                                <Col numColSpan={1}>
+                                    <Card className="w-xs hover:cursor-pointer transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-105 duration-300"
+                                        decoration={"top"} decorationColor={randomDecoration()}>
+                                        <Subtitle className="text-xl font-bold text-gray-800"> {task.title} </Subtitle>
+                                        <Text> Duration: {task.duration} </Text>
+                                        <Text> Repeat: {task.repeat} </Text>
+                                        <Text> Project: {task.projectName} </Text>
+                                        <Text> Group Task: {task.groupTaskName} </Text>
+                                    </Card>
+                                </Col>
+                            ))}
+                        </Grid>
+                    </Card>
+                    {/* <Card>
+                        <Grid numItems={12}>
+                            <Col numColSpan={7}>
+                                <Flex justifyContent="end">
+                                    <Subtitle className="text-xl font-bold text-gray-800">
+                                        Your Schedule Tasks
+                                    </Subtitle>
+                                </Flex>
+                            </Col>
+                            <Col numColSpan={5}>
+                                <Flex justifyContent='end'>
+                                    <CreateScheduleTaskDialog userId={userId} />
+                                </Flex>
+                            </Col>
+                        </Grid>
+                        <Grid numItems={3} className="gap-7 mt-5">
                             <Col numColSpan={1}>
                                 <Card className="w-xs hover:cursor-pointer transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-105 duration-300"
                                     decoration={"top"} decorationColor={randomDecoration()}>
@@ -96,7 +126,7 @@ export const ScheduleTasks = (props) => {
                                 </Card>
                             </Col>
                         </Grid>
-                    </Card>
+                    </Card> */}
                 </>
             )
             }

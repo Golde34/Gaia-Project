@@ -93,6 +93,7 @@ export const repeatScheduleTaskList = (userId) => async (dispatch) => {
     dispatch({ type: REPEAT_SCHEDULE_TASK_LIST_REQUEST, payload: userId });
     try {
         const { data } = await serverRequest(`/schedule-task/get-schedule-list/${userId}`, HttpMethods.GET, portName.middleware);
+        console.log(data);
         dispatch({ type: REPEAT_SCHEDULE_TASK_LIST_SUCCESS, payload: data });
     } catch (error) {
         dispatch({

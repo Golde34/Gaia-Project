@@ -44,6 +44,7 @@ export const CreateScheduleTaskDialog = (props) => {
         scheduleTask.activeStatus = 'ACTIVE';
 
         createScheduleTask(scheduleTask); 
+        window.location.reload();
     }
 
     const createScheduleTask = useCreateScheduletaskDispatch();
