@@ -108,30 +108,40 @@ export const CreateScheduleTaskDialog = (props) => {
                                     <div className="mt-6">
                                         <Grid numItems={6}>
                                             <Col numColSpan={3}>
-                                                <p className="block text-md font-medium text-gray-700 mb-3">Start Date</p>
+                                                <p className="block text-md font-medium text-gray-700 mb-3">Start Time</p>
                                                 <div className="grid grid-cols-1 m-1">
                                                     <div className="inline-flex items-center bg-white">
-                                                        <DatePicker
-                                                            className="max-w-md mx-auto"
-                                                            onValueChange={setStartDate}
-                                                            minDate={new Date()}
-                                                            value={startDate}
-                                                            displayFormat="dd/MM/yyyy"
-                                                        ></DatePicker>
+                                                        <div className="relative">
+                                                            <input
+                                                                type="time"
+                                                                id="start-time"
+                                                                className="bg-indigo-50 border border-indigo-300 text-indigo-900 text-sm rounded-full focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5"
+                                                                min="00:00"
+                                                                max="23:59"
+                                                                value={startHour}
+                                                                onChange={(e) => setStartHour(e.target.value)}
+                                                                required
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </Col>
                                             <Col numColSpan={3}>
-                                                <p className="block text-md font-medium text-gray-700 mb-3">Due Date</p>
+                                                <p className="block text-md font-medium text-gray-700 mb-3">End Time</p>
                                                 <div className="grid grid-cols-1 m-1">
                                                     <div className="inline-flex items-center bg-white">
-                                                        <DatePicker
-                                                            className="max-w-md mx-auto"
-                                                            onValueChange={setDeadline}
-                                                            minDate={new Date()}
-                                                            value={deadline}
-                                                            displayFormat="dd/MM/yyyy"
-                                                        ></DatePicker>
+                                                        <div className="relative">
+                                                            <input
+                                                                type="time"
+                                                                id="end-time"
+                                                                className="bg-indigo-50 border border-indigo-300 text-indigo-900 text-sm rounded-full focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5"
+                                                                min="00:00"
+                                                                max="23:59"
+                                                                value={endHour}
+                                                                onChange={(e) => setEndHour(e.target.value)}
+                                                                required
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </Col>
