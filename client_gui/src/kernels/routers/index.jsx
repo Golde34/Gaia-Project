@@ -16,12 +16,13 @@ import GaiaManagerDashboard from '../../views/gaia_management/GaiaManagerDashboa
 import GaiaHealth from '../../views/microservices_gui/GaiaHealth';
 import NoteDashboard from '../../views/task_manager/NoteDashboard';
 import NoteDetail from '../../screens/noteScreen/NoteDetail';
-import ChatComponent from '../../views/user_gui/TestChat';
+import ChatComponent from '../../views/test/TestChat';
 import TaskIntroduction from '../../views/introduction/TaskIntroduction';
 import TaskRegistration from '../../views/task_manager/TaskRegistration';
 import TaskDetail from '../../views/task_manager/TaskDetail';
 import GitHubCallback from '../context/GithubCallback';
 import ProjectDetail from '../../views/task_manager/ProjectDetail';
+import Test from "../../views/test/Test";
 
 // Guest is public
 // User is protected, only logged in when the Role higher than User
@@ -29,6 +30,11 @@ import ProjectDetail from '../../views/task_manager/ProjectDetail';
 // Boss is private, only logged in when the Role is Boss
 
 const routeList = [
+    {
+        path: '/private/test',
+        key: 'test',
+        element: <Test />
+    },
     {
         path: '/',
         key: 'root',
