@@ -1,5 +1,5 @@
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
-import { Button, TextInput } from "@tremor/react";
+import { Button, Col, Grid, Textarea, TextInput } from "@tremor/react";
 import { Fragment, useState } from "react";
 import CheckBoxIcon from "../../components/icons/CheckboxIcon";
 import { pushPriority, pushRepeat } from "../../kernels/utils/field-utils";
@@ -18,7 +18,10 @@ export const CreateScheduleTaskDialog = (props) => {
 
     const [scheduleTask] = useState({});
     const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
     const [duration, setDuration] = useState(0);
+    const [startHour, setStartHour] = useState(new Date());
+    const [endHour, setEndHour] = useState(new Date());
     // Priority check boxes
     const [isHighPriority, setIsHighPriority] = useState(false);
     const [isMediumPriority, setIsMediumPriority] = useState(false);
@@ -33,17 +36,21 @@ export const CreateScheduleTaskDialog = (props) => {
     const [isSaturday, setIsSaturday] = useState(false);
     const [isSunday, setIsSunday] = useState(false);
 
-    const setObjectTask = (title, duration, isHighPriority, isMediumPriority, isLowPriority, isStarPriority,
+    const setObjectTask = (title, duration, description, startHour, endHour,
+        isHighPriority, isMediumPriority, isLowPriority, isStarPriority,
         isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday) => {
         scheduleTask.userId = userId;
         scheduleTask.title = title;
         scheduleTask.duration = duration;
+        scheduleTask.description = description;
+        scheduleTask.startHour = startHour;
+        scheduleTask.endHour = endHour;
         scheduleTask.priority = pushPriority(isHighPriority, isMediumPriority, isLowPriority, isStarPriority);
         scheduleTask.repeat = pushRepeat(isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday);
         scheduleTask.isNotify = true;
         scheduleTask.activeStatus = 'ACTIVE';
 
-        createScheduleTask(scheduleTask); 
+        createScheduleTask(scheduleTask);
         window.location.reload();
     }
 
@@ -98,6 +105,60 @@ export const CreateScheduleTaskDialog = (props) => {
                                             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                             placeholder="Task Title"
                                         />
+                                    </div>
+
+                                    <div className="mt-4">
+                                        <label htmlFor="task-description" className="block text-md font-medium text-gray-700 mb-3">Description</label>
+                                        <Textarea
+                                            id="task-description"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                            placeholder="Task Description"
+                                        />
+                                    </div>
+
+                                    <div className="mt-6">
+                                        <Grid numItems={6}>
+                                            <Col numColSpan={3}>
+                                                <p className="block text-md font-medium text-gray-700 mb-3">Start Time</p>
+                                                <div className="grid grid-cols-1 m-1">
+                                                    <div className="inline-flex items-center bg-white">
+                                                        <div className="relative">
+                                                            <input
+                                                                type="time"
+                                                                id="start-time"
+                                                                className="bg-indigo-50 border border-indigo-300 text-indigo-900 text-sm rounded-full focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5"
+                                                                min="00:00"
+                                                                max="23:59"
+                                                                value={startHour}
+                                                                onChange={(e) => setStartHour(e.target.value)}
+                                                                required
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </Col>
+                                            <Col numColSpan={3}>
+                                                <p className="block text-md font-medium text-gray-700 mb-3">End Time</p>
+                                                <div className="grid grid-cols-1 m-1">
+                                                    <div className="inline-flex items-center bg-white">
+                                                        <div className="relative">
+                                                            <input
+                                                                type="time"
+                                                                id="end-time"
+                                                                className="bg-indigo-50 border border-indigo-300 text-indigo-900 text-sm rounded-full focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5"
+                                                                min="00:00"
+                                                                max="23:59"
+                                                                value={endHour}
+                                                                onChange={(e) => setEndHour(e.target.value)}
+                                                                required
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </Col>
+                                        </Grid>
                                     </div>
 
                                     <div className="mt-2">
@@ -317,7 +378,8 @@ export const CreateScheduleTaskDialog = (props) => {
                                             type="button"
                                             className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                             onClick={() => {
-                                                setObjectTask(title, duration, isHighPriority, isMediumPriority, isLowPriority, isStarPriority, 
+                                                setObjectTask(title, duration, description, startHour, endHour, 
+                                                    isHighPriority, isMediumPriority, isLowPriority, isStarPriority,
                                                     isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday);
                                                 closeModal();
                                             }}
