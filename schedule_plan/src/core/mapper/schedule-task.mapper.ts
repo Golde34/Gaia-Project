@@ -23,9 +23,17 @@ export const scheduleTaskMapper = {
     },
 
     restCreateTaskMapper(scheduleTask: any, schedulePlanId: string): IScheduleTaskEntity {
+        const [startHour, startMinute] = scheduleTask.startHour.split(':').map(Number)
+        const [endHour, endMinute] = scheduleTask.endHour.split(':').map(Number)
+        const now = new Date()
+        const startDate = this.createDateByHour(now, startHour, startMinute)
+        const endDate = this.createDateByHour(now, endHour, endMinute)
         return new ScheduleTaskEntity({
             title: scheduleTask.title,
             duration: scheduleTask.duration,
+            description: scheduleTask.description,
+            startDate: startDate,
+            deadline: endDate,
             activeStatus: ActiveStatus.active,
             priority: scheduleTask.priority,
             preferenceLevel: convertPriority(scheduleTask.priority),
@@ -33,6 +41,10 @@ export const scheduleTaskMapper = {
             repeat: scheduleTask.repeat,
             isNotify: true,
         })
+    },
+
+    createDateByHour(now: Date, hour: string, minute: string): Date {
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate(), Number(hour), Number(minute)) 
     },
 
     buildKafkaCreateTaskMapper(taskId: string, scheduleTaskId: string, scheduleTaskName: string ) {
