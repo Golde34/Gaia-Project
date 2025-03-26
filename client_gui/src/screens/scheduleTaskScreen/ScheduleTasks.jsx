@@ -54,7 +54,7 @@ export const ScheduleTasks = (props) => {
                         </Grid>
                         <Grid numItems={3} className="gap-7 mt-5">
                             {scheduleTasks.map((task) => (
-                                <Col numColSpan={1}>
+                                <Col numColSpan={1} key={task.id}>
                                     <Card className="w-xs hover:cursor-pointer transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-105 duration-300"
                                         decoration={"top"} decorationColor={randomDecoration()}>
                                         <Subtitle className="text-xl font-bold text-gray-800"> {task.title} </Subtitle>
