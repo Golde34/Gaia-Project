@@ -44,6 +44,8 @@ func ReturnScheduleObjectMapper(body map[string]interface{}) *response_dtos.Sche
 	input.Title = body["title"].(string)
 	input.Priority = utils.ConvertStringToStringArray(body["priority"].([]interface{}))
 	input.Duration = body["duration"].(float64)
+	input.StartDate = body["startDate"].(string)
+	input.Deadline = body["deadline"].(string)
 	input.ActiveStatus = body["activeStatus"].(string)
 	input.PreferenceLevel = body["preferenceLevel"].(float64)
 	input.Repeat = utils.ConvertStringToStringArray(body["repeat"].([]interface{}))

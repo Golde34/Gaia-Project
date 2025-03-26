@@ -59,6 +59,8 @@ export const ScheduleTasks = (props) => {
                                         decoration={"top"} decorationColor={randomDecoration()}>
                                         <Subtitle className="text-xl font-bold text-gray-800"> {task.title} </Subtitle>
                                         <Text> Duration: {task.duration} </Text>
+                                        <Text> Start At: {task.startDate}</Text>
+                                        <Text> End At: {task.deadline} </Text>
                                         <Text> Repeat: {task.repeat} </Text>
                                         <Text> Project: {task.projectName} </Text>
                                         <Text> Group Task: {task.groupTaskName} </Text>
