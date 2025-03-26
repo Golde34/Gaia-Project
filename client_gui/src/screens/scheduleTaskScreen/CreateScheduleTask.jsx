@@ -1,9 +1,10 @@
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 import { Button, Col, Grid, Textarea, TextInput } from "@tremor/react";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import CheckBoxIcon from "../../components/icons/CheckboxIcon";
 import { pushPriority, pushRepeat } from "../../kernels/utils/field-utils";
 import { useCreateScheduletaskDispatch } from "../../kernels/utils/write-dialog-api-requests";
+import { calculateDuration } from "../../kernels/utils/date-picker";
 
 export const CreateScheduleTaskDialog = (props) => {
     const userId = props.userId;
@@ -20,8 +21,8 @@ export const CreateScheduleTaskDialog = (props) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [duration, setDuration] = useState(0);
-    const [startHour, setStartHour] = useState(new Date());
-    const [endHour, setEndHour] = useState(new Date());
+    const [startHour, setStartHour] = useState('');
+    const [endHour, setEndHour] = useState('');
     // Priority check boxes
     const [isHighPriority, setIsHighPriority] = useState(false);
     const [isMediumPriority, setIsMediumPriority] = useState(false);
@@ -41,7 +42,7 @@ export const CreateScheduleTaskDialog = (props) => {
         isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday) => {
         scheduleTask.userId = userId;
         scheduleTask.title = title;
-        scheduleTask.duration = duration;
+        scheduleTask.duration = Number(duration);
         scheduleTask.description = description;
         scheduleTask.startHour = startHour;
         scheduleTask.endHour = endHour;
@@ -51,10 +52,14 @@ export const CreateScheduleTaskDialog = (props) => {
         scheduleTask.activeStatus = 'ACTIVE';
 
         createScheduleTask(scheduleTask);
-        window.location.reload();
+        // window.location.reload();
     }
 
     const createScheduleTask = useCreateScheduletaskDispatch();
+
+    useEffect(() => {
+        setDuration(calculateDuration(startHour, endHour));
+    })
 
     return (
         <>
@@ -120,7 +125,7 @@ export const CreateScheduleTaskDialog = (props) => {
 
                                     <div className="mt-6">
                                         <Grid numItems={6}>
-                                            <Col numColSpan={3}>
+                                            <Col numColSpan={2}>
                                                 <p className="block text-md font-medium text-gray-700 mb-3">Start Time</p>
                                                 <div className="grid grid-cols-1 m-1">
                                                     <div className="inline-flex items-center bg-white">
@@ -139,7 +144,7 @@ export const CreateScheduleTaskDialog = (props) => {
                                                     </div>
                                                 </div>
                                             </Col>
-                                            <Col numColSpan={3}>
+                                            <Col numColSpan={2}>
                                                 <p className="block text-md font-medium text-gray-700 mb-3">End Time</p>
                                                 <div className="grid grid-cols-1 m-1">
                                                     <div className="inline-flex items-center bg-white">
@@ -158,22 +163,23 @@ export const CreateScheduleTaskDialog = (props) => {
                                                     </div>
                                                 </div>
                                             </Col>
+                                            <Col numColSpan={2}>
+                                                <p className="block text-md font-medium text-gray-700 mb-3">Duration</p>
+                                                <div className="grid grid-cols-1 m-1">
+                                                    <div className="inline-flex items-center bg-white">
+                                                        <div className="relative">
+                                                            <input
+                                                                type="number"
+                                                                id="duration"
+                                                                className="bg-indigo-50 border border-indigo-300 text-indigo-900 text-sm rounded-full focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5"
+                                                                min="0"
+                                                                value={duration}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </Col>
                                         </Grid>
-                                    </div>
-
-                                    <div className="mt-2">
-                                        <p className="block text-md font-medium text-gray-700 mb-3">Duration</p>
-                                        <TextInput
-                                            type="number"
-                                            value={duration === 0 ? defaultDuration : duration}
-                                            onChange={(event) => {
-                                                setDuration(event.target.value);
-                                            }}
-                                            className="mt-1 rounded-md shadow-sm focus:border-blue-500 sm:text-sm"
-                                            placeholder="Input working hours"
-                                            error={(duration < 1 || duration > 16) && defaultDuration !== 2}
-                                            errorMessage="Duration must be between 1 and 16 hours"
-                                        />
                                     </div>
 
                                     <div className="mt-8">
@@ -378,7 +384,7 @@ export const CreateScheduleTaskDialog = (props) => {
                                             type="button"
                                             className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                             onClick={() => {
-                                                setObjectTask(title, duration, description, startHour, endHour, 
+                                                setObjectTask(title, duration, description, startHour, endHour,
                                                     isHighPriority, isMediumPriority, isLowPriority, isStarPriority,
                                                     isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday);
                                                 closeModal();

@@ -28,3 +28,20 @@ export const convertISODateToString = (isoDate) => {
     const formattedDate = `${year}-${month}-${day}`;
     return formattedDate;
 }
+
+export const calculateDuration = (start, end) => {
+  const [startHour, startMinute] = start.split(':').map(Number);
+  const [endHour, endMinute] = end.split(':').map(Number);
+
+  const startTotal = startHour * 60 + startMinute;
+  let endTotal = endHour * 60 + endMinute;
+
+  if (endTotal <= startTotal) {
+    endTotal += 24 * 60;
+  }
+
+  const diffMinutes = endTotal - startTotal;
+  const duration = Math.floor((diffMinutes * 2) / 60) / 2;
+
+  return duration;
+};

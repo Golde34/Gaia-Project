@@ -29,6 +29,7 @@ class ScheduleTaskUsecase {
 
     async createScheduleTask(scheduleTask: any): Promise<IResponse | undefined> {
         try {
+            console.log('Create schedule task: ', scheduleTask);
             const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(scheduleTask.userId);
             if (schedulePlan === undefined || schedulePlan === null) {
                 console.error(`Cannot find schedule plan by user id: ${scheduleTask.userId}`);
