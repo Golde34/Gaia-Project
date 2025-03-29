@@ -1,19 +1,22 @@
-import { IResponse } from "../common/response";
+import { IResponse, msg200, msg400 } from "../common/response";
+import { scheduleGroupMapper } from "../mapper/schedule-group.mapper";
+import { scheduleTaskMapper } from "../mapper/schedule-task.mapper";
 import { schedulePlanService } from "../services/schedule-plan.service";
+import { scheduleTaskService } from "../services/schedule-task.service";
 
 class ScheduleGroupUsecase {
     constructor() {}
 
-    async createScheduleGroup(scheduleGroup: any): Promise<IResponse | undefined> {
+    async createScheduleGroup(scheduleGroup: any, userId: number): Promise<IResponse | undefined> {
         try {
             console.log('Create schedule group: ', scheduleGroup);
-            const schedulePlan = await schedulePlanServicr.findSchedulePlanByUserId(scheduleTask.userId);
-            if (schedulePlan === undefined || schedulePlan === null) {
-                console.error(`Cannot find schedule plan by user id: ${scheduleTask.userId}`);
-                return msg400(`Cannot find schedule plan by user id: ${scheduleTask.userId}`);
+            const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
+            if (!schedulePlan) {
+                console.error(`Cannot find schedule plan by user id: ${userId}`);
+                return msg400(`Cannot find schedule plan by user id: ${userId}`);
             }
-            const task = scheduleTaskMapper.restCreateTaskMapper(scheduleTask, schedulePlan._id);
-            const createdScheduleTask = await scheduleTaskService.createScheduleTask(task);
+            const group = scheduleGroupMapper.createGroupMapper(scheduleGroup, schedulePlan._id);
+            const createdScheduleTask = await scheduleTaskService.createScheduleTask(group);
             console.log('Created schedule task: ', createdScheduleTask);
             return msg200({
                 createdScheduleTask
@@ -24,3 +27,5 @@ class ScheduleGroupUsecase {
         }
     }
 }
+
+export const scheduleGroupUsecase = new ScheduleGroupUsecase();

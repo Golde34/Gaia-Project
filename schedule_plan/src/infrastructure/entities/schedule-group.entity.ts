@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ActiveStatus } from "../../core/domain/enums/enums";
 
 export interface IScheduleGroupEntity extends Document {
     _id: string;
@@ -14,6 +15,7 @@ export interface IScheduleGroupEntity extends Document {
     preferenceLevel: Number;
     repeat: string[];
     isNotify: boolean;
+    acitveStatus: ActiveStatus;
     createDate: Date;
     updateDate: Date;
 }
@@ -67,6 +69,11 @@ export const scheduleGroupSchema = new mongoose.Schema(
         isNotify: {
             type: Boolean,
             required: false,
+        },
+        activeStatus: {
+            type: Object.values(ActiveStatus),
+            default: ActiveStatus.active,
+            required: true,
         },
         createDate: {
             type: Date,
