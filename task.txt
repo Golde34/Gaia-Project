@@ -11,7 +11,7 @@ from the question answering we generate text include location, time keywords.
 8. Create and send invoices
 9. Handle customer inquiries and complaints
 10. Manage your social media accounts
-11. Monitor your website traffi
+11. Monitor your website traffic
 
 tasks:
 convert token to word

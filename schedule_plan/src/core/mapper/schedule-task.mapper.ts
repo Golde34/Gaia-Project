@@ -22,19 +22,6 @@ export const scheduleTaskMapper = {
         });
     },
 
-    restCreateTaskMapper(scheduleTask: any, schedulePlanId: string): IScheduleTaskEntity {
-        return new ScheduleTaskEntity({
-            title: scheduleTask.title,
-            duration: scheduleTask.duration,
-            activeStatus: ActiveStatus.active,
-            priority: scheduleTask.priority,
-            preferenceLevel: convertPriority(scheduleTask.priority),
-            schedulePlanId: schedulePlanId,
-            repeat: scheduleTask.repeat,
-            isNotify: true,
-        })
-    },
-
     buildKafkaCreateTaskMapper(taskId: string, scheduleTaskId: string, scheduleTaskName: string ) {
         const message = new KafkaCreateTaskMessage()
         message.taskId = taskId

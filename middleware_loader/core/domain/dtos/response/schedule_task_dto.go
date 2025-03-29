@@ -36,6 +36,8 @@ type ScheduleResponseDTO struct {
 	Title           string   `json:"title"`
 	Priority        []string `json:"priority"`
 	Duration        float64  `json:"duration"`
+	StartDate       string   `json:"startDate"`
+	Deadline        string   `json:"deadline"`
 	ActiveStatus    string   `json:"activeStatus"`
 	PreferenceLevel float64  `json:"preferenceLevel"`
 	Repeat          []string `json:"repeat"`

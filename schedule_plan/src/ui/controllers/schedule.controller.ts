@@ -72,14 +72,6 @@ class ScheduleController {
             next(error);
         }
     }
-
-    async createScheduleTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
-        try {
-            return await scheduleTaskUsecase.createScheduleTask(req.body);
-        } catch (error) {
-            next(error);
-        }
-    }
 }
 
 export const scheduleController = new ScheduleController();

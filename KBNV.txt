@@ -60,3 +60,10 @@ Task 3.1	Learn	0.5	                1	            3	                0.015	0.058
 + Algorithm 2: Sap xep theo thoi gian thuc hien task
 + Algorithm 3: Sap xep theo thoi gian thuc hien task va uu tien cua task
 + Algorithm 4: Tabu Search
+
+#### Schedule Task ####
++ Khi thuc hien tao schedule task o tren man Project -> Bao dam them mot button co cho repeat theo tung ngay hay khong hay chi la task binh thuong, 
+neu la task repeat thi khoi tao mojt sheduleGroupTask tuong ung o SchedulePlan
++ Khi thuc hien tao shcedule task o tren man Schedule Calendar -> Bao dam list ra cac group task co danh dau la repeat cua user
+Trong truong hop neu lon hon min 5 group task thi mo ra mot man lay het group task va schedule task moi voi project tuong ung
+Trong truong hop neu khong co group task nao thoa man thi mo ra man tao group task va schedule task moi voi ptoject moi hoac project tuong unghk

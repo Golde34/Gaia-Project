@@ -78,10 +78,10 @@ class SchedulePlanService {
 
     async findSchedulePlanByUserId(userId: number): Promise<ISchedulePlanEntity | null> {
         try {
-            const existedUser = await authServiceAdapter.checkExistedUser(userId);
-            if (typeof existedUser === 'number') {
-                return null;
-            }
+            // const existedUser = await authServiceAdapter.checkExistedUser(userId);
+            // if (typeof existedUser === 'number') {
+            //     return null;
+            // }
             return await schedulePlanRepository.findSchedulePlanByUserId(userId);
         } catch (error: any) {
             console.error("Error on findSchedulePlanByUserId: ", error);
