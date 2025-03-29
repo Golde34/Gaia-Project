@@ -10,7 +10,7 @@ class ScheduleGroupService {
         try {
             const createdScheduleGroup = await scheduleGroupRepository.createScheduleGroup(scheduleGroup);
             console.log("Schedule group created successfully: ", scheduleGroup);
-            return scheduleGroup;
+            return createdScheduleGroup;
         } catch (error: any) {
             throw new Error(error.message.toString());
         }

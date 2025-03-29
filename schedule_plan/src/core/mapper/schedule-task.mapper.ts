@@ -22,10 +22,6 @@ export const scheduleTaskMapper = {
         });
     },
 
-    
-
-    
-
     buildKafkaCreateTaskMapper(taskId: string, scheduleTaskId: string, scheduleTaskName: string ) {
         const message = new KafkaCreateTaskMessage()
         message.taskId = taskId

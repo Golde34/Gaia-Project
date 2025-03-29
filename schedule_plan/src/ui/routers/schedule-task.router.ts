@@ -60,14 +60,3 @@ scheduleTaskRouter.get("/get-schedule-task-list/:userId",
         }
     }
 )
-
-scheduleTaskRouter.post("/create-task",
-    async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            const scheduleTaskResult = await scheduleTaskControllerImpl.createScheduleTask(req, next);
-            return returnResult(scheduleTaskResult, "FAIL", res, next); 
-        } catch (error) {
-            next(error);
-        }
-    }
-)

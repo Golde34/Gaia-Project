@@ -12,6 +12,7 @@ export interface IScheduleGroupEntity extends Document {
     startMinute: Number;
     endHour: Number;
     endMinute: Number;
+    duration: Number;
     preferenceLevel: Number;
     repeat: string[];
     isNotify: boolean;
@@ -28,7 +29,7 @@ export const scheduleGroupSchema = new mongoose.Schema(
         },
         groupTaskId: {
             type: String,
-            required: true,
+            required: false,
         },
         title: {
             type: String,
@@ -55,6 +56,10 @@ export const scheduleGroupSchema = new mongoose.Schema(
             required: false,
         },
         endMinute: {
+            type: Number,
+            required: false,
+        },
+        duration: {
             type: Number,
             required: false,
         },
@@ -95,4 +100,4 @@ scheduleGroupSchema.virtual("id").get(function (this: IScheduleGroupEntity) {
     return this._id.toString();
 });
 
-export const ScheduleGroupEntity  = mongoose.model<IScheduleGroupEntity>("ScheduleGroup", scheduleGroupSchema);
+export const ScheduleGroupEntity = mongoose.model<IScheduleGroupEntity>("ScheduleGroup", scheduleGroupSchema);

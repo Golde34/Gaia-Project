@@ -6,7 +6,7 @@ export const scheduleGroupRouter = Router();
 
 const scheduleGroupControllerImpl = scheduleGroupController;
 
-scheduleGroupRouter.post("/create-schedule-group", 
+scheduleGroupRouter.post("/create", 
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const scheduleGroupResult = await scheduleGroupControllerImpl.createScheduleGroup(req, next);
