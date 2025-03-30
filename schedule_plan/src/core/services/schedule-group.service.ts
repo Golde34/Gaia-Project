@@ -12,10 +12,15 @@ class ScheduleGroupService {
         try {
             const createdScheduleGroup = await scheduleGroupRepository.createScheduleGroup(scheduleGroup);
             console.log("Schedule group created successfully: ", scheduleGroup);
+            this.clearScheduleGroupCache(scheduleGroup.schedulePlanId);
             return createdScheduleGroup;
         } catch (error: any) {
             throw new Error(error.message.toString());
         }
+    }
+
+    private clearScheduleGroupCache(schedulePlanId: string) {
+        this.scheduleGroupCache.clear(InternalCacheConstants.SCHEDULE_GROUP_LIST + schedulePlanId);
     }
 
     async listScheduleGroup(schedulePlanId: string): Promise<IScheduleGroupEntity[]> {
