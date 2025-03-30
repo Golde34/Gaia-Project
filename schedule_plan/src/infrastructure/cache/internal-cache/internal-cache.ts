@@ -1,4 +1,4 @@
-import { InternalCacheConstants } from "../../core/domain/constants/constants";
+import { InternalCacheConstants } from "../../../core/domain/constants/constants";
 
 class InternalCache<T> {
     private cache: Map<string, { value: T, expiry: number }> = new Map();

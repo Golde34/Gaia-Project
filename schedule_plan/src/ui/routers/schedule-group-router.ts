@@ -17,7 +17,7 @@ scheduleGroupRouter.post("/create",
     }
 )
 
-scheduleGroupRouter.get("list", 
+scheduleGroupRouter.get("/list/:userId", 
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const scheduleGroupResult = await scheduleGroupControllerImpl.listScheduleGroup(req, next);

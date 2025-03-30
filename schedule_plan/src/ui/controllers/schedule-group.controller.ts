@@ -14,7 +14,7 @@ class ScheduleGroupController {
 
     async listScheduleGroup(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
-            const userId = req.query.userId;
+            const userId = req.params.userId;
             return await scheduleGroupUsecase.getScheduleGroupList(Number(userId));
         } catch (error) {
             next(error);
