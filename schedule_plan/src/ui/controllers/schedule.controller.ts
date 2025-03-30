@@ -63,15 +63,6 @@ class ScheduleController {
             next(error);
         }
     }
-
-    async getScheduleTaskList(req: Request, next: NextFunction): Promise<IResponse | undefined> {
-        try {
-            const userId = Number(req.params.userId);
-            return await scheduleTaskUsecase.getScheduleTaskList(userId);
-        } catch (error) {
-            next(error);
-        }
-    }
 }
 
 export const scheduleController = new ScheduleController();

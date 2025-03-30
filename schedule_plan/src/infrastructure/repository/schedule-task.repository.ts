@@ -55,10 +55,6 @@ class ScheduleTaskRepository implements ScheduleTaskStore {
     async findDistinctTaskBatch(schedulePlanId: string): Promise<number[]> {
         return await ScheduleTaskEntity.distinct('taskBatch', { schedulePlanId: schedulePlanId, status: { $ne: 'DONE'} });
     }
-
-    async findScheduleTasksByUserId(schedulePlanId: string): Promise<IScheduleTaskEntity[]> {
-        return await ScheduleTaskEntity.find({ schedulePlanId: schedulePlanId, isNotify: true }); 
-    }
 }
 
 export const scheduleTaskRepository = new ScheduleTaskRepository();

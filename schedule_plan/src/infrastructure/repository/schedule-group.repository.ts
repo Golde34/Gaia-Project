@@ -7,6 +7,10 @@ class ScheduleGroupRepository implements ScheduleGroupStore {
     async createScheduleGroup(scheduleGroup: IScheduleGroupEntity): Promise<IScheduleGroupEntity> {
         return await ScheduleGroupEntity.create(scheduleGroup);
     }
+
+    async listScheduleGroup(schedulePlanId: string): Promise<IScheduleGroupEntity[]> {
+        return await ScheduleGroupEntity.find({ schedulePlanId: schedulePlanId });
+    }
 }
 
 export const scheduleGroupRepository = new ScheduleGroupRepository();
