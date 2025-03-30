@@ -200,9 +200,8 @@ class GroupTaskService {
             });
         } else {
             console.log("Get list completed tasks from cache");
-            groupTask = this.groupTaskCache.get(InternalCacheConstants.TASK_COMPLETED + groupTask._id);
             return msg200({
-                groupTask,
+                groupTask: groupTaskCache,
             });
         }
     }
