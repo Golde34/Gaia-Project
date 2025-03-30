@@ -45,8 +45,8 @@ func (s *ScheduleTaskService) CreateScheduleGroup(request request_dtos.CreateSch
 	return scheduleTask, nil
 }
 
-func (s *ScheduleTaskService) GetScheduleListByUserId(userId string) ([]response_dtos.ScheduleResponseDTO, error) {
-	scheduleTasks, err := client.IScheduleTaskAdapter(&adapter.ScheduleTaskAdapter{}).GetScheduleListByUserId(userId)
+func (s *ScheduleTaskService) ListScheduleGroupByUserId(userId string) ([]response_dtos.ScheduleGroupResponseDTO, error) {
+	scheduleTasks, err := client.IScheduleTaskAdapter(&adapter.ScheduleTaskAdapter{}).ListScheduleGroupByUserId(userId)
 	if err != nil {
 		return nil, err
 	}

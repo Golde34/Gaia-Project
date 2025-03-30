@@ -2,6 +2,7 @@ package client_adapter
 
 import (
 	"encoding/json"
+	"log"
 	request_dtos "middleware_loader/core/domain/dtos/request"
 	response_dtos "middleware_loader/core/domain/dtos/response"
 	mapper_response "middleware_loader/core/port/mapper/response"
@@ -115,28 +116,29 @@ func (adapter *ScheduleTaskAdapter) CreateScheduleTask(request request_dtos.Crea
 	return dto, nil
 }
 
-func (adapter *ScheduleTaskAdapter) GetScheduleListByUserId(userId string) ([]response_dtos.ScheduleResponseDTO, error) {
-	listScheduleURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule/get-schedule-task-list/" + userId
-	var schedules []response_dtos.ScheduleResponseDTO
+func (adapter *ScheduleTaskAdapter) ListScheduleGroupByUserId(userId string) ([]response_dtos.ScheduleGroupResponseDTO, error) {
+	listScheduleURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-group/list/" + userId
+	var schedules []response_dtos.ScheduleGroupResponseDTO
 	headers := utils.BuildDefaultHeaders()
 	bodyResult, err := utils.BaseAPI(listScheduleURL, "GET", nil, headers)
 	if err != nil {
-		return []response_dtos.ScheduleResponseDTO{}, err
+		return []response_dtos.ScheduleGroupResponseDTO{}, err
 	}
+	log.Println("ListScheduleGroupByUserId bodyResult: ", bodyResult)
 
 	bodyResultMap, ok := bodyResult.(map[string]interface{})
 	if !ok {
-		return []response_dtos.ScheduleResponseDTO{}, nil
+		return []response_dtos.ScheduleGroupResponseDTO{}, nil
 	}
-	scheduleList, exists := bodyResultMap["scheduleTasks"]
+	scheduleList, exists := bodyResultMap["scheduleGroups"]
 	if !exists || scheduleList == nil {
 		return nil, nil
 	}
 	if taskList, ok := scheduleList.([]interface{}); ok && len(taskList) == 0 {
-		return []response_dtos.ScheduleResponseDTO{}, nil
+		return []response_dtos.ScheduleGroupResponseDTO{}, nil
 	}
 
-	for _, scheduleElement := range bodyResultMap["scheduleTasks"].([]interface{}) {
+	for _, scheduleElement := range bodyResultMap["scheduleGroups"].([]interface{}) {
 		schedule := mapper_response.ReturnScheduleObjectMapper(scheduleElement.(map[string]interface{}))
 		schedules = append(schedules, *schedule)
 	}

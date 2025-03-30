@@ -25,12 +25,14 @@ func CreateScheduleGroupRequestDTOMapper(body map[string]any) request_dtos.Creat
 	var input request_dtos.CreateScheduleGroupRequestDTO
 	bodyMap := body["body"].(map[string]interface{})
 	input.UserId = bodyMap["userId"].(string)
-	input.SchedulePlanId = bodyMap["schedulePlanId"].(string)
 	input.Title = bodyMap["title"].(string)
-	input.GroupTaskId = bodyMap["groupTaskId"].(string)
+	if bodyMap["groupTaskId"] != nil {
+		input.GroupTaskId = bodyMap["groupTaskId"].(string)
+	} else {
+		input.GroupTaskId = ""
+	}
 	input.Title = bodyMap["title"].(string)
 	input.Priority = utils.ConvertStringToStringArray(bodyMap["priority"].([]interface{}))
-	input.Status = bodyMap["status"].(string)
 	input.StartHour = bodyMap["startHour"].(string)
 	input.EndHour = bodyMap["endHour"].(string)
 	input.Duration = bodyMap["duration"].(float64)
