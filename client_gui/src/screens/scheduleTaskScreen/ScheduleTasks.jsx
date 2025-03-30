@@ -1,15 +1,12 @@
 import { Card, Col, Flex, Grid, Subtitle, Text } from "@tremor/react"
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { CreateScheduleTaskDialog } from "./CreateScheduleTask";
 import { useCallback, useEffect, useRef } from "react";
 import { repeatScheduleTaskList } from "../../api/store/actions/schedule_plan/schedule-task.action";
 import MessageBox from "../../components/subComponents/MessageBox";
 
-export const ScheduleTasks = (props) => {
+export const ScheduleGroups = (props) => {
     const userId = "1";
     const dispatch = useDispatch();
-    const navigate = useNavigate();
 
     const listScheduleTasks = useSelector(state => state.repeatScheduleTaskList);
     const { loading, error, scheduleTasks } = listScheduleTasks;
@@ -42,13 +39,13 @@ export const ScheduleTasks = (props) => {
                             <Col numColSpan={7}>
                                 <Flex justifyContent="end">
                                     <Subtitle className="text-xl font-bold text-gray-800">
-                                        Your Schedule Tasks
+                                        Your Schedule Tasks 
                                     </Subtitle>
                                 </Flex>
                             </Col>
                             <Col numColSpan={5}>
                                 <Flex justifyContent='end'>
-                                    <CreateScheduleTaskDialog userId={userId} />
+                                    <CreateScheduleGroupDialog userId={userId} />
                                 </Flex>
                             </Col>
                         </Grid>

@@ -39,6 +39,7 @@ import { chooseTaskBatchReducer, createScheduleTaskReducer, repeatScheduleTaskLi
 import { getUserGithubInfoReducer } from "./contribution_tracker/user-commit.reducer";
 import { getProjectAndRepoRequestReducer } from "./contribution_tracker/project-commit.reducer";
 import { compareCommitsReducer, getProjectContributionReducer, getUserContributionsReducer } from "./contribution_tracker/contribution.reducer";
+import { createScheduleGroupReducer } from "./schedule_plan/schedule-group.reducers";
 
 export const reducer = combineReducers({
     // auth service
@@ -96,8 +97,8 @@ export const reducer = combineReducers({
     scheduleTaskList: scheduleTaskListReducer,
     taskBatchList: taskBatchListReducer,
     chooseTaskBatch: chooseTaskBatchReducer,
-    createScheduleTask: createScheduleTaskReducer,
     repeatScheduleTaskList: repeatScheduleTaskListReducer,
+    createScheduleGroup: createScheduleGroupReducer,
     // middleware loader
     microserviceList: microserviceListReducer,
     // work optimization 
