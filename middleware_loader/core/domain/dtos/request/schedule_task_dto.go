@@ -14,19 +14,21 @@ func (in *ChooseTaskBatchDTO) MapperToModel(userId, batchNumber float64) {
 	in.BatchNumber = batchNumber
 }
 
-type CreateScheduleTaskRequestDTO struct {
-	Title        string   `json:"title"`
-	Duration     float64  `json:"duration"`
-	Description  string   `json:"description"`
-	StartHour    string   `json:"startHour"`
-	EndHour      string   `json:"endHour"`
-	ActiveStatus string   `json:"activeStatus"`
-	Priority     []string `json:"priority"`
-	UserId       string   `json:"userId"`
-	Repeat       []string `json:"repeat"`
-	IsNotify     bool     `json:"isNotify"`
+type CreateScheduleGroupRequestDTO struct {
+	UserId         string   `json:"userId"`
+	SchedulePlanId string   `json:"schedulePlanId"`
+	GroupTaskId    string   `json:"groupTaskId"`
+	Title          string   `json:"title"`
+	Priority       []string `json:"priority"`
+	Status         string   `json:"status"`
+	StartHour      string   `json:"startHour"`
+	EndHour        string   `json:"endHour"`
+	Duration       float64  `json:"duration"`
+	Repeat         []string `json:"repeat"`
+	IsNotify       bool     `json:"isNotify"`
+	ActiveStatus   string   `json:"activeStatus"`
 }
 
-func NewCreateScheduleTaskRequestDTO() *CreateScheduleTaskRequestDTO {
-	return &CreateScheduleTaskRequestDTO{}
+func NewCreateScheduleGroupRequestDTO() *CreateScheduleGroupRequestDTO {
+	return &CreateScheduleGroupRequestDTO{}
 }

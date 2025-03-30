@@ -92,24 +92,24 @@ func (adapter *ScheduleTaskAdapter) ChooseTaskBatch(userId, batchNumber float64)
 	return dto, nil
 }
 
-func (adapter *ScheduleTaskAdapter) CreateScheduleTask(request request_dtos.CreateScheduleTaskRequestDTO) (response_dtos.ScheduleTaskResponseDTO, error) {
-	createScheduleTaskURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule/create-task"
+func (adapter *ScheduleTaskAdapter) CreateScheduleTask(request request_dtos.CreateScheduleGroupRequestDTO) (response_dtos.ScheduleGroupResponseDTO, error) {
+	createScheduleTaskURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-group/create"
 	headers := utils.BuildDefaultHeaders()
 
 	bodyResult, err := utils.BaseAPI(createScheduleTaskURL, "POST", request, headers)
 	if err != nil {
-		return response_dtos.ScheduleTaskResponseDTO{}, err
+		return response_dtos.ScheduleGroupResponseDTO{}, err
 	}
 
 	data, err := json.Marshal(bodyResult)
 	if err != nil {
-		return response_dtos.ScheduleTaskResponseDTO{}, err
+		return response_dtos.ScheduleGroupResponseDTO{}, err
 	}
 
-	var dto response_dtos.ScheduleTaskResponseDTO
+	var dto response_dtos.ScheduleGroupResponseDTO
 	err = json.Unmarshal(data, &dto)
 	if err != nil {
-		return response_dtos.ScheduleTaskResponseDTO{}, err
+		return response_dtos.ScheduleGroupResponseDTO{}, err
 	}
 
 	return dto, nil

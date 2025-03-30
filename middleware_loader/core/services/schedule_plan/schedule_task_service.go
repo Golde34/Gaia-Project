@@ -37,10 +37,10 @@ func (s *ScheduleTaskService) ChooseTaskBatch(userId, batchNumber float64) (resp
 	return taskBatch, nil
 }
 
-func (s *ScheduleTaskService) CreateScheduleTask(request request_dtos.CreateScheduleTaskRequestDTO) (response_dtos.ScheduleTaskResponseDTO, error) {
+func (s *ScheduleTaskService) CreateScheduleGroup(request request_dtos.CreateScheduleGroupRequestDTO) (response_dtos.ScheduleGroupResponseDTO, error) {
 	scheduleTask, err := client.IScheduleTaskAdapter(&adapter.ScheduleTaskAdapter{}).CreateScheduleTask(request)
 	if err != nil {
-		return response_dtos.ScheduleTaskResponseDTO{}, err
+		return response_dtos.ScheduleGroupResponseDTO{}, err
 	}
 	return scheduleTask, nil
 }
