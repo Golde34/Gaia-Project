@@ -1,17 +1,18 @@
 import { Card, Col, Flex, Grid, Subtitle, Text } from "@tremor/react"
 import { useDispatch, useSelector } from "react-redux";
 import { useCallback, useEffect, useRef } from "react";
-import { repeatScheduleTaskList } from "../../api/store/actions/schedule_plan/schedule-task.action";
 import MessageBox from "../../components/subComponents/MessageBox";
+import { scheduleGroupList } from "../../api/store/actions/schedule_plan/schedule-group.action";
+import { CreateScheduleGroupDialog } from "./CreateScheduleGroup";
 
 export const ScheduleGroups = (props) => {
     const userId = "1";
     const dispatch = useDispatch();
 
-    const listScheduleTasks = useSelector(state => state.repeatScheduleTaskList);
-    const { loading, error, scheduleTasks } = listScheduleTasks;
+    const listScheduleGroup = useSelector(state => state.scheduleGroupList);
+    const { loading, error, scheduleGroups } = listScheduleGroup;
     const getTasks = useCallback(() => {
-        dispatch(repeatScheduleTaskList(userId));
+        dispatch(scheduleGroupList(userId));
     }, [dispatch, userId]);
     const debounceRef = useRef(null);
     useEffect(() => {
@@ -50,7 +51,7 @@ export const ScheduleGroups = (props) => {
                             </Col>
                         </Grid>
                         <Grid numItems={3} className="gap-7 mt-5">
-                            {scheduleTasks.map((task) => (
+                            {scheduleGroups.map((task) => (
                                 <Col numColSpan={1} key={task.id}>
                                     <Card className="w-xs hover:cursor-pointer transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-105 duration-300"
                                         decoration={"top"} decorationColor={randomDecoration()}>

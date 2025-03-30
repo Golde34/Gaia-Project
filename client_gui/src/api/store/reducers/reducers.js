@@ -35,11 +35,11 @@ import {
     noteListReducer, noteLockReducer, noteUnlockReducer, noteUpdateReducer
 } from "./task_manager/note.reducers";
 import { optimizeTaskByUserReducer } from "./work_optimization/optimize-task.reducers";
-import { chooseTaskBatchReducer, createScheduleTaskReducer, repeatScheduleTaskListReducer, scheduleTaskListReducer, taskBatchListReducer } from "./schedule_plan/schedule-task.reducers";
+import { chooseTaskBatchReducer, scheduleTaskListReducer, taskBatchListReducer } from "./schedule_plan/schedule-task.reducers";
 import { getUserGithubInfoReducer } from "./contribution_tracker/user-commit.reducer";
 import { getProjectAndRepoRequestReducer } from "./contribution_tracker/project-commit.reducer";
 import { compareCommitsReducer, getProjectContributionReducer, getUserContributionsReducer } from "./contribution_tracker/contribution.reducer";
-import { createScheduleGroupReducer } from "./schedule_plan/schedule-group.reducers";
+import { createScheduleGroupReducer, scheduleGroupListReducer } from "./schedule_plan/schedule-group.reducers";
 
 export const reducer = combineReducers({
     // auth service
@@ -97,8 +97,8 @@ export const reducer = combineReducers({
     scheduleTaskList: scheduleTaskListReducer,
     taskBatchList: taskBatchListReducer,
     chooseTaskBatch: chooseTaskBatchReducer,
-    repeatScheduleTaskList: repeatScheduleTaskListReducer,
     createScheduleGroup: createScheduleGroupReducer,
+    scheduleGroupList: scheduleGroupListReducer,
     // middleware loader
     microserviceList: microserviceListReducer,
     // work optimization 

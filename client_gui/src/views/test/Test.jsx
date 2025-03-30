@@ -1,5 +1,5 @@
 import Template from "../../components/template/Template"
-import { CreateScheduleGroupDialog } from "../../screens/scheduleTaskScreen/CreateScheduleTask";
+import { CreateScheduleGroupDialog } from "../../screens/scheduleTaskScreen/CreateScheduleGroup";
 
 function ContentArea() {
     const userId = "1";

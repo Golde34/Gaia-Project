@@ -1,5 +1,5 @@
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
-import { Button, Col, Grid, Textarea, TextInput } from "@tremor/react";
+import { Button, Col, Grid, TextInput } from "@tremor/react";
 import { Fragment, useEffect, useState } from "react";
 import CheckBoxIcon from "../../components/icons/CheckboxIcon";
 import { pushPriority, pushRepeat } from "../../kernels/utils/field-utils";

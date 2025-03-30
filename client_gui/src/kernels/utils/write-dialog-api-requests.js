@@ -6,7 +6,8 @@ import { updateUser, updateUserSetting } from '../../api/store/actions/auth_serv
 import { createRole } from '../../api/store/actions/auth_service/role.actions';
 import { registerTaskConfig } from '../../api/store/actions/work_optimization/task-registration.actions';
 import { createNote } from '../../api/store/actions/task_manager/note.actions';
-import { chooseTaskBatch, createScheduleTaskAction } from '../../api/store/actions/schedule_plan/schedule-task.action';
+import { chooseTaskBatch } from '../../api/store/actions/schedule_plan/schedule-task.action';
+import { createScheduleGroupAction } from '../../api/store/actions/schedule_plan/schedule-group.action';
 
 export const useCreateGroupTaskDispatch = () => {
     const dispatch = useDispatch();
@@ -122,7 +123,7 @@ export const useCreateScheduletaskDispatch = () => {
     const dispatch = useDispatch();
 
     const createScheduleTaskDispatch = (scheduleTask) => {
-        dispatch(createScheduleTaskAction(scheduleTask));
+        dispatch(createScheduleGroupAction(scheduleTask));
     }
 
     return createScheduleTaskDispatch;
