@@ -19,6 +19,7 @@ export const scheduleGroupMapper = {
             preferenceLevel: convertPriority(scheduleGroup.priority),
             repeat: scheduleGroup.repeat,
             isNotify: scheduleGroup.isNotify,
+            acitveStatus: scheduleGroup.acitveStatus,
             createDate: new Date(),
             updateDate: new Date(),
         })

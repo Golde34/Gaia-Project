@@ -17,9 +17,7 @@ class ScheduleGroupUsecase {
             const group = scheduleGroupMapper.createGroupMapper(scheduleGroup, schedulePlan._id);
             const createScheduleGroup = await scheduleGroupService.createScheduleGroup(group);
             console.log('Created schedule group: ', group);
-            return msg200({
-                scheduleGroup: group 
-            })
+            return msg200(createScheduleGroup); 
         } catch (error) {
             console.error("Error on createScheduleTask: ", error);
             return msg400("Cannot create schedule task!");

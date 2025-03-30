@@ -5,9 +5,8 @@ import { scheduleGroupUsecase } from "../../core/usecase/schedule-group.usecase"
 class ScheduleGroupController {
     async createScheduleGroup(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
-            const scheduleGroup = req.body.scheduleGroup;
-            const userId = Number(req.body.userId);
-            return await scheduleGroupUsecase.createScheduleGroup(scheduleGroup, userId);
+            const scheduleGroup = req.body;
+            return await scheduleGroupUsecase.createScheduleGroup(scheduleGroup, Number(scheduleGroup.userId));
         } catch (error) {
             next(error);
         }
