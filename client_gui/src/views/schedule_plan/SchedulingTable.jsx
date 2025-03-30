@@ -8,7 +8,7 @@ import { getScheduleTaskBatchList, getScheduleTaskList } from '../../api/store/a
 import MessageBox from '../../components/subComponents/MessageBox';
 import TaskBatchScreen from '../../screens/scheduleTaskScreen/TaskBatchScreen';
 import CalendarChart from '../../screens/scheduleTaskScreen/CalendarChart';
-import { ScheduleTasks } from '../../screens/scheduleTaskScreen/ScheduleTasks';
+import { ScheduleGroups } from '../../screens/scheduleTaskScreen/ScheduleGroups';
 
 function ContentArea() {
     const userId = "1";
@@ -124,7 +124,7 @@ function ContentArea() {
                             </div>
                         </div>
                     </Card>
-                    <ScheduleTasks />    
+                    <ScheduleGroups />    
 
                     <Dialog
                         open={isOpen}

@@ -5,7 +5,6 @@ import { CTServiceConfigRepository } from "../../infrastructure/repository/ct-se
 import { UserCommitRepository } from "../../infrastructure/repository/user-commit.repository";
 import { InternalCacheConstants } from "../domain/constants/constants";
 import UserCommitEntity from "../domain/entities/user-commit.entity";
-import { TimeUnit } from "../domain/enums/enums";
 
 class UserCommitService {
     constructor(

@@ -185,15 +185,6 @@ class ScheduleTaskService {
             return [];
         }
     }
-
-    async getScheduleTaskList(schedulePlanId: string): Promise<any> {
-        try {
-            return await scheduleTaskRepository.findScheduleTasksByUserId(schedulePlanId);
-        } catch (error) {
-            console.error("Error on getScheduleTaskList: ", error);
-            return [];
-        }
-    }
 }
 
 export const scheduleTaskService = new ScheduleTaskService();   

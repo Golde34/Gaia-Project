@@ -38,7 +38,8 @@ export const schedulePlanSchema = new mongoose.Schema(
             required: false,
         },
         activeStatus: {
-            type: Object.values(ActiveStatus),
+            type: String,
+            enum: Object.values(ActiveStatus),
             default: ActiveStatus.active,
             required: true,
         },

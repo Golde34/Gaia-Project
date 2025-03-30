@@ -21,18 +21,23 @@ func ChooseTaskBatch(body map[string]interface{}) (float64, float64) {
 	return userFloat, batchFloat 
 }
 
-func CreateScheduleTaskRequestDTOMapper(body map[string]any) request_dtos.CreateScheduleTaskRequestDTO {
-	var input request_dtos.CreateScheduleTaskRequestDTO
+func CreateScheduleGroupRequestDTOMapper(body map[string]any) request_dtos.CreateScheduleGroupRequestDTO {
+	var input request_dtos.CreateScheduleGroupRequestDTO
 	bodyMap := body["body"].(map[string]interface{})
+	input.UserId = bodyMap["userId"].(string)
 	input.Title = bodyMap["title"].(string)
-	input.Duration = bodyMap["duration"].(float64)
-	input.Description = bodyMap["description"].(string)
+	if bodyMap["groupTaskId"] != nil {
+		input.GroupTaskId = bodyMap["groupTaskId"].(string)
+	} else {
+		input.GroupTaskId = ""
+	}
+	input.Title = bodyMap["title"].(string)
+	input.Priority = utils.ConvertStringToStringArray(bodyMap["priority"].([]interface{}))
 	input.StartHour = bodyMap["startHour"].(string)
 	input.EndHour = bodyMap["endHour"].(string)
-	input.ActiveStatus = bodyMap["activeStatus"].(string)
-	input.Priority = utils.ConvertStringToStringArray(bodyMap["priority"].([]interface{}))
-	input.UserId = bodyMap["userId"].(string)
+	input.Duration = bodyMap["duration"].(float64)
 	input.Repeat = utils.ConvertStringToStringArray(bodyMap["repeat"].([]interface{}))
-	input.IsNotify = bodyMap["isNotify"].(bool)	
+	input.IsNotify = bodyMap["isNotify"].(bool)
+	input.ActiveStatus = bodyMap["activeStatus"].(string)
 	return input
 }

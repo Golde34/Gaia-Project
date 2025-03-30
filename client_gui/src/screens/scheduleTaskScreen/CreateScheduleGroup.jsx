@@ -1,14 +1,14 @@
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
-import { Button, Col, Grid, Textarea, TextInput } from "@tremor/react";
+import { Button, Col, Grid, TextInput } from "@tremor/react";
 import { Fragment, useEffect, useState } from "react";
 import CheckBoxIcon from "../../components/icons/CheckboxIcon";
 import { pushPriority, pushRepeat } from "../../kernels/utils/field-utils";
 import { useCreateScheduletaskDispatch } from "../../kernels/utils/write-dialog-api-requests";
 import { calculateDuration } from "../../kernels/utils/date-picker";
 
-export const CreateScheduleTaskDialog = (props) => {
+export const CreateScheduleGroupDialog = (props) => {
     const userId = props.userId;
-    let defaultDuration = 2;
+
     let [isOpen, setIsOpen] = useState(false);
     function closeModal() {
         setIsOpen(false);

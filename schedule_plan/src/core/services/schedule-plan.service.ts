@@ -1,12 +1,16 @@
+import CacheSingleton from "../../infrastructure/cache/internal-cache/cache-singleton";
 import { authServiceAdapter } from "../../infrastructure/client/auth-service.adapter";
 import { ISchedulePlanEntity } from "../../infrastructure/entities/schedule-plan.entity";
 import { schedulePlanRepository } from "../../infrastructure/repository/schedule-plan.repository";
 import { returnInternalServiceErrorResponse } from "../../kernel/utils/return-result";
 import { IResponse, msg200, msg400, msg500 } from "../common/response";
+import { InternalCacheConstants } from "../domain/constants/constants";
 import { ActiveStatus } from "../domain/enums/enums";
 
 class SchedulePlanService {
-    constructor() { }
+    constructor(
+        public schedulePlanCache = CacheSingleton.getInstance().getCache(),
+    ) { }
 
     async createSchedulePlan(userId: number): Promise<any> {
         const existedSchedulePlan = await schedulePlanRepository.findSchedulePlanByUserId(userId);
@@ -78,11 +82,23 @@ class SchedulePlanService {
 
     async findSchedulePlanByUserId(userId: number): Promise<ISchedulePlanEntity | null> {
         try {
-            // const existedUser = await authServiceAdapter.checkExistedUser(userId);
-            // if (typeof existedUser === 'number') {
-            //     return null;
-            // }
-            return await schedulePlanRepository.findSchedulePlanByUserId(userId);
+            const existedUser = await authServiceAdapter.checkExistedUser(userId);
+            if (typeof existedUser === 'number') {
+                return null;
+            }
+            const schedulePlanCache = this.schedulePlanCache.get(InternalCacheConstants.SCHEDULE_PLAN + userId);
+            if (!schedulePlanCache) {
+                const schedulePlan = await schedulePlanRepository.findSchedulePlanByUserId(userId); 
+                if (!schedulePlan) {
+                    console.error(`Cannot find schedule plan by user id: ${userId}`);
+                    return null;
+                }
+                this.schedulePlanCache.set(InternalCacheConstants.SCHEDULE_PLAN + userId, schedulePlan);
+                return schedulePlan;
+            } else {
+                console.log('Get schedule plan from cache: ', schedulePlanCache);
+                return schedulePlanCache;
+            }
         } catch (error: any) {
             console.error("Error on findSchedulePlanByUserId: ", error);
             return null;

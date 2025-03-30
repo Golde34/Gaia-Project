@@ -1,20 +1,18 @@
 import { Card, Col, Flex, Grid, Subtitle, Text } from "@tremor/react"
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { CreateScheduleTaskDialog } from "./CreateScheduleTask";
 import { useCallback, useEffect, useRef } from "react";
-import { repeatScheduleTaskList } from "../../api/store/actions/schedule_plan/schedule-task.action";
 import MessageBox from "../../components/subComponents/MessageBox";
+import { scheduleGroupList } from "../../api/store/actions/schedule_plan/schedule-group.action";
+import { CreateScheduleGroupDialog } from "./CreateScheduleGroup";
 
-export const ScheduleTasks = (props) => {
+export const ScheduleGroups = (props) => {
     const userId = "1";
     const dispatch = useDispatch();
-    const navigate = useNavigate();
 
-    const listScheduleTasks = useSelector(state => state.repeatScheduleTaskList);
-    const { loading, error, scheduleTasks } = listScheduleTasks;
+    const listScheduleGroup = useSelector(state => state.scheduleGroupList);
+    const { loading, error, scheduleGroups } = listScheduleGroup;
     const getTasks = useCallback(() => {
-        dispatch(repeatScheduleTaskList(userId));
+        dispatch(scheduleGroupList(userId));
     }, [dispatch, userId]);
     const debounceRef = useRef(null);
     useEffect(() => {
@@ -42,18 +40,18 @@ export const ScheduleTasks = (props) => {
                             <Col numColSpan={7}>
                                 <Flex justifyContent="end">
                                     <Subtitle className="text-xl font-bold text-gray-800">
-                                        Your Schedule Tasks
+                                        Your Schedule Tasks 
                                     </Subtitle>
                                 </Flex>
                             </Col>
                             <Col numColSpan={5}>
                                 <Flex justifyContent='end'>
-                                    <CreateScheduleTaskDialog userId={userId} />
+                                    <CreateScheduleGroupDialog userId={userId} />
                                 </Flex>
                             </Col>
                         </Grid>
                         <Grid numItems={3} className="gap-7 mt-5">
-                            {scheduleTasks.map((task) => (
+                            {scheduleGroups.map((task) => (
                                 <Col numColSpan={1} key={task.id}>
                                     <Card className="w-xs hover:cursor-pointer transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-105 duration-300"
                                         decoration={"top"} decorationColor={randomDecoration()}>

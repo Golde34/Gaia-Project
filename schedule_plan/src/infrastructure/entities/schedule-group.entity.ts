@@ -41,6 +41,7 @@ export const scheduleGroupSchema = new mongoose.Schema(
         },
         status: {
             type: String,
+            default: "In Progress",
             required: false,
         },
         startHour: {
@@ -76,7 +77,8 @@ export const scheduleGroupSchema = new mongoose.Schema(
             required: false,
         },
         activeStatus: {
-            type: Object.values(ActiveStatus),
+            type: String,
+            enum: Object.values(ActiveStatus),
             default: ActiveStatus.active,
             required: true,
         },

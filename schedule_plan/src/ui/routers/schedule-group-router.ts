@@ -16,3 +16,14 @@ scheduleGroupRouter.post("/create",
         }
     }
 )
+
+scheduleGroupRouter.get("/list/:userId", 
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const scheduleGroupResult = await scheduleGroupControllerImpl.listScheduleGroup(req, next);
+            return returnResult(scheduleGroupResult, "FAIL", res, next);
+        } catch (error) {
+            next(error);
+        }
+    }
+)

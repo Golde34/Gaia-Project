@@ -26,13 +26,3 @@ export enum HttpMethod {
     PUT = "PUT",
     DELETE = "DELETE",
 }
-
-export enum TimeUnit {
-    SECOND = "seconds",
-    MINUTE = "minutes",
-    HOUR = "hours",
-    DAY = "days",
-    WEEK = "weeks",
-    MONTH = "months",
-    YEAR = "years",
-}

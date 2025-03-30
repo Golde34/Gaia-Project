@@ -186,27 +186,6 @@ class ScheduleTaskUsecase {
             return msg400("Cannot get schedule task!");
         }
     }
-
-    async getScheduleTaskList(userId: number): Promise<IResponse | undefined> {
-        try {
-            const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
-            if (!schedulePlan) {
-                console.error(`Cannot find schedule plan by user id: ${userId}`);
-                throw new Error(`Cannot find schedule plan by user id: ${userId}`);
-            }
-            console.log('Get schedule task list by schedule plan: ', schedulePlan._id);
-            const scheduleTasks = await scheduleTaskService.getScheduleTaskList(schedulePlan._id);
-            if (scheduleTasks) {
-                return msg200({
-                    scheduleTasks
-                })
-            }
-            return msg400("Cannot get schedule task list!");
-        } catch (error) {
-            console.error("Error on getScheduleTaskList: ", error);
-            return msg400("Cannot get schedule task list!");
-        }
-    }
 }
 
 export const scheduleTaskUsecase = new ScheduleTaskUsecase();
