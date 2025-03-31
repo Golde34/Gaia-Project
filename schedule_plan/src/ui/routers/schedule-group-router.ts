@@ -27,3 +27,14 @@ scheduleGroupRouter.get("/list/:userId",
         }
     }
 )
+
+scheduleGroupRouter.delete("/delete/:id",
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const scheduleGroupResult = await scheduleGroupControllerImpl.deleteScheduleGroup(req, next);
+            return returnResult(scheduleGroupResult, "FAIL", res, next);
+        } catch (error) {
+            next(error);
+        }
+    }
+)

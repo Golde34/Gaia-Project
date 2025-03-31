@@ -47,6 +47,19 @@ class ScheduleGroupUsecase {
             return msg400("Cannot get schedule task list!");
         }
     }
+
+    async deleteScheduleGroup(scheduleGroupId: string): Promise<IResponse | undefined> {
+        try {
+            const scheduleGroup = await scheduleGroupService.deleteScheduleGroup(scheduleGroupId);
+            if (scheduleGroup) {
+                return msg200(scheduleGroup);
+            }
+            return msg400("Cannot delete schedule group!");
+        } catch (error) {
+            console.error("Error on deleteScheduleTask: ", error);
+            return msg400("Cannot delete schedule task!");
+        }
+    }
 }
 
 export const scheduleGroupUsecase = new ScheduleGroupUsecase();
