@@ -1,4 +1,4 @@
-import { Dialog, Transition, TransitionChild } from "@headlessui/react";
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import { useDeleteComponentDispatch, useLockNoteDispatch, useUpdateOrdinalNumberDispatch } from "../../kernels/utils/dialog-api-requests";
 import { useNavigate } from "react-router-dom";

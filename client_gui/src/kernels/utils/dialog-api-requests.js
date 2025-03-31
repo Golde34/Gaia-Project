@@ -3,6 +3,7 @@ import { updateGroupTaskName, deleteGroupTask, updateOrdinalNumber } from "../..
 import { deleteProject, updateProjectColor, updateProjectName } from "../../api/store/actions/task_manager/project.actions";
 import { deleteTask, moveTask, updateTaskInDialog } from "../../api/store/actions/task_manager/task.actions";
 import { deleteNote, lockNote, unlockNote, updateNote } from "../../api/store/actions/task_manager/note.actions";
+import { deleteScheduleGroup } from "../../api/store/actions/schedule_plan/schedule-group.action";
 
 export const useUpdateComponentNameDispatch = () => {
     const dispatch = useDispatch();

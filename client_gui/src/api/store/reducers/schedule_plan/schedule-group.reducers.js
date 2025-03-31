@@ -1,5 +1,6 @@
 import {
     CREATE_SCHEDULE_GROUP_FAILURE, CREATE_SCHEDULE_GROUP_REQUEST, CREATE_SCHEDULE_GROUP_SUCCESS,
+    DELETE_SCHEDULE_GROUP_FAILURE, DELETE_SCHEDULE_GROUP_REQUEST, DELETE_SCHEDULE_GROUP_SUCCESS,
     SCHEDULE_GROUP_LIST_FAILURE, SCHEDULE_GROUP_LIST_REQUEST, SCHEDULE_GROUP_LIST_SUCCESS
 } from "../../constants/schedule_plan/schedule-group.constants";
 
@@ -25,6 +26,20 @@ export const scheduleGroupListReducer = (
         case SCHEDULE_GROUP_LIST_SUCCESS:
             return { loading: false, scheduleGroups: action.payload.scheduleGroups };
         case SCHEDULE_GROUP_LIST_FAILURE:
+            return { loading: false, error: action.payload };
+        default:
+            return state;
+    }
+}
+
+export const deleteScheduleGroupReducer = (
+    state = { loading: true }, action) => {
+    switch (action.type) {
+        case DELETE_SCHEDULE_GROUP_REQUEST:
+            return { loading: true };
+        case DELETE_SCHEDULE_GROUP_SUCCESS:
+            return { loading: false, scheduleGroup: action.payload.scheduleGroup };
+        case DELETE_SCHEDULE_GROUP_FAILURE:
             return { loading: false, error: action.payload };
         default:
             return state;
