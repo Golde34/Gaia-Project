@@ -4,7 +4,6 @@ import { getUserContributions } from "../../api/store/actions/contribution_track
 import { Card } from "@tremor/react";
 import MessageBox from "../../components/subComponents/MessageBox";
 import AreaChartComponent from "../../components/subComponents/AreaChartComponent";
-import TableComponent from "../../components/subComponents/TableComponent";
 
 const UserContributionCalendar = () => {
     const userId = "1";
@@ -34,7 +33,6 @@ const UserContributionCalendar = () => {
                     )
                 }
             </Card>
-            <TableComponent />
         </div>
     );
 };

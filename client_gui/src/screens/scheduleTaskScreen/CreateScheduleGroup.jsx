@@ -1,13 +1,20 @@
-import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
+import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions, Dialog, DialogPanel, DialogTitle, Input, Transition, TransitionChild } from "@headlessui/react";
 import { Button, Col, Grid, TextInput } from "@tremor/react";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import CheckBoxIcon from "../../components/icons/CheckboxIcon";
 import { pushPriority, pushRepeat } from "../../kernels/utils/field-utils";
 import { useCreateScheduletaskDispatch } from "../../kernels/utils/write-dialog-api-requests";
 import { calculateDuration } from "../../kernels/utils/date-picker";
+import { useDispatch, useSelector } from "react-redux";
+import { getProjects } from "../../api/store/actions/task_manager/project.actions";
+import { CheckIcon, ChevronDownIcon } from "@heroicons/react/solid";
+import clsx from "clsx";
+import MessageBox from "../../components/subComponents/MessageBox";
+import { getGroupTaskList } from "../../api/store/actions/task_manager/group-task.actions";
 
 export const CreateScheduleGroupDialog = (props) => {
     const userId = props.userId;
+    const dispatch = useDispatch();
 
     let [isOpen, setIsOpen] = useState(false);
     function closeModal() {
@@ -59,10 +66,51 @@ export const CreateScheduleGroupDialog = (props) => {
         setDuration(calculateDuration(startHour, endHour));
     })
 
+    const listProject = useSelector((state) => state.projectList);
+    const { loading, error, projects } = listProject;
+    const getListProjects = useCallback(() => {
+        dispatch(getProjects(userId));
+    }, [dispatch, userId]);
+    const debounceRef = useRef(null);
+    useEffect(() => {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            getListProjects();
+        }, 200);
+    }, []);
+
+    const [selectedProject, setSelectedProject] = useState('');
+    const [queryProject, setQueryProject] = useState('');
+    const filterProjects = queryProject === ''
+        ? projects
+        : projects.filter((project) => project.name.toLowerCase().includes(queryProject.toLowerCase()));
+
+    const listGroupTasks = useSelector((state) => state.groupTaskList);
+    const { groupTaskLoading, groupTaskError, groupTasks } = listGroupTasks;
+    const didGroupTasksRef = useRef();
+
+    const getGroupTasks = useCallback(() => {
+        if (selectedProject?.id) {
+            dispatch(getGroupTaskList(selectedProject.id));
+        }
+    }, [dispatch, selectedProject.id]);
+
+    useEffect(() => {
+        if (didGroupTasksRef.current) return;
+        getGroupTasks();
+        didGroupTasksRef.current = true;
+    }, [selectedProject.id]);
+
+    const [selectedGroupTask, setSelectedGroupTask] = useState('');
+    const [queryGroupTask, setQueryGroupTask] = useState('');
+    const filterGroupTasks = queryGroupTask === ''
+        ? groupTasks
+        : groupTasks.filter((groupTask) => groupTask.name.toLowerCase().includes(queryGroupTask.toLowerCase()));
+
     return (
         <>
             <Button type='button' color='indigo' onClick={openModal}>
-                Create new Schedule Task
+                Create new Schedule Group
             </Button>
 
             <Transition appear show={isOpen} as={Fragment}>
@@ -95,22 +143,113 @@ export const CreateScheduleGroupDialog = (props) => {
                                         as="h3"
                                         className="text-lg font-medium leading-6 text-gray-900"
                                     >
-                                        Create New Task
+                                        Create New Schedule Group 
                                     </DialogTitle>
 
                                     <div className="mt-5">
                                         <label htmlFor="task-title" className="block text-md font-medium text-gray-700 mb-3">Task Title</label>
-                                        <TextInput
+                                        <Input
                                             id="task-title"
                                             type="text"
                                             value={title}
                                             onChange={(e) => setTitle(e.target.value)}
-                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                            placeholder="Task Title"
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2 px-3 bg-indigo-50"
                                         />
                                     </div>
 
-                                    <div className="mt-6">
+                                    {loading ? (
+                                        <p>Loading...</p>
+                                    ) : error ? (
+                                        <MessageBox message={error}></MessageBox>
+                                    ) : projects ? (
+                                        <>
+                                            <label htmlFor="project" className="block text-md font-medium text-gray-700 mt-4 mb-3">Project</label>
+                                            <Combobox value={selectedProject} onChange={(value) => setSelectedProject(value)} onClose={() => setQueryProject('')}>
+                                                <div className="relative">
+                                                    <ComboboxInput
+                                                        className={clsx(
+                                                            "mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
+                                                            "py-2 px-3 bg-indigo-50"
+                                                        )}
+                                                        displayValue={(project) => project?.name}
+                                                        onChange={(event) => setQueryProject(event.target.value)}
+                                                    />
+                                                    <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">
+                                                        <ChevronDownIcon className="size-4 fill-black/60 group-data-[hover]:fill-black" />
+                                                    </ComboboxButton>
+                                                </div>
+                                                <ComboboxOptions
+                                                    anchor="bottom"
+                                                    transition
+                                                    className={clsx(
+                                                        'w-[var(--input-width)] rounded-xl border border-white/5 bg-white p-1 [--anchor-gap:var(--spacing-1)] empty:invisible',
+                                                        'transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0'
+                                                    )}
+                                                >
+                                                    {filterProjects.map((project) => (
+                                                        <ComboboxOption
+                                                            key={project.id}
+                                                            value={project}
+                                                            className="group flex cursor-default items-center gap-2 rounded-lg py-1.5 px-3 select-none data-[focus]:bg-white/10"
+                                                        >
+                                                            <CheckIcon className="invisible size-4 group-data-[selected]:visible" />
+                                                            {project.name}
+                                                        </ComboboxOption>
+                                                    ))}
+                                                </ComboboxOptions>
+                                            </Combobox>
+                                        </>
+                                    ) : (
+                                        <p>No projects found</p>
+                                    )}
+
+                                    {groupTaskLoading ? (
+                                        <p>Loading...</p>
+                                    ) : groupTaskError ? (
+                                        <MessageBox message={groupTaskError}></MessageBox>
+                                    ) : groupTasks ? (
+                                        <>
+                                            <Combobox value={selectedGroupTask} onChange={(value) => setSelectedGroupTask(value)} onClose={() => setQueryGroupTask('')}>
+                                                <label htmlFor="group-task" className="block text-md font-medium text-gray-700 mt-4 mb-3">Group Task</label>
+                                                <div className="relative">
+                                                    <ComboboxInput
+                                                        className={clsx(
+                                                            "mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
+                                                            "py-2 px-3 bg-indigo-50"
+                                                        )}
+                                                        displayValue={(groupTask) => groupTask?.name}
+                                                        onChange={(event) => setQueryGroupTask(event.target.value)}
+                                                    />
+                                                    <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">
+                                                        <ChevronDownIcon className="size-4 fill-black/60 group-data-[hover]:fill-black" />
+                                                    </ComboboxButton>
+                                                </div>
+                                                <ComboboxOptions
+                                                    anchor="bottom"
+                                                    transition
+                                                    className={clsx(
+                                                        'w-[var(--input-width)] rounded-xl border border-white/5 bg-white p-1 [--anchor-gap:var(--spacing-1)] empty:invisible',
+                                                        'transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0'
+                                                    )}
+                                                >
+                                                    {filterGroupTasks.map((groupTask) => (
+                                                        <ComboboxOption
+                                                            key={groupTask.id}
+                                                            value={groupTask}
+                                                            className="group flex cursor-default items-center gap-2 rounded-lg py-1.5 px-3 select-none data-[focus]:bg-white/10"
+                                                        >
+                                                            <CheckIcon className="invisible size-4 group-data-[selected]:visible" />
+                                                            {groupTask.name}
+                                                        </ComboboxOption>
+                                                    ))}
+                                                </ComboboxOptions>
+                                            </Combobox>
+                                        </>
+                                    ) : (
+                                        <p>No group tasks found</p>
+                                    )}
+
+                                    <div className="mt-4">
                                         <Grid numItems={6}>
                                             <Col numColSpan={2}>
                                                 <p className="block text-md font-medium text-gray-700 mb-3">Start Time</p>
@@ -169,7 +308,7 @@ export const CreateScheduleGroupDialog = (props) => {
                                         </Grid>
                                     </div>
 
-                                    <div className="mt-8">
+                                    <div className="mt-4">
                                         <p className="block text-md font-medium text-gray-700 mb-1">Priority</p>
                                         <div className="grid grid-cols-4 m-1">
                                             <div className="inline-flex items-center">
