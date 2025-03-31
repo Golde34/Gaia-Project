@@ -31,6 +31,9 @@ func NewScheduleTaskRouter(scheduleTaskService *services.ScheduleTaskService, r 
 		r.Get("/list/{userId}", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.ListScheduleGroupByUserId(w, r, scheduleTaskService)
 		})
+		r.Delete("/delete/{scheduleGroupId}", func(w http.ResponseWriter, r *http.Request) {
+			controller_services.DeleteScheduleGroup(w, r, scheduleTaskService)
+		})
 	})
 	return &ScheduleTaskRouter{
 		ScheduleTaskService: scheduleTaskService,

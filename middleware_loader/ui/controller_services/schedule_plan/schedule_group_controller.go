@@ -80,7 +80,7 @@ func CreateScheduleGroup(w http.ResponseWriter, r *http.Request, scheduleTaskSer
 
 	scheduleTaskDto := mapper.CreateScheduleGroupRequestDTOMapper(body)	
 	
-	scheduleGroup, err := services.NewScheduleTaskService().CreateScheduleGroup(scheduleTaskDto)
+	scheduleGroup, err := services.NewScheduleGroupService().CreateScheduleGroup(scheduleTaskDto)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -96,7 +96,7 @@ func CreateScheduleGroup(w http.ResponseWriter, r *http.Request, scheduleTaskSer
 
 func ListScheduleGroupByUserId(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
 	userId := chi.URLParam(r, "userId")
-	scheduleList, err := services.NewScheduleTaskService().ListScheduleGroupByUserId(userId)
+	scheduleList, err := services.NewScheduleGroupService().ListScheduleGroupByUserId(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -108,6 +108,22 @@ func ListScheduleGroupByUserId(w http.ResponseWriter, r *http.Request, scheduleT
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(scheduleGroups); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}
+
+func DeleteScheduleGroup(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
+	scheduleGroupId := chi.URLParam(r, "scheduleGroupId")
+	scheduleGroup, err  := services.NewScheduleGroupService().DeleteScheduleGroup(scheduleGroupId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(scheduleGroup); err != nil {
 		log.Printf("Error encoding response: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
