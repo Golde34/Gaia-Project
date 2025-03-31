@@ -11,6 +11,14 @@ class ScheduleGroupRepository implements ScheduleGroupStore {
     async listScheduleGroup(schedulePlanId: string): Promise<IScheduleGroupEntity[]> {
         return await ScheduleGroupEntity.find({ schedulePlanId: schedulePlanId });
     }
+
+    async deleteScheduleGroup(scheduleGroupId: string): Promise<IScheduleGroupEntity> {
+        const scheduleGroup = await ScheduleGroupEntity.findByIdAndDelete(scheduleGroupId);
+        if (scheduleGroup) {
+            return scheduleGroup;
+        }
+        throw new Error("Cannot delete schedule group!");
+    }
 }
 
 export const scheduleGroupRepository = new ScheduleGroupRepository();

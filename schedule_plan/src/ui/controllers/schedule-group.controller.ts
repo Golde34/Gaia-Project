@@ -20,6 +20,15 @@ class ScheduleGroupController {
             next(error);
         }
     }
+
+    async deleteScheduleGroup(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const scheduleGroupId = req.params.id;
+            return await scheduleGroupUsecase.deleteScheduleGroup(scheduleGroupId);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export const scheduleGroupController = new ScheduleGroupController();

@@ -37,6 +37,18 @@ class ScheduleGroupService {
             throw new Error(error.message.toString());
         }
     }
+
+    async deleteScheduleGroup(scheduleGroupId: string): Promise<IScheduleGroupEntity> {
+        try {
+            const deletedScheduleGroup = await scheduleGroupRepository.deleteScheduleGroup(scheduleGroupId);
+            if (deletedScheduleGroup) {
+                this.clearScheduleGroupCache(deletedScheduleGroup.schedulePlanId);
+            }
+            return deletedScheduleGroup;
+        } catch (error: any) {
+            throw new Error(error.message.toString());
+        }
+    }
 }
 
 export const scheduleGroupService = new ScheduleGroupService();
