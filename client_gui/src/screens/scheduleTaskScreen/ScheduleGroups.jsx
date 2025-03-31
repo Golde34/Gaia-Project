@@ -1,9 +1,10 @@
-import { Card, Col, Flex, Grid, Subtitle, Text } from "@tremor/react"
+import { Card, Col, Flex, Grid, Metric, Subtitle, Text } from "@tremor/react"
 import { useDispatch, useSelector } from "react-redux";
 import { useCallback, useEffect, useRef } from "react";
 import MessageBox from "../../components/subComponents/MessageBox";
 import { scheduleGroupList } from "../../api/store/actions/schedule_plan/schedule-group.action";
 import { CreateScheduleGroupDialog } from "./CreateScheduleGroup";
+import EllipsisMenu from "../../components/EllipsisMenu";
 
 export const ScheduleGroups = (props) => {
     const userId = "1";
@@ -40,7 +41,7 @@ export const ScheduleGroups = (props) => {
                             <Col numColSpan={7}>
                                 <Flex justifyContent="end">
                                     <Subtitle className="text-xl font-bold text-gray-800">
-                                        Your Schedule Tasks 
+                                        Your Schedule Tasks
                                     </Subtitle>
                                 </Flex>
                             </Col>
@@ -55,7 +56,10 @@ export const ScheduleGroups = (props) => {
                                 <Col numColSpan={1} key={task.id}>
                                     <Card className="w-xs hover:cursor-pointer transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-105 duration-300"
                                         decoration={"top"} decorationColor={randomDecoration()}>
-                                        <Subtitle className="text-xl font-bold text-gray-800"> {task.title} </Subtitle>
+                                            <Flex justifyContent="between" alignItems="center">
+                                                <Metric>{task.title}</Metric>
+                                                <EllipsisMenu elementName="Schedule Group" elementId={task.id} />
+                                            </Flex>
                                         <Text> Duration: {task.duration} </Text>
                                         <Text> Start At: {task.startDate}</Text>
                                         <Text> End At: {task.deadline} </Text>

@@ -37,3 +37,5 @@ export const scheduleGroupList = (userId) => async (dispatch) => {
         });
     }
 }
+
+// export const deleteScheduleGroup = (scheduleGroupId) 

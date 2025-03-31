@@ -44,6 +44,9 @@ export const useDeleteComponentDispatch = () => {
             case "Ordinal":
                 dispatch(updateOrdinalNumber(id));
                 break;
+            case "Schedule Group":
+                dispatch(deleteScheduleGroup(id));
+                break;
         }
     }
 
