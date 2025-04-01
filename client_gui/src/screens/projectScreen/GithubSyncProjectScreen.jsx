@@ -6,7 +6,6 @@ import { Button, Card, Flex, Table, TableBody, TableCell, TableHead, TableHeader
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions, Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 import clsx from "clsx";
 import { CheckIcon, ChevronDownIcon } from "@heroicons/react/solid";
-import CardButton from "../../components/subComponents/CardButton";
 
 const GithubSyncProjectScreen = (props) => {
     const user = props.user;
