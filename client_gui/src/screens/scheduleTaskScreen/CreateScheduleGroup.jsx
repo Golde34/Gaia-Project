@@ -12,8 +12,8 @@ import clsx from "clsx";
 import MessageBox from "../../components/subComponents/MessageBox";
 import { getGroupTaskList } from "../../api/store/actions/task_manager/group-task.actions";
 
-export const CreateScheduleGroupDialog = (props) => {
-    const userId = props.userId;
+export const CreateScheduleGroupDialog = () => {
+    const userId = "1";
     const dispatch = useDispatch();
 
     let [isOpen, setIsOpen] = useState(false);
@@ -73,6 +73,7 @@ export const CreateScheduleGroupDialog = (props) => {
     }, [dispatch, userId]);
     const debounceRef = useRef(null);
     useEffect(() => {
+        console.log('userId', userId);
         clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
             getListProjects();
@@ -87,25 +88,22 @@ export const CreateScheduleGroupDialog = (props) => {
 
     const listGroupTasks = useSelector((state) => state.groupTaskList);
     const { groupTaskLoading, groupTaskError, groupTasks } = listGroupTasks;
-    const didGroupTasksRef = useRef();
 
     const getGroupTasks = useCallback(() => {
-        if (selectedProject?.id) {
-            dispatch(getGroupTaskList(selectedProject.id));
-        }
+        dispatch(getGroupTaskList(selectedProject.id));
     }, [dispatch, selectedProject.id]);
 
     useEffect(() => {
-        if (didGroupTasksRef.current) return;
-        getGroupTasks();
-        didGroupTasksRef.current = true;
+        if (selectedProject) {
+            getGroupTasks();
+        }
     }, [selectedProject.id]);
 
     const [selectedGroupTask, setSelectedGroupTask] = useState('');
     const [queryGroupTask, setQueryGroupTask] = useState('');
     const filterGroupTasks = queryGroupTask === ''
         ? groupTasks
-        : groupTasks.filter((groupTask) => groupTask.name.toLowerCase().includes(queryGroupTask.toLowerCase()));
+        : groupTasks.filter((groupTask) => groupTask.title.toLowerCase().includes(queryGroupTask.toLowerCase()));
 
     return (
         <>
@@ -143,7 +141,7 @@ export const CreateScheduleGroupDialog = (props) => {
                                         as="h3"
                                         className="text-lg font-medium leading-6 text-gray-900"
                                     >
-                                        Create New Schedule Group 
+                                        Create New Schedule Group
                                     </DialogTitle>
 
                                     <div className="mt-5">
@@ -217,7 +215,7 @@ export const CreateScheduleGroupDialog = (props) => {
                                                             "mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
                                                             "py-2 px-3 bg-indigo-50"
                                                         )}
-                                                        displayValue={(groupTask) => groupTask?.name}
+                                                        displayValue={(groupTask) => groupTask?.title}
                                                         onChange={(event) => setQueryGroupTask(event.target.value)}
                                                     />
                                                     <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">
@@ -239,7 +237,7 @@ export const CreateScheduleGroupDialog = (props) => {
                                                             className="group flex cursor-default items-center gap-2 rounded-lg py-1.5 px-3 select-none data-[focus]:bg-white/10"
                                                         >
                                                             <CheckIcon className="invisible size-4 group-data-[selected]:visible" />
-                                                            {groupTask.name}
+                                                            {groupTask.title}
                                                         </ComboboxOption>
                                                     ))}
                                                 </ComboboxOptions>

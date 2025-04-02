@@ -13,11 +13,11 @@ export const groupTaskListReducer = (
 ) => {
     switch (action.type) {
         case GROUP_TASK_LIST_REQUEST:
-            return { loading: true };
+            return { groupTaskLoading: true };
         case GROUP_TASK_LIST_SUCCESS:
-            return { loading: false, groupTasks: action.payload.getGroupTasksInProject };
+            return { groupTaskLoading: false, groupTasks: action.payload.getGroupTasksInProject };
         case GROUP_TASK_LIST_FAIL:
-            return { loading: false, error: action.payload };
+            return { groupTaskLoading: false, groupTaskError: action.payload };
         default:
             return state;
     }

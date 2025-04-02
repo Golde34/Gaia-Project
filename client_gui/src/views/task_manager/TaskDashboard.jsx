@@ -16,7 +16,7 @@ const TaskDashboard = (props) => {
     console.log("my cookie: " + cookies.accessToken)
 
     const listGroupTasks = useSelector((state) => state.groupTaskList);
-    const { loading, error, groupTasks } = listGroupTasks;
+    const { groupTaskLoading, groupTaskError, groupTasks } = listGroupTasks;
     const didGroupTasksRef = useRef();
 
     const getGroupTasks = useCallback(() => {
@@ -47,9 +47,9 @@ const TaskDashboard = (props) => {
 
     return (
         <div>
-            {loading ? (
+            {groupTaskLoading ? (
                 <Text>Loading...</Text>
-            ) : error ? (
+            ) : groupTaskError ? (
                 <MessageBox message={error} />
             ) : (
                 <>
