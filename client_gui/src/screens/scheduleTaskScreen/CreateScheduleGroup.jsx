@@ -1,5 +1,5 @@
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions, Dialog, DialogPanel, DialogTitle, Input, Transition, TransitionChild } from "@headlessui/react";
-import { Button, Col, Grid, TextInput } from "@tremor/react";
+import { Button, Col, Grid } from "@tremor/react";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import CheckBoxIcon from "../../components/icons/CheckboxIcon";
 import { pushPriority, pushRepeat } from "../../kernels/utils/field-utils";
@@ -63,7 +63,9 @@ export const CreateScheduleGroupDialog = () => {
     const createScheduleTask = useCreateScheduletaskDispatch();
 
     useEffect(() => {
-        setDuration(calculateDuration(startHour, endHour));
+        if (startHour && endHour) {
+            setDuration(calculateDuration(startHour, endHour));
+        }
     })
 
     const listProject = useSelector((state) => state.projectList);
@@ -298,6 +300,7 @@ export const CreateScheduleGroupDialog = () => {
                                                                 className="bg-indigo-50 border border-indigo-300 text-indigo-900 text-sm rounded-full focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5"
                                                                 min="0"
                                                                 value={duration}
+                                                                readOnly
                                                             />
                                                         </div>
                                                     </div>
