@@ -16,7 +16,7 @@ export interface IScheduleGroupEntity extends Document {
     preferenceLevel: Number;
     repeat: string[];
     isNotify: boolean;
-    acitveStatus: ActiveStatus;
+    activeStatus: ActiveStatus;
     createDate: Date;
     updateDate: Date;
 }

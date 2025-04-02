@@ -1,3 +1,4 @@
+import { IScheduleGroupEntity } from "../../infrastructure/entities/schedule-group.entity";
 import { IScheduleTaskEntity } from "../../infrastructure/entities/schedule-task.entity";
 import { createMessage } from "../../infrastructure/kafka/create-message";
 import { KafkaHandler } from "../../infrastructure/kafka/kafka-handler";
@@ -183,6 +184,17 @@ class ScheduleTaskService {
         } catch (error) {
             console.error("Error on getScheduleBatchTask: ", error);
             return [];
+        }
+    }
+    
+    async createTaskFromScheduleGroup(scheduleGroup: IScheduleGroupEntity): Promise<IScheduleTaskEntity | null> {
+        try {
+            const scheduleTask = scheduleTaskMapper.buildTaskFromScheduleGroup(scheduleGroup);
+            const createdScheduleTask = await scheduleTaskRepository.createScheduleTask(scheduleTask);
+            return createdScheduleTask;
+        } catch (error) {
+            console.error("Error on createTaskFromScheduleGroup: ", error);
+            return null;
         }
     }
 }
