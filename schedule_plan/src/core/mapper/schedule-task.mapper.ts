@@ -1,3 +1,5 @@
+import { ulid } from "ulid";
+import { IScheduleGroupEntity } from "../../infrastructure/entities/schedule-group.entity";
 import { IScheduleTaskEntity, ScheduleTaskEntity } from "../../infrastructure/entities/schedule-task.entity"
 import { convertPriority } from "../../kernel/utils/convert-fields";
 import { ActiveStatus, RepeatLevel } from "../domain/enums/enums";
@@ -59,5 +61,24 @@ export const scheduleTaskMapper = {
         scheduleTask.taskOrder = data.taskOrder
         scheduleTask.stopTime = data.stopTime
         return scheduleTask
-    } 
+    },
+    
+    buildTaskFromScheduleGroup(scheduleGroup: IScheduleGroupEntity): IScheduleTaskEntity {
+        // startDate = today but have schedule.startHour and schedule.startMinute
+        const startDate = new Date(new Date().setHours(Number(scheduleGroup.startHour), Number(scheduleGroup.startMinute), 0, 0));
+        const deadline = new Date(new Date().setHours(Number(scheduleGroup.endHour), Number(scheduleGroup.endMinute), 0, 0));
+        return new ScheduleTaskEntity({
+            taskId: ulid(),
+            title: scheduleGroup.title,
+            priority: scheduleGroup.priority,
+            status: scheduleGroup.status,
+            startDate: startDate,
+            deadline: deadline,
+            duration: scheduleGroup.duration,
+            activeStatus: ActiveStatus.active,
+            preferenceLevel: convertPriority(scheduleGroup.priority),
+            schedulePlanId: scheduleGroup.schedulePlanId,
+            isNotify: scheduleGroup.isNotify,
+        });
+    }
 }

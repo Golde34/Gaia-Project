@@ -1,8 +1,10 @@
+import { IScheduleGroupEntity } from "../../infrastructure/entities/schedule-group.entity";
 import { IScheduleTaskEntity } from "../../infrastructure/entities/schedule-task.entity";
 import { IResponse, msg200, msg400 } from "../common/response";
 import { OptimizeScheduleTaskMessage, SyncScheduleTaskRequest } from "../domain/request/task.dto";
 import { scheduleTaskMapper } from "../mapper/schedule-task.mapper";
 import { notificationService } from "../services/notifi-agent.service";
+import { scheduleGroupService } from "../services/schedule-group.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
 import { scheduleTaskService } from "../services/schedule-task.service";
 
@@ -184,6 +186,28 @@ class ScheduleTaskUsecase {
         } catch (error) {
             console.error("Error on getScheduleTask: ", error);
             return msg400("Cannot get schedule task!");
+        }
+    }
+
+    async scheduleGroupCreateTask(): Promise<any> {
+        try {
+            const limit = 100;
+            const today = new Date();
+            let scheduleGroups: IScheduleGroupEntity[] = [];
+            do {
+                scheduleGroups = await scheduleGroupService.findAllScheduleGroupsToCreateTask(limit, today);
+                scheduleGroups.forEach(async (scheduleGroup: IScheduleGroupEntity) => {
+                    // create task
+                    console.log("Create task for schedule group: ", scheduleGroup);
+                    const task = await scheduleTaskService.createTaskFromScheduleGroup(scheduleGroup);
+                    console.log("Task created: ", task);
+                    // update schedule group status
+                    scheduleGroup.updateDate = today;
+                    await scheduleGroupService.updateScheduleGroup(scheduleGroup);
+                })
+            } while (scheduleGroups.length > 0);
+        } catch (error: any) {
+            throw new Error(error.message.toString());
         }
     }
 }

@@ -2,6 +2,7 @@ import CacheSingleton from "../../infrastructure/cache/internal-cache/cache-sing
 import { IScheduleGroupEntity } from "../../infrastructure/entities/schedule-group.entity";
 import { scheduleGroupRepository } from "../../infrastructure/repository/schedule-group.repository";
 import { InternalCacheConstants } from "../domain/constants/constants";
+import { scheduleTaskService } from "./schedule-task.service";
 
 class ScheduleGroupService {
     constructor(
@@ -37,6 +38,18 @@ class ScheduleGroupService {
             throw new Error(error.message.toString());
         }
     }
+    
+    async updateScheduleGroup(scheduleGroup: IScheduleGroupEntity): Promise<void> {
+        try {
+            const updatedScheduleGroup = await scheduleGroupRepository.updateScheduleGroup(scheduleGroup);
+            if (updatedScheduleGroup) {
+                this.clearScheduleGroupCache(scheduleGroup.schedulePlanId);
+            }
+            console.log("Schedule group updated successfully: ", scheduleGroup);
+        } catch (error: any) {
+            throw new Error(error.message.toString());
+        }
+    }
 
     async deleteScheduleGroup(scheduleGroupId: string): Promise<IScheduleGroupEntity> {
         try {
@@ -45,6 +58,14 @@ class ScheduleGroupService {
                 this.clearScheduleGroupCache(deletedScheduleGroup.schedulePlanId);
             }
             return deletedScheduleGroup;
+        } catch (error: any) {
+            throw new Error(error.message.toString());
+        }
+    }
+
+    async findAllScheduleGroupsToCreateTask(limit: number, date: Date): Promise<any> {
+        try {
+            return await scheduleGroupRepository.findAllScheduleGroupsToCreateTask(limit, date);
         } catch (error: any) {
             throw new Error(error.message.toString());
         }
