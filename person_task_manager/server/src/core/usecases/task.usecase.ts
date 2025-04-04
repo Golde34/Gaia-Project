@@ -127,6 +127,8 @@ class TaskUsecase {
             return msg400(err.message.toString());
         }
     }
+
+    async createScheduleTask(scheduletask)
 }
 
 export const taskUsecase = new TaskUsecase();
