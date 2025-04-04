@@ -9,7 +9,7 @@ import { schedulePlanService } from "../services/schedule-plan.service";
 import { scheduleTaskService } from "../services/schedule-task.service";
 
 class ScheduleTaskUsecase {
-    constructor() { }
+    constructor() {} 
 
     async createScheduleTaskByKafka(scheduleTask: any): Promise<void> {
         try {
@@ -23,7 +23,7 @@ class ScheduleTaskUsecase {
             console.log('Result: ', result);
 
             const { id: scheduleTaskId, title: scheduleTaskName } = result.data.message;
-            scheduleTaskService.pushKafkaCreateScheduleTaskMessage(task.taskId, scheduleTaskId, scheduleTaskName);
+            scheduleTaskService.pushCreateTaskKafkaMessage(task.taskId, scheduleTaskId, scheduleTaskName);
         } catch (error) {
             console.error("Error on createScheduleTask: ", error);
         }
@@ -210,9 +210,14 @@ class ScheduleTaskUsecase {
                     try {
                         console.log("Create task for schedule group: ", scheduleGroup);
                         const task = await scheduleTaskService.createTaskFromScheduleGroup(scheduleGroup);
+                        if (!task) {
+                            console.error("Task creation failed for schedule group: ", scheduleGroup);
+                            throw new Error("Task creation failed"); 
+                        }
                         console.log("Task created: ", task);
                         await scheduleGroupService.updateScheduleGroup({...scheduleGroup, updateDate: today});
                         delete failedScheduleMap[scheduleGroup._id]
+                        await scheduleTaskService.pushCreateScheduleTaskKafkaMessage(task)
                     } catch (err) {
                         const id = scheduleGroup._id;
                         console.error("Error creating task or updating scheduleGroup:", err);
