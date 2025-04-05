@@ -42,7 +42,7 @@ export const scheduleGroupSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            default: "In Progress",
+            default: "IN PROGRESS",
             required: false,
         },
         startHour: {
