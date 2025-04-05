@@ -1,4 +1,4 @@
-package config 
+package config
 
 import (
 	"fmt"
@@ -18,8 +18,10 @@ type JobConfig struct {
 	BootstrapServers string
 	Topic            string
 	JobName          string
+	JobType          string
 	JobTime          int
 	JobTimeUnit      string
+	JobCron          string
 }
 
 func LoadProducerEnv() ([]JobConfig, error) {
@@ -38,11 +40,13 @@ func LoadProducerEnv() ([]JobConfig, error) {
 			BootstrapServers: os.Getenv(prefix + server + "_BOOTSTRAP_SERVERS"),
 			Topic:            os.Getenv(prefix + server + "_TOPIC"),
 			JobName:          os.Getenv(prefix + server + "_JOB_NAME"),
+			JobType:          os.Getenv(prefix + server + "_JOB_TYPE"),
 			JobTime:          ConvertInt(os.Getenv(prefix + server + "_JOB_TIME")),
 			JobTimeUnit:      os.Getenv(prefix + server + "_JOB_TIME_UNIT"),
+			JobCron:          os.Getenv(prefix + server + "_JOB_CRON"),
 		}
 		configs = append(configs, kafkaServerConfig)
-	}	
+	}
 
 	return configs, nil
 }
