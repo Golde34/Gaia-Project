@@ -7,7 +7,7 @@ export enum KafkaTopic {
     OPTIMIZE_TASK_NOTIFY = "notify-agent.optimize-task-notify.topic",
     DELETE_TASK = "task-manager.delete-task.topic",
     UPDATE_TASK = "task-manager.update-task.topic",
-    SCHEDULE_GRROUP_CREATE_TASK = "schedule-plan.schedule-group-create-task.topic",
+    SCHEDULE_GROUP_CREATE_TASK = "schedule-plan.schedule-group-create-task.topic",
 }
 
 export enum KafkaCommand {
