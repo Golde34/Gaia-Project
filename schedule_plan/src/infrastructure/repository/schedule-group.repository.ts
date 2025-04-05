@@ -27,8 +27,9 @@ class ScheduleGroupRepository implements ScheduleGroupStore {
     }
 
     async findAllScheduleGroupsToCreateTask(limit: number, date: Date): Promise<IScheduleGroupEntity[]> {
+        const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
         return await ScheduleGroupEntity.find({
-            activeStatus: ActiveStatus.active, updateDate: { $lt: date },
+            activeStatus: ActiveStatus.active, updateDate: { $lt: startOfDay },
             $or: [{ isFailed: null }, { isFailed: false }]
         }).limit(limit);
     }
