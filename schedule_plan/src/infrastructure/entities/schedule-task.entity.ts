@@ -19,6 +19,7 @@ export interface IScheduleTaskEntity extends Document {
     schedulePlanId: string;
     isNotify: boolean;
     createDate: Date;
+    scheduleGroupId: string;
 }
 
 export const scheduleTaskSchema = new mongoose.Schema(
@@ -91,6 +92,10 @@ export const scheduleTaskSchema = new mongoose.Schema(
             type: Date,
             required: true,
             default: Date.now,
+        },
+        scheduleGroupId: {
+            type: String,
+            required: false,
         }
     }, 
     {

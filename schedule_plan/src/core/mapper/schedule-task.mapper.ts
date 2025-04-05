@@ -79,6 +79,7 @@ export const scheduleTaskMapper = {
             preferenceLevel: convertPriority(scheduleGroup.priority),
             schedulePlanId: scheduleGroup.schedulePlanId,
             isNotify: scheduleGroup.isNotify,
+            scheduleGroupId: scheduleGroup._id,
         });
     }
 }

@@ -207,6 +207,16 @@ class ScheduleTaskService {
         console.log("Push Kafka Message: ", messages);
         this.kafkaHandler.produce(KafkaTopic.CREATE_SCHEDULE_TASK, messages);
     }
+
+    async findScheduleTaskByScheduleGroup(scheduleGroupId: string): Promise<IScheduleTaskEntity[]> {
+        try {
+            const scheduleTask = await scheduleTaskRepository.finddByScheduleGroup(scheduleGroupId);
+            return scheduleTask;
+        } catch (error) {
+            console.error("Error on findScheduleTaskByScheduleGroup: ", error);
+            return [];
+        }
+    }
 }
 
 export const scheduleTaskService = new ScheduleTaskService();   
