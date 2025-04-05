@@ -1,5 +1,5 @@
 import { useCreateTaskDispatch, useGenerateTaskFromScratchDispatch } from "../../kernels/utils/write-dialog-api-requests";
-import { Transition, Dialog } from "@headlessui/react";
+import { Transition, Dialog, DialogPanel, DialogTitle, TransitionChild } from "@headlessui/react";
 import { Textarea } from "@material-tailwind/react";
 import { Button, Col, DatePicker, Grid, TextInput } from "@tremor/react";
 import { Fragment, useState } from "react";
@@ -79,7 +79,7 @@ export const CreateTaskDialog = (props) => {
 
             <Transition appear show={isOpen} as={Fragment}>
                 <Dialog as="div" className="relative z-10" onClose={closeModal}>
-                    <Transition.Child
+                    <TransitionChild
                         as={Fragment}
                         enter="ease-out duration-300"
                         enterFrom="opacity-0"
@@ -89,11 +89,11 @@ export const CreateTaskDialog = (props) => {
                         leaveTo="opacity-0"
                     >
                         <div className="fixed inset-0 bg-black/25" />
-                    </Transition.Child>
+                    </TransitionChild>
 
                     <div className="fixed inset-0 overflow-y-auto">
                         <div className="flex min-h-full items-center justify-center p-4 text-center">
-                            <Transition.Child
+                            <TransitionChild
                                 as={Fragment}
                                 enter="ease-out duration-300"
                                 enterFrom="opacity-0 scale-95"
@@ -102,13 +102,13 @@ export const CreateTaskDialog = (props) => {
                                 leaveFrom="opacity-100 scale-100"
                                 leaveTo="opacity-0 scale-95"
                             >
-                                <Dialog.Panel className="w-full max-w-md transform rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                                    <Dialog.Title
+                                <DialogPanel className="w-full max-w-md transform rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                                    <DialogTitle
                                         as="h3"
                                         className="text-lg font-medium leading-6 text-gray-900"
                                     >
                                         Create New Task
-                                    </Dialog.Title>
+                                    </DialogTitle>
 
                                     <div className="mt-5">
                                         <label htmlFor="task-title" className="block text-md font-medium text-gray-700 mb-3">Task Title</label>
@@ -334,8 +334,8 @@ export const CreateTaskDialog = (props) => {
                                         </button>
                                     </div>
 
-                                </Dialog.Panel>
-                            </Transition.Child>
+                                </DialogPanel>
+                            </TransitionChild>
                         </div>
                     </div>
                 </Dialog>

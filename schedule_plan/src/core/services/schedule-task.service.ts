@@ -198,6 +198,7 @@ class ScheduleTaskService {
     }
 
     async pushCreateScheduleTaskKafkaMessage(scheduleTask: IScheduleTaskEntity): Promise<void> {
+        // call to TM to get taskId
         const messages = [{
             value: JSON.stringify(createMessage(
                 KafkaCommand.SCHEDULE_GRROUP_CREATE_TASK, '00', 'Successful', scheduleTask 
