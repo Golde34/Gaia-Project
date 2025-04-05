@@ -7,6 +7,7 @@ export const scheduleGroupMapper = {
         const [endHour, endMinute] = scheduleGroup.endHour.split(':').map(Number)
         return  new ScheduleGroupEntity({
             schedulePlanId: schedulePlanId,
+            projectId: scheduleGroup.projectId,
             groupTaskId: scheduleGroup.groupTaskId,
             title: scheduleGroup.title,
             priority: scheduleGroup.priority,
