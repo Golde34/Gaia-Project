@@ -45,13 +45,13 @@ export const CreateScheduleGroupDialog = () => {
     const [isSaturday, setIsSaturday] = useState(false);
     const [isSunday, setIsSunday] = useState(false);
 
-    const setObjectTask = (title, project, groupTask, duration, startHour, endHour,
+    const setObjectTask = (title, duration, startHour, endHour,
         isHighPriority, isMediumPriority, isLowPriority, isStarPriority,
         isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday) => {
         scheduleTask.userId = userId;
         scheduleTask.title = title;
-        scheduleTask.projectId = project._id;
-        scheduleTask.groupTaskId = groupTask._id;
+        scheduleTask.projectId = selectedProject.id;
+        scheduleTask.groupTaskId = selectedGroupTask.id;
         scheduleTask.duration = Number(duration);
         scheduleTask.startHour = startHour;
         scheduleTask.endHour = endHour;
@@ -59,7 +59,7 @@ export const CreateScheduleGroupDialog = () => {
         scheduleTask.repeat = pushRepeat(isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday);
         scheduleTask.isNotify = true;
         scheduleTask.activeStatus = 'ACTIVE';
-
+        
         createScheduleTask(scheduleTask);
         window.location.reload();
     }
@@ -549,7 +549,7 @@ export const CreateScheduleGroupDialog = () => {
                                             type="button"
                                             className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                             onClick={() => {
-                                                setObjectTask(title, selectedProject, selectedGroupTask, duration, startHour, endHour,
+                                                setObjectTask(title, duration, startHour, endHour,
                                                     isHighPriority, isMediumPriority, isLowPriority, isStarPriority,
                                                     isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday);
                                                 closeModal();
