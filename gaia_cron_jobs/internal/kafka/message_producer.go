@@ -10,7 +10,7 @@ func CreateKafkaMessage(cronType, message string) *domain.KafkaMessage {
 		Cmd:         cronType,
 		ErrorCode:   "00",
 		ErrorMessage: "Success",
-		DisplayTime: time.Now().String(),
+		DisplayTime: time.Now().UTC().Format(time.RFC3339),
 		Data:        message,
 	}
 }
@@ -19,7 +19,7 @@ func CreateKafkaObjectMessage(cronType string, message map[string]interface{}) *
 		Cmd:         cronType,
 		ErrorCode:   "00",
 		ErrorMessage: "Success",
-		DisplayTime: time.Now().String(),
+		DisplayTime: time.Now().UTC().Format(time.RFC3339),
 		Data:        message,
 	}
 }
