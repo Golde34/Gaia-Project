@@ -3,6 +3,7 @@ import { IResponse, msg200, msg400 } from "../common/response";
 import { scheduleGroupMapper } from "../mapper/schedule-group.mapper";
 import { scheduleGroupService } from "../services/schedule-group.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
+import { scheduleTaskService } from "../services/schedule-task.service";
 
 class ScheduleGroupUsecase {
     constructor(
@@ -52,6 +53,10 @@ class ScheduleGroupUsecase {
         try {
             const scheduleGroup = await scheduleGroupService.deleteScheduleGroup(scheduleGroupId);
             if (scheduleGroup) {
+                const deletedTasks = await scheduleTaskService.findScheduleTaskByScheduleGroup(scheduleGroupId);
+                Promise.all(deletedTasks.map(async (task) =>{
+                    await scheduleTaskService.deleteScheduleTask(task._id);
+                }))
                 return msg200(scheduleGroup);
             }
             return msg400("Cannot delete schedule group!");

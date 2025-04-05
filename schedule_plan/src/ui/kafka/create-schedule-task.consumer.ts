@@ -6,7 +6,7 @@ export const handleCreateScheduleTaskMessage = (message: string) => {
     const cmd = kafkaMessage.cmd;
     switch (cmd) {
         case KafkaCommand.SCHEDULE_GRROUP_CREATE_TASK:
-            scheduleTaskUsecase.scheduleGroupCreateTask(kafkaMessage.data)
+            scheduleTaskUsecase.scheduleGroupCreateTask(kafkaMessage.displayTime, kafkaMessage.data)
             break;
         default:
             console.warn("No handler for command: ", cmd);

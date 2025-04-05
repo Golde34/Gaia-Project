@@ -68,7 +68,6 @@ export const scheduleTaskMapper = {
         const startDate = new Date(new Date().setHours(Number(scheduleGroup.startHour), Number(scheduleGroup.startMinute), 0, 0));
         const deadline = new Date(new Date().setHours(Number(scheduleGroup.endHour), Number(scheduleGroup.endMinute), 0, 0));
         return new ScheduleTaskEntity({
-            taskId: ulid(),
             title: scheduleGroup.title,
             priority: scheduleGroup.priority,
             status: scheduleGroup.status,
@@ -79,6 +78,7 @@ export const scheduleTaskMapper = {
             preferenceLevel: convertPriority(scheduleGroup.priority),
             schedulePlanId: scheduleGroup.schedulePlanId,
             isNotify: scheduleGroup.isNotify,
+            scheduleGroupId: scheduleGroup._id,
         });
     }
 }

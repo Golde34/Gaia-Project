@@ -71,6 +71,15 @@ class TaskController {
         }
     }
 
+    async createScheduleTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const taskResult = await taskUsecase.createScheduleTask(req.body);
+            return taskResult;
+        } catch (err) {
+            next(err);
+        }
+    }
+
     async generateTaskWithoutGroupTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const bodyJson = req.body;

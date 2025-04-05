@@ -9,7 +9,7 @@ import { schedulePlanService } from "../services/schedule-plan.service";
 import { scheduleTaskService } from "../services/schedule-task.service";
 
 class ScheduleTaskUsecase {
-    constructor() {} 
+    constructor() { }
 
     async createScheduleTaskByKafka(scheduleTask: any): Promise<void> {
         try {
@@ -189,17 +189,19 @@ class ScheduleTaskUsecase {
         }
     }
 
-    async scheduleGroupCreateTask(kafkaData: any): Promise<any> {
-        console.log('Schedule Group Create Task day: ' + kafkaData.date + ' id: ' + kafkaData.id);
+    async scheduleGroupCreateTask(displayTime: Date, kafkaData: any): Promise<any> {
+        console.log('Schedule Group Create Task day: ' + displayTime + ' id: ' + kafkaData);
         try {
             const limit = 100;
-            const today = new Date(kafkaData.date);
+            const maxRetry = 3;
+            const today = new Date(displayTime);
             let hasMore = true;
 
             const failedScheduleMap: Record<string, number> = {}
 
             while (hasMore) {
                 const scheduleGroups: IScheduleGroupEntity[] = await scheduleGroupService.findAllScheduleGroupsToCreateTask(limit, today);
+                console.log("Schedule groups: ", scheduleGroups.length > 0 ? scheduleGroups.forEach((scheduleGroup) => scheduleGroup._id) : "0");
 
                 if (scheduleGroups.length === 0) {
                     hasMore = false;
@@ -207,22 +209,30 @@ class ScheduleTaskUsecase {
                 }
 
                 for (const scheduleGroup of scheduleGroups) {
+                    let createdTask = null;
                     try {
-                        console.log("Create task for schedule group: ", scheduleGroup);
-                        const task = await scheduleTaskService.createTaskFromScheduleGroup(scheduleGroup);
-                        if (!task) {
+                        console.log("Schedule group updated: ", scheduleGroup._id);
+                        createdTask = await scheduleTaskService.createTaskFromScheduleGroup(scheduleGroup);
+                        if (!createdTask) {
                             console.error("Task creation failed for schedule group: ", scheduleGroup);
-                            throw new Error("Task creation failed"); 
+                            throw new Error("Task creation failed");
                         }
-                        console.log("Task created: ", task);
-                        await scheduleGroupService.updateScheduleGroup({...scheduleGroup, updateDate: today});
+                        console.log("Task created: ", createdTask);
+                        scheduleGroup.updateDate = today;
+                        await scheduleGroupService.updateScheduleGroup(scheduleGroup);
                         delete failedScheduleMap[scheduleGroup._id]
-                        await scheduleTaskService.pushCreateScheduleTaskKafkaMessage(task)
+                        await scheduleTaskService.pushCreateScheduleTaskKafkaMessage(createdTask)
                     } catch (err) {
                         const id = scheduleGroup._id;
                         console.error("Error creating task or updating scheduleGroup:", err);
                         failedScheduleMap[id] = (failedScheduleMap[id] || 0) + 1;
-                        if (failedScheduleMap[id] >= 3) {
+                        
+                        // Delete created task if it exists
+                        if (createdTask !== null) {
+                            await scheduleTaskService.deleteScheduleTask(createdTask._id);
+                        }
+                        
+                        if (failedScheduleMap[id] >= maxRetry) {
                             console.error(`Exceeded retires for ${id}: Sending to error queue.`);
                             // push to logging tracker to handle error
                             await scheduleGroupService.markAsFail(scheduleGroup._id);

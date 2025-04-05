@@ -11,10 +11,12 @@ import { CheckIcon, ChevronDownIcon } from "@heroicons/react/solid";
 import clsx from "clsx";
 import MessageBox from "../../components/subComponents/MessageBox";
 import { getGroupTaskList } from "../../api/store/actions/task_manager/group-task.actions";
+import { useNavigate } from "react-router-dom";
 
 export const CreateScheduleGroupDialog = () => {
     const userId = "1";
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     let [isOpen, setIsOpen] = useState(false);
     function closeModal() {
@@ -48,6 +50,8 @@ export const CreateScheduleGroupDialog = () => {
         isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday) => {
         scheduleTask.userId = userId;
         scheduleTask.title = title;
+        scheduleTask.projectId = selectedProject.id;
+        scheduleTask.groupTaskId = selectedGroupTask.id;
         scheduleTask.duration = Number(duration);
         scheduleTask.startHour = startHour;
         scheduleTask.endHour = endHour;
@@ -55,9 +59,9 @@ export const CreateScheduleGroupDialog = () => {
         scheduleTask.repeat = pushRepeat(isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday);
         scheduleTask.isNotify = true;
         scheduleTask.activeStatus = 'ACTIVE';
-
+        
         createScheduleTask(scheduleTask);
-        // window.location.reload();
+        window.location.reload();
     }
 
     const createScheduleTask = useCreateScheduletaskDispatch();
@@ -163,7 +167,21 @@ export const CreateScheduleGroupDialog = () => {
                                         <MessageBox message={error}></MessageBox>
                                     ) : projects ? (
                                         <>
-                                            <label htmlFor="project" className="block text-md font-medium text-gray-700 mt-4 mb-3">Project</label>
+                                            <label
+                                                htmlFor="project"
+                                                className="flex items-center justify-between text-md font-medium text-gray-700 mt-4 mb-3"
+                                            >
+                                                Project
+                                                <div className="flex justify-end">
+                                                    <button
+                                                        type="button"
+                                                        className="inline-flex justify-center rounded-md border border-transparent bg-indigo-100 px-4 py-2 text-sm font-medium text-indigo-900 hover:bg-indigo-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+                                                        onClick={() => navigate(`/project`)}
+                                                    >
+                                                        Create Project
+                                                    </button>
+                                                </div>
+                                            </label>
                                             <Combobox value={selectedProject} onChange={(value) => setSelectedProject(value)} onClose={() => setQueryProject('')}>
                                                 <div className="relative">
                                                     <ComboboxInput
@@ -210,7 +228,27 @@ export const CreateScheduleGroupDialog = () => {
                                     ) : groupTasks ? (
                                         <>
                                             <Combobox value={selectedGroupTask} onChange={(value) => setSelectedGroupTask(value)} onClose={() => setQueryGroupTask('')}>
-                                                <label htmlFor="group-task" className="block text-md font-medium text-gray-700 mt-4 mb-3">Group Task</label>
+                                                <label
+                                                    htmlFor="group-task"
+                                                    className="flex items-center justify-between text-md font-medium text-gray-700 mt-4 mb-3"
+                                                >
+                                                    Group Task
+                                                    <div className="flex justify-end">
+                                                        <button
+                                                            type="button"
+                                                            className="inline-flex justify-center rounded-md border border-transparent bg-indigo-100 px-4 py-2 text-sm font-medium text-indigo-900 hover:bg-indigo-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+                                                            onClick={() => {
+                                                                if (selectedProject.id !== undefined) {
+                                                                    navigate(`/project/${selectedProject.id}`)
+                                                                } else {
+                                                                    navigate(`/project`);
+                                                                }
+                                                            }}
+                                                        >
+                                                            Create Group Task
+                                                        </button>
+                                                    </div>
+                                                </label>
                                                 <div className="relative">
                                                     <ComboboxInput
                                                         className={clsx(

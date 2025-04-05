@@ -72,6 +72,31 @@ taskRouter.post("/private-create",
     }
 )
 
+taskRouter.post("/create-schedule-task",
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const taskResult = await taskControllerImpl.createScheduleTask(req, next);
+            return returnResult(taskResult, CREATE_TASK_FAILED, res, next);
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+)
+
+// generate task from scratch
+taskRouter.post("/generate",
+    RequestValidator.validateV2(GenerateTaskFromScratchRequestDTO),
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const taskResult = await taskControllerImpl.generateTaskWithoutGroupTask(req, next);
+            return returnResult(taskResult, CREATE_TASK_FAILED, res, next);
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+
 // update task
 taskRouter.put("/:id",
     RequestValidator.validateV2(UpdateTaskRequestDto),
@@ -117,19 +142,6 @@ taskRouter.get("/:id/comments", async (req: Request, res: Response, next: NextFu
         next(err);
     }
 });
-
-// generate task from scratch
-taskRouter.post("/generate",
-    RequestValidator.validateV2(GenerateTaskFromScratchRequestDTO),
-    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        try {
-            const taskResult = await taskControllerImpl.generateTaskWithoutGroupTask(req, next);
-            return returnResult(taskResult, CREATE_TASK_FAILED, res, next);
-        }
-        catch (err) {
-            next(err);
-        }
-    });
 
 // update task in dialog
 taskRouter.put("/:id/update-task-in-dialog",

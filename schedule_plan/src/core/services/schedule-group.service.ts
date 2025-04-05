@@ -2,7 +2,6 @@ import CacheSingleton from "../../infrastructure/cache/internal-cache/cache-sing
 import { IScheduleGroupEntity } from "../../infrastructure/entities/schedule-group.entity";
 import { scheduleGroupRepository } from "../../infrastructure/repository/schedule-group.repository";
 import { InternalCacheConstants } from "../domain/constants/constants";
-import { scheduleTaskService } from "./schedule-task.service";
 
 class ScheduleGroupService {
     constructor(

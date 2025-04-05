@@ -4,6 +4,7 @@ import { ActiveStatus } from "../../core/domain/enums/enums";
 export interface IScheduleGroupEntity extends Document {
     _id: string;
     schedulePlanId: string;
+    projectId: string;
     groupTaskId: string;
     title: string;
     priority: string[];
@@ -28,6 +29,10 @@ export const scheduleGroupSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        projectId: {
+            type: String,
+            required: false,
+        },
         groupTaskId: {
             type: String,
             required: false,
@@ -42,7 +47,7 @@ export const scheduleGroupSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            default: "In Progress",
+            default: "IN PROGRESS",
             required: false,
         },
         startHour: {
