@@ -7,19 +7,19 @@ dotenv.config({ path: './src/.env' });
 const taskManagerServiceDomain = process.env.TASK_MANAGER_SERVICE_DOMAIN;
 
 class TaskManagerAdapter {
-    private createTask: string;
+    private createTaskURL: string;
 
     constructor() {
         if (!taskManagerServiceDomain) {
             throw new Error("Task manager service domain is not provided");
         }
-        this.createTask = taskManagerServiceDomain + process.env.TASK_MANAGER_SERVICE_CREATE_TASK;
+        this.createTaskURL = taskManagerServiceDomain + process.env.TASK_MANAGER_SERVICE_CREATE_TASK;
     }
 
-    async createTaskService(task: any) {
+    async createTask(task: any) {
         try {
             const headers = buildDefaultHeaders({});
-            const uri = this.createTask;
+            const uri = this.createTaskURL;
             console.log(`Calling api to task manager service...`);
             const response = await fetch(uri, {
                 headers,

@@ -1,3 +1,4 @@
+import { taskManagerAdapter } from "../../infrastructure/client/task-manager.adapter";
 import { IScheduleGroupEntity } from "../../infrastructure/entities/schedule-group.entity";
 import { IScheduleTaskEntity } from "../../infrastructure/entities/schedule-task.entity";
 import { createMessage } from "../../infrastructure/kafka/create-message";
@@ -11,8 +12,10 @@ import { SyncScheduleTaskRequest } from "../domain/request/task.dto";
 import { scheduleTaskMapper } from "../mapper/schedule-task.mapper";
 
 class ScheduleTaskService {
-    kafkaHandler: KafkaHandler = new KafkaHandler();
-    constructor() { }
+    constructor(
+        public kafkaHandler: KafkaHandler = new KafkaHandler(),
+        public taskManagerAdapterImpl = taskManagerAdapter,
+    ) { }
 
     async createScheduleTask(scheduleTask: any): Promise<IResponse> {
         try {
@@ -190,6 +193,8 @@ class ScheduleTaskService {
     async createTaskFromScheduleGroup(scheduleGroup: IScheduleGroupEntity): Promise<IScheduleTaskEntity | null> {
         try {
             const scheduleTask = scheduleTaskMapper.buildTaskFromScheduleGroup(scheduleGroup);
+            const task = await this.taskManagerAdapterImpl.createTask(scheduleTask);
+            scheduleTask.taskId = task.id;
             return await scheduleTaskRepository.createScheduleTask(scheduleTask);
         } catch (error) {
             console.error("Error on createTaskFromScheduleGroup: ", error);
