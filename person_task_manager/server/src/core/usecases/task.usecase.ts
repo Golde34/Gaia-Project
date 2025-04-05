@@ -3,7 +3,7 @@ import { msg200, msg400 } from "../common/response-helpers";
 import { TaskDetailRequestDTO, TaskRequestDto } from "../domain/dtos/task.dto";
 import { CRUDType, IsPrivateRoute, TaskDetail } from "../domain/enums/enums";
 import { taskService } from "../services/task.service";
-import { buildCommonStringValue } from "../../kernel/util/string-utils";
+import { buildCommonStringValue, isStringEmpty } from "../../kernel/util/string-utils";
 import { GetGroupTaskProject } from "../domain/dtos/request_dtos/get-group-task-project.dto";
 import { projectService } from "../services/project.service";
 import { groupTaskService } from "../services/group-task.service";
@@ -128,7 +128,37 @@ class TaskUsecase {
         }
     }
 
-    async createScheduleTask(scheduletask)
+    async createScheduleTask(scheduleTask: any): Promise<IResponse> {
+        try {
+            let project = null;
+            let groupTask = null;
+            // validate
+            if (isStringEmpty(scheduleTask.projectId)) {
+                //create Project
+                // const projectMapper= await projectMapper.mapProject(scheduleTask);
+                const projectMapper = {}
+                project = await projectService.createProject(projectMapper);
+            } 
+            project = await projectService.getProject(scheduleTask.projectId);
+            if (!project) return msg400('Error when create project for schedule task');
+
+            if (isStringEmpty(scheduleTask.groupTaskId)) {
+                //create group task
+                // const groupTaskMapper = await groupTaskMapper.mapGroupTask(scheduleTask);
+                const groupTaskMapper = {}
+                groupTask = await groupTaskService.createGroupTaskToProject(groupTaskMapper, project.data._id);
+            }
+            groupTask = await groupTaskService.getGroupTask(scheduleTask.groupTaskId);
+            if (!groupTask) return msg400('Error when create group task for schedule task');
+
+            const taskMapper = scheduleTask
+            const createdTask = await taskService.createTaskInGroupTask(taskMapper, groupTask._id);
+            const taskResult = await taskService.handleAfterCreateTask(createdTask, groupTask._id);
+            return taskResult;
+        } catch (err: any) {
+            return msg400(err.message.toString());
+        }
+    }
 }
 
 export const taskUsecase = new TaskUsecase();
