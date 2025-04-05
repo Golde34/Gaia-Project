@@ -17,6 +17,7 @@ export interface IScheduleGroupEntity extends Document {
     repeat: string[];
     isNotify: boolean;
     activeStatus: ActiveStatus;
+    isFailed: boolean;
     createDate: Date;
     updateDate: Date;
 }
@@ -82,6 +83,10 @@ export const scheduleGroupSchema = new mongoose.Schema(
             default: ActiveStatus.active,
             required: true,
         },
+        isFailed: {
+            type: Boolean,
+            require: false,
+        }, 
         createDate: {
             type: Date,
             required: true,

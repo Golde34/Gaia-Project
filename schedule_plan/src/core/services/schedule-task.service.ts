@@ -59,7 +59,7 @@ class ScheduleTaskService {
         }
     }
 
-    async pushKafkaCreateScheduleTaskMessage(taskId: string, scheduleTaskId: string, scheduleTaskName: string): Promise<void> {
+    async pushCreateTaskKafkaMessage(taskId: string, scheduleTaskId: string, scheduleTaskName: string): Promise<void> {
         const data = scheduleTaskMapper.buildKafkaCreateTaskMapper(taskId, scheduleTaskId, scheduleTaskName);
         const messages = [{
             value: JSON.stringify(createMessage(
@@ -190,12 +190,21 @@ class ScheduleTaskService {
     async createTaskFromScheduleGroup(scheduleGroup: IScheduleGroupEntity): Promise<IScheduleTaskEntity | null> {
         try {
             const scheduleTask = scheduleTaskMapper.buildTaskFromScheduleGroup(scheduleGroup);
-            const createdScheduleTask = await scheduleTaskRepository.createScheduleTask(scheduleTask);
-            return createdScheduleTask;
+            return await scheduleTaskRepository.createScheduleTask(scheduleTask);
         } catch (error) {
             console.error("Error on createTaskFromScheduleGroup: ", error);
             return null;
         }
+    }
+
+    async pushCreateScheduleTaskKafkaMessage(scheduleTask: IScheduleTaskEntity): Promise<void> {
+        const messages = [{
+            value: JSON.stringify(createMessage(
+                KafkaCommand.SCHEDULE_GRROUP_CREATE_TASK, '00', 'Successful', scheduleTask 
+            ))
+        }]
+        console.log("Push Kafka Message: ", messages);
+        this.kafkaHandler.produce(KafkaTopic.CREATE_SCHEDULE_TASK, messages);
     }
 }
 

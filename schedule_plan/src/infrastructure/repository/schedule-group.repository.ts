@@ -27,7 +27,14 @@ class ScheduleGroupRepository implements ScheduleGroupStore {
     }
 
     async findAllScheduleGroupsToCreateTask(limit: number, date: Date): Promise<IScheduleGroupEntity[]> {
-        return await ScheduleGroupEntity.find({activeStatus: ActiveStatus.active, updateDate: {$lt: date}}).limit(limit);
+        return await ScheduleGroupEntity.find({
+            activeStatus: ActiveStatus.active, updateDate: { $lt: date },
+            $or: [{ isFailed: null }, { isFailed: false }]
+        }).limit(limit);
+    }
+
+    async markAsFail(scheduleGroupId: string): Promise<UpdateWriteOpResult> {
+        return await ScheduleGroupEntity.updateOne({ _id: scheduleGroupId }, { isFailed: true });
     }
 }
 

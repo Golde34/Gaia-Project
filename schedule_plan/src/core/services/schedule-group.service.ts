@@ -70,6 +70,14 @@ class ScheduleGroupService {
             throw new Error(error.message.toString());
         }
     }
+
+    async markAsFail(scheduleGroupId: string): Promise<any> {
+        try {
+            return await scheduleGroupRepository.markAsFail(scheduleGroupId);
+        } catch (error: any) {
+            throw new Error(error.message.toString());
+        } 
+    }
 }
 
 export const scheduleGroupService = new ScheduleGroupService();

@@ -9,7 +9,7 @@ import { schedulePlanService } from "../services/schedule-plan.service";
 import { scheduleTaskService } from "../services/schedule-task.service";
 
 class ScheduleTaskUsecase {
-    constructor() { }
+    constructor() {} 
 
     async createScheduleTaskByKafka(scheduleTask: any): Promise<void> {
         try {
@@ -23,7 +23,7 @@ class ScheduleTaskUsecase {
             console.log('Result: ', result);
 
             const { id: scheduleTaskId, title: scheduleTaskName } = result.data.message;
-            scheduleTaskService.pushKafkaCreateScheduleTaskMessage(task.taskId, scheduleTaskId, scheduleTaskName);
+            scheduleTaskService.pushCreateTaskKafkaMessage(task.taskId, scheduleTaskId, scheduleTaskName);
         } catch (error) {
             console.error("Error on createScheduleTask: ", error);
         }
@@ -189,24 +189,49 @@ class ScheduleTaskUsecase {
         }
     }
 
-    async scheduleGroupCreateTask(): Promise<any> {
+    async scheduleGroupCreateTask(kafkaData: any): Promise<any> {
+        console.log('Schedule Group Create Task day: ' + kafkaData.date + ' id: ' + kafkaData.id);
         try {
             const limit = 100;
-            const today = new Date();
-            let scheduleGroups: IScheduleGroupEntity[] = [];
-            do {
-                scheduleGroups = await scheduleGroupService.findAllScheduleGroupsToCreateTask(limit, today);
-                scheduleGroups.forEach(async (scheduleGroup: IScheduleGroupEntity) => {
-                    // create task
-                    console.log("Create task for schedule group: ", scheduleGroup);
-                    const task = await scheduleTaskService.createTaskFromScheduleGroup(scheduleGroup);
-                    console.log("Task created: ", task);
-                    // update schedule group status
-                    scheduleGroup.updateDate = today;
-                    await scheduleGroupService.updateScheduleGroup(scheduleGroup);
-                })
-            } while (scheduleGroups.length > 0);
+            const today = new Date(kafkaData.date);
+            let hasMore = true;
+
+            const failedScheduleMap: Record<string, number> = {}
+
+            while (hasMore) {
+                const scheduleGroups: IScheduleGroupEntity[] = await scheduleGroupService.findAllScheduleGroupsToCreateTask(limit, today);
+
+                if (scheduleGroups.length === 0) {
+                    hasMore = false;
+                    break;
+                }
+
+                for (const scheduleGroup of scheduleGroups) {
+                    try {
+                        console.log("Create task for schedule group: ", scheduleGroup);
+                        const task = await scheduleTaskService.createTaskFromScheduleGroup(scheduleGroup);
+                        if (!task) {
+                            console.error("Task creation failed for schedule group: ", scheduleGroup);
+                            throw new Error("Task creation failed"); 
+                        }
+                        console.log("Task created: ", task);
+                        await scheduleGroupService.updateScheduleGroup({...scheduleGroup, updateDate: today});
+                        delete failedScheduleMap[scheduleGroup._id]
+                        await scheduleTaskService.pushCreateScheduleTaskKafkaMessage(task)
+                    } catch (err) {
+                        const id = scheduleGroup._id;
+                        console.error("Error creating task or updating scheduleGroup:", err);
+                        failedScheduleMap[id] = (failedScheduleMap[id] || 0) + 1;
+                        if (failedScheduleMap[id] >= 3) {
+                            console.error(`Exceeded retires for ${id}: Sending to error queue.`);
+                            // push to logging tracker to handle error
+                            await scheduleGroupService.markAsFail(scheduleGroup._id);
+                        }
+                    }
+                }
+            }
         } catch (error: any) {
+            console.error("Fatal error in scheduleGroupCreateTask:", error);
             throw new Error(error.message.toString());
         }
     }
