@@ -1,4 +1,3 @@
-import { ulid } from "ulid";
 import { ProjectEntity } from "../../../infrastructure/database/model-repository/project.model";
 import { IProjectEntity } from "../../domain/entities/project.entity";
 import { ActiveStatus } from "../../domain/enums/enums";
@@ -10,7 +9,6 @@ import { ITaskEntity } from "../../domain/entities/task.entity";
 export const scheduleTaskMapper = {
     mapProject(scheduleGroup: any, ownerId: number): IProjectEntity {
         return new ProjectEntity({
-            _id: ulid(),
             name: scheduleGroup.title,
             status: scheduleGroup.status,
             color: "indigo",
@@ -22,7 +20,6 @@ export const scheduleTaskMapper = {
 
     mapGroupTask(scheduleGroup: any, projectId: string): IGroupTaskEntity {
         return new GroupTaskEntity({
-            _id: ulid(),
             title: scheduleGroup.title,
             priority: scheduleGroup.priority,
             status: scheduleGroup.status,
@@ -35,7 +32,6 @@ export const scheduleTaskMapper = {
 
     mapTask(scheduleTask: any, groupTaskId: string): ITaskEntity {
         return new TaskEntity({
-            _id: ulid(),
             title: scheduleTask.title,
             priority: scheduleTask.priority,
             status: scheduleTask.status,

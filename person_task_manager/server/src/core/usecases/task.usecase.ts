@@ -132,10 +132,10 @@ class TaskUsecase {
     async createScheduleTask(scheduleTask: any, scheduleGroup: any, ownerId: number): Promise<IResponse> {
         try {
             // validate
-            const project = await this.handleProjectWhenCreatScheduleTask(scheduleGroup, ownerId); 
+            const project = await this.handleProjectWhenCreatScheduleTask(scheduleGroup, ownerId);
             if (project == null) return msg400('Error when create project for schedule task');
 
-            const groupTask = await this.handleGroupTaskWhenCreateScheduletask(scheduleTask, project.data._id);
+            const groupTask = await this.handleGroupTaskWhenCreateScheduletask(scheduleGroup, project.data.project.id);
             if (groupTask == null) return msg400('Error when create group task for schedule task');
 
             const task = scheduleTaskMapper.mapTask(scheduleTask, groupTask._id);
@@ -147,14 +147,16 @@ class TaskUsecase {
         }
     }
 
-    private async handleProjectWhenCreatScheduleTask(scheduleGroup: any, ownerId: number): Promise<any| null> {
+    private async handleProjectWhenCreatScheduleTask(scheduleGroup: any, ownerId: number): Promise<any | null> {
         let project;
         if (isStringEmpty(scheduleGroup.projectId)) {
             const mappedProject = scheduleTaskMapper.mapProject(scheduleGroup, ownerId);
             project = await projectService.createProject(mappedProject);
+        } else {
+            project = await projectService.getProject(scheduleGroup.projectId);
         }
-        project = await projectService.getProject(scheduleGroup.projectId);
         if (!project) return null;
+        console.log("Project: ", project);
         return project;
     }
 
@@ -163,8 +165,10 @@ class TaskUsecase {
         if (isStringEmpty(scheduleGroup.groupTaskId)) {
             const mappedGrouPTask = scheduleTaskMapper.mapGroupTask(scheduleGroup, projectId)
             groupTask = await groupTaskService.createGroupTaskToProject(mappedGrouPTask, projectId);
+        } else {
+            groupTask = await groupTaskService.getGroupTask(scheduleGroup.groupTaskId);
         }
-        groupTask = await groupTaskService.getGroupTask(scheduleGroup.groupTaskId);
+        console.log("Group task: ", groupTask);
         return groupTask;
     }
 }
