@@ -33,7 +33,7 @@ public class CreateTaskCommand extends CommandService<CreateTaskRequestDTO, Stri
 
     @Override
     public String command() {
-        return TopicConstants.CreateTaskCommand.CREATE_TASK;
+        return TopicConstants.HandleTaskCommand.CREATE_TASK;
     }
 
     @Override

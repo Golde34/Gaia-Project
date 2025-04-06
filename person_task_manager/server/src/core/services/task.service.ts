@@ -84,7 +84,7 @@ class TaskService {
             ))
         }]
         console.log("Push kafka message: ", messages)
-        this.kafkaConfig.produce(KafkaTopic.CREATE_TASK, messages);
+        this.kafkaConfig.produce(KafkaTopic.HANDLE_TASK, messages);
     }
 
     /** UPDATE */
@@ -150,7 +150,7 @@ class TaskService {
                 KafkaCommand.UPDATE_TASK, '00', 'Successful', updateTask
             ))
         }]
-        this.kafkaConfig.produce(KafkaTopic.UPDATE_TASK, messages);
+        this.kafkaConfig.produce(KafkaTopic.HANDLE_TASK, messages);
     }
 
     private pushContributionMessage(updateTask: any): void {
@@ -161,7 +161,7 @@ class TaskService {
                 KafkaCommand.CREATE_COMMIT, '00', 'Successful', updateTask
             ))
         }]
-        this.kafkaConfig.produce(KafkaTopic.UPDATE_TASK, messages);
+        this.kafkaConfig.produce(KafkaTopic.HANDLE_TASK, messages);
     }
 
     /** DELETE */
@@ -181,7 +181,7 @@ class TaskService {
                         KafkaCommand.DELETE_TASK, '00', 'Successful', taskId
                     ))
                 }]
-                this.kafkaConfig.produce(KafkaTopic.DELETE_TASK, messages);
+                this.kafkaConfig.produce(KafkaTopic.HANDLE_TASK, messages);
                 return msg200({
                     message: (deleteTask as any)
                 });

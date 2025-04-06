@@ -13,11 +13,13 @@ public class TopicConstants {
     }
 
     @UtilityClass
-    public class CreateTaskCommand {
-        public static final String TOPIC = "task-manager.create-task.topic";
+    public class HandleTaskCommand {
+        public static final String TOPIC = "task-manager.handle-task.topic";
 
-        public static final String CREATE_TASK = "taskManagerCreateTask";
+        public static final String CREATE_TASK = "createTask";
         public static final String GAIA_CREATE_TASK = "gaiaCreateTask";
+        public static final String UPDATE_TASK = "updateTask";
+        public static final String DELETE_TASK = "deleteTask";
     }
 
     @UtilityClass
@@ -41,19 +43,5 @@ public class TopicConstants {
         public static final String TOPIC = "notify-agent.optimize-task-notify.topic";
 
         public static final String OPTIMIZE_TASK = "optimizeTask";
-    }
-
-    @UtilityClass
-    public class DeleteTaskCommand {
-        public static final String TOPIC = "task-manager.delete-task.topic";
-
-        public static final String DELETE_TASK = "deleteTask";
-    }
-
-    @UtilityClass
-    public class UpdateTaskCommand {
-        public static final String TOPIC = "task-manager.update-task.topic";
-
-        public static final String UPDATE_TASK = "updateTask";
     }
 }

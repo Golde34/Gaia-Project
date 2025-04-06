@@ -22,7 +22,7 @@ public class UpdateTaskCommand extends CommandService<TaskObjRequestDTO, String>
 
     @Override
     public String command() {
-        return TopicConstants.UpdateTaskCommand.UPDATE_TASK;
+        return TopicConstants.HandleTaskCommand.UPDATE_TASK;
     }
 
     @Override

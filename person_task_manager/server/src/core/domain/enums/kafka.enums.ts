@@ -1,10 +1,8 @@
 export enum KafkaTopic {
     // Producer 
     OPTIMIZE_TASK = 'task-manager.optimize-task.topic',
-    CREATE_TASK = 'task-manager.create-task.topic',
+    HANDLE_TASK = 'task-manager.handle-task.topic',
     UPLOAD_FILE = 'task-manager.upload-note-file.topic',
-    DELETE_TASK = 'task-manager.delete-task.topic',
-    UPDATE_TASK = 'task-manager.update-task.topic',
     // Consumer
     CREATE_SCHEDULE_TASK = "schedule-plan.create-schedule-task.topic",
 }

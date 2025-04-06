@@ -19,6 +19,6 @@ public class GaiaCreateTaskCommand extends CreateTaskCommand {
 
     @Override
     public String command() {
-        return TopicConstants.CreateTaskCommand.GAIA_CREATE_TASK;
+        return TopicConstants.HandleTaskCommand.GAIA_CREATE_TASK;
     }
 }

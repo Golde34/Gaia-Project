@@ -16,7 +16,7 @@ public class CreateTaskConsumer extends KafkaMessageHandler {
 
     @Override
     public String getTopic() {
-        return TopicConstants.CreateTaskCommand.TOPIC;
+        return TopicConstants.HandleTaskCommand.TOPIC;
     }
 
     @Override

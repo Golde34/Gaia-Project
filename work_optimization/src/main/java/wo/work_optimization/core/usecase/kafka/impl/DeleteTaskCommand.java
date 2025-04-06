@@ -21,7 +21,7 @@ public class DeleteTaskCommand extends CommandService<String, String> {
 
     @Override
     public String command() {
-        return TopicConstants.DeleteTaskCommand.DELETE_TASK;
+        return TopicConstants.HandleTaskCommand.DELETE_TASK;
     }
 
     @Override

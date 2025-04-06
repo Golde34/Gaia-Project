@@ -1,5 +1,5 @@
 export enum ConsumerKafkaTopic {
-    CREATE_COMMIT = 'task-manager.update-task.topic',
+    CREATE_COMMIT = 'task-manager.handle-task.topic',
     SYNC_GITHUB_COMMIT= "contribution-tracker.github-commit.topic",
 }
 
