@@ -24,4 +24,6 @@ public class TaskObjRequestDTO {
     private String taskId;
     private int taskOrder;
     private double stopTime;
+    // schedule group create task
+    private String createDate;
 }

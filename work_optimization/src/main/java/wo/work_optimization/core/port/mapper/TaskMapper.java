@@ -95,5 +95,19 @@ public class TaskMapper {
         task.setStopTime(request.getStopTime());
         task.setTaskOrder(request.getTaskOrder());
         return task;
-   }
+    }
+
+    public Task mapScheduleTaskToEntity(TaskObjRequestDTO request) throws ParseException {
+        return Task.builder()
+                .title(request.getTitle())
+                .status(request.getStatus())
+                .startDate(DateTimeUtils.convertStringDateTime(request.getStartDate()))
+                .duration(request.getDuration())
+                .endDate(DateTimeUtils.convertStringDateTime(request.getDeadline()))
+                .activeStatus(request.getActiveStatus())
+                .originalId(request.getTaskId())
+                .priority(calculateTaskWeight(request.getPriority()))
+                .scheduleTaskId(request.getId())
+                .build();
+    }
 }
