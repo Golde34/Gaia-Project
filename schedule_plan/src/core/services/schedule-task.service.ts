@@ -190,10 +190,10 @@ class ScheduleTaskService {
         }
     }
     
-    async createTaskFromScheduleGroup(scheduleGroup: IScheduleGroupEntity): Promise<IScheduleTaskEntity | null> {
+    async createTaskFromScheduleGroup(scheduleGroup: IScheduleGroupEntity, userId: number): Promise<IScheduleTaskEntity | null> {
         try {
             const scheduleTask = scheduleTaskMapper.buildTaskFromScheduleGroup(scheduleGroup);
-            const task = await this.taskManagerAdapterImpl.createTask(scheduleTask);
+            const task = await this.taskManagerAdapterImpl.createTask(scheduleTask, scheduleGroup, userId);
             scheduleTask.taskId = task.id;
             return await scheduleTaskRepository.createScheduleTask(scheduleTask);
         } catch (error) {

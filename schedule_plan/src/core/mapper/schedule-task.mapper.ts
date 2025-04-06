@@ -1,4 +1,3 @@
-import { ulid } from "ulid";
 import { IScheduleGroupEntity } from "../../infrastructure/entities/schedule-group.entity";
 import { IScheduleTaskEntity, ScheduleTaskEntity } from "../../infrastructure/entities/schedule-task.entity"
 import { convertPriority } from "../../kernel/utils/convert-fields";

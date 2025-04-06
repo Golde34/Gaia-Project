@@ -114,6 +114,15 @@ class SchedulePlanService {
             console.error("Error on updateTaskBatch: ", error);
         }
     }
+
+    async getSchedulePlanById(schedulePlanId: string): Promise<ISchedulePlanEntity | null> {
+        try {
+            return await schedulePlanRepository.findSchedulePlanById(schedulePlanId);
+        } catch (error: any) {
+            console.log("Cannot find schedule plan by id: ", schedulePlanId)
+            return null;
+        }
+    }
 }
 
 export const schedulePlanService = new SchedulePlanService();

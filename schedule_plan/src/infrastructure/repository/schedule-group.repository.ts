@@ -30,8 +30,8 @@ class ScheduleGroupRepository implements ScheduleGroupStore {
         const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
         return await ScheduleGroupEntity.find({
             activeStatus: ActiveStatus.active, updateDate: { $lt: startOfDay },
-            $or: [{ isFailed: null }, { isFailed: false }]
-        }).limit(limit);
+            $or: [{ isFailed: null }, { isFailed: false }],
+        }, { schedulePlanId: 1 }).limit(limit);
     }
 
     async markAsFail(scheduleGroupId: string): Promise<UpdateWriteOpResult> {

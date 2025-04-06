@@ -211,10 +211,16 @@ class ScheduleTaskUsecase {
                 for (const scheduleGroup of scheduleGroups) {
                     let createdTask = null;
                     try {
+                        const schedulePlan = await schedulePlanService.getSchedulePlanById(scheduleGroup.schedulePlanId);
+                        if (schedulePlan == null) {
+                            console.error("Task creation failed because of schedule plan not existed, scheduleGroupId: ", scheduleGroup._id)
+                            throw new Error("Task creation fail because schedule plan not found");
+                        }
+
                         console.log("Schedule group updated: ", scheduleGroup._id);
-                        createdTask = await scheduleTaskService.createTaskFromScheduleGroup(scheduleGroup);
+                        createdTask = await scheduleTaskService.createTaskFromScheduleGroup(scheduleGroup, schedulePlan.userId)
                         if (!createdTask) {
-                            console.error("Task creation failed for schedule group: ", scheduleGroup);
+                            console.error("Task creation failed with schedule group: ", scheduleGroup);
                             throw new Error("Task creation failed");
                         }
                         console.log("Task created: ", createdTask);

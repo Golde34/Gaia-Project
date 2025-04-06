@@ -16,15 +16,20 @@ class TaskManagerAdapter {
         this.createTaskURL = taskManagerServiceDomain + process.env.TASK_MANAGER_SERVICE_CREATE_TASK;
     }
 
-    async createTask(task: any) {
+    async createTask(task: any, scheduleGroup: any, userId: number): Promise<any> {
         try {
             const headers = buildDefaultHeaders({});
             const uri = this.createTaskURL;
             console.log(`Calling api to task manager service...`);
+            const body = {
+                task: task,
+                scheduleGroup: scheduleGroup,
+                ownerId: userId
+            }
             const response = await fetch(uri, {
                 headers,
                 method: HttpMethod.POST,
-                body: JSON.stringify(task)
+                body: JSON.stringify(body)
             });
 
             if (response.status !== 200) {
