@@ -201,7 +201,7 @@ class ScheduleTaskUsecase {
 
             while (hasMore) {
                 const scheduleGroups: IScheduleGroupEntity[] = await scheduleGroupService.findAllScheduleGroupsToCreateTask(limit, today);
-                console.log("Schedule groups: ", scheduleGroups.length > 0 ? scheduleGroups.forEach((scheduleGroup) => scheduleGroup._id) : "0");
+                console.log("Schedule groups: ", scheduleGroups.length > 0 ? scheduleGroups.map(scheduleGroup => scheduleGroup._id) : []);
 
                 if (scheduleGroups.length === 0) {
                     hasMore = false;

@@ -31,7 +31,7 @@ class ScheduleGroupRepository implements ScheduleGroupStore {
         return await ScheduleGroupEntity.find({
             activeStatus: ActiveStatus.active, updateDate: { $lt: startOfDay },
             $or: [{ isFailed: null }, { isFailed: false }],
-        }, { schedulePlanId: 1 }).limit(limit);
+        }).sort({ schedulePlanId: 1 }).limit(limit);
     }
 
     async markAsFail(scheduleGroupId: string): Promise<UpdateWriteOpResult> {
