@@ -7,6 +7,7 @@ import { buildCommonStringValue, isStringEmpty } from "../../kernel/util/string-
 import { GetGroupTaskProject } from "../domain/dtos/request_dtos/get-group-task-project.dto";
 import { projectService } from "../services/project.service";
 import { groupTaskService } from "../services/group-task.service";
+import { scheduleTaskMapper } from "../port/mapper/schedule-task.mappter";
 
 class TaskUsecase {
     constructor() { }
@@ -42,7 +43,7 @@ class TaskUsecase {
             }
             return msg400('Invalid update type');
         } catch (err: any) {
-            return msg400(err.message.toString()); 
+            return msg400(err.message.toString());
         }
     }
 
@@ -128,36 +129,43 @@ class TaskUsecase {
         }
     }
 
-    async createScheduleTask(scheduleTask: any): Promise<IResponse> {
+    async createScheduleTask(scheduleTask: any, scheduleGroup: any, ownerId: number): Promise<IResponse> {
         try {
-            let project = null;
-            let groupTask = null;
             // validate
-            if (isStringEmpty(scheduleTask.projectId)) {
-                //create Project
-                // const projectMapper= await projectMapper.mapProject(scheduleTask);
-                const projectMapper = {}
-                project = await projectService.createProject(projectMapper);
-            } 
-            project = await projectService.getProject(scheduleTask.projectId);
-            if (!project) return msg400('Error when create project for schedule task');
+            const project = await this.handleProjectWhenCreatScheduleTask(scheduleGroup, ownerId); 
+            if (project == null) return msg400('Error when create project for schedule task');
 
-            if (isStringEmpty(scheduleTask.groupTaskId)) {
-                //create group task
-                // const groupTaskMapper = await groupTaskMapper.mapGroupTask(scheduleTask);
-                const groupTaskMapper = {}
-                groupTask = await groupTaskService.createGroupTaskToProject(groupTaskMapper, project.data._id);
-            }
-            groupTask = await groupTaskService.getGroupTask(scheduleTask.groupTaskId);
-            if (!groupTask) return msg400('Error when create group task for schedule task');
+            const groupTask = await this.handleGroupTaskWhenCreateScheduletask(scheduleTask, project.data._id);
+            if (groupTask == null) return msg400('Error when create group task for schedule task');
 
-            const taskMapper = scheduleTask
-            const createdTask = await taskService.createTaskInGroupTask(taskMapper, groupTask._id);
+            const task = scheduleTaskMapper.mapTask(scheduleTask, groupTask._id);
+            const createdTask = await taskService.createTaskInGroupTask(task, groupTask._id);
             const taskResult = await taskService.handleAfterCreateTask(createdTask, groupTask._id);
             return taskResult;
         } catch (err: any) {
             return msg400(err.message.toString());
         }
+    }
+
+    private async handleProjectWhenCreatScheduleTask(scheduleGroup: any, ownerId: number): Promise<any| null> {
+        let project;
+        if (isStringEmpty(scheduleGroup.projectId)) {
+            const mappedProject = scheduleTaskMapper.mapProject(scheduleGroup, ownerId);
+            project = await projectService.createProject(mappedProject);
+        }
+        project = await projectService.getProject(scheduleGroup.projectId);
+        if (!project) return null;
+        return project;
+    }
+
+    private async handleGroupTaskWhenCreateScheduletask(scheduleGroup: any, projectId: string): Promise<any | null> {
+        let groupTask;
+        if (isStringEmpty(scheduleGroup.groupTaskId)) {
+            const mappedGrouPTask = scheduleTaskMapper.mapGroupTask(scheduleGroup, projectId)
+            groupTask = await groupTaskService.createGroupTaskToProject(mappedGrouPTask, projectId);
+        }
+        groupTask = await groupTaskService.getGroupTask(scheduleGroup.groupTaskId);
+        return groupTask;
     }
 }
 
