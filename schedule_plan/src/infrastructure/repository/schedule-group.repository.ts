@@ -28,8 +28,11 @@ class ScheduleGroupRepository implements ScheduleGroupStore {
 
     async findAllScheduleGroupsToCreateTask(limit: number, date: Date): Promise<IScheduleGroupEntity[]> {
         const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const weekDay = date.getDay().toString();
         return await ScheduleGroupEntity.find({
-            activeStatus: ActiveStatus.active, updateDate: { $lt: startOfDay },
+            activeStatus: ActiveStatus.active, 
+            updateDate: { $lt: startOfDay },
+            repeat: weekDay,
             $or: [{ isFailed: null }, { isFailed: false }],
         }).sort({ schedulePlanId: 1 }).limit(limit);
     }

@@ -28,6 +28,7 @@ class TaskManagerAdapter {
                 scheduleGroup: scheduleGroup,
                 ownerId: userId
             }
+            console.log("Request body: ", body);
             const response = await fetch(uri, {
                 headers,
                 method: HttpMethod.POST,
@@ -38,6 +39,7 @@ class TaskManagerAdapter {
                 return getInternalServiceErrorResponse(response.status);
             }
             const data = await response.json();
+            console.log("Response from task manager service: ", data);
             return data.data.message;
         } catch (error: any) {
             console.log("Exception when calling task manager service");

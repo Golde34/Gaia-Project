@@ -50,3 +50,17 @@ export const revertPriority = (priority: number): string[] => {
             return ["Medium"]; 
     }
 } 
+
+const days = {
+    "Sunday": 0,
+    "Monday": 1,
+    "Tuesday": 2,
+    "Wednesday": 3,
+    "Thursday": 4,
+    "Friday": 5,
+    "Saturday": 6
+};
+
+export const convertWeekday = (weekday: (keyof typeof days)[]): number[] => {
+    return weekday.map(day => days[day]);
+}
