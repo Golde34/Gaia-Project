@@ -171,6 +171,36 @@ class TaskUsecase {
         console.log("Group task: ", groupTask);
         return groupTask;
     }
+
+    async deleteScheduleTask(taskId: string): Promise<IResponse> {
+        try {
+            const groupTask = await groupTaskService.getGroupTaskObjectByTaskId(taskId);
+            if (!groupTask) {
+                return msg400('Group task not found');
+            }
+
+            if (groupTask.tasks.length > 1) {
+                await taskService.deleteTask(taskId, groupTask._id);
+                return msg200({ message: 'Delete task successfully' });
+            }
+
+            const project = await projectService.findProjectByGroupTaskId(groupTask._id);
+            if (!project) {
+                return msg400('Project not found');
+            }
+
+            if (project.groupTasks.length === 1) {
+                await projectService.deleteProject(project._id);
+                return msg200({ message: 'Delete project successfully' });
+            }
+
+            await groupTaskService.deleteGroupTask(groupTask._id, project._id);
+            return msg200({ message: 'Delete task successfully' });
+
+        } catch (err: any) {
+            return msg400(err.message.toString());
+        }
+    }
 }
 
 export const taskUsecase = new TaskUsecase();

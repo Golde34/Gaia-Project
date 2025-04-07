@@ -121,6 +121,16 @@ taskRouter.delete("/:id", async (req: Request, res: Response, next: NextFunction
     }
 });
 
+taskRouter.delete("/delete-schedule-task/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const taskResult = await taskControllerImpl.deleteScheduleTask(req, next);
+        return returnResult(taskResult, DELETE_TASK_FAILED, res, next);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+
 // get subtasks of a task
 taskRouter.get("/:id/sub-tasks", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

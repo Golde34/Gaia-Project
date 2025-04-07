@@ -157,6 +157,15 @@ class TaskController {
         }
     }
 
+    async deleteScheduleTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const taskId = req.params.id;
+            return await taskUsecase.deleteScheduleTask(taskId);
+        } catch (err) {
+            next(err);
+        }
+    } 
+
     async getSubTasksByTaskId(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const taskId = req.params.id;
