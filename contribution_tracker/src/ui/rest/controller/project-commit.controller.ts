@@ -48,8 +48,7 @@ class ProjectCommitController {
         try {
             const userId = Number(req.body.userId);
             const projectId = req.body.projectId;
-            const githubRepoUrl = req.body.githubRepoUrl;
-            const refreshResult = await projectCommitUsecase.refreshProjectCommits(userId, projectId, githubRepoUrl);
+            const refreshResult = await projectCommitUsecase.refreshProjectCommits(userId, projectId);
             return refreshResult;
         } catch (err) {
             next(err);

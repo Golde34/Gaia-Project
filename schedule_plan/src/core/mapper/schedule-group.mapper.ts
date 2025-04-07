@@ -23,6 +23,7 @@ export const scheduleGroupMapper = {
             acitveStatus: scheduleGroup.acitveStatus,
             createDate: new Date(),
             updateDate: new Date(),
+            isFailed: false,
         })
     },
 

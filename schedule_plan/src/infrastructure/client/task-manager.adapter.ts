@@ -8,30 +8,58 @@ const taskManagerServiceDomain = process.env.TASK_MANAGER_SERVICE_DOMAIN;
 
 class TaskManagerAdapter {
     private createTaskURL: string;
+    private deleteTaskURL: string;
 
     constructor() {
         if (!taskManagerServiceDomain) {
             throw new Error("Task manager service domain is not provided");
         }
         this.createTaskURL = taskManagerServiceDomain + process.env.TASK_MANAGER_SERVICE_CREATE_TASK;
+        this.deleteTaskURL = taskManagerServiceDomain + process.env.TASK_MANAGER_SERVICE_DELETE_TASK;
     }
 
-    async createTask(task: any) {
+    async createTask(task: any, scheduleGroup: any, userId: number): Promise<any> {
         try {
             const headers = buildDefaultHeaders({});
             const uri = this.createTaskURL;
             console.log(`Calling api to task manager service...`);
+            const body = {
+                task: task,
+                scheduleGroup: scheduleGroup,
+                ownerId: userId
+            }
             const response = await fetch(uri, {
                 headers,
                 method: HttpMethod.POST,
-                body: JSON.stringify(task)
+                body: JSON.stringify(body)
             });
 
             if (response.status !== 200) {
                 return getInternalServiceErrorResponse(response.status);
             }
             const data = await response.json();
-            return data;
+            return data.data.message;
+        } catch (error: any) {
+            console.log("Exception when calling task manager service");
+            return getInternalServiceErrorResponse(HttpCodeMessage.INTERNAL_SERVER_ERROR); 
+        }
+    }
+
+    async deleteTask(taskId: string): Promise<any> {
+        try {
+            const headers = buildDefaultHeaders({});
+            const uri = this.deleteTaskURL + taskId;
+            console.log(`Calling api to task manager service...`);
+            const response = await fetch(uri, {
+                headers,
+                method: HttpMethod.DELETE
+            });
+
+            if (response.status !== 200) {
+                return getInternalServiceErrorResponse(response.status);
+            }
+            const data = await response.json();
+            return data.data.message;
         } catch (error: any) {
             console.log("Exception when calling task manager service");
             return getInternalServiceErrorResponse(HttpCodeMessage.INTERNAL_SERVER_ERROR); 

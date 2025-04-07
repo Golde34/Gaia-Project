@@ -79,7 +79,7 @@ class ProjectCommitUsecase {
         }
     }
 
-    async refreshProjectCommits(userId: number, projectId: string, githubRepoUrl: string | null): Promise<any> {
+    async refreshProjectCommits(userId: number, projectId: string): Promise<any> {
         try {
             const user = await this.userCommitServiceImpl.getUserGithubInfo(userId);
             if (!user) {

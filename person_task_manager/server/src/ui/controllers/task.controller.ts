@@ -73,7 +73,10 @@ class TaskController {
 
     async createScheduleTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
-            const taskResult = await taskUsecase.createScheduleTask(req.body);
+            const task = req.body.task;
+            const scheduleGroup = req.body.scheduleGroup;
+            const ownerId = req.body.ownerId;
+            const taskResult = await taskUsecase.createScheduleTask(task, scheduleGroup, ownerId);
             return taskResult;
         } catch (err) {
             next(err);
@@ -153,6 +156,15 @@ class TaskController {
             next(err);
         }
     }
+
+    async deleteScheduleTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const taskId = req.params.id;
+            return await taskUsecase.deleteScheduleTask(taskId);
+        } catch (err) {
+            next(err);
+        }
+    } 
 
     async getSubTasksByTaskId(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {

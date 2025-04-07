@@ -1,4 +1,3 @@
-import { ulid } from "ulid";
 import { IScheduleGroupEntity } from "../../infrastructure/entities/schedule-group.entity";
 import { IScheduleTaskEntity, ScheduleTaskEntity } from "../../infrastructure/entities/schedule-task.entity"
 import { convertPriority } from "../../kernel/utils/convert-fields";
@@ -63,7 +62,8 @@ export const scheduleTaskMapper = {
         return scheduleTask
     },
     
-    buildTaskFromScheduleGroup(scheduleGroup: IScheduleGroupEntity): IScheduleTaskEntity {
+        buildTaskFromScheduleGroup(scheduleGroup: IScheduleGroupEntity): IScheduleTaskEntity {
+        console.log('Schedule group: ', scheduleGroup)
         // startDate = today but have schedule.startHour and schedule.startMinute
         const startDate = new Date(new Date().setHours(Number(scheduleGroup.startHour), Number(scheduleGroup.startMinute), 0, 0));
         const deadline = new Date(new Date().setHours(Number(scheduleGroup.endHour), Number(scheduleGroup.endMinute), 0, 0));

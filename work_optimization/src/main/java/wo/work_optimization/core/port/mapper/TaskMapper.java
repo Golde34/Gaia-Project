@@ -95,5 +95,5 @@ public class TaskMapper {
         task.setStopTime(request.getStopTime());
         task.setTaskOrder(request.getTaskOrder());
         return task;
-   }
+    }
 }
