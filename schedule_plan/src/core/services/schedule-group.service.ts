@@ -64,7 +64,9 @@ class ScheduleGroupService {
 
     async findAllScheduleGroupsToCreateTask(limit: number, date: Date): Promise<any> {
         try {
-            return await scheduleGroupRepository.findAllScheduleGroupsToCreateTask(limit, date);
+            const scheduleGroups = await scheduleGroupRepository.findAllScheduleGroupsToCreateTask(limit, date);
+            console.log(scheduleGroups.length >= 1 ? scheduleGroups.map((group: IScheduleGroupEntity) => group.title) : "No schedule groups found");
+            return scheduleGroups;
         } catch (error: any) {
             throw new Error(error.message.toString());
         }

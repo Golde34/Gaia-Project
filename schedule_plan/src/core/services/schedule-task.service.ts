@@ -109,25 +109,15 @@ class ScheduleTaskService {
             throw new Error("Invalid input: listTasks must be a non-empty array.");
         }
 
-        async function saveToDatabase(task: any): Promise<void> {
-            listTasks.forEach(async (scheduleTask: any) => {
-                try {
-                    const task = await scheduleTaskRepository.findByScheduleTaskIdAndTaskId(scheduleTask.scheduleTaskId, scheduleTask.originalId);
-                    if (task) {
-                        const newTask = scheduleTaskMapper.buildOptimizeScheduleTaskMapper(scheduleTask, task);
-                        await scheduleTaskRepository.updateScheduleTask(scheduleTask.scheduleTaskId, newTask);
-                    }
-                } catch (error) {
-                    console.error("Error saving task to database:", error);
-                    throw new Error("Failed to save task to the database.");
-                }
-            })
-        }
-
         try {
-            for (const task of listTasks) {
-                await saveToDatabase(task);
+            await Promise.all(listTasks.map(async (scheduleTask: any) => {
+                const task = await scheduleTaskRepository.findByScheduleTaskIdAndTaskId(scheduleTask.scheduleTaskId, scheduleTask.originalId);
+                if (task) {
+                    const newTask = scheduleTaskMapper.buildOptimizeScheduleTaskMapper(scheduleTask, task);
+                    await scheduleTaskRepository.updateScheduleTask(scheduleTask.scheduleTaskId, newTask);
+                }
             }
+            ));
             console.log("Save database successfully");
             return "SUCCESS";
         } catch (error) {
@@ -205,16 +195,6 @@ class ScheduleTaskService {
         }
     }
 
-    async pushCreateScheduleTaskKafkaMessage(scheduleTask: IScheduleTaskEntity): Promise<void> {
-        const messages = [{
-            value: JSON.stringify(createMessage(
-                KafkaCommand.SCHEDULE_GRROUP_CREATE_TASK, '00', 'Successful', scheduleTask
-            ))
-        }]
-        console.log("Push Kafka Message: ", messages);
-        this.kafkaHandler.produce(KafkaTopic.CREATE_SCHEDULE_TASK, messages);
-    }
-
     async findScheduleTaskByScheduleGroup(scheduleGroupId: string): Promise<IScheduleTaskEntity[]> {
         try {
             const scheduleTask = await scheduleTaskRepository.finddByScheduleGroup(scheduleGroupId);
@@ -222,6 +202,17 @@ class ScheduleTaskService {
         } catch (error) {
             console.error("Error on findScheduleTaskByScheduleGroup: ", error);
             return [];
+        }
+    }
+
+    async deleteCommandToTMService(taskId: string): Promise<IResponse> {
+        try {
+            const deleteCommand = await this.taskManagerAdapterImpl.deleteTask(taskId);
+            return msg200({
+                message: (deleteCommand as any)
+            });
+        } catch (error: any) {
+            return msg500(error.message.toString());
         }
     }
 }
