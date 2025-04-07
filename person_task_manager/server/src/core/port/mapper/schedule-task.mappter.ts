@@ -12,7 +12,7 @@ export const scheduleTaskMapper = {
             name: scheduleGroup.title,
             status: scheduleGroup.status,
             color: "indigo",
-            owwnerId: ownerId,
+            ownerId: ownerId,
             activeStatus: ActiveStatus.active,
         })
 
@@ -30,7 +30,7 @@ export const scheduleTaskMapper = {
         })
     },
 
-    mapTask(scheduleTask: any, groupTaskId: string): ITaskEntity {
+    mapTask(scheduleTask: any): ITaskEntity {
         return new TaskEntity({
             title: scheduleTask.title,
             priority: scheduleTask.priority,
@@ -38,7 +38,6 @@ export const scheduleTaskMapper = {
             startDate: scheduleTask.startDate,
             deadline: scheduleTask.deadline,
             duration: scheduleTask.duration,
-            groupTaskId: groupTaskId,
             createdAt: new Date(),
             updatedAt: new Date(),
             activeStatus: ActiveStatus.active,
