@@ -204,7 +204,7 @@ class ScheduleTaskUsecase {
                     break;
                 }
 
-                this.scheduleGroupCreateTask(scheduleGroups, today)
+                await this.scheduleGroupCreateTask(scheduleGroups, today)
             }
         } catch (error: any) {
             console.error("Fatal error in scheduleGroupCreateTask:", error);
@@ -215,6 +215,7 @@ class ScheduleTaskUsecase {
     private async scheduleGroupCreateTask(scheduleGroups: IScheduleGroupEntity[], today: Date): Promise<void> {
         const maxRetry = 3;
         const failedScheduleMap: Record<string, number> = {};
+        console.log("Schedule Groups length: ", scheduleGroups.length);
         for (const scheduleGroup of scheduleGroups) {
             let createdTask = null;
             try {
@@ -229,6 +230,7 @@ class ScheduleTaskUsecase {
                     console.error("Task creation failed with schedule group: ", scheduleGroup);
                     throw new Error("Task creation failed");
                 }
+                console.log("Task created both SP and TM: ", createdTask.taskId);
 
                 scheduleGroup.updateDate = today;
                 await scheduleGroupService.updateScheduleGroup(scheduleGroup);

@@ -20,6 +20,7 @@ export enum KafkaCommand {
     OPTIMIZE_TASK = "optimizeTask",
     UPDATE_TASK = "updateTask",
     DELETE_TASK = "deleteTask",
+    SCHEDULE_GROUP_CREATE_TASK = "scheduleGroupCreateTask",
 }
 
 export class KafkaMessage {
