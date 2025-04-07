@@ -9,7 +9,11 @@ func ReturnGroupTaskObjectMapper(body map[string]interface{}) *response_dtos.Gro
 	var input response_dtos.GroupTaskResponseDTO
 	input.ID = body["_id"].(string)
 	input.Title = body["title"].(string)
-	input.Description = body["description"].(string)
+	if body["description"] == nil {
+		input.Description = ""
+	} else {
+		input.Description = body["description"].(string)
+	}
 	input.Priority = utils.ConvertStringToStringArray(body["priority"].([]interface{}))
 	input.Status = body["status"].(string)
 	input.Tasks = utils.ConvertStringToStringArray(body["tasks"].([]interface{}))
