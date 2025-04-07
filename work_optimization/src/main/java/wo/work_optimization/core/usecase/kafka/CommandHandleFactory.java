@@ -29,7 +29,6 @@ public class CommandHandleFactory implements CommandFactory {
 
     @Override
     public CommandConnector getCommand(@NonNull String command) {
-        CommandConnector commandConnector = commandConnectorMap.get(command);
-        return commandConnector;
+        return commandConnectorMap.get(command);
     }
 }

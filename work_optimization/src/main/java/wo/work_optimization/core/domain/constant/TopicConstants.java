@@ -27,7 +27,6 @@ public class TopicConstants {
 
         public static final String CREATE_SCHEDULE_TASK = "schedulePlanCreateTask";
         public static final String SYNC_SCHEDULE_TASK = "syncScheduleTask";
-        public static final String SCHEDULE_GROUP_CREATE_TASK = "scheduleGroupCreateTask";
     }
 
     @UtilityClass
