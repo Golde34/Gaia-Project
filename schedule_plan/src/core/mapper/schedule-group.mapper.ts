@@ -1,5 +1,5 @@
 import { IScheduleGroupEntity, ScheduleGroupEntity } from "../../infrastructure/entities/schedule-group.entity"
-import { convertPriority } from "../../kernel/utils/convert-fields"
+import { convertPriority, convertWeekday } from "../../kernel/utils/convert-fields"
 
 export const scheduleGroupMapper = {
     createGroupMapper(scheduleGroup: any, schedulePlanId: string): IScheduleGroupEntity{
@@ -18,7 +18,7 @@ export const scheduleGroupMapper = {
             endMinute: endMinute,
             duration: scheduleGroup.duration,
             preferenceLevel: convertPriority(scheduleGroup.priority),
-            repeat: scheduleGroup.repeat,
+            repeat: convertWeekday(scheduleGroup.repeat),
             isNotify: scheduleGroup.isNotify,
             acitveStatus: scheduleGroup.acitveStatus,
             createDate: new Date(),

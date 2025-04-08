@@ -9,7 +9,11 @@ func ReturnProjectObjectMapper(body map[string]interface{}) *response_dtos.Proje
 	var input response_dtos.ProjectResponseDTO
 	input.ID = body["_id"].(string)
 	input.Name = body["name"].(string)
-	input.Description = body["description"].(string)
+	if (body["description"] != nil) {
+		input.Description = body["description"].(string)
+	} else {
+		input.Description = ""
+	}
 	input.Status = body["status"].(string)
 	input.Color = body["color"].(string)
 	input.Owner = body["ownerId"].(float64)

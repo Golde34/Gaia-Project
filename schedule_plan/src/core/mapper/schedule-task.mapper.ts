@@ -18,12 +18,12 @@ export const scheduleTaskMapper = {
             activeStatus: data.task.activeStatus,
             preferenceLevel: convertPriority(data.task.priority),
             schedulePlanId: schedulePlanId,
-            repeat: RepeatLevel.NONE, 
+            repeat: RepeatLevel.NONE,
             isNotify: false,
         });
     },
 
-    buildKafkaCreateTaskMapper(taskId: string, scheduleTaskId: string, scheduleTaskName: string ) {
+    buildKafkaCreateTaskMapper(taskId: string, scheduleTaskId: string, scheduleTaskName: string) {
         const message = new KafkaCreateTaskMessage()
         message.taskId = taskId
         message.scheduleTaskId = scheduleTaskId
@@ -44,7 +44,7 @@ export const scheduleTaskMapper = {
         task.taskOrder = optimizedTask.taskOrder
         task.weight = optimizedTask.weight
         task.stopTime = optimizedTask.stopTime
-        task.taskBatch = optimizedTask.taskBatch 
+        task.taskBatch = optimizedTask.taskBatch
         return task;
     },
 
@@ -61,8 +61,8 @@ export const scheduleTaskMapper = {
         scheduleTask.stopTime = data.stopTime
         return scheduleTask
     },
-    
-        buildTaskFromScheduleGroup(scheduleGroup: IScheduleGroupEntity): IScheduleTaskEntity {
+
+    buildTaskFromScheduleGroup(scheduleGroup: IScheduleGroupEntity): IScheduleTaskEntity {
         console.log('Schedule group: ', scheduleGroup)
         // startDate = today but have schedule.startHour and schedule.startMinute
         const startDate = new Date(new Date().setHours(Number(scheduleGroup.startHour), Number(scheduleGroup.startMinute), 0, 0));

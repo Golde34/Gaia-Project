@@ -4,6 +4,7 @@ import { IResponse, msg200, msg400 } from "../common/response";
 import { OptimizeScheduleTaskMessage, SyncScheduleTaskRequest } from "../domain/request/task.dto";
 import { scheduleTaskMapper } from "../mapper/schedule-task.mapper";
 import { notificationService } from "../services/notifi-agent.service";
+import { scheduleCalendarService } from "../services/schedule-calendar.service";
 import { scheduleGroupService } from "../services/schedule-group.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
 import { scheduleTaskService } from "../services/schedule-task.service";
@@ -16,6 +17,10 @@ class ScheduleTaskUsecase {
             const schedulePlan = await schedulePlanService.createSchedulePlan(scheduleTask.userId);
             if (!schedulePlan) {
                 throw new Error("Failed to create schedule plan");
+            }
+            const scheduleCalendar = await scheduleCalendarService.createScheduleCalendar(scheduleTask.userId);
+            if (!scheduleCalendar) {
+                throw new Error("Failed to create schedule calendar");
             }
 
             const task = scheduleTaskMapper.kafkaCreateTaskMapper(scheduleTask, schedulePlan._id);
@@ -193,7 +198,9 @@ class ScheduleTaskUsecase {
         console.log('Schedule Group Create Task day: ' + displayTime + ' id: ' + kafkaData);
         try {
             const limit = 100;
+            const maxRetry = 3;
             const today = new Date(displayTime);
+            const failedScheduleMap: Record<string, number> = {}
             let hasMore = true;
 
             while (hasMore) {
@@ -204,7 +211,14 @@ class ScheduleTaskUsecase {
                     break;
                 }
 
-                this.scheduleGroupCreateTask(scheduleGroups, today)
+                for (const scheduleGroup of scheduleGroups) {
+                    let createdTask = null;
+                    try {
+                        await this.createScheduleTask(scheduleGroup, createdTask, today, failedScheduleMap);
+                    } catch (err) {
+                        await this.rollbackCreateScheduleTask(scheduleGroup._id, createdTask, maxRetry, err, failedScheduleMap);
+                    }
+                }
             }
         } catch (error: any) {
             console.error("Fatal error in scheduleGroupCreateTask:", error);
@@ -212,45 +226,39 @@ class ScheduleTaskUsecase {
         }
     }
 
-    private async scheduleGroupCreateTask(scheduleGroups: IScheduleGroupEntity[], today: Date): Promise<void> {
-        const maxRetry = 3;
-        const failedScheduleMap: Record<string, number> = {};
-        for (const scheduleGroup of scheduleGroups) {
-            let createdTask = null;
-            try {
-                const schedulePlan = await schedulePlanService.getSchedulePlanById(scheduleGroup.schedulePlanId);
-                if (schedulePlan == null) {
-                    console.error("Task creation failed because of schedule plan not existed, scheduleGroupId: ", scheduleGroup._id)
-                    throw new Error("Task creation fail because schedule plan not found");
-                }
+    private async createScheduleTask(scheduleGroup: IScheduleGroupEntity, createdTask: any, today: Date, failedScheduleMap: Record<string, number>): Promise<any> {
+        const schedulePlan = await schedulePlanService.getSchedulePlanById(scheduleGroup.schedulePlanId);
+        if (schedulePlan == null) {
+            console.error("Task creation failed because of schedule plan not existed, scheduleGroupId: ", scheduleGroup._id)
+            throw new Error("Task creation fail because schedule plan not found");
+        }
 
-                createdTask = await scheduleTaskService.createTaskFromScheduleGroup(scheduleGroup, schedulePlan.userId)
-                if (!createdTask) {
-                    console.error("Task creation failed with schedule group: ", scheduleGroup);
-                    throw new Error("Task creation failed");
-                }
+        createdTask = await scheduleTaskService.createTaskFromScheduleGroup(scheduleGroup, schedulePlan.userId)
+        if (!createdTask) {
+            console.error("Task creation failed with schedule group: ", scheduleGroup);
+            throw new Error("Task creation failed");
+        }
 
-                scheduleGroup.updateDate = today;
-                await scheduleGroupService.updateScheduleGroup(scheduleGroup);
-                
-                delete failedScheduleMap[scheduleGroup._id]
-            } catch (err) {
-                const id = scheduleGroup._id;
-                console.error("Error creating task or updating scheduleGroup:", err);
-                failedScheduleMap[id] = (failedScheduleMap[id] || 0) + 1;
+        scheduleGroup.updateDate = today;
+        await scheduleGroupService.updateScheduleGroup(scheduleGroup);
+        delete failedScheduleMap[scheduleGroup._id]
+    }
 
-                // Delete created task if it exists
-                if (createdTask !== null) {
-                    await scheduleTaskService.deleteScheduleTask(createdTask._id);
-                    await scheduleTaskService.deleteCommandToTMService(createdTask.taskId);
-                }
+    private async rollbackCreateScheduleTask(scheduleGroupId: string, createdTask: any, maxRetry: number,
+        err: any, failedScheduleMap: Record<string, number>): Promise<any> {
+        console.error("Error creating task or updating scheduleGroup:", err);
+        failedScheduleMap[scheduleGroupId] = (failedScheduleMap[scheduleGroupId] || 0) + 1;
 
-                if (failedScheduleMap[id] >= maxRetry) {
-                    console.error(`Exceeded retires for ${id}: Sending to error queue.`);
-                    // push to logging tracker to handle error
-                    await scheduleGroupService.markAsFail(scheduleGroup._id);
-                }
-            }
+        // Delete created task if it exists
+        if (createdTask !== null) {
+            await scheduleTaskService.deleteScheduleTask(createdTask._id);
+            await scheduleTaskService.deleteCommandToTMService(createdTask.taskId);
+        }
+
+        if (failedScheduleMap[scheduleGroupId] >= maxRetry) {
+            console.error(`Exceeded retires for ${scheduleGroupId}: Sending to error queue.`);
+            // push to logging tracker to handle error
+            await scheduleGroupService.markAsFail(scheduleGroupId);
         }
     }
 }

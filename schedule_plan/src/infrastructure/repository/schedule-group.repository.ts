@@ -1,9 +1,8 @@
 import { UpdateWriteOpResult } from "mongoose";
 import { ActiveStatus } from "../../core/domain/enums/enums";
 import { IScheduleGroupEntity, ScheduleGroupEntity } from "../entities/schedule-group.entity";
-import { ScheduleGroupStore } from "./store/schedule-group.store";
 
-class ScheduleGroupRepository implements ScheduleGroupStore {
+class ScheduleGroupRepository {
     constructor() { }
 
     async createScheduleGroup(scheduleGroup: IScheduleGroupEntity): Promise<IScheduleGroupEntity> {
@@ -28,8 +27,11 @@ class ScheduleGroupRepository implements ScheduleGroupStore {
 
     async findAllScheduleGroupsToCreateTask(limit: number, date: Date): Promise<IScheduleGroupEntity[]> {
         const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const weekDay = date.getDay().toString();
         return await ScheduleGroupEntity.find({
-            activeStatus: ActiveStatus.active, updateDate: { $lt: startOfDay },
+            activeStatus: ActiveStatus.active, 
+            updateDate: { $lt: startOfDay },
+            repeat: weekDay,
             $or: [{ isFailed: null }, { isFailed: false }],
         }).sort({ schedulePlanId: 1 }).limit(limit);
     }

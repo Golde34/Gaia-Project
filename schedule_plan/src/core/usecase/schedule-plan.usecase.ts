@@ -1,5 +1,6 @@
 import { ISchedulePlanEntity } from "../../infrastructure/entities/schedule-plan.entity";
 import { IResponse, msg200 } from "../common/response";
+import { scheduleCalendarService } from "../services/schedule-calendar.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
 
 class SchedulePlanUsercase {
@@ -8,8 +9,10 @@ class SchedulePlanUsercase {
     async registerSchedulePlan(userId: number): Promise<IResponse> {
         var isScheduleExist = false;
         try {
-            const result = await schedulePlanService.createSchedulePlan(userId);
-            console.log('Result: ', result);
+            const schedulePlan = await schedulePlanService.createSchedulePlan(userId);
+            console.log('Schedule Plan: ', schedulePlan );
+            const scheduleCalendar = await scheduleCalendarService.createScheduleCalendar(userId);
+            console.log('Schedule Calendar: ', scheduleCalendar );
             isScheduleExist = true;
             return msg200({
                 isScheduleExist

@@ -38,7 +38,7 @@ class ProjectService {
         this.clearProjectCache(project.ownerId);
 
         return msg200({
-            message: (createProject as any)
+            project: (createProject as any)
         });
     }
 
