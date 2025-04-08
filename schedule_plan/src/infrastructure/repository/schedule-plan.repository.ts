@@ -1,9 +1,8 @@
 import { UpdateWriteOpResult } from "mongoose";
 import { ISchedulePlanEntity, SchedulePlanEntity } from "../entities/schedule-plan.entity";
 import { DeleteResult } from "mongodb";
-import { SchedulePlanStore } from "./store/schedule-plan.store";
 
-class SchedulePlanRepository implements SchedulePlanStore {
+class SchedulePlanRepository {
     constructor() {}
 
     async createSchedulePlan(schedulePlan: any): Promise<ISchedulePlanEntity> {

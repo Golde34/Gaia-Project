@@ -4,6 +4,7 @@ import { IResponse, msg200, msg400 } from "../common/response";
 import { OptimizeScheduleTaskMessage, SyncScheduleTaskRequest } from "../domain/request/task.dto";
 import { scheduleTaskMapper } from "../mapper/schedule-task.mapper";
 import { notificationService } from "../services/notifi-agent.service";
+import { scheduleCalendarService } from "../services/schedule-calendar.service";
 import { scheduleGroupService } from "../services/schedule-group.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
 import { scheduleTaskService } from "../services/schedule-task.service";
@@ -16,6 +17,10 @@ class ScheduleTaskUsecase {
             const schedulePlan = await schedulePlanService.createSchedulePlan(scheduleTask.userId);
             if (!schedulePlan) {
                 throw new Error("Failed to create schedule plan");
+            }
+            const scheduleCalendar = await scheduleCalendarService.createScheduleCalendar(scheduleTask.userId);
+            if (!scheduleCalendar) {
+                throw new Error("Failed to create schedule calendar");
             }
 
             const task = scheduleTaskMapper.kafkaCreateTaskMapper(scheduleTask, schedulePlan._id);

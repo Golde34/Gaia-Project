@@ -1,9 +1,8 @@
 import { UpdateWriteOpResult } from "mongoose";
 import { ActiveStatus } from "../../core/domain/enums/enums";
 import { IScheduleGroupEntity, ScheduleGroupEntity } from "../entities/schedule-group.entity";
-import { ScheduleGroupStore } from "./store/schedule-group.store";
 
-class ScheduleGroupRepository implements ScheduleGroupStore {
+class ScheduleGroupRepository {
     constructor() { }
 
     async createScheduleGroup(scheduleGroup: IScheduleGroupEntity): Promise<IScheduleGroupEntity> {

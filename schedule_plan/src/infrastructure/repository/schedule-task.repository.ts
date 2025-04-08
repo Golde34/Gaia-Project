@@ -1,10 +1,9 @@
 import { UpdateWriteOpResult } from "mongoose";
 import { DeleteResult } from "mongodb";
 import { IScheduleTaskEntity, ScheduleTaskEntity } from "../entities/schedule-task.entity";
-import { ScheduleTaskStore } from "./store/schedule-task.store";
 import { ActiveStatus } from "../../core/domain/enums/enums";
 
-class ScheduleTaskRepository implements ScheduleTaskStore {
+class ScheduleTaskRepository {
     constructor() {}
 
     async createScheduleTask(scheduleTask: any): Promise<IScheduleTaskEntity> {
