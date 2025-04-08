@@ -8,7 +8,6 @@ import { MongoHelper } from "./kernel/database/mongodb.db";
 import { msg404, sendResponse } from "./core/common/response";
 import { MSG404 } from "./core/domain/constants/string.constants";
 import { dashboardRouter } from "./ui/routers/dashboard.router";
-import { userRouter } from "./ui/routers/user.router";
 import { KafkaHandler } from "./infrastructure/kafka/kafka-handler";
 import { kafkaController } from "./infrastructure/kafka/kafka-controller";
 import { scheduleTaskRouter } from "./ui/routers/schedule-task.router";
@@ -49,7 +48,6 @@ async function main(): Promise<void> {
     })
 
     app.use(applicationContext + "/dashboard", dashboardRouter);
-    app.use(applicationContext + "/user", userRouter);
     app.use(applicationContext + "/schedule", scheduleTaskRouter);
     app.use(applicationContext + "/schedule-group", scheduleGroupRouter);
 
