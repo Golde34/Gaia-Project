@@ -8,6 +8,7 @@ import { scheduleCalendarService } from "../services/schedule-calendar.service";
 import { scheduleGroupService } from "../services/schedule-group.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
 import { scheduleTaskService } from "../services/schedule-task.service";
+import { scheduleCalendarUsecase } from "./schedule-calendar.usecase";
 
 class ScheduleTaskUsecase {
     constructor() { }
@@ -157,6 +158,7 @@ class ScheduleTaskUsecase {
             }
             schedulePlan.activeTaskBatch = batchNumber;
             await schedulePlanService.updateSchedulePlan(schedulePlan._id, schedulePlan);
+            await scheduleCalendarUsecase.updateScheduleTasksWithSchedulePlan(userId, schedulePlan)
 
             const taskBatch = await scheduleTaskService.getScheduleTaskByBatchNumber(schedulePlan._id, batchNumber);
             return msg200({

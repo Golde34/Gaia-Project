@@ -14,6 +14,24 @@ class ScheduleCalendarService {
         }
         return await scheduleCalendarRepository.createScheduleCalendar(scheduleCalendar);
     }
+
+    async findScheduleCalendarByUserId(userId: number): Promise<any> {
+        try {
+            const scheduleCalendar = await scheduleCalendarRepository.findScheduleCalendarByUserId(userId);
+            return scheduleCalendar;
+        } catch (error: any) {
+            throw new Error(error.message.toString());
+        }
+    }
+
+    async updateScheduleCalendar(userId: number, scheduleCalendar: any): Promise<any> {
+        try {
+        const updateScheduleCalendar = await scheduleCalendarRepository.updateScheduleCalendar(userId, scheduleCalendar);
+            return updateScheduleCalendar;
+        } catch (error: any) {
+            throw new Error(error.message.toString());
+        }
+    }
 }
 
 export const scheduleCalendarService = new ScheduleCalendarService();
