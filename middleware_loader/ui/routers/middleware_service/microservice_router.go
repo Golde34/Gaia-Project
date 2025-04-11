@@ -17,6 +17,8 @@ type MicroserviceRouter struct {
 func NewMicroserviceRouter(db database_mongo.Database, r *chi.Mux) *MicroserviceRouter {
 	microserviceConfigurationStore := store.NewMicroserviceConfigurationStore(db)
 	microserviceConfigurationService := services.NewMicroserviceConfigurationService(microserviceConfigurationStore)
+	screenConfigurationStore := store.NewScreenConfigurationStore(db)
+	screenConfigurationService := services.NewScreenConfigurationService(screenConfigurationStore)
 	r.Route("/microservice", func(r chi.Router) {
 			r.Get("/status", func(w http.ResponseWriter, r *http.Request) {
 				controller_services.CheckMicroservice(w, r, microserviceConfigurationService)
@@ -30,7 +32,9 @@ func NewMicroserviceRouter(db database_mongo.Database, r *chi.Mux) *Microservice
 			r.Post("/insert-microservice-configuration", func(w http.ResponseWriter, r *http.Request) {
 				controller_services.InsertMicroserviceConfiguration(w, r, microserviceConfigurationService)
 			})
-
+			r.Get("/gaia-screen", func(w http.ResponseWriter, r *http.Request) {
+				controller_services.GetGaiaScreens(w, r, screenConfigurationService)
+			})
 		})
 	return &MicroserviceRouter{
 		MicroserviceConfigurationDB: db,
