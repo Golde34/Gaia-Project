@@ -35,4 +35,4 @@ scheduleCalendarSchema.virtual("id").get(function(this: IScheduleCalendarEntity)
     return this._id.toString();
 });
 
-export const ScheduleCalendarEntity = mongoose.model<IScheduleCalendarEntity>("SchedulePlan", scheduleCalendarSchema);
+export const ScheduleCalendarEntity = mongoose.model<IScheduleCalendarEntity>("ScheduleCalendar", scheduleCalendarSchema);
