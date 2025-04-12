@@ -156,6 +156,7 @@ class TaskUsecase {
                 groupTaskId: groupTaskId,
                 projectId: project.data.project.id,
             }
+            console.log("Created schedule task response: ", response);
             return msg200(response);
         } catch (err: any) {
             return msg400(err.message.toString());
