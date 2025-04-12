@@ -145,7 +145,7 @@ export const CreateTaskDialog = (props) => {
                                                             onValueChange={setStartDate}
                                                             minDate={new Date()}
                                                             value={startDate}
-                                                            dPINETREEisplayFormat="dd/MM/yyyy"
+                                                            displayFormat="dd/MM/yyyy"
                                                         ></DatePicker>
                                                     </div>
                                                 </div>
