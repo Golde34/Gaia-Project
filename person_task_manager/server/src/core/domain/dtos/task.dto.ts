@@ -31,6 +31,9 @@ export class TaskRequestDto {
     @IsString()
     @IsOptional()
     tag?: string;
+    @IsString()
+    @IsOptional()
+    userId?: number;
 }
 
 export class UpdateTaskRequestDto {

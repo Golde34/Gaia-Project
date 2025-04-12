@@ -18,6 +18,7 @@ export interface ITaskEntity extends Document {
     updatedAt: Date;
     activeStatus: ActiveStatus;
     groupTaskId: string;
+    userId: number;
     tag: IUserTagEntity 
 }
 
