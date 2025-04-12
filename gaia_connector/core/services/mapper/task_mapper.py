@@ -14,6 +14,7 @@ class TaskMapper:
             'deadline': task['deadline'],
             'duration': float(task['duration']),
             'activeStatus': 'ACTIVE',
+            'userId': data['user_id'],
         } 
 
     def map_create_task_to_sor(self, data, task, task_id):
