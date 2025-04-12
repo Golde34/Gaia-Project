@@ -3,6 +3,8 @@ package utils
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/google/uuid"
 )
 
 func GetStringValue(bodyMap map[string]interface{}, key string, defaultValue string) string {
@@ -38,6 +40,10 @@ func ParseFloatValue(value string) (float64) {
 		panic(fmt.Errorf("cannot parse value"))
 	}
 	return floatValue
+}
+
+func GenerateUUID() string {
+	return fmt.Sprintf("%s", uuid.NewString())
 }
 
 // func GetIntegerValue(bodyMap map[string]interface{}, key string, defaultValue int64) int64 {

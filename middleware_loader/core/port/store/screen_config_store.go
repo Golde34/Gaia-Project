@@ -31,3 +31,17 @@ func (store *ScreenConfigurationStore) GetAllScreens(context context.Context) ([
 		
 	return screens, nil
 }
+
+func (store *ScreenConfigurationStore) InsertScreen(context context.Context, body map[string]interface{}) (entity.ScreenConfiguration, error) {
+	collection := store.Database.Collection(store.Collection)
+	db := store.Database
+
+	screens, err := store_adapter.IScreenConfigurationRepository(
+		&repository.ScreenConfigurationRepository{Database: db, Collection: collection},
+	).InsertScreen(context, body)
+	if err != nil {
+		return entity.ScreenConfiguration{}, err
+	}
+		
+	return screens, nil
+}

@@ -27,3 +27,15 @@ func (s *ScreenConfigurationService) GetGaiaScreens() (base_dtos.ErrorResponse, 
 
 	return utils.ReturnSuccessResponse("Get all screens successfully", screens), nil	
 }
+
+func (s *ScreenConfigurationService) InsertScreen(body map[string]interface{}) (base_dtos.ErrorResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	screen, err := s.Store.InsertScreen(ctx, body)
+	if err != nil {
+		return base_dtos.ErrorResponse{}, err
+	}
+
+	return utils.ReturnSuccessResponse("Insert screen successfully", screen), nil
+}

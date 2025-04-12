@@ -94,3 +94,24 @@ func GetGaiaScreens(w http.ResponseWriter, r *http.Request, screenConfigurationS
 		return
 	}
 }
+
+func InsertScreenConfiguration(w http.ResponseWriter, r *http.Request, screenConfigurationService *services.ScreenConfigurationService) {
+	var body map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	result, err := screenConfigurationService.InsertScreen(body)	
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}

@@ -2,6 +2,7 @@ package entity
 
 import (
 	"middleware_loader/core/domain/enums"
+	"middleware_loader/kernel/utils"
 	"time"
 )
 
@@ -12,17 +13,19 @@ const (
 type ScreenConfiguration struct {
 	ID         string    `json:"id" bson:"_id"`
 	ScreenName string    `json:"screenName" bson:"screenname"`
+	ScreenUrl  string    `json:"screenUrl" bson:"screenurl"`
 	Status     bool      `json:"status" bson:"status"`
 	CreatedAt  time.Time `json:"createdAt" bson:"createdat"`
 	UpdatedAt  time.Time `json:"updatedAt" bson:"updatedat"`
 }
 
-func NewScreenConfiguration(id, screenName string, status bool, createdAt, updatedAt time.Time) *ScreenConfiguration {
+func NewScreenConfiguration(screenName, screenUrl string, status bool) *ScreenConfiguration {
 	return &ScreenConfiguration{
-		ID:         id,
+		ID: 	  utils.GenerateUUID(),
 		ScreenName: screenName,
+		ScreenUrl: screenUrl,
 		Status:     status,
-		CreatedAt:  createdAt,
-		UpdatedAt:  updatedAt,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
 }

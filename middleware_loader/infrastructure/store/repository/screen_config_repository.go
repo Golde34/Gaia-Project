@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log"
 	"middleware_loader/core/domain/entity"
 	database_mongo "middleware_loader/kernel/database/mongo"
 
@@ -28,4 +29,44 @@ func (repo *ScreenConfigurationRepository) GetAllScreens(context context.Context
 	}
 
 	return screens, nil
+}
+
+func (repo *ScreenConfigurationRepository) InsertScreen(
+	context context.Context, 
+	screen map[string]any,
+) (entity.ScreenConfiguration, error) {
+	screenEntity := entity.NewScreenConfiguration(
+		screen["screenName"].(string),
+		screen["screenUrl"].(string),
+		screen["status"].(bool),
+	)
+	log.Println("Inserting screen configuration:", screenEntity)
+
+	foundedScreen, err := repo.FindByScreenName(context, screenEntity.ScreenName)
+	if err == nil {
+		log.Println("Screen configuration already exists:", foundedScreen)
+		return foundedScreen, nil
+	}
+
+	result, err := repo.Collection.InsertOne(context, screenEntity)
+	if err != nil {
+		return entity.ScreenConfiguration{}, err
+	}
+	log.Println("Inserted screen configuration:", result)
+	return *screenEntity, nil
+}
+
+func (repo ScreenConfigurationRepository) FindByScreenName(
+	ctx context.Context,
+	screenName string,
+) (entity.ScreenConfiguration, error) {
+	filter := bson.M{"screenname": screenName}
+	result := repo.Collection.FindOne(ctx, filter)
+	screen := entity.ScreenConfiguration{}
+	err := result.Decode(&screen)
+	if err != nil {
+		return entity.ScreenConfiguration{}, err
+	}
+
+	return screen, nil
 }

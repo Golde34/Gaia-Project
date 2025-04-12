@@ -32,8 +32,11 @@ func NewMicroserviceRouter(db database_mongo.Database, r *chi.Mux) *Microservice
 			r.Post("/insert-microservice-configuration", func(w http.ResponseWriter, r *http.Request) {
 				controller_services.InsertMicroserviceConfiguration(w, r, microserviceConfigurationService)
 			})
-			r.Get("/gaia-screen", func(w http.ResponseWriter, r *http.Request) {
+			r.Get("/gaia-screens", func(w http.ResponseWriter, r *http.Request) {
 				controller_services.GetGaiaScreens(w, r, screenConfigurationService)
+			})
+			r.Post("/insert-screen-configuration", func(w http.ResponseWriter, r *http.Request) {
+				controller_services.InsertScreenConfiguration(w, r, screenConfigurationService)
 			})
 		})
 	return &MicroserviceRouter{
