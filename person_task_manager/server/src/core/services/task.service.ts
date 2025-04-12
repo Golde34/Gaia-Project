@@ -49,19 +49,17 @@ class TaskService {
         return createTask;
     }
 
-    async handleAfterCreateTask(createTask: any, groupTaskId: string): Promise<IResponse> {
+    async handleAfterCreateTask(createTask: any, groupTaskId: string): Promise<any> {
         const taskId = (createTask as any)._id;
         if (await this.taskValidationImpl.checkExistedTaskInGroupTask(taskId, groupTaskId) === NOT_EXISTED) {
             // push task id to group task
             await groupTaskStore.pushTaskToGroupTask(groupTaskId, taskId);
             groupTaskServiceUtils.calculateTotalTasks(groupTaskId);
-
-            return msg200({
-                message: (createTask as any)
-            });
+            return createTask as any;
+            
         } else {
             await taskStore.deleteTask(taskId);
-            return msg400(CREATE_TASK_FAILED);
+            return CREATE_TASK_FAILED;
         }
     }
 

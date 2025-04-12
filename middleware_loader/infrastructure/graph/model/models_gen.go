@@ -67,6 +67,7 @@ type CreateTaskInput struct {
 	Duration     string   `json:"duration"`
 	ActiveStatus string   `json:"activeStatus"`
 	GroupTaskID  string   `json:"groupTaskId"`
+	UserID       float64  `json:"userId"`
 }
 
 type CreateUserInput struct {
@@ -87,6 +88,7 @@ type GenerateTaskWithoutGroupTaskInput struct {
 	Duration     string   `json:"duration"`
 	ActiveStatus string   `json:"activeStatus"`
 	ProjectID    string   `json:"projectId"`
+	UserID       float64  `json:"userId"`
 }
 
 type GithubRepo struct {

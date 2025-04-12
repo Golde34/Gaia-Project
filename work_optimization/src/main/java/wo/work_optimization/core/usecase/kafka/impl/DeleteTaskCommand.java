@@ -41,6 +41,10 @@ public class DeleteTaskCommand extends CommandService<String, String> {
     public String doCommand(String request) {
         try {
             Task task = taskStore.findTaskByOriginalId(request);
+            if (DataUtils.isNullOrEmpty(task)) {
+                log.error("Task with originalId {} not existed", request);
+                return "Task not existed";
+            }
             taskStore.deleteTask(task);
             return "Delete task successfully";
         } catch (Exception e)  {

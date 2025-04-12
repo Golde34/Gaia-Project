@@ -5,6 +5,7 @@ import { createMessage } from "../../infrastructure/kafka/create-message";
 import { KafkaHandler } from "../../infrastructure/kafka/kafka-handler";
 import { scheduleTaskRepository } from "../../infrastructure/repository/schedule-task.repository";
 import { convertErrorCodeToBoolean } from "../../kernel/utils/convert-fields";
+import { isStringEmpty } from "../../kernel/utils/string-utils";
 import { IResponse, msg200, msg400, msg500 } from "../common/response";
 import { ErrorStatus } from "../domain/enums/enums";
 import { KafkaCommand, KafkaTopic } from "../domain/enums/kafka.enum";
@@ -183,11 +184,17 @@ class ScheduleTaskService {
     async createTaskFromScheduleGroup(scheduleGroup: IScheduleGroupEntity, userId: number): Promise<IScheduleTaskEntity | null> {
         try {
             const scheduleTask = scheduleTaskMapper.buildTaskFromScheduleGroup(scheduleGroup);
-            const task = await this.taskManagerAdapterImpl.createTask(scheduleTask, scheduleGroup, userId);
-            if (typeof task === 'number') {
+            const response = await this.taskManagerAdapterImpl.createTask(scheduleTask, scheduleGroup, userId);
+            if (typeof response === 'number') {
                 return null;
             }
-            scheduleTask.taskId = task.id;
+            if (isStringEmpty(scheduleGroup.projectId)) {
+                scheduleGroup.projectId = response.projectId;
+            }
+            if (isStringEmpty(scheduleGroup.groupTaskId)) {
+                scheduleGroup.groupTaskId = response.groupTaskId;
+            }
+            scheduleTask.taskId = response.task.id;
             return await scheduleTaskRepository.createScheduleTask(scheduleTask);
         } catch (error) {
             console.error("Error on createTaskFromScheduleGroup: ", error);

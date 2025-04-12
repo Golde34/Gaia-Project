@@ -16,6 +16,7 @@ type CreateTaskRequestDTO struct {
 	Duration     string   `json:"duration"`
 	ActiveStatus string   `json:"activeStatus"`
 	GroupTaskId  string   `json:"groupTaskId"`
+	UserId       float64  `json:"userId"`
 }
 
 type UpdateTaskRequestDTO struct {
@@ -43,6 +44,7 @@ type GenerateTaskRequestDTO struct {
 	Duration     string   `json:"duration"`
 	ActiveStatus string   `json:"activeStatus"`
 	ProjectID    string   `json:"projectId"`
+	UserID       float64  `json:"userId"`
 }
 
 type UpdateTaskInDialogRequestDTO struct {

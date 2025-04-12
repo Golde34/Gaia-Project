@@ -23,7 +23,9 @@ func (in *TaskValidator) CreateTaskValidate(input model.CreateTaskInput) error {
 	if input.Title == "" {
 		return fmt.Errorf("%w: title is required", enums.ErrValidation)
 	}
-
+	if input.UserID <= 0 {
+		return fmt.Errorf("%w: user id is nil", enums.ErrValidation)
+	}
 	return nil
 }
 

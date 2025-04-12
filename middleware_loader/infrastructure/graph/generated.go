@@ -17337,7 +17337,7 @@ func (ec *executionContext) unmarshalInputCreateTaskInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"title", "description", "priority", "status", "startDate", "deadline", "duration", "activeStatus", "groupTaskId"}
+	fieldsInOrder := [...]string{"title", "description", "priority", "status", "startDate", "deadline", "duration", "activeStatus", "groupTaskId", "userId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -17407,6 +17407,13 @@ func (ec *executionContext) unmarshalInputCreateTaskInput(ctx context.Context, o
 				return it, err
 			}
 			it.GroupTaskID = data
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
 		}
 	}
 
@@ -17475,7 +17482,7 @@ func (ec *executionContext) unmarshalInputGenerateTaskWithoutGroupTaskInput(ctx 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"title", "description", "priority", "status", "startDate", "deadline", "duration", "activeStatus", "projectId"}
+	fieldsInOrder := [...]string{"title", "description", "priority", "status", "startDate", "deadline", "duration", "activeStatus", "projectId", "userId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -17545,6 +17552,13 @@ func (ec *executionContext) unmarshalInputGenerateTaskWithoutGroupTaskInput(ctx 
 				return it, err
 			}
 			it.ProjectID = data
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserID = data
 		}
 	}
 

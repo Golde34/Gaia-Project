@@ -22,10 +22,16 @@ class TaskUsecase {
             }
             const createdTask = await taskService.createTaskInGroupTask(task, groupTaskId);
             const taskResult = await taskService.handleAfterCreateTask(createdTask, groupTaskId);
+            if (typeof taskResult === 'string') {
+                return msg400(taskResult);
+            }
+            
             if (isPrivate === IsPrivateRoute.PUBLIC) {
                 await taskService.pushKafkaToCreateTask(createdTask, groupTaskId);
             }
-            return taskResult;
+            return msg200({
+                message: taskResult
+            })
         } catch (err: any) {
             return msg400(err.message.toString());
         }
@@ -141,8 +147,17 @@ class TaskUsecase {
             const groupTaskId = groupTask.data.message.id;
             const task = scheduleTaskMapper.mapTask(scheduleTask);
             const createdTask = await taskService.createTaskInGroupTask(task, groupTaskId);
-            const taskResult = await taskService.handleAfterCreateTask(createdTask, groupTaskId);
-            return taskResult;
+            const taskResult = await taskService.handleAfterCreateTask(createdTask, groupTaskId)
+            if (typeof taskResult === 'string') {
+                return msg400(taskResult);
+            }
+            const response = {
+                task: taskResult,
+                groupTaskId: groupTaskId,
+                projectId: project.data.project.id,
+            }
+            console.log("Created schedule task response: ", response);
+            return msg200(response);
         } catch (err: any) {
             return msg400(err.message.toString());
         }

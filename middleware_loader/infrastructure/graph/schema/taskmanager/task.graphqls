@@ -27,6 +27,7 @@ input CreateTaskInput {
 	duration: String!
 	activeStatus: String!
 	groupTaskId: String!
+	userId: Float!
 }
 
 input UpdateTaskInput {
@@ -54,6 +55,7 @@ input GenerateTaskWithoutGroupTaskInput {
 	duration: String!
 	activeStatus: String!
 	projectId: String!
+	userId: Float!
 }
 
 input UpdateTaskInDialogInput {
