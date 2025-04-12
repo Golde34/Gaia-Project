@@ -31,7 +31,6 @@ export class TaskRequestDto {
     @IsString()
     @IsOptional()
     tag?: string;
-    @IsString()
     @IsOptional()
     userId?: number;
 }
@@ -93,6 +92,8 @@ export class GenerateTaskFromScratchRequestDTO {
     activeStatus?: string;
     @IsOptional()
     tag?: TaskTagRequest;
+    @IsOptional()
+    userId?: number;
 }
 
 export class UpdateTaskInDialogDTO {
