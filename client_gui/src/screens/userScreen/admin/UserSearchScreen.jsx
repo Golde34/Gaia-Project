@@ -7,9 +7,9 @@ const UserSearchScreen = ({ onSearch }) => {
     const searchInput = () => {
         onSearch(text);
     }
-    // const searchInputV2 = (text) => {
-    //     onSearch(text);
-    // }
+    const searchInputV2 = (text) => {
+        onSearch(text);
+    }
     return (
         <>
             <Card className="max-w-full mx-auto">
@@ -19,8 +19,8 @@ const UserSearchScreen = ({ onSearch }) => {
                         <Flex>
                             <TextInput icon={SearchCircleIcon} placeholder="Search"
                                 value={text} onChange={(e) => { setText(e.target.value) }} />
-                            <Button className="ms-2" onClick={searchInput}>Search</Button>
-                            {/* <Button className="ms-2" onClick={searchInputV2(text)}>Search V2</Button> */}
+                            {/* <Button className="ms-2" onClick={searchInput}>Search</Button> */}
+                            <Button className="ms-2" onClick={searchInputV2(text)}>Search V2</Button>
                         </Flex>
                     </Col>
                 </Grid>

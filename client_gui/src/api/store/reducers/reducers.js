@@ -25,7 +25,7 @@ import {
     commentCreateReducer, commentDeleteReducer, commentDetailReducer,
     commentListReducer, commentUpdateReducer
 } from './task_manager/comment.reducers'
-import { microserviceListReducer } from "./middleware_loader/microservices.reducer";
+import { microserviceListReducer, screenListReducer } from "./middleware_loader/microservices.reducer";
 import { userDetailReducer, userListReducer, userSettingUpdateReducer, userUpdateReducer } from "./auth_service/user.reducer";
 import { roleCreateReducer, roleListReducer } from "./auth_service/role.reducer";
 import { privilegeListReducer } from "./auth_service/privilege.reducer";
@@ -101,6 +101,7 @@ export const reducer = combineReducers({
     scheduleGroupList: scheduleGroupListReducer,
     // middleware loader
     microserviceList: microserviceListReducer,
+    screenList: screenListReducer,
     // work optimization 
     registerTaskConfig: registerTaskConfigReducer,
     queryTaskConfig: queryTaskConfigReducer,
