@@ -253,8 +253,9 @@ class ScheduleTaskUsecase {
 
         // Delete created task if it exists
         if (createdTask !== null) {
-            await scheduleTaskService.deleteScheduleTask(createdTask._id);
+            console.log(`Deleting task : ${createdTask}`);
             await scheduleTaskService.deleteCommandToTMService(createdTask.taskId);
+            await scheduleTaskService.deleteScheduleTask(createdTask._id);
         }
 
         if (failedScheduleMap[scheduleGroupId] >= maxRetry) {

@@ -40,7 +40,7 @@ class TaskManagerAdapter {
             }
             const data = await response.json();
             console.log("Response from task manager service: ", data);
-            return data.data.message;
+            return data.data;
         } catch (error: any) {
             console.log("Exception when calling task manager service");
             return getInternalServiceErrorResponse(HttpCodeMessage.INTERNAL_SERVER_ERROR); 

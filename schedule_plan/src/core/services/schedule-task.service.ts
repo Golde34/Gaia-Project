@@ -5,6 +5,7 @@ import { createMessage } from "../../infrastructure/kafka/create-message";
 import { KafkaHandler } from "../../infrastructure/kafka/kafka-handler";
 import { scheduleTaskRepository } from "../../infrastructure/repository/schedule-task.repository";
 import { convertErrorCodeToBoolean } from "../../kernel/utils/convert-fields";
+import { isStringEmpty } from "../../kernel/utils/string-utils";
 import { IResponse, msg200, msg400, msg500 } from "../common/response";
 import { ErrorStatus } from "../domain/enums/enums";
 import { KafkaCommand, KafkaTopic } from "../domain/enums/kafka.enum";
@@ -187,10 +188,10 @@ class ScheduleTaskService {
             if (typeof response === 'number') {
                 return null;
             }
-            if (scheduleGroup.projectId === undefined || scheduleGroup.projectId === null) {
+            if (isStringEmpty(scheduleGroup.projectId)) {
                 scheduleGroup.projectId = response.projectId;
             }
-            if (scheduleGroup.groupTaskId === undefined || scheduleGroup.groupTaskId === null) {
+            if (isStringEmpty(scheduleGroup.groupTaskId)) {
                 scheduleGroup.groupTaskId = response.groupTaskId;
             }
             scheduleTask.taskId = response.task.id;
