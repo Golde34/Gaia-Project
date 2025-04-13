@@ -186,3 +186,23 @@ func GetTaskDetail(w http.ResponseWriter, r *http.Request, taskService *services
 		return
 	}
 }
+
+func ListDoneTasks(w http.ResponseWriter, r *http.Request, taskService *services.TaskService) {
+	userId := chi.URLParam(r, "userId")
+
+	doneTasks, err := services.NewTaskService().GetDoneTasks(userId)	
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	response := map[string]interface{}{
+		"data": doneTasks,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}

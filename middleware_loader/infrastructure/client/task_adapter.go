@@ -281,3 +281,24 @@ func (adapter *TaskAdapter) GetTaskDetail(input request_dtos.GetTaskDetailInputD
 
 	return taskDetail, nil
 }
+
+func (adapter *TaskAdapter) GetDoneTasks(userId string) ([]response_dtos.TaskResponseDTO, error) {
+	getDoneTasksURL := base.TaskManagerServiceURL + "/dashboard/done-tasks/" + userId
+	var doneTasks []response_dtos.TaskResponseDTO
+	headers := utils.BuildDefaultHeaders()
+	bodyResult, err := utils.BaseAPI(getDoneTasksURL, "GET", nil, headers)
+	if err != nil {
+		return []response_dtos.TaskResponseDTO{}, err
+	}
+	bodyResultMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return []response_dtos.TaskResponseDTO{}, nil
+	}
+
+	for _, taskElement := range bodyResultMap["tasks"].([]interface{}) {
+		task := mapper_response.ReturnTaskObjectMapper(taskElement.(map[string]interface{}))
+		doneTasks = append(doneTasks, *task)
+	}
+
+	return doneTasks, nil
+}
