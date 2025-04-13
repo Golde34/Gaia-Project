@@ -21,6 +21,7 @@ import { ITaskEntity } from "../domain/entities/task.entity";
 import { IGroupTaskEntity } from "../domain/entities/group-task.entity";
 import { schedulePlanAdapter } from "../../infrastructure/client/schedule-plan.adapter";
 import { Status } from "../domain/enums/enums";
+import { calculdateDaysBetweenDates } from "../../kernel/util/string-utils";
 
 class TaskService {
     constructor(
@@ -45,7 +46,7 @@ class TaskService {
         task.groupTaskId = groupTaskId;
         if (task.duration === 0 || task.duration === undefined || task.duration === null) task.duration = 2;
         const createTask = await taskStore.createTask(task);
-        this.taskServiceUtilsImpl.clearTaskCache(this.taskCache, task.groupTaskId);
+        this.taskServiceUtilsImpl.clearTaskCache(this.taskCache, task.groupTaskId, task.userId);
         return createTask;
     }
 
@@ -56,7 +57,7 @@ class TaskService {
             await groupTaskStore.pushTaskToGroupTask(groupTaskId, taskId);
             groupTaskServiceUtils.calculateTotalTasks(groupTaskId);
             return createTask as any;
-            
+
         } else {
             await taskStore.deleteTask(taskId);
             return CREATE_TASK_FAILED;
@@ -108,7 +109,7 @@ class TaskService {
             return msg400(UPDATE_TASK_FAILED);
         }
 
-        this.taskServiceUtilsImpl.clearTaskCache(this.taskCache, task.groupTaskId);
+        this.taskServiceUtilsImpl.clearTaskCache(this.taskCache, task.groupTaskId, task.userId);
 
         const updateTaskMessage = await kafkaUpdateTaskMapper(updateTask, task);
         this.pushUpdateTaskMessage(updateTaskMessage);
@@ -132,7 +133,7 @@ class TaskService {
                 taskUpdate.description = task.description ?? ''; // Use optional chaining operator and provide a default value
                 taskUpdate.status = task.status;
 
-                return await this.updatetaskAndPushKafka(taskId, taskUpdate); 
+                return await this.updatetaskAndPushKafka(taskId, taskUpdate);
             } else {
                 return msg400(TASK_NOT_FOUND);
             }
@@ -237,9 +238,9 @@ class TaskService {
     }
 
     // get top task 
-    async getTopTasks(limit: number): Promise<IResponse> {
+    async getTopTasks(userId: number, limit: number): Promise<IResponse> {
         try {
-            const tasks = await taskStore.getTopTasks(limit);
+            const tasks = await taskStore.getTopTasks(userId, limit);
             if (tasks === null) {
                 return msg400(TASK_NOT_FOUND);
             } else {
@@ -380,7 +381,27 @@ class TaskService {
             const task = await taskStore.findTaskById(scheduleTask.taskId);
             return { task, scheduleTask };
         }
-        return null;
+        return null
+    }
+
+    async getDoneTasks(userId: number, timeUnit: string): Promise<IResponse> {
+        const doneTasksCache = this.taskCache.get(InternalCacheConstants.DONE_TASKS + userId);
+        if (doneTasksCache) {
+            console.log('Get done tasks from cache');
+            return msg200({
+                tasks: doneTasksCache as any,
+            });
+        } else {
+            const startDate = calculdateDaysBetweenDates(new Date(), timeUnit);
+            const tasks = await taskStore.getDoneTasksFromDateToDate(userId, startDate, new Date());
+            if (tasks === null) {
+                return msg400(TASK_NOT_FOUND);
+            } else {
+                return msg200({
+                    tasks
+                });
+            }
+        }
     }
 
     // add subTask

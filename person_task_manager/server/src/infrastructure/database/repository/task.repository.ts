@@ -67,16 +67,29 @@ class TaskRepository {
             .updateOne({ _id: taskId }, { activeStatus: ActiveStatus.active });
     }
 
-    async getTopTasks(limit: number): Promise<ITaskEntity[] | null> {
+    async getTopTasks(userId: number, limit: number): Promise<ITaskEntity[] | null> {
         return await TaskEntity.find({ 
             priority: Priority.star,
             status: { $in: ['TODO', 'IN_PROGRESS', 'CUSTOM'] },
-            activeStatus: ActiveStatus.active
+            activeStatus: ActiveStatus.active,
+            userId: userId,
         }).limit(limit);
     }
 
     async updateGroupTaskId(taskId: string, groupTaskId: string): Promise<UpdateWriteOpResult> {
         return await TaskEntity.updateOne({ _id: taskId }, { groupTaskId: groupTaskId });
+    }
+
+    async getDoneTasksFromDateToDate(userId: number, fromDate: Date, toDate: Date): Promise<ITaskEntity[]> {
+        return await TaskEntity.find({
+            userId: userId,
+            status: Status.done,
+            activeStatus: ActiveStatus.active,
+            updatedAt: {
+                $gte: fromDate,
+                $lte: toDate
+            }
+        });
     }
 }
 

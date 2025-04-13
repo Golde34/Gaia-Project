@@ -59,12 +59,16 @@ class TaskStore {
         return await taskRepository.enableTask(taskId);
     }
 
-    async getTopTasks(limit: number): Promise<ITaskEntity[] | null> {
-        return await taskRepository.getTopTasks(limit);
+    async getTopTasks(userId: number, limit: number): Promise<ITaskEntity[] | null> {
+        return await taskRepository.getTopTasks(userId, limit);
     }
     
     async updateGroupTaskId(taskId: string, newGroupTaskId: string): Promise<UpdateWriteOpResult> {
         return await taskRepository.updateGroupTaskId(taskId, newGroupTaskId);
+    }
+
+    async getDoneTasksFromDateToDate(userId: number, fromDate:Date, toDate: Date): Promise<ITaskEntity[]> {
+        return await taskRepository.getDoneTasksFromDateToDate(userId, fromDate, toDate);
     }
 }
 

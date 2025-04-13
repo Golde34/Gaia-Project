@@ -8,7 +8,8 @@ import { TASK_LIST_REQUEST, TASK_LIST_SUCCESS, TASK_LIST_FAIL,
     TASK_COMPLETED_REQUEST, TASK_COMPLETED_SUCCESS, TASK_COMPLETED_FAIL, 
     TOP_TASK_REQUEST, TOP_TASK_SUCCESS, TOP_TASK_FAIL, 
     MOVE_TASK_REQUEST, MOVE_TASK_SUCCESS, MOVE_TASK_FAIL,
-    TASK_TABLE_REQUEST, TASK_TABLE_SUCCESS, TASK_TABLE_FAIL
+    TASK_TABLE_REQUEST, TASK_TABLE_SUCCESS, TASK_TABLE_FAIL,
+    DONE_TASKS_REQUEST, DONE_TASKS_SUCCESS, DONE_TASKS_FAIL
 } from '../../constants/task_manager/task.constants';
 
 const portName = {
@@ -167,10 +168,10 @@ export const getTasksCompleted = (groupTaskId) => async (dispatch) => {
     }
 }
 
-export const getTopTasks = (groupTaskId) => async (dispatch) => {
-    dispatch({ type: TOP_TASK_REQUEST, payload: groupTaskId });
+export const getTopTasks = (userId) => async (dispatch) => {
+    dispatch({ type: TOP_TASK_REQUEST, payload: userId });
     try {
-        const { data } = await serverRequest(`/dashboard/top-tasks`, HttpMethods.GET, portName.taskManager);
+        const { data } = await serverRequest(`/dashboard/top-tasks/${userId}`, HttpMethods.GET, portName.taskManager);
         dispatch({ type: TOP_TASK_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({
@@ -209,5 +210,20 @@ export const getTableTaskList = (groupTaskId) => async (dispatch) => {
                 ? error.response.data.message
                 : error.message,
         });
+    }
+}
+
+export const getDoneTasks = (userId) => async (dispatch) => {
+    dispatch({ type: DONE_TASKS_REQUEST, payload: userId });
+    try {
+        const { data } = await serverRequest(`/task/done-tasks/${userId}`, HttpMethods.GET, portName.middleware);
+        dispatch({ type: DONE_TASKS_SUCCESS, payload: data.data });
+    } catch (error) {
+        dispatch({
+            type: DONE_TASKS_FAIL,
+            payload: error.response && error.response.data.message
+                ? error.response.data.message
+                : error.message,
+        })
     }
 }

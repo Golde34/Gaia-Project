@@ -14,6 +14,7 @@ import {
     groupTaskListReducer, groupTaskUpdateReducer
 } from './task_manager/group-task.reducers'
 import {
+    doneTasksReducer,
     moveTaskReducer, taskCompletedReducer, taskCreateReducer, taskDeleteReducer, taskDetailReducer,
     taskListReducer, taskTableReducer, taskUpdateReducer, topTaskReducer
 } from './task_manager/task.reducers'
@@ -75,6 +76,7 @@ export const reducer = combineReducers({
     taskCompleted: taskCompletedReducer,
     movedTask: moveTaskReducer,
     topTask: topTaskReducer,
+    doneTasks: doneTasksReducer,
     taskTable: taskTableReducer,
     subTaskList: subTaskListReducer,
     subTaskDetail: subTaskDetailReducer,

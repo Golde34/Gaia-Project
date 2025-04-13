@@ -8,7 +8,7 @@ export const dashboardRouter = Router();
 const dashboardControllerImpl = dashboardController;
 
 // get 3 top tasks
-dashboardRouter.get("/top-tasks",
+dashboardRouter.get("/top-tasks/:userId",
     // checkToken,
     // checkPermission(Permission.readTask),
     async (res: Request, req: Response, next: NextFunction): Promise<void> => {
@@ -26,6 +26,19 @@ dashboardRouter.get("/check-existed-tasks",
     async (res: Request, req: Response, next: NextFunction): Promise<void> => {
         try {
             const dashboardResult = await dashboardControllerImpl.checkExistedTasks(res, next);
+            returnResult(dashboardResult, TASK_NO_RECORDS, req, next);
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+)
+
+// check all tasks finished in 1 week
+dashboardRouter.get("/done-tasks/:userId",
+    async (res: Request, req: Response, next: NextFunction): Promise<void> => {
+        try {
+            const dashboardResult = await dashboardControllerImpl.getDoneTasks(res, next);
             returnResult(dashboardResult, TASK_NO_RECORDS, req, next);
         }
         catch (err) {
