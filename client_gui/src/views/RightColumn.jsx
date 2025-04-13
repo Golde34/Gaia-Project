@@ -7,7 +7,7 @@ const RightColumn = () => {
 		<div className="w-full p-2">
 			<CompareCommitChart />
 			<Item />
-			<ScoreList />
+			{/* <ScoreList /> */}
 		</div>
 	);
 };
