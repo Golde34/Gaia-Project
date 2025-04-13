@@ -1,4 +1,7 @@
 import {
+    DONE_TASKS_FAIL,
+    DONE_TASKS_REQUEST,
+    DONE_TASKS_SUCCESS,
     MOVE_TASK_FAIL, MOVE_TASK_REQUEST, MOVE_TASK_SUCCESS,
     TASK_COMPLETED_FAIL, TASK_COMPLETED_REQUEST, TASK_COMPLETED_SUCCESS,
     TASK_CREATE_FAIL, TASK_CREATE_REQUEST, TASK_CREATE_SUCCESS,
@@ -152,6 +155,22 @@ export const taskTableReducer = (
         case TASK_TABLE_SUCCESS:
             return { loading: false, tasks: action.payload.getTaskTableByGroupTaskId };
         case TASK_TABLE_FAIL:
+            return { loading: false, error: action.payload };
+        default:
+            return state;
+    }
+}
+
+export const doneTasksReducer = (
+    state = { loading: true, doneTasks: [] },
+    action
+) => {
+    switch (action.type) {
+        case DONE_TASKS_REQUEST:
+            return { loading: true };
+        case DONE_TASKS_SUCCESS:
+            return { loading: false, doneTasks: action.payload };
+        case DONE_TASKS_FAIL:
             return { loading: false, error: action.payload };
         default:
             return state;
