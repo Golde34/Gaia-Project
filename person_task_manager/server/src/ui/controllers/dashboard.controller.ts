@@ -10,7 +10,8 @@ class DashboardController {
     async getTopTasks(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const NUMBER_OF_TOP_TASKS = 3;
-            const taskResult = await taskService.getTopTasks(NUMBER_OF_TOP_TASKS);
+            const userId: number = Number(req.params.userId);
+            const taskResult = await taskService.getTopTasks(userId, NUMBER_OF_TOP_TASKS);
 
             return taskResult;
         }

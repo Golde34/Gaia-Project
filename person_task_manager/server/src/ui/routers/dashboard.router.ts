@@ -8,7 +8,7 @@ export const dashboardRouter = Router();
 const dashboardControllerImpl = dashboardController;
 
 // get 3 top tasks
-dashboardRouter.get("/top-tasks",
+dashboardRouter.get("/top-tasks/:userId",
     // checkToken,
     // checkPermission(Permission.readTask),
     async (res: Request, req: Response, next: NextFunction): Promise<void> => {

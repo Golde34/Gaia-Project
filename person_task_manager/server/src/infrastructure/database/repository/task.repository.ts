@@ -67,11 +67,12 @@ class TaskRepository {
             .updateOne({ _id: taskId }, { activeStatus: ActiveStatus.active });
     }
 
-    async getTopTasks(limit: number): Promise<ITaskEntity[] | null> {
+    async getTopTasks(userId: number, limit: number): Promise<ITaskEntity[] | null> {
         return await TaskEntity.find({ 
             priority: Priority.star,
             status: { $in: ['TODO', 'IN_PROGRESS', 'CUSTOM'] },
-            activeStatus: ActiveStatus.active
+            activeStatus: ActiveStatus.active,
+            userId: userId,
         }).limit(limit);
     }
 

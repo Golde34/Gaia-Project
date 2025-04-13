@@ -237,9 +237,9 @@ class TaskService {
     }
 
     // get top task 
-    async getTopTasks(limit: number): Promise<IResponse> {
+    async getTopTasks(userId: number, limit: number): Promise<IResponse> {
         try {
-            const tasks = await taskStore.getTopTasks(limit);
+            const tasks = await taskStore.getTopTasks(userId, limit);
             if (tasks === null) {
                 return msg400(TASK_NOT_FOUND);
             } else {
