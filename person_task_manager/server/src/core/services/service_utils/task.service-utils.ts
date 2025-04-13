@@ -85,9 +85,10 @@ class TaskServiceUtils {
         return taskArray;
     }
 
-    clearTaskCache(taskCache: InternalCache<any>, groupTaskId: string): void {
+    clearTaskCache(taskCache: InternalCache<any>, groupTaskId: string, userId: number): void {
        taskCache.clear(InternalCacheConstants.TASK_TABLE + groupTaskId);
        taskCache.clear(InternalCacheConstants.TASK_COMPLETED + groupTaskId);  
+       taskCache.clear(InternalCacheConstants.DONE_TASKS + userId);
     }
 }
 

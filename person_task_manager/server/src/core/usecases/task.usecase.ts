@@ -1,7 +1,7 @@
 import { IResponse } from "../common/response";
 import { msg200, msg400 } from "../common/response-helpers";
 import { TaskDetailRequestDTO, TaskRequestDto } from "../domain/dtos/task.dto";
-import { CRUDType, IsPrivateRoute, TaskDetail } from "../domain/enums/enums";
+import { CRUDType, IsPrivateRoute, TaskDetail, TimeUnit } from "../domain/enums/enums";
 import { taskService } from "../services/task.service";
 import { buildCommonStringValue, isStringEmpty } from "../../kernel/util/string-utils";
 import { GetGroupTaskProject } from "../domain/dtos/request_dtos/get-group-task-project.dto";
@@ -213,6 +213,16 @@ class TaskUsecase {
             await groupTaskService.deleteGroupTask(groupTask._id, project._id);
             return msg200({ message: 'Delete task successfully' });
 
+        } catch (err: any) {
+            return msg400(err.message.toString());
+        }
+    }
+
+    async getDoneTasks(userId: number): Promise<IResponse> {
+        try {
+            const timeUnit = TimeUnit.WEEK;
+            const taskResult = await taskService.getDoneTasks(userId, timeUnit);
+            return taskResult;
         } catch (err: any) {
             return msg400(err.message.toString());
         }

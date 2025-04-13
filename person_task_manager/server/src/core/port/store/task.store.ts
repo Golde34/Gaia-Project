@@ -66,6 +66,10 @@ class TaskStore {
     async updateGroupTaskId(taskId: string, newGroupTaskId: string): Promise<UpdateWriteOpResult> {
         return await taskRepository.updateGroupTaskId(taskId, newGroupTaskId);
     }
+
+    async getDoneTasksFromDateToDate(userId: number, fromDate:Date, toDate: Date): Promise<ITaskEntity[]> {
+        return await taskRepository.getDoneTasksFromDateToDate(userId, fromDate, toDate);
+    }
 }
 
 export const taskStore = new TaskStore();

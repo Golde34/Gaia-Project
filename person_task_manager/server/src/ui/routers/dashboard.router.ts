@@ -33,3 +33,16 @@ dashboardRouter.get("/check-existed-tasks",
         }
     }
 )
+
+// check all tasks finished in 1 week
+dashboardRouter.get("/done-tasks/:userId",
+    async (res: Request, req: Response, next: NextFunction): Promise<void> => {
+        try {
+            const dashboardResult = await dashboardControllerImpl.getDoneTasks(res, next);
+            returnResult(dashboardResult, TASK_NO_RECORDS, req, next);
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+)

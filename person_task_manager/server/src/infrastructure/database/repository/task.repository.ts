@@ -79,6 +79,18 @@ class TaskRepository {
     async updateGroupTaskId(taskId: string, groupTaskId: string): Promise<UpdateWriteOpResult> {
         return await TaskEntity.updateOne({ _id: taskId }, { groupTaskId: groupTaskId });
     }
+
+    async getDoneTasksFromDateToDate(userId: number, fromDate: Date, toDate: Date): Promise<ITaskEntity[]> {
+        return await TaskEntity.find({
+            userId: userId,
+            status: Status.done,
+            activeStatus: ActiveStatus.active,
+            updatedAt: {
+                $gte: fromDate,
+                $lte: toDate
+            }
+        });
+    }
 }
 
 export const taskRepository = new TaskRepository();
