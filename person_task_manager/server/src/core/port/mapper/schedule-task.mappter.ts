@@ -30,7 +30,7 @@ export const scheduleTaskMapper = {
         })
     },
 
-    mapTask(scheduleTask: any): ITaskEntity {
+    mapTask(scheduleTask: any, userId: number): ITaskEntity {
         return new TaskEntity({
             title: scheduleTask.title,
             priority: scheduleTask.priority,
@@ -41,6 +41,7 @@ export const scheduleTaskMapper = {
             createdAt: new Date(),
             updatedAt: new Date(),
             activeStatus: ActiveStatus.active,
+            userId: userId, 
         }) 
     }
 }
