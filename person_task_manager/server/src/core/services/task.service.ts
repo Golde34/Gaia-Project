@@ -384,24 +384,25 @@ class TaskService {
         return null
     }
 
-    async getDoneTasks(userId: number, timeUnit: string): Promise<IResponse> {
-        const doneTasksCache = this.taskCache.get(InternalCacheConstants.DONE_TASKS + userId);
-        if (doneTasksCache) {
-            console.log('Get done tasks from cache');
-            return msg200({
-                tasks: doneTasksCache as any,
-            });
-        } else {
+    async getDoneTasks(userId: number, timeUnit: string): Promise<Record<string, { count: number, tasks: ITaskEntity[] }> | string> {
+        let doneTasks = this.taskCache.get(InternalCacheConstants.DONE_TASKS + userId);
+        if (!doneTasks) {
+            console.log("Get done tasks from database");
             const startDate = calculdateDaysBetweenDates(new Date(), timeUnit);
-            const tasks = await taskStore.getDoneTasksFromDateToDate(userId, startDate, new Date());
-            if (tasks === null) {
-                return msg400(TASK_NOT_FOUND);
-            } else {
-                return msg200({
-                    tasks
-                });
+            doneTasks = await taskStore.getDoneTasksFromDateToDate(userId, startDate, new Date());
+            this.taskCache.set(InternalCacheConstants.DONE_TASKS + userId, doneTasks);
+        } 
+
+        const result = doneTasks.reduce((acc: Record<string, { count: number, tasks: ITaskEntity[] }>, task: ITaskEntity) => {
+            const groupId = task.groupTaskId.toString();
+            if (!acc[groupId]) {
+                acc[groupId] = { count: 0, tasks: [] };
             }
-        }
+            acc[groupId].count++;
+            acc[groupId].tasks.push(task);
+            return acc;
+        }, {});
+        return result; 
     }
 
     // add subTask
