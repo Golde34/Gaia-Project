@@ -24,6 +24,7 @@ const SalesItem = () => {
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const handleNavigate = (task) => {
+    localStorage.setItem("activeTab", task.groupTaskId);
     navigate(`/project/${task.projectId}`);
   }
   return (
