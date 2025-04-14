@@ -161,6 +161,8 @@ func (in *TaskDetailResponseDTO) MapperTaskDetail(response interface{}) TaskDeta
 type CountDoneTaskListDTO struct {
 	GroupTaskId string  `json:"groupTaskId"`
 	Count       float64 `json:"count"`
+	ProjectId   string  `json:"projectId"`
+	Name        string  `json:"name"`
 }
 
 func NewCountDoneTaskListDTO() *CountDoneTaskListDTO {

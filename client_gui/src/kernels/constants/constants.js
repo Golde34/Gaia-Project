@@ -44,7 +44,7 @@ export class Weekday {
 
 export class ServiceTag {
     static SCHEDULE_GROUP = "ScheduleGroup";
-    static GROUP_TASK = "GroupTask";
+    static GROUP_TASK = "Group Task";
     static NOTE = "Note";
     static PROJECT = "Project";
 }

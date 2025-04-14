@@ -2,14 +2,14 @@ import { ChartPieIcon, ViewListIcon } from "@heroicons/react/outline";
 import { Bold, Card, Col, DonutChart, Flex, Grid, List, ListItem, Metric, Tab, TabGroup, TabList, Text, Title } from "@tremor/react";
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getDoneTasks } from "../../api/store/actions/task_manager/task.actions";
-import { Link, useNavigate } from "react-router-dom";
+import { getDoneTasks } from "../api/store/actions/task_manager/task.actions";
+import { useNavigate } from "react-router-dom";
 
 const dataFormatter = (number) => {
   return Intl.NumberFormat("us").format(number).toString() + " Tasks";
 };
 
-const SalesItem = () => {
+const DoneTasksComponent = () => {
   const userId = "1";
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -23,8 +23,9 @@ const SalesItem = () => {
   }, [dispatch]);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const handleNavigate = (groupTaskId) => {
-    navigate(`/project/${groupTaskId}`);
+  const handleNavigate = (task) => {
+    localStorage.setItem("activeTab", task.groupTaskId);
+    navigate(`/project/${task.projectId}`);
   }
   return (
     <>
@@ -66,7 +67,7 @@ const SalesItem = () => {
                     dataFormatter={dataFormatter}
                     showAnimation={true}
                     category="count"
-                    index="groupTaskId"
+                    index="name"
                     className="mt-6"
                   />
                 </>
@@ -81,10 +82,7 @@ const SalesItem = () => {
                   <List className="mt-4">
                     {doneTasks.map((task) => (
                       <ListItem key={task.groupTaskId}>
-                        <Text><button onClick={() => handleNavigate(task.groupTaskId)}
-                          style={{ color: 'blue', textDecoration: 'underline', cursor: 'pointer' }}>
-                          {task.groupTaskId}</button>
-                        </Text>
+                        <Text><button onClick={() => handleNavigate(task)} className="text-blue-500 hover:underline">{task.name}</button></Text>
                         <Flex className="space-x-2" justifyContent="end">
                           <Text>
                             {Intl.NumberFormat("us").format(task.count).toString()} Tasks
@@ -115,4 +113,4 @@ const SalesItem = () => {
   );
 };
 
-export default SalesItem;
+export default DoneTasksComponent;
