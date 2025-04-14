@@ -1,41 +1,9 @@
-import { ArrowRightIcon, ChartPieIcon, ViewListIcon } from "@heroicons/react/outline";
-import { Bold, Button, Card, Col, Divider, DonutChart, Flex, Grid, List, ListItem, Metric, Tab, TabGroup, TabList, Text, Title } from "@tremor/react";
+import { ChartPieIcon, ViewListIcon } from "@heroicons/react/outline";
+import { Bold, Card, Col, DonutChart, Flex, Grid, List, ListItem, Metric, Tab, TabGroup, TabList, Text, Title } from "@tremor/react";
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getDoneTasks } from "../../api/store/actions/task_manager/task.actions";
-
-const stocks = [
-  {
-    name: "Off Running AG",
-    value: 10456,
-    performance: "6.1%",
-    deltaType: "increase",
-  },
-  {
-    name: "Not Normal Inc.",
-    value: 5789,
-    performance: "1.2%",
-    deltaType: "moderateDecrease",
-  },
-  {
-    name: "Logibling Inc.",
-    value: 4367,
-    performance: "2.3%",
-    deltaType: "moderateIncrease",
-  },
-  {
-    name: "Raindrop Inc.",
-    value: 3421,
-    performance: "0.5%",
-    deltaType: "moderateDecrease",
-  },
-  {
-    name: "Mwatch Group",
-    value: 1432,
-    performance: "3.4%",
-    deltaType: "decrease",
-  },
-];
+import { Link, useNavigate } from "react-router-dom";
 
 const dataFormatter = (number) => {
   return Intl.NumberFormat("us").format(number).toString() + " Tasks";
@@ -44,6 +12,7 @@ const dataFormatter = (number) => {
 const SalesItem = () => {
   const userId = "1";
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const { loading, error, doneTasks } = useSelector((state) => state.doneTasks);
   const didGetDoneTaskRef = useRef();
@@ -53,26 +22,10 @@ const SalesItem = () => {
     didGetDoneTaskRef.current = true;
   }, [dispatch]);
 
-  const [groupTasks, setGroupTasks] = useState([]);
-  useEffect(() => {
-    if (doneTasks && Object.keys(doneTasks).length > 0) {
-      setGroupTasks(
-        // getGroupTasksLength and count Tasks inside is the array 
-        Object.keys(doneTasks).map((groupTaskId) => {
-          const groupTasks = doneTasks[groupTaskId];
-          return {
-            name: groupTaskId,
-            value: groupTasks.tasks.length,
-          };
-        })
-      );
-      console.log("groupTasks", groupTasks);
-    }
-  }, [doneTasks])
-
-
   const [selectedIndex, setSelectedIndex] = useState(0);
-
+  const handleNavigate = (groupTaskId) => {
+    navigate(`/project/${groupTaskId}`);
+  }
   return (
     <>
       {loading ? (
@@ -80,7 +33,7 @@ const SalesItem = () => {
       ) : error ? (
         <MessageBox message={error} />
       ) : (
-        Object.keys(doneTasks).length === 0 ? (
+        doneTasks.length === 0 ? (
           <div></div>
         ) : (
           <div>
@@ -97,39 +50,44 @@ const SalesItem = () => {
               <Grid numItems={2}>
                 <Col numColSpan={1}>
                   <Text className="mt-8">Total Done Tasks</Text>
-                  <Metric>{Object.keys(doneTasks).length}</Metric>
+                  <Metric>{doneTasks.reduce((acc, task) => acc + task.count, 0)}</Metric>
                 </Col>
                 <Col numColSpan={1}>
                   <Text className="mt-8">
                     <Bold>Number Done Tasks</Bold>
                   </Text>
-                  <Text>Your task in {groupTasks.length} group tasks</Text>
+                  <Text>Your tasks in {doneTasks.length} group tasks</Text>
                 </Col>
               </Grid>
               {selectedIndex === 0 ? (
-                <DonutChart
-                  data={groupTasks}
-                  valueFormatter={dataFormatter}
-                  showAnimation={false}
-                  category="value"
-                  index="name"
-                  className="mt-6"
-                />
+                <>
+                  <DonutChart
+                    data={doneTasks}
+                    dataFormatter={dataFormatter}
+                    showAnimation={true}
+                    category="count"
+                    index="groupTaskId"
+                    className="mt-6"
+                  />
+                </>
               ) : (
                 <>
                   <Flex className="mt-8" justifyContent="between">
                     <Text className="truncate">
-                      <Bold>Stocks</Bold>
+                      <Bold>GroupTaskId</Bold>
                     </Text>
-                    <Text>Since transaction</Text>
+                    <Text>Number Done Tasks</Text>
                   </Flex>
                   <List className="mt-4">
-                    {stocks.map((stock) => (
-                      <ListItem key={stock.name}>
-                        <Text>{stock.name}</Text>
+                    {doneTasks.map((task) => (
+                      <ListItem key={task.groupTaskId}>
+                        <Text><button onClick={() => handleNavigate(task.groupTaskId)}
+                          style={{ color: 'blue', textDecoration: 'underline', cursor: 'pointer' }}>
+                          {task.groupTaskId}</button>
+                        </Text>
                         <Flex className="space-x-2" justifyContent="end">
                           <Text>
-                            $ {Intl.NumberFormat("us").format(stock.value).toString()}
+                            {Intl.NumberFormat("us").format(task.count).toString()} Tasks
                           </Text>
                         </Flex>
                       </ListItem>
@@ -137,7 +95,7 @@ const SalesItem = () => {
                   </List>
                 </>
               )}
-              <Flex className="mt-6 pt-4 border-t">
+              {/* <Flex className="mt-6 pt-4 border-t">
                 <Button
                   size="xs"
                   variant="light"
@@ -146,7 +104,7 @@ const SalesItem = () => {
                 >
                   View more
                 </Button>
-              </Flex>
+              </Flex> */}
             </Card>
           </div>
         )
