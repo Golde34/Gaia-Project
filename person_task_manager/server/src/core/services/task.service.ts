@@ -391,18 +391,22 @@ class TaskService {
             const startDate = calculdateDaysBetweenDates(new Date(), timeUnit);
             doneTasks = await taskStore.getDoneTasksFromDateToDate(userId, startDate, new Date());
             this.taskCache.set(InternalCacheConstants.DONE_TASKS + userId, doneTasks);
-        } 
+        }
 
-        const result = doneTasks.reduce((acc: Record<string, { count: number, tasks: ITaskEntity[] }>, task: ITaskEntity) => {
+        const result = doneTasks.reduce((acc: { groupTaskId: string, count: number }[], task: ITaskEntity) => {
             const groupId = task.groupTaskId.toString();
-            if (!acc[groupId]) {
-                acc[groupId] = { count: 0, tasks: [] };
+            const group = acc.find((item) => item.groupTaskId === groupId);
+
+            if (group) {
+                group.count++;
+            } else {
+                acc.push({ groupTaskId: groupId, count: 1 });
             }
-            acc[groupId].count++;
-            acc[groupId].tasks.push(task);
+
             return acc;
-        }, {});
-        return result; 
+        }, []);
+
+        return result;
     }
 
     // add subTask
