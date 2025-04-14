@@ -36,5 +36,7 @@ func ReturnCountDoneTaskMapper(body map[string]interface{}) *response_dtos.Count
 	var input response_dtos.CountDoneTaskListDTO
 	input.GroupTaskId = body["groupTaskId"].(string)
 	input.Count = body["count"].(float64)
+	input.ProjectId = body["projectId"].(string)
+	input.Name = body["name"].(string)
 	return &input
 }
