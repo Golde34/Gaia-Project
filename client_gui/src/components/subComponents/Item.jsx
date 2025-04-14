@@ -63,7 +63,7 @@ const SalesItem = () => {
       ) : error ? (
         <MessageBox message={error} />
       ) : (
-        doneTasks.length === 0 ? (
+        Object.keys(doneTasks).length === 0 ? (
           <div></div>
         ) : (
           <div>
@@ -78,21 +78,21 @@ const SalesItem = () => {
                 </TabGroup>
               </Flex>
               <Text className="mt-8">Total Done Tasks</Text>
-              <Metric>{doneTasks.length}</Metric>
+              <Metric>{Object.keys(doneTasks).length}</Metric>
               <Divider />
               <Text className="mt-8">
-                <Bold>Asset Allocation</Bold>
+                <Bold>Number Done Tasks</Bold>
               </Text>
-              <Text>1 Asset class - 5 Holdings</Text>
               {selectedIndex === 0 ? (
-                <DonutChart
-                  data={stocks}
-                  valueFormatter={dataFormatter}
-                  showAnimation={false}
-                  category="value"
-                  index="name"
-                  className="mt-6"
-                />
+                // <DonutChart
+                //   data={groupTasks}
+                //   valueFormatter={dataFormatter}
+                //   showAnimation={false}
+                //   category="value"
+                //   index="name"
+                //   className="mt-6"
+                // />
+                <></>
               ) : (
                 <>
                   <Flex className="mt-8" justifyContent="between">
