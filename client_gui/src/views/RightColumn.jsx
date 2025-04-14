@@ -1,11 +1,11 @@
-import Item from "../components/subComponents/Item";
+import DoneTasksComponent from "../components/DoneTasksComponent";
 import CompareCommitChart from "../components/subComponents/CompareCommitsChart";
 
 const RightColumn = () => {
 	return (
 		<div className="w-full p-2">
 			<CompareCommitChart />
-			<Item />
+			<DoneTasksComponent />
 		</div>
 	);
 };
