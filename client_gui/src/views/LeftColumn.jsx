@@ -12,7 +12,7 @@ const LeftColumn = () => {
             </div>
             <div className="flex-auto w-full">
                 <UserContributionCalendar />
-                <TableComponent />
+                {/* <TableComponent /> */}
             </div>
         </div>
     );

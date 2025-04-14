@@ -171,7 +171,7 @@ func (s *TaskService) GetTaskDetail(input request_dtos.GetTaskDetailInputDTO) (r
 	}	
 }
 
-func (s *TaskService) GetDoneTasks(userId string) ([]response_dtos.TaskResponseDTO, error) {
+func (s *TaskService) GetDoneTasks(userId string) (any, error) {
 	tasks, err := client.ITaskAdapter(&adapter.TaskAdapter{}).GetDoneTasks(userId)
 	if err != nil {
 		return []response_dtos.TaskResponseDTO{}, err

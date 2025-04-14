@@ -157,3 +157,12 @@ func (in *TaskDetailResponseDTO) MapperTaskDetail(response interface{}) TaskDeta
 	out.CompletedTasks = int64(groupTask["completedTasks"].(float64))
 	return out
 }
+
+type CountDoneTaskListDTO struct {
+	GroupTaskId string  `json:"groupTaskId"`
+	Count       float64 `json:"count"`
+}
+
+func NewCountDoneTaskListDTO() *CountDoneTaskListDTO {
+	return &CountDoneTaskListDTO{}
+}

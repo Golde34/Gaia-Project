@@ -282,21 +282,21 @@ func (adapter *TaskAdapter) GetTaskDetail(input request_dtos.GetTaskDetailInputD
 	return taskDetail, nil
 }
 
-func (adapter *TaskAdapter) GetDoneTasks(userId string) ([]response_dtos.TaskResponseDTO, error) {
+func (adapter *TaskAdapter) GetDoneTasks(userId string) ([]response_dtos.CountDoneTaskListDTO, error) {
 	getDoneTasksURL := base.TaskManagerServiceURL + "/dashboard/done-tasks/" + userId
-	var doneTasks []response_dtos.TaskResponseDTO
+	var doneTasks []response_dtos.CountDoneTaskListDTO
 	headers := utils.BuildDefaultHeaders()
 	bodyResult, err := utils.BaseAPI(getDoneTasksURL, "GET", nil, headers)
 	if err != nil {
-		return []response_dtos.TaskResponseDTO{}, err
+		return []response_dtos.CountDoneTaskListDTO{}, err
 	}
 	bodyResultMap, ok := bodyResult.(map[string]interface{})
 	if !ok {
-		return []response_dtos.TaskResponseDTO{}, nil
+		return []response_dtos.CountDoneTaskListDTO{}, nil
 	}
 
-	for _, taskElement := range bodyResultMap["tasks"].([]interface{}) {
-		task := mapper_response.ReturnTaskObjectMapper(taskElement.(map[string]interface{}))
+	for _, taskElement := range bodyResultMap["data"].([]interface{}) {
+		task := mapper_response.ReturnCountDoneTaskMapper(taskElement.(map[string]interface{}))
 		doneTasks = append(doneTasks, *task)
 	}
 

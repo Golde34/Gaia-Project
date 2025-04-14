@@ -222,7 +222,10 @@ class TaskUsecase {
         try {
             const timeUnit = TimeUnit.WEEK;
             const taskResult = await taskService.getDoneTasks(userId, timeUnit);
-            return taskResult;
+            if (typeof taskResult === 'string') {
+                return msg400(taskResult);
+            }
+            return msg200({data: taskResult});  
         } catch (err: any) {
             return msg400(err.message.toString());
         }
