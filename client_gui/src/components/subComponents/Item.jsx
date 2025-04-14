@@ -1,5 +1,5 @@
 import { ArrowRightIcon, ChartPieIcon, ViewListIcon } from "@heroicons/react/outline";
-import { Bold, Button, Card, Divider, DonutChart, Flex, List, ListItem, Metric, Tab, TabGroup, TabList, Text, Title } from "@tremor/react";
+import { Bold, Button, Card, Col, Divider, DonutChart, Flex, Grid, List, ListItem, Metric, Tab, TabGroup, TabList, Text, Title } from "@tremor/react";
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getDoneTasks } from "../../api/store/actions/task_manager/task.actions";
@@ -38,7 +38,7 @@ const stocks = [
 ];
 
 const dataFormatter = (number) => {
-  return "$ " + Intl.NumberFormat("us").format(number).toString();
+  return Intl.NumberFormat("us").format(number).toString() + " Tasks";
 };
 
 const SalesItem = () => {
@@ -52,6 +52,23 @@ const SalesItem = () => {
     dispatch(getDoneTasks(userId));
     didGetDoneTaskRef.current = true;
   }, [dispatch]);
+
+  const [groupTasks, setGroupTasks] = useState([]);
+  useEffect(() => {
+    if (doneTasks && Object.keys(doneTasks).length > 0) {
+      setGroupTasks(
+        // getGroupTasksLength and count Tasks inside is the array 
+        Object.keys(doneTasks).map((groupTaskId) => {
+          const groupTasks = doneTasks[groupTaskId];
+          return {
+            name: groupTaskId,
+            value: groupTasks.tasks.length,
+          };
+        })
+      );
+      console.log("groupTasks", groupTasks);
+    }
+  }, [doneTasks])
 
 
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -77,22 +94,27 @@ const SalesItem = () => {
                   </TabList>
                 </TabGroup>
               </Flex>
-              <Text className="mt-8">Total Done Tasks</Text>
-              <Metric>{Object.keys(doneTasks).length}</Metric>
-              <Divider />
-              <Text className="mt-8">
-                <Bold>Number Done Tasks</Bold>
-              </Text>
+              <Grid numItems={2}>
+                <Col numColSpan={1}>
+                  <Text className="mt-8">Total Done Tasks</Text>
+                  <Metric>{Object.keys(doneTasks).length}</Metric>
+                </Col>
+                <Col numColSpan={1}>
+                  <Text className="mt-8">
+                    <Bold>Number Done Tasks</Bold>
+                  </Text>
+                  <Text>Your task in {groupTasks.length} group tasks</Text>
+                </Col>
+              </Grid>
               {selectedIndex === 0 ? (
-                // <DonutChart
-                //   data={groupTasks}
-                //   valueFormatter={dataFormatter}
-                //   showAnimation={false}
-                //   category="value"
-                //   index="name"
-                //   className="mt-6"
-                // />
-                <></>
+                <DonutChart
+                  data={groupTasks}
+                  valueFormatter={dataFormatter}
+                  showAnimation={false}
+                  category="value"
+                  index="name"
+                  className="mt-6"
+                />
               ) : (
                 <>
                   <Flex className="mt-8" justifyContent="between">
