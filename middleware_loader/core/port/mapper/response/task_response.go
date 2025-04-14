@@ -31,3 +31,10 @@ func ReturnTaskObjectMapper(body map[string]interface{}) *response_dtos.TaskResp
 	input.Comments = utils.ConvertStringToStringArray(body["comments"].([]interface{}))
 	return &input	
 }
+
+func ReturnCountDoneTaskMapper(body map[string]interface{}) *response_dtos.CountDoneTaskListDTO {
+	var input response_dtos.CountDoneTaskListDTO
+	input.GroupTaskId = body["groupTaskId"].(string)
+	input.Count = body["count"].(float64)
+	return &input
+}
