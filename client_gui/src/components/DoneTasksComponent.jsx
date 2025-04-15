@@ -6,7 +6,7 @@ import { getDoneTasks } from "../api/store/actions/task_manager/task.actions";
 import { useNavigate } from "react-router-dom";
 
 const dataFormatter = (number) => {
-  return Intl.NumberFormat("us").format(number).toString() + " Tasks";
+  return Intl.NumberFormat("us").format(number).toString() + " tasks";
 };
 
 const DoneTasksComponent = () => {
@@ -50,14 +50,14 @@ const DoneTasksComponent = () => {
               </Flex>
               <Grid numItems={2}>
                 <Col numColSpan={1}>
-                  <Text className="mt-8">Total Done Tasks</Text>
+                  <Text className="mt-8">Total Number of Completed Tasks</Text>
                   <Metric>{doneTasks.reduce((acc, task) => acc + task.count, 0)}</Metric>
                 </Col>
                 <Col numColSpan={1}>
                   <Text className="mt-8">
-                    <Bold>Number Done Tasks</Bold>
+                    <Bold>Completed Tasks Summary</Bold>
                   </Text>
-                  <Text>Your tasks in {doneTasks.length} group tasks</Text>
+                  <Text>You have completed tasks in {doneTasks.length} different groups</Text>
                 </Col>
               </Grid>
               {selectedIndex === 0 ? (
@@ -75,19 +75,17 @@ const DoneTasksComponent = () => {
                 <>
                   <Flex className="mt-8" justifyContent="between">
                     <Text className="truncate">
-                      <Bold>GroupTaskId</Bold>
+                      <Bold>Group Task Overview</Bold>
                     </Text>
-                    <Text>Number Done Tasks</Text>
+                    <Text>Task Count</Text>
                   </Flex>
                   <List className="mt-4">
                     {doneTasks.map((task) => (
                       <ListItem key={task.groupTaskId}>
                         <Text><button onClick={() => handleNavigate(task)} className="text-blue-500 hover:underline">{task.name}</button></Text>
-                        <Flex className="space-x-2" justifyContent="end">
                           <Text>
                             {Intl.NumberFormat("us").format(task.count).toString()} Tasks
                           </Text>
-                        </Flex>
                       </ListItem>
                     ))}
                   </List>
