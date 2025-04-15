@@ -6,6 +6,7 @@ import { InternalCacheConstants } from "../domain/constants/constants";
 import { ARCHIVE_GROUP_TASK_FAILED, CREATE_GROUP_TASK_FAILED, ENABLE_GROUP_TASK_FAILED, EXCEPTION_PREFIX, GROUP_TASK_EXCEPTION, GROUP_TASK_NOT_FOUND, PROJECT_NOT_FOUND } from "../domain/constants/error.constant";
 import { IGroupTaskEntity } from "../domain/entities/group-task.entity";
 import { IProjectEntity } from "../domain/entities/project.entity";
+import { ITaskEntity } from "../domain/entities/task.entity";
 import { BooleanStatus } from "../domain/enums/enums";
 import { groupTaskStore } from "../port/store/group-task.store";
 import { projectStore } from "../port/store/project.store";
@@ -118,7 +119,20 @@ class GroupTaskService {
     }
 
     async getGroupTask(groupTaskId: string): Promise<IGroupTaskEntity | null> {
-        return await groupTaskStore.findGroupTaskById(groupTaskId);
+        try {
+            const groupTaskCache = this.groupTaskCache.get(InternalCacheConstants.GROUP_TASK + groupTaskId)
+            if (groupTaskCache) {
+                console.log('Get groupTask from cache');
+                return groupTaskCache; 
+            }
+            console.log('Get task table from database');
+            const groupTask = await groupTaskStore.findGroupTaskById(groupTaskId);
+            this.groupTaskCache.set(InternalCacheConstants.GROUP_TASK + groupTaskId, groupTask);
+            return groupTask;
+        } catch (error) {
+            console.log();
+            return null;
+        }
     }
 
     async getGroupTaskByTaskId(taskId: string): Promise<string> {
@@ -322,6 +336,44 @@ class GroupTaskService {
         } catch (error: any) {
             console.log(error.message.toString());
             return undefined;
+        }
+    }
+
+    async returnDoneTasksDashboard(doneTasks: ITaskEntity[]): Promise<Record<string, any> | null> {
+        try {
+            const groupTaskMap = new Map<string, { count: number, groupTaskId: string }>();
+            doneTasks.forEach((task: ITaskEntity) => {
+                const groupId = task.groupTaskId.toString();
+                if (groupTaskMap.has(groupId)) {
+                    groupTaskMap.get(groupId)!.count++;
+                } else {
+                    groupTaskMap.set(groupId, { count: 1, groupTaskId: groupId });
+                }
+            });
+
+            const groupTasks = await Promise.all(
+                Array.from(groupTaskMap.keys()).map(async (groupTaskId) => {
+                    const groupTask = await this.getGroupTask(groupTaskId)
+                    return groupTask;
+                })
+            );
+
+            const groupTaskLookup = new Map(
+                groupTasks.filter(groupTask => groupTask !== null).map(groupTask => [groupTask!._id.toString(), groupTask!])
+            );
+            const result = Array.from(groupTaskMap.values()).map(group => {
+                const groupTask = groupTaskLookup.get(group.groupTaskId);
+                return {
+                    ...group,
+                    projectId: groupTask ? groupTask.projectId : null,
+                    name: groupTask ? groupTask.title : null,
+                };
+            });
+
+            return result;
+        } catch (error) {
+            console.log("An error occurred white get done task dashboard: ", error);
+            return null;
         }
     }
 }

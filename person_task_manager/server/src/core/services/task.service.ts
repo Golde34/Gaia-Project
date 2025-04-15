@@ -360,14 +360,13 @@ class TaskService {
             return msg200({
                 message: taskTableCache as any,
             });
-        } else {
-            console.log('Get task table from database');
-            const taskTable = await groupTaskStore.findActiveTasksInActiveGroupTask(groupTaskId);
-            this.taskCache.set(InternalCacheConstants.TASK_TABLE + groupTaskId, taskTable);
-            return msg200({
-                message: taskTable as any,
-            });
         }
+        console.log('Get task table from database');
+        const taskTable = await groupTaskStore.findActiveTasksInActiveGroupTask(groupTaskId);
+        this.taskCache.set(InternalCacheConstants.TASK_TABLE + groupTaskId, taskTable);
+        return msg200({
+            message: taskTable as any,
+        });
     }
 
     async getTaskDetail(taskId: string | null, scheduleTaskId: string | null): Promise<any> {
@@ -384,43 +383,21 @@ class TaskService {
         return null
     }
 
-async getDoneTasks(userId: number, timeUnit: string): Promise<Record<string, any> | string> {
-    let doneTasks = this.taskCache.get(InternalCacheConstants.DONE_TASKS + userId);
-    if (!doneTasks) {
-        console.log("Get done tasks from database");
-        const startDate = calculdateDaysBetweenDates(new Date(), timeUnit);
-        doneTasks = await taskStore.getDoneTasksFromDateToDate(userId, startDate, new Date());
-        this.taskCache.set(InternalCacheConstants.DONE_TASKS + userId, doneTasks);
-    }
-
-    const groupTaskMap = new Map<string, { count: number, groupTaskId: string }>();
-    doneTasks.forEach((task: ITaskEntity) => {
-        const groupId = task.groupTaskId.toString();
-        if (groupTaskMap.has(groupId)) {
-            groupTaskMap.get(groupId)!.count++;
-        } else {
-            groupTaskMap.set(groupId, { count: 1, groupTaskId: groupId });
+    async getDoneTasks(userId: number, timeUnit: string): Promise<ITaskEntity[] | null> {
+        try {
+            let doneTasks = this.taskCache.get(InternalCacheConstants.DONE_TASKS + userId);
+            if (!doneTasks) {
+                console.log("Get done tasks from database");
+                const startDate = calculdateDaysBetweenDates(new Date(), timeUnit);
+                doneTasks = await taskStore.getDoneTasksFromDateToDate(userId, startDate, new Date());
+                this.taskCache.set(InternalCacheConstants.DONE_TASKS + userId, doneTasks);
+            }
+            return doneTasks;
+        } catch (error) {
+            console.log("Exception when get done tasks, ", error);
+            return null;
         }
-    });
-
-    const groupTasks = await Promise.all(
-        Array.from(groupTaskMap.keys()).map((groupTaskId) => groupTaskStore.findGroupTaskById(groupTaskId))
-    );
-
-    const groupTaskLookup = new Map(
-        groupTasks.filter(groupTask => groupTask !== null).map(groupTask => [groupTask!._id.toString(), groupTask!])
-    );
-    const result = Array.from(groupTaskMap.values()).map(group => {
-        const groupTask = groupTaskLookup.get(group.groupTaskId);
-        return {
-            ...group,
-            projectId: groupTask ? groupTask.projectId : null,
-            name: groupTask ? groupTask.title : null,
-        };
-    });
-
-    return result;
-}
+    }
 
     // add subTask
 
