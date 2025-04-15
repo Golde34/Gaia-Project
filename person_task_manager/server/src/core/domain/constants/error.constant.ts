@@ -1,3 +1,5 @@
+export const BAD_REQUEST = "Bad Request";
+
 export const USER_NOT_FOUND = "User not found";
 export const PROJECT_NOT_FOUND = "Project not found";
 export const GROUP_TASK_NOT_FOUND = "Group Task not found";

@@ -8,6 +8,7 @@ import { GetGroupTaskProject } from "../domain/dtos/request_dtos/get-group-task-
 import { projectService } from "../services/project.service";
 import { groupTaskService } from "../services/group-task.service";
 import { scheduleTaskMapper } from "../port/mapper/schedule-task.mappter";
+import { BAD_REQUEST, TASK_NOT_FOUND } from "../domain/constants/error.constant";
 
 class TaskUsecase {
     constructor() { }
@@ -221,11 +222,16 @@ class TaskUsecase {
     async getDoneTasks(userId: number): Promise<IResponse> {
         try {
             const timeUnit = TimeUnit.WEEK;
-            const taskResult = await taskService.getDoneTasks(userId, timeUnit);
-            if (typeof taskResult === 'string') {
-                return msg400(taskResult);
+            const doneTasks = await taskService.getDoneTasks(userId, timeUnit);
+            if (doneTasks === null) {
+                return msg400(TASK_NOT_FOUND)
             }
-            return msg200({data: taskResult});  
+
+            const result = await groupTaskService.returnDoneTasksDashboard(doneTasks);
+            if (result === null) {
+                return msg400(BAD_REQUEST)
+            }
+            return msg200({data: result});  
         } catch (err: any) {
             return msg400(err.message.toString());
         }
