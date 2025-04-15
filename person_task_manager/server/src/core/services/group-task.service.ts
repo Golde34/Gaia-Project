@@ -119,7 +119,20 @@ class GroupTaskService {
     }
 
     async getGroupTask(groupTaskId: string): Promise<IGroupTaskEntity | null> {
-        return await groupTaskStore.findGroupTaskById(groupTaskId);
+        try {
+            const groupTaskCache = this.groupTaskCache.get(InternalCacheConstants.GROUP_TASK + groupTaskId)
+            if (groupTaskCache) {
+                console.log('Get groupTask from cache');
+                return groupTaskCache; 
+            }
+            console.log('Get task table from database');
+            const groupTask = await groupTaskStore.findGroupTaskById(groupTaskId);
+            this.groupTaskCache.set(InternalCacheConstants.GROUP_TASK + groupTaskId, groupTask);
+            return groupTask;
+        } catch (error) {
+            console.log();
+            return null;
+        }
     }
 
     async getGroupTaskByTaskId(taskId: string): Promise<string> {
@@ -339,7 +352,10 @@ class GroupTaskService {
             });
 
             const groupTasks = await Promise.all(
-                Array.from(groupTaskMap.keys()).map((groupTaskId) => groupTaskStore.findGroupTaskById(groupTaskId))
+                Array.from(groupTaskMap.keys()).map(async (groupTaskId) => {
+                    const groupTask = await this.getGroupTask(groupTaskId)
+                    return groupTask;
+                })
             );
 
             const groupTaskLookup = new Map(

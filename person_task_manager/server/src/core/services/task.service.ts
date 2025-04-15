@@ -360,14 +360,13 @@ class TaskService {
             return msg200({
                 message: taskTableCache as any,
             });
-        } else {
-            console.log('Get task table from database');
-            const taskTable = await groupTaskStore.findActiveTasksInActiveGroupTask(groupTaskId);
-            this.taskCache.set(InternalCacheConstants.TASK_TABLE + groupTaskId, taskTable);
-            return msg200({
-                message: taskTable as any,
-            });
         }
+        console.log('Get task table from database');
+        const taskTable = await groupTaskStore.findActiveTasksInActiveGroupTask(groupTaskId);
+        this.taskCache.set(InternalCacheConstants.TASK_TABLE + groupTaskId, taskTable);
+        return msg200({
+            message: taskTable as any,
+        });
     }
 
     async getTaskDetail(taskId: string | null, scheduleTaskId: string | null): Promise<any> {
