@@ -23,6 +23,9 @@ func NewScheduleTaskRouter(scheduleTaskService *services.ScheduleTaskService, r 
 		r.Post("/choose-task-batch", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.ChooseTaskBatch(w, r, scheduleTaskService)
 		})
+		r.Get("/schedule-task-batch/{userId}", func(w http.ResponseWriter, r *http.Request) {
+			controller_services.GetScheduleTaskBatch(w, r, scheduleTaskService)
+		})
 	})
 	r.Route("/schedule-group", func(r chi.Router) {
 		r.Post("/create", func(w http.ResponseWriter, r *http.Request) {

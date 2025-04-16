@@ -35,3 +35,11 @@ func (s *ScheduleTaskService) ChooseTaskBatch(userId, batchNumber float64) (resp
 	}
 	return taskBatch, nil
 }
+
+func (s *ScheduleTaskService) GetScheduleTaskBatch(userId string) (response_dtos.ScheduleTaskBatchListResponseDTO, error) {
+	taskBatch, err := client.IScheduleTaskAdapter(&adapter.ScheduleTaskAdapter{}).GetScheduleTaskBatch(userId)
+	if err != nil {
+		return response_dtos.ScheduleTaskBatchListResponseDTO{}, err
+	}
+	return taskBatch, nil
+}
