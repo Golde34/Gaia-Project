@@ -59,9 +59,7 @@ const Navbar = () => {
     }, []);
 
     return (
-        <div id="top"
-            className="relative w-full sm:flex justify-between item-center p-2"
-        >
+        <div id="top" className="relative w-full sm:flex justify-between item-center p-2 mb-10">
             {/* Make item center */}
             <Flex justifyContent="center"></Flex>
                 {loading ? (

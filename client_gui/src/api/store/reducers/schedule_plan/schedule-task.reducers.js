@@ -53,7 +53,7 @@ export const scheduleTaskBatchReducer = (
         case SCHEDULE_TASK_BATCH_REQUEST:
             return { loading: true };
         case SCHEDULE_TASK_BATCH_SUCCESS:
-            return { loading: false, scheduleBatchTask: action.payload.scheduleBatchTask };
+            return { loading: false, scheduleTaskBatch: action.payload.scheduleBatchTask };
         case SCHEDULE_TASK_BATCH_FAILURE:
             return { loading: false, error: action.payload };
         default:
