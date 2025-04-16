@@ -141,8 +141,7 @@ class ScheduleTaskUsecase {
                 throw new Error(`Cannot find schedule plan by user id: ${userId}`);
             }
 
-            const scheduleTaskList = scheduleTaskService.getScheduleBatchTask(schedulePlan._id);
-            return scheduleTaskList;
+            return await scheduleTaskService.getScheduleBatchTask(schedulePlan._id);
         } catch (error) {
             console.error("Error on getScheduleBatchTask: ", error);
             return undefined;
@@ -262,6 +261,23 @@ class ScheduleTaskUsecase {
             console.error(`Exceeded retires for ${scheduleGroupId}: Sending to error queue.`);
             // push to logging tracker to handle error
             await scheduleGroupService.markAsFail(scheduleGroupId);
+        }
+    }
+
+    async getScheduleTasksBatch(userId: number): Promise<IResponse | undefined> {
+        try {
+            const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
+            if (!schedulePlan) {
+                console.error(`Cannot find schedule plan by user id: ${userId}`);
+                throw new Error(`Cannot find schedule plan by user id: ${userId}`);
+            }
+            const scheduleTasksBatch = await scheduleTaskService.getScheduleTaskByBatchNumber(schedulePlan._id, schedulePlan.activeTaskBatch);
+            return msg200({
+                scheduleTasksBatch
+            })
+        } catch (error) {
+            console.error("Error on getScheduleTasksBatch: ", error);
+            return msg400("Cannot get schedule tasks batch!");
         }
     }
 }

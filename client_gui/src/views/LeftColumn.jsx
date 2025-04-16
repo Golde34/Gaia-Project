@@ -1,4 +1,4 @@
-import TableComponent from "../components/subComponents/TableComponent"
+import DailyTasks from "../screens/dashboardScreen/DailyTasks"
 import TopTask from "../screens/dashboardScreen/TopTaskComponent";
 import UserContributionCalendar from "../screens/dashboardScreen/UserContributionCalendar";
 
@@ -12,7 +12,7 @@ const LeftColumn = () => {
             </div>
             <div className="flex-auto w-full">
                 <UserContributionCalendar />
-                {/* <TableComponent /> */}
+                <DailyTasks />
             </div>
         </div>
     );

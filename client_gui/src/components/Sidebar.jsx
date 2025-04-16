@@ -2,10 +2,9 @@ import React from "react";
 import {
 	ArrowUpIcon,
 	BellIcon,
+	BookmarkIcon,
 	CalendarIcon,
-	ChartBarIcon,
 	ClipboardCheckIcon,
-	DocumentSearchIcon,
 	ExternalLinkIcon,
 	HomeIcon,
 	MailIcon,
@@ -15,7 +14,6 @@ import {
 } from "@heroicons/react/solid";
 import { Button, Col, Grid } from "@tremor/react";
 import styled from "styled-components";
-import { TemplateIcon } from "@heroicons/react/outline";
 
 const Description = styled.div`
   display: none;
@@ -39,7 +37,7 @@ const LinkWrapper = styled.a`
 const Sidebar = () => {
 	return (
 		<>
-			<div className="fixed left-3 sm:left-6 top-[100px]">
+			<div className="fixed left-3 sm:left-6 top-[100px] mt-10">
 				<Grid numItems={1}>
 					<Col numColSpan={1}>
 						<LinkWrapper href="/client-gui/dashboard">
@@ -90,30 +88,44 @@ const Sidebar = () => {
 						<LinkWrapper href="/client-gui/note-dashboard">
 							<Button variant="primary" color="indigo"
 								className="p-2 rounded-lg mb-4">
-									<PencilAltIcon width={20} />
+								<BookmarkIcon width={20} />
 							</Button>
 							<Description>Note </Description>
 						</LinkWrapper>
 					</Col>
+					{/* <Col numColSpan={1}>
+						<LinkWrapper href="/client-gui/chat">
+							<Button variant="primary" color="indigo"
+								className="p-2 rounded-lg mb-4">
+								<PencilAltIcon width={20} />
+							</Button>
+							<Description>Chat Bot</Description>
+						</LinkWrapper>
+					</Col> */}
 				</Grid>
-				<ChartBarIcon
+				 <PencilAltIcon
+					width={40}
+					className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
+				/>
+				
+				{/*<ChartBarIcon
 					width={40}
 					className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
 				/>
 				<DocumentSearchIcon
 					width={40}
 					className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
-				/>
+				/> 
 				<MailIcon
 					width={40}
 					className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
 				/>
-				{/* <a href="/client-gui/scheduling-table">
-          <CreditCardIcon
-            width={40}
-            className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
-          />
-        </a> */}
+				<a href="/client-gui/scheduling-table">
+					<CreditCardIcon
+						width={40}
+						className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
+					/>
+				</a> */}
 				<BellIcon
 					width={40}
 					className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
