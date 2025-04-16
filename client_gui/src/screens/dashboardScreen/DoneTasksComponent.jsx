@@ -2,7 +2,7 @@ import { ChartPieIcon, ViewListIcon } from "@heroicons/react/outline";
 import { Bold, Card, Col, DonutChart, Flex, Grid, List, ListItem, Metric, Tab, TabGroup, TabList, Text, Title } from "@tremor/react";
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getDoneTasks } from "../api/store/actions/task_manager/task.actions";
+import { getDoneTasks } from "../../api/store/actions/task_manager/task.actions";
 import { useNavigate } from "react-router-dom";
 
 const dataFormatter = (number) => {

@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { StatusOnlineIcon } from "@heroicons/react/outline";
 import { useDispatch, useSelector } from "react-redux";
-import MessageBox from "./subComponents/MessageBox";
+import MessageBox from "../../components/subComponents/MessageBox";
 import { Badge, BadgeDelta, Card, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text, Title } from "@tremor/react";
-import { getScheduleTaskBatch } from "../api/store/actions/schedule_plan/schedule-task.action";
-import { priorityColor, statusColor } from "../kernels/utils/field-utils";
+import { getScheduleTaskBatch } from "../../api/store/actions/schedule_plan/schedule-task.action";
+import { priorityColor, statusColor } from "../../kernels/utils/field-utils";
 
 const DailyTasks = () => {
   const userId = "1"; // Replace with actual user ID

@@ -1,4 +1,4 @@
-import DailyTasks from "../components/DailyTasks"
+import DailyTasks from "../screens/dashboardScreen/DailyTasks"
 import TopTask from "../screens/dashboardScreen/TopTaskComponent";
 import UserContributionCalendar from "../screens/dashboardScreen/UserContributionCalendar";
 

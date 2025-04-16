@@ -1,4 +1,4 @@
-import DoneTasksComponent from "../components/DoneTasksComponent";
+import DoneTasksComponent from "../screens/dashboardScreen/DoneTasksComponent";
 import CompareCommitChart from "../components/subComponents/CompareCommitsChart";
 
 const RightColumn = () => {
