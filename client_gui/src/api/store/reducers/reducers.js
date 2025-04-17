@@ -36,7 +36,7 @@ import {
     noteListReducer, noteLockReducer, noteUnlockReducer, noteUpdateReducer
 } from "./task_manager/note.reducers";
 import { optimizeTaskByUserReducer } from "./work_optimization/optimize-task.reducers";
-import { chooseTaskBatchReducer, scheduleTaskBatchReducer, scheduleTaskListReducer, taskBatchListReducer } from "./schedule_plan/schedule-task.reducers";
+import { activeTaskBatchReducer, chooseTaskBatchReducer, scheduleTaskListReducer, taskBatchListReducer } from "./schedule_plan/schedule-task.reducers";
 import { getUserGithubInfoReducer } from "./contribution_tracker/user-commit.reducer";
 import { getProjectAndRepoRequestReducer } from "./contribution_tracker/project-commit.reducer";
 import { compareCommitsReducer, getProjectContributionReducer, getUserContributionsReducer } from "./contribution_tracker/contribution.reducer";
@@ -101,7 +101,7 @@ export const reducer = combineReducers({
     chooseTaskBatch: chooseTaskBatchReducer,
     createScheduleGroup: createScheduleGroupReducer,
     scheduleGroupList: scheduleGroupListReducer,
-    scheduleTaskBatch: scheduleTaskBatchReducer,
+    activeTaskBatch: activeTaskBatchReducer,
     // middleware loader
     microserviceList: microserviceListReducer,
     screenList: screenListReducer,

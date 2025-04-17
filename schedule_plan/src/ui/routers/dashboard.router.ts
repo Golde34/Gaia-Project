@@ -30,10 +30,10 @@ dashboardRouter.post("/register-schedule-plan",
     }
 )
 
-dashboardRouter.get("/get-batch-task/:userId", 
+dashboardRouter.get("/get-active-task-batch/:userId", 
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const result = await scheduleControllerImpl.getBatchTask(req, next);
+            const result = await scheduleControllerImpl.getActiveTaskBatch(req, next);
             returnResult(result, SCHEDULE_PLAN_SERVICE_ERROR, res, next);
         } catch (error) {
             next(error);

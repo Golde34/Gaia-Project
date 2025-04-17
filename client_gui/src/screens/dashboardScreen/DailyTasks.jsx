@@ -3,29 +3,26 @@ import { StatusOnlineIcon } from "@heroicons/react/outline";
 import { useDispatch, useSelector } from "react-redux";
 import MessageBox from "../../components/subComponents/MessageBox";
 import { Badge, BadgeDelta, Card, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text, Title } from "@tremor/react";
-import { getScheduleTaskBatch } from "../../api/store/actions/schedule_plan/schedule-task.action";
 import { priorityColor, statusColor } from "../../kernels/utils/field-utils";
+import { useNavigate } from "react-router-dom";
+import { getActiveTaskBatch } from "../../api/store/actions/schedule_plan/schedule-task.action";
 
 const DailyTasks = () => {
   const userId = "1"; // Replace with actual user ID
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const { loading, error, scheduleTaskBatch } = useSelector((state) => state.scheduleTaskBatch);
-  const didScheduleTaskBatchRef = useRef();
+  const { loading, error, activeTaskBatch } = useSelector((state) => state.activeTaskBatch);
+  const didActiveTaskBatch = useRef();
   useEffect(() => {
-    if (didScheduleTaskBatchRef.current) return;
-    dispatch(getScheduleTaskBatch(userId));
-    didScheduleTaskBatchRef.current = true;
+    if (didActiveTaskBatch.current) return;
+    dispatch(getActiveTaskBatch(userId));
+    didActiveTaskBatch.current = true;
   }, [dispatch]);
 
-  const [allTasks, setAllTasks] = useState([]);
-  useEffect(() => {
-    if (scheduleTaskBatch) {
-      setAllTasks(Object.values(scheduleTaskBatch).flat());
-    }
-    console.log("scheduleTaskBatch", allTasks);
-  }, [scheduleTaskBatch]);
-
+  const handleRowClick = (taskId) => {
+    navigate("/task/detail/" + taskId);
+  }
   return (
     <>
       {loading ? (
@@ -33,7 +30,7 @@ const DailyTasks = () => {
       ) : error ? (
         <MessageBox message={error} />
       ) : (
-        allTasks && allTasks.length === 0 ? (
+        activeTaskBatch && activeTaskBatch.length === 0 ? (
           <div></div>
         ) :
           <Card className="mt-4">
@@ -48,8 +45,10 @@ const DailyTasks = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {allTasks.map((task) => (
-                  <TableRow key={task.id}>
+                {activeTaskBatch.map((task) => (
+                  <TableRow key={task.id}
+                    onClick={() => handleRowClick(task.taskId)}
+                    className="hover:bg-gray-100 cursor-pointer transition-colors">
                     <TableCell>{task.title}</TableCell>
                     <TableCell>
                       <Text>{task.duration} Hours</Text>

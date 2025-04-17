@@ -64,12 +64,12 @@ class ScheduleController {
         }
     }
 
-    async getScheduleTasksBatch(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+    async getActiveTaskBatch(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = parseInt(req.params.userId, 10);
-            const scheduleTaskList = await scheduleTaskUsecase.getScheduleTasksBatch(userId);
+            const activeTaskBatch = await scheduleTaskUsecase.getActiveTaskBatch(userId);
             return msg200({
-                scheduleTaskList
+                activeTaskBatch 
             })
         } catch (error) {
             next(error);
