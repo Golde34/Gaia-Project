@@ -47,13 +47,13 @@ export const chooseTaskBatchReducer = (
     }
 }
 
-export const scheduleTaskBatchReducer = (
+export const activeTaskBatchReducer = (
     state = { loading: true }, action) => {
     switch (action.type) {
         case SCHEDULE_TASK_BATCH_REQUEST:
             return { loading: true };
         case SCHEDULE_TASK_BATCH_SUCCESS:
-            return { loading: false, scheduleTaskBatch: action.payload.scheduleBatchTask };
+            return { loading: false, activeTaskBatch: action.payload.activeTaskBatch};
         case SCHEDULE_TASK_BATCH_FAILURE:
             return { loading: false, error: action.payload };
         default:
