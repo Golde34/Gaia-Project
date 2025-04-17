@@ -109,23 +109,23 @@ const _fetchData = async (url, method, body, headers) => {
             } catch (error) {
                 return error;
             }
-        case "CREDENTIAL_POST":
-            try {
-                const credentialResponse = Axios.create({
-                    withCredentials: true,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                });
-                return credentialResponse.post(
-                    url, {
-                        headers: headers,
-                        body: body
-                    }
-                )
-            } catch (error) {
-                return error;
-            }
+        // case "CREDENTIAL_POST":
+        //     try {
+        //         const credentialResponse = Axios.create({
+        //             withCredentials: true,
+        //             headers: {
+        //                 "Content-Type": "application/json",
+        //             },
+        //         });
+        //         return credentialResponse.post(
+        //             url, {
+        //                 headers: headers,
+        //                 body: body
+        //             }
+        //         )
+        //     } catch (error) {
+        //         return error;
+        //     }
         default:
             return null;
     }
