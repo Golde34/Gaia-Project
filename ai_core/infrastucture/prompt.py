@@ -1,38 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
-from pydantic import BaseModel
-from typing import Optional
-from google import genai
-from dotenv import load_dotenv
-import os
-import uvicorn
-import json
-
-# Load environment variables
-load_dotenv()
-
-# Initialize Google Generative AI client
-client = genai.Client(api_key=os.getenv('API_KEY'))
-
-# Define the output format model
-class OutputFormat(BaseModel):
-    Project: str
-    GroupTask: str
-    Title: str
-    Priority: str
-    Status: str
-    StartDate: Optional[str] = None
-    Deadline: Optional[str] = None
-    Duration: Optional[str] = None
-
-# Define the input request model
-class TaskRequest(BaseModel):
-    query: str
-
-# Create FastAPI app
-app = FastAPI(title="Task Information Extraction API")
-
-# Define the extraction prompt
-def create_prompt(query: str) -> str:
+def create_task_prompt(query: str) -> str:
     return f"""# Task Information Extraction Prompt
 
 You are an AI assistant specialized in extracting structured information from natural language queries about tasks. Your job is to analyze user queries and convert them into a standardized JSON format with specific fields.
@@ -113,34 +79,3 @@ Output:
 
 Now, analyze the user's query and extract the requested information into the JSON format.
 User's query: {query}"""
-
-@app.post("/extract-task", response_model=OutputFormat)
-async def extract_task_info(request: TaskRequest):
-    try:
-        # Generate the prompt with the user's query
-        prompt = create_prompt(request.query)
-        
-        # Call the Gemini API
-        response = client.models.generate_content(
-            model="gemini-2.0-flash", 
-            contents=[prompt],
-            config={
-                'response_mime_type': 'application/json',
-                'response_schema': OutputFormat,
-            },
-        )
-        
-        # Return the extracted information
-        print(response)
-        return json.loads(response.text)
-    except Exception as e:
-        # Handle errors
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/")
-async def root():
-    return {"message": "Task Information Extraction API is running. Use POST /extract-task endpoint to extract task information."}
-
-# Run the API server if the script is executed directly
-if __name__ == "__main__":
-    uvicorn.run("test_task_create:app", host="0.0.0.0", port=8000, reload=True)

@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Variables
-APP_MODULE="test_task_create:app"  # Path to your FastAPI app
+APP_MODULE="index:app"                   # Path to your FastAPI app
 HOST="0.0.0.0"                           # Bind to all interfaces
-PORT=8000                                # Port to run the application
+PORT=4002                                # Port to run the application
 RELOAD=false                             # Enable reload for development (optional)
 NGROK_PORT=8000                          # Port to expose via ngrok
 

@@ -17,7 +17,7 @@ COPY . .
 RUN chmod +x ./run.sh
 
 # Expose port 8000 to allow external access
-EXPOSE 8000
+EXPOSE 4002 
 
 # Set the default command to execute the script
 CMD ["./run.sh"]
