@@ -173,8 +173,7 @@ class ScheduleTaskService {
 
     async getScheduleTaskByBatchNumber(schedulePlanId: string, batchNumber: number): Promise<any> {
         try {
-            const taskList = await scheduleTaskRepository.findByTaskBatch(schedulePlanId, batchNumber);
-            return taskList;
+            return await scheduleTaskRepository.findByTaskBatch(schedulePlanId, batchNumber);
         } catch (error) {
             console.error("Error on getScheduleBatchTask: ", error);
             return [];

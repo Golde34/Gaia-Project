@@ -264,20 +264,18 @@ class ScheduleTaskUsecase {
         }
     }
 
-    async getScheduleTasksBatch(userId: number): Promise<IResponse | undefined> {
+    async getActiveTaskBatch(userId: number): Promise<IResponse | undefined> {
         try {
             const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
             if (!schedulePlan) {
                 console.error(`Cannot find schedule plan by user id: ${userId}`);
                 throw new Error(`Cannot find schedule plan by user id: ${userId}`);
             }
-            const scheduleTasksBatch = await scheduleTaskService.getScheduleTaskByBatchNumber(schedulePlan._id, schedulePlan.activeTaskBatch);
-            return msg200({
-                scheduleTasksBatch
-            })
+
+            return await scheduleTaskService.getScheduleTaskByBatchNumber(schedulePlan._id, schedulePlan.activeTaskBatch);
         } catch (error) {
             console.error("Error on getScheduleTasksBatch: ", error);
-            return msg400("Cannot get schedule tasks batch!");
+            return undefined;
         }
     }
 }
