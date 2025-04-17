@@ -93,25 +93,23 @@ func (adapter *ScheduleTaskAdapter) ChooseTaskBatch(userId, batchNumber float64)
 }
 
 
-func (adapter *ScheduleTaskAdapter) GetScheduleTaskBatch(userId string) (response_dtos.ScheduleTaskBatchListResponseDTO, error) {
-	getScheduleTaskBatchURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule/get-batch-task/" + userId
+func (adapter *ScheduleTaskAdapter) GetActiveTaskBatch(userId string) ([]response_dtos.ScheduleTaskResponseDTO, error) {
+	getScheduleTaskBatchURL := base.SchedulePlanServiceURL + "/schedule-plan/dashboard/get-active-task-batch/" + userId
+	var scheduleTasks []response_dtos.ScheduleTaskResponseDTO
 	headers := utils.BuildDefaultHeaders()
 
 	bodyResult, err := utils.BaseAPI(getScheduleTaskBatchURL, "GET", nil, headers)
 	if err != nil {
-		return response_dtos.ScheduleTaskBatchListResponseDTO{}, err
+		return []response_dtos.ScheduleTaskResponseDTO{}, err
+	}
+	bodyResultMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return []response_dtos.ScheduleTaskResponseDTO{}, nil
+	}
+	for _, activeTaskBatch := range bodyResultMap["activeTaskBatch"].([]interface{}) {
+		scheduleTask := mapper_response.ReturnScheduleTaskObjectMapper(activeTaskBatch.(map[string]interface{}))
+		scheduleTasks = append(scheduleTasks, *scheduleTask)
 	}
 
-	data, err := json.Marshal(bodyResult)
-	if err != nil {
-		return response_dtos.ScheduleTaskBatchListResponseDTO{}, err
-	}
-
-	var dto response_dtos.ScheduleTaskBatchListResponseDTO
-	err = json.Unmarshal(data, &dto)
-	if err != nil {
-		return response_dtos.ScheduleTaskBatchListResponseDTO{}, err
-	}
-
-	return dto, nil
+	return scheduleTasks, nil
 }

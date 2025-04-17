@@ -130,16 +130,20 @@ func DeleteScheduleGroup(w http.ResponseWriter, r *http.Request, scheduleTaskSer
 	}
 }
 
-func GetScheduleTaskBatch(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
+func GetActiveTaskBatch(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
 	userId := chi.URLParam(r, "userId")		
-	scheduleTaskBatch, err := services.NewScheduleTaskService().GetScheduleTaskBatch(userId)
+	scheduleTaskBatch, err := services.NewScheduleTaskService().GetActiveTaskBatch(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	response := map[string]interface{}{
+		"activeTaskBatch": scheduleTaskBatch,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(scheduleTaskBatch); err != nil {
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Error encoding response: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
