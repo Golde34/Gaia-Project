@@ -13,10 +13,10 @@ load_dotenv()
 app = FastAPI(title="Task Information Extraction API")
 
 @app.post("/extract-task")
-async def extract_task_info(request: query_request.TaskRequest):
+async def extract_task_info(request: query_request.QueryRequest):
     try:
         label = "Create Task"
-        return handle_query(request.query, label)
+        return handle_query(request, label)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

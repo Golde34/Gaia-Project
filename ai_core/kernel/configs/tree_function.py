@@ -1,4 +1,4 @@
-from core.gemini_generate_content import create_task
+from core.service.task_service import create_task
 
 FUNCTIONS = [
     {
