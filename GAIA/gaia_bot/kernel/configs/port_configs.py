@@ -42,6 +42,16 @@ PORTS = {
         "database_name": "gaia",
         "shell_path": "gaia_bot/microservices/bash_shell/gaia_connector.sh"
     }, 
+    "ai_core": {
+        "name": "AI Core",
+        "port": 4002,
+        "programming_language": "Python",
+        "description": "AI Core API",
+        "router": "ai-core",
+        "database": None,
+        "database_name": None,
+        "shell_path": "gaia_bot/microservices/bash_shell/ai_core.sh"
+    },
     "notify_agent": {
         "name": "Notify Agent",
         "port": 4003,
@@ -178,6 +188,7 @@ PORT_COMPONENTS = [
     "work_optimization",
     "notify_agent",
     "contribution_tracker",
+    "ai_core",
     # 3rd Party + Pipeline
     "sor_data_transfer",
     "kafka_server",

@@ -1,0 +1,2 @@
+run:
+	python index.py

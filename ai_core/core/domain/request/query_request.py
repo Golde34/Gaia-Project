@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
 
-class TaskRequest(BaseModel):
+class QueryRequest(BaseModel):
     query: str
+    model_name: str

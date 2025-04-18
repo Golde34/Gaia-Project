@@ -1,17 +1,13 @@
-import os
 import json
-from google import genai
 from fastapi import HTTPException
-from dotenv import load_dotenv
 
+from core.domain.request.query_request import QueryRequest
 from core.domain.response.create_task_dto import CreateTaskDto
-from infrastucture.prompt import create_task_prompt 
+from core.prompt import create_task_prompt
+from kernel.configs import llm_models 
 
 
-load_dotenv()
-client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
-
-def create_task(query: str) -> str:
+def create_task(query: QueryRequest) -> str:
     """
     Create task information extraction prompt for Gemini API.
     Args:
@@ -31,17 +27,10 @@ def create_task(query: str) -> str:
     """
     try:
         prompt = create_task_prompt(query)
-        
-        response = client.models.generate_content(
-            model="gemini-2.0-flash", 
-            contents=[prompt],
-            config={
-                'response_mime_type': 'application/json',
-                'response_schema': CreateTaskDto,
-            },
-        )
-        
-        print(response)
-        return json.loads(response.text)
+        print("Query:", query.model_name)
+
+        response = llm_models.get_model_generate_content(query.model_name)(prompt=prompt,dto=CreateTaskDto) 
+        print("Response:", response)
+        return json.loads(response)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
