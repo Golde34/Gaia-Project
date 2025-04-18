@@ -1,7 +1,8 @@
 from core.gemini_generate_content import create_task
+from function_label import FUNCTIONS
 
 
-def handle_query(query: str) -> str:
+def handle_query(query: str, label: str) -> str:
     """
     Handle the user's query and generate a response.
     Args:
@@ -9,5 +10,8 @@ def handle_query(query: str) -> str:
     Returns:
         str: The generated response.
     """
-    return create_task(query=query)
+    for function in FUNCTIONS:
+        if label == function.get('label'):
+            return function.get('func')(query=query)
+    return "No matching function for this query"
     

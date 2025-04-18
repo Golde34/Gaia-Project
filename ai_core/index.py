@@ -15,7 +15,8 @@ app = FastAPI(title="Task Information Extraction API")
 @app.post("/extract-task")
 async def extract_task_info(request: query_request.TaskRequest):
     try:
-        return handle_query(request.query)
+        label = "Create Task"
+        return handle_query(request.query, label)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
