@@ -36,7 +36,6 @@ export const getDetailTask = (body) => async (dispatch) => {
     dispatch({ type: TASK_DETAIL_REQUEST, payload: body });
     try {
         const { data } = await serverRequest(`/task/${body.taskId}/detail`, HttpMethods.POST, portName.middleware, body);
-        console.log(data);
         dispatch({ type: TASK_DETAIL_SUCCESS, payload: data });
     } catch (error) {
         dispatch({

@@ -27,7 +27,6 @@ export const getCompareCommits = (userId) => async (dispatch) => {
     dispatch({ type: COMPARE_COMMTIS_REQUEST, payload: userId });
     try {
         const { data } = await serverRequest(`/contribution/${userId}/compare-commits`, HttpMethods.GET, portName.middlewarePort);
-        console.log(data);
         dispatch({ type: COMPARE_COMMTIS_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({

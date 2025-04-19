@@ -79,7 +79,6 @@ export const CreateScheduleGroupDialog = () => {
     }, [dispatch, userId]);
     const debounceRef = useRef(null);
     useEffect(() => {
-        console.log('userId', userId);
         clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
             getListProjects();
