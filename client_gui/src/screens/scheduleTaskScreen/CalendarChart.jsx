@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useWebSocket } from "../../kernels/context/WebSocketContext";
+import { useMultiWS } from "../../kernels/context/MultiWSContext";
 import { optimizeTaskByUserId } from "../../api/store/actions/work_optimization/optimize-task.actions";
 import { Text } from "@tremor/react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/solid";
@@ -18,7 +18,7 @@ const CalendarChart = (props) => {
     const [today, setToday] = useState(props.currentDate);
     const [selectDate, setSelectDate] = useState(props.selectDate);
 
-    const { sendMessage, messages, isConnected } = useWebSocket();
+    const { messages, isConnected, sendMessage } = useMultiWS();
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState(null);
     const checkEmptyTaskList = props.checkEmptyScheduleTaskList;
@@ -36,7 +36,7 @@ const CalendarChart = (props) => {
             }
         };
 
-        messages.forEach(handleMessage);
+        messages.notification.forEach(handleMessage);
     }, [messages, userId]);
 
     const handleOptimizeClick = (userId) => {
