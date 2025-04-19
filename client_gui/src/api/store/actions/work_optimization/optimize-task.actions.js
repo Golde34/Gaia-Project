@@ -19,7 +19,6 @@ export const optimizeTaskByUserId = (userId) => async (dispatch) => {
             portName.middlewarePort,
             body
         );
-        console.log(data);
         dispatch({ type: OPTIMZE_TASK_BY_USER_SUCCESS, payload: data });
 
         // sendMessage(JSON.stringify({

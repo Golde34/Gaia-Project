@@ -145,7 +145,7 @@ class TaskUsecase {
             const groupTask = await this.handleGroupTaskWhenCreateScheduletask(scheduleGroup, project.data.project.id);
             if (groupTask == null) return msg400('Error when create group task for schedule task');
 
-            const groupTaskId = groupTask.data.message.id;
+            const groupTaskId = groupTask.id;
             const task = scheduleTaskMapper.mapTask(scheduleTask, ownerId);
             const createdTask = await taskService.createTaskInGroupTask(task, groupTaskId);
             const taskResult = await taskService.handleAfterCreateTask(createdTask, groupTaskId)

@@ -28,7 +28,6 @@ export const getScreenConfiguration = () => async (dispatch) => {
     dispatch({ type: SCREEN_LIST_REQUEST });
     try {
         const { data } = await serverRequest('/microservice/gaia-screens', HttpMethods.GET, portName.middlewarePort, null);
-        console.log(data)
         dispatch({ type: SCREEN_LIST_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({

@@ -5,10 +5,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { getDoneTasks } from "../../api/store/actions/task_manager/task.actions";
 import { useNavigate } from "react-router-dom";
 
-const dataFormatter = (number) => {
-  return Intl.NumberFormat("us").format(number).toString() + " tasks";
-};
-
 const DoneTasksComponent = () => {
   const userId = "1";
   const dispatch = useDispatch();
@@ -27,6 +23,7 @@ const DoneTasksComponent = () => {
     localStorage.setItem("activeTab", task.groupTaskId);
     navigate(`/project/${task.projectId}`);
   }
+
   return (
     <>
       {loading ? (
@@ -64,7 +61,6 @@ const DoneTasksComponent = () => {
                 <>
                   <DonutChart
                     data={doneTasks}
-                    dataFormatter={dataFormatter}
                     showAnimation={true}
                     category="count"
                     index="name"
@@ -83,9 +79,9 @@ const DoneTasksComponent = () => {
                     {doneTasks.map((task) => (
                       <ListItem key={task.groupTaskId}>
                         <Text><button onClick={() => handleNavigate(task)} className="text-blue-500 hover:underline">{task.name}</button></Text>
-                          <Text>
-                            {Intl.NumberFormat("us").format(task.count).toString()} Tasks
-                          </Text>
+                        <Text>
+                          {Intl.NumberFormat("us").format(task.count).toString()} Tasks
+                        </Text>
                       </ListItem>
                     ))}
                   </List>

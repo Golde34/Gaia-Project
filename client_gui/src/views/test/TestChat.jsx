@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { useWebSocket } from "../../kernels/context/WebSocketContext";
+import { useMultiWS} from "../../kernels/context/MultiWSContext";
 
 const ChatComponent = () => {
-  const { messages, sendMessage } = useWebSocket();
+  const { messages, sendMessage } = useMultiWS();
   const [input, setInput] = useState("");
 
   const handleSend = () => {
