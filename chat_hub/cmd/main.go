@@ -3,8 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"chat_hub/cmd/bootstrap"
-	"chat_hub/cmd/route"
 	services "chat_hub/core/services/websocket"
 	"chat_hub/infrastructure/kafka"
 	"chat_hub/kernel/configs"
@@ -18,24 +16,13 @@ import (
 
 
 func main() {
-	// Database
-	app := bootstrap.App()
-	databaseEnv := app.Env
-	db := app.Mongo.Database(databaseEnv.DBName)
-	log.Println("Database connected")
-	defer func() {
-		log.Println("Closing MongoDB connection")
-		app.CloseDBConnection()
-		log.Println("Database connection closed")
-	}()
-
 	// Kafka Initialization
 	kafkaConfig := configs.KafkaConfig{}
 	kafkaCfg, _ := kafkaConfig.LoadEnv()
 	log.Println("Kafka Config: ", kafkaCfg.GroupId)
 
 	handlers := map[string] kafka.MessageHandler {
-		"notify-agent.optimize-task-notify.topic": &consumer.OptimizeTaskNotifyHandler{Database: db},
+		"chat-hub.task-result.topic": &consumer.TaskResultHandler{},
 	}
 
 	consumerGroupHandler := kafka.NewConsumerGroupHandler(kafkaCfg.Name, handlers)
@@ -54,8 +41,6 @@ func main() {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RedirectSlashes)
 	r.Use(middleware.Timeout(time.Second * 60))
-
-	route.Setup(r)
 
 	// Register WebSocket handler
 	http.HandleFunc("/ws", services.NewWebSocketService().HandleWebSocket)
