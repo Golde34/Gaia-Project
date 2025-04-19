@@ -62,6 +62,14 @@ func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 			break
 		}
 		log.Printf("Message received from userId %s: %s", userId, message)
+		messageMap := make(map[string]interface{})
+		err = json.Unmarshal(message, &messageMap)
+		if err != nil {
+			log.Println("Error unmarshaling message:", err)
+			continue
+		}
+		response := messageMap["text"].(string)
+		SendToUser(userId, []byte(response))
 	}
 }
 
