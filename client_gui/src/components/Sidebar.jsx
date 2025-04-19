@@ -93,7 +93,7 @@ const Sidebar = () => {
 							<Description>Note </Description>
 						</LinkWrapper>
 					</Col>
-					{/* <Col numColSpan={1}>
+					<Col numColSpan={1}>
 						<LinkWrapper href="/client-gui/chat">
 							<Button variant="primary" color="indigo"
 								className="p-2 rounded-lg mb-4">
@@ -101,12 +101,8 @@ const Sidebar = () => {
 							</Button>
 							<Description>Chat Bot</Description>
 						</LinkWrapper>
-					</Col> */}
+					</Col>
 				</Grid>
-				 <PencilAltIcon
-					width={40}
-					className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
-				/>
 				
 				{/*<ChartBarIcon
 					width={40}
