@@ -2,7 +2,7 @@ package store_adapter
 
 import (
 	"context"
-	"notify_agent/core/domain/entity"
+	"chat_hub/core/domain/entity"
 )
 
 type INotificationRepository interface {

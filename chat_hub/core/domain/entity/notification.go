@@ -1,6 +1,6 @@
 package entity
 
-import "notify_agent/core/domain/enums"
+import "chat_hub/core/domain/enums"
 
 const (
 	CollectionNotification = enums.Notification

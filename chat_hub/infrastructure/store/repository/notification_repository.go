@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 	"log"
-	"notify_agent/core/domain/entity"
-	database_mongo "notify_agent/kernel/database/mongo"
+	"chat_hub/core/domain/entity"
+	database_mongo "chat_hub/kernel/database/mongo"
 
 	"go.mongodb.org/mongo-driver/bson"
 )

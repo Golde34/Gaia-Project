@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"notify_agent/core/domain/constants"
-	base_dtos "notify_agent/core/domain/dtos/base"
-	"notify_agent/core/port/mapper"
-	"notify_agent/core/port/store"
-	services "notify_agent/core/services/work_optimization"
-	database_mongo "notify_agent/kernel/database/mongo"
+	"chat_hub/core/domain/constants"
+	base_dtos "chat_hub/core/domain/dtos/base"
+	"chat_hub/core/port/mapper"
+	"chat_hub/core/port/store"
+	services "chat_hub/core/services/work_optimization"
+	database_mongo "chat_hub/kernel/database/mongo"
 )
 
 type OptimizeTaskNotifyHandler struct {

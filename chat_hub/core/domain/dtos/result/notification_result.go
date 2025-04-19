@@ -1,7 +1,7 @@
 package result_dto
 
 import (
-	"notify_agent/core/domain/entity"
+	"chat_hub/core/domain/entity"
 
 	"github.com/devfeel/mapper"
 )

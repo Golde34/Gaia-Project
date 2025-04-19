@@ -3,12 +3,12 @@ package main
 import (
 	"log"
 	"net/http"
-	"notify_agent/cmd/bootstrap"
-	"notify_agent/cmd/route"
-	services "notify_agent/core/services/websocket"
-	"notify_agent/infrastructure/kafka"
-	"notify_agent/kernel/configs"
-	consumer "notify_agent/ui/kafka"
+	"chat_hub/cmd/bootstrap"
+	"chat_hub/cmd/route"
+	services "chat_hub/core/services/websocket"
+	"chat_hub/infrastructure/kafka"
+	"chat_hub/kernel/configs"
+	consumer "chat_hub/ui/kafka"
 	"time"
 
 	"github.com/go-chi/chi"

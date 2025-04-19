@@ -2,11 +2,11 @@ package store
 
 import (
 	"context"
-	"notify_agent/core/domain/entity"
-	"notify_agent/core/domain/enums"
-	store_adapter "notify_agent/infrastructure/store/adapter"
-	"notify_agent/infrastructure/store/repository"
-	database_mongo "notify_agent/kernel/database/mongo"
+	"chat_hub/core/domain/entity"
+	"chat_hub/core/domain/enums"
+	store_adapter "chat_hub/infrastructure/store/adapter"
+	"chat_hub/infrastructure/store/repository"
+	database_mongo "chat_hub/kernel/database/mongo"
 )
 
 type NotificationStore struct {

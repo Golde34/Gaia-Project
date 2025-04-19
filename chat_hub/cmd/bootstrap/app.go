@@ -1,6 +1,6 @@
 package bootstrap
 
-import database_mongo "notify_agent/kernel/database/mongo"
+import database_mongo "chat_hub/kernel/database/mongo"
 
 
 type Application struct {

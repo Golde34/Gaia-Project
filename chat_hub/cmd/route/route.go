@@ -1,8 +1,8 @@
 package route
 
 import (
-	websocket_services "notify_agent/core/services/websocket"
-	"notify_agent/ui/routers"
+	websocket_services "chat_hub/core/services/websocket"
+	"chat_hub/ui/routers"
 
 	"github.com/go-chi/chi"
 )

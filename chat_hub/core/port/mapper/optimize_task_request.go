@@ -2,8 +2,8 @@ package mapper
 
 import (
 	"fmt"
-	request_dtos "notify_agent/core/domain/dtos/request"
-	"notify_agent/core/domain/entity"
+	request_dtos "chat_hub/core/domain/dtos/request"
+	"chat_hub/core/domain/entity"
 	"time"
 )
 

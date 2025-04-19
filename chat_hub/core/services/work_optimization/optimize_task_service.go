@@ -3,11 +3,11 @@ package services
 import (
 	"context"
 	"log"
-	request_dtos "notify_agent/core/domain/dtos/request"
-	"notify_agent/core/domain/entity"
-	"notify_agent/core/port/mapper"
-	"notify_agent/core/port/store"
-	websocket "notify_agent/core/services/websocket"
+	request_dtos "chat_hub/core/domain/dtos/request"
+	"chat_hub/core/domain/entity"
+	"chat_hub/core/port/mapper"
+	"chat_hub/core/port/store"
+	websocket "chat_hub/core/services/websocket"
 	"time"
 )
 

@@ -1,7 +1,7 @@
 package request_dtos
 
 import (
-	"notify_agent/core/domain/entity"
+	"chat_hub/core/domain/entity"
 	"time"
 
 	"github.com/google/uuid"

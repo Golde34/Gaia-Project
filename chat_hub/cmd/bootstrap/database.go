@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	database_mongo "notify_agent/kernel/database/mongo"
+	database_mongo "chat_hub/kernel/database/mongo"
 	"time"
 )
 
