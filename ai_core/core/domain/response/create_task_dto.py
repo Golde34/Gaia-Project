@@ -11,3 +11,5 @@ class CreateTaskDto(BaseModel):
     StartDate: Optional[str] = None
     Deadline: Optional[str] = None
     Duration: Optional[str] = None
+    ActionType: Optional[str] = None 
+    Response: str 

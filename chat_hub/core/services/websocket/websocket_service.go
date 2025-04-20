@@ -1,6 +1,7 @@
 package services
 
 import (
+	services "chat_hub/core/services/chat"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -68,13 +69,32 @@ func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 			log.Println("Error unmarshaling message:", err)
 			continue
 		}
-		response := messageMap["text"].(string)
-		SendToUser(userId, []byte(response))
+		// response := "Bot answered user prompt: " + messageMap["text"].(string)
+		// SendToUser(userId, []byte(response))
+		handleService(messageMap, userId)
 	}
 }
 
+func handleService(messageMap map[string]interface{}, userId string) {
+	switch messageMap["type"] {
+	case "chat_message":
+		log.Println("Handling task optimized for user:", userId)
+		result, err := services.NewChatService().HandleChatMessage(userId, messageMap["text"].(string))
+		if err != nil {
+			log.Println("Error handling chat message:", err)
+			return
+		}
+		SendToUser(userId, []byte(result))
+		return
+	default:
+		log.Println("Unknown message type:", messageMap["type"])
+	}
+}
+
+
 func SendToUser(userId string, message []byte) {
 	log.Println("Attempting to send message to user:", userId)
+	log.Println("Message content:", string(message))
 
 	if conn, ok := userConnections.Load(userId); ok {
 		wsConn := conn.(*websocket.Conn)
