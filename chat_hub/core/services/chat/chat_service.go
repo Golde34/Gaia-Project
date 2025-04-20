@@ -1,5 +1,10 @@
 package services
 
+import (
+	"chat_hub/infrastructure/client"
+	"log"
+)
+
 type ChatService struct {}
 
 func NewChatService() *ChatService {
@@ -7,6 +12,11 @@ func NewChatService() *ChatService {
 }
 
 func (s *ChatService) HandleChatMessage(userId string, message string) (string, error) {
-	response := "Message received from user " + userId + ": " + message
-	return response, nil	
+	log.Println("Message received from user " + userId + ": " + message)
+	chatResponse, err := client.NewLLMCoreAdapter().UserPrompt(userId, message)
+	if err != nil {
+		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
+		return "", err
+	}
+	return chatResponse, nil	
 }
