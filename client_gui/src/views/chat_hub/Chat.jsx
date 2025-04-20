@@ -10,35 +10,48 @@ function ContentArea() {
   const { messages, isConnected, sendMessage } = useMultiWS();
 
   const [chatInput, setChatInput] = useState('');
-  const [chatHistory, setChatHistory] = useState([]);
+  const [chatHistory, setChatHistory] = useState([]);      // array of {from, text}
+  const [lastBotIndex, setLastBotIndex] = useState(0);     // how many bot msgs we've consumed
   const endRef = useRef(null);
 
+  // Whenever messages.chat grows, append only the new ones:
   useEffect(() => {
-    console.log('Chat messages:', messages.chat);
-    const incoming = (messages.chat || []).map(raw => {
-        console.log('raw:', raw);
-        console.log('type of raw:', typeof raw);
-        return raw;
-    });     
-        setChatHistory(incoming);
-  }, [messages.chat]);
+    console.log("Received chat messages in: ", messages.chat);
+    const botMsgs = messages.chat || [];
+    if (botMsgs.length > lastBotIndex) {
+      const newOnes = botMsgs.slice(lastBotIndex).map(raw => {
+        const text = typeof raw === 'string' ? raw : raw.text || '';
+        return { from: 'bot', text };
+      });
+      setChatHistory(prev => [...prev, ...newOnes]);
+      setLastBotIndex(botMsgs.length);
+    }
+  }, [messages.chat, lastBotIndex]);
 
+  // Scroll to bottom on every chatHistory change
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory]);
 
   const handleSend = () => {
     if (!chatInput.trim()) return;
-    const msgObj = { from: 'user', text: chatInput };
-    setChatHistory(prev => [...prev, msgObj]);
-    sendMessage('chat', JSON.stringify({ type: 'chat_message', userId, text: chatInput }));
+    // 1. Optimistically show the user’s own message
+    setChatHistory(prev => [...prev, { from: 'user', text: chatInput }]);
+    // 2. Send it over WS
+    sendMessage('chat', JSON.stringify({
+      type: 'chat_message',
+      userId,
+      text: chatInput
+    }));
     setChatInput('');
   };
 
   return (
     <>
-      <Metric className="text-2xl font-bold text-gray-800 mb-5">Chat Hub</Metric>
-      <Card className="flex flex-col h-full ">
+      <Metric className="text-2xl font-bold text-gray-800 mb-5">
+        Chat Hub
+      </Metric>
+      <Card className="flex flex-col h-full">
         <div className="flex-1 overflow-auto p-4 space-y-3">
           {chatHistory.map((msg, idx) => (
             <div
@@ -46,11 +59,12 @@ function ContentArea() {
               className={`flex ${msg.from === 'bot' ? 'justify-start' : 'justify-end'}`}
             >
               <div
-                className={`max-w-xs px-4 py-2 rounded-2xl break-words ` +
-                  (msg.from === 'bot'
+                className={[
+                  'max-w-xs px-4 py-2 rounded-2xl break-words',
+                  msg.from === 'bot'
                     ? 'bg-gray-200 text-gray-800'
-                    : 'bg-blue-500 text-white')
-                }
+                    : 'bg-blue-500 text-white'
+                ].join(' ')}
               >
                 {msg.text}
               </div>
@@ -58,7 +72,6 @@ function ContentArea() {
           ))}
           <div ref={endRef} />
         </div>
-
         <div className="flex items-center p-4 border-t">
           <TextInput
             placeholder="Type a message..."
@@ -76,10 +89,10 @@ function ContentArea() {
   );
 }
 
-const Chat = () => (
-  <Template>
-    <ContentArea />
-  </Template>
-);
-
-export default Chat;
+export default function Chat() {
+  return (
+    <Template>
+      <ContentArea />
+    </Template>
+  );
+}
