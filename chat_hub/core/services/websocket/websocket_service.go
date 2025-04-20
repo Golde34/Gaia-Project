@@ -68,13 +68,14 @@ func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 			log.Println("Error unmarshaling message:", err)
 			continue
 		}
-		response := messageMap["text"].(string)
+		response := "Bot answered user prompt: " + messageMap["text"].(string)
 		SendToUser(userId, []byte(response))
 	}
 }
 
 func SendToUser(userId string, message []byte) {
 	log.Println("Attempting to send message to user:", userId)
+	log.Println("Message content:", string(message))
 
 	if conn, ok := userConnections.Load(userId); ok {
 		wsConn := conn.(*websocket.Conn)
