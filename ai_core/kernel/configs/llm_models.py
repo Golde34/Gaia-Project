@@ -2,7 +2,7 @@ from  infrastucture.llm import gemini_generate_content
 
 
 MODELS_INTERFACE = {
-    "gemini": gemini_generate_content.generate_content,
+    "gemini-2.0-flash": gemini_generate_content.generate_content,
     "unsloth": "UNSLOTH" 
 }
 

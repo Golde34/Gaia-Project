@@ -1,13 +1,11 @@
 import json
-from fastapi import HTTPException
-import traceback
-
 
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import CreateTaskSchema
 from core.prompt import CREATE_TASK_PROMPT, TASK_CLASSIFY_PROMPT, CHITCHAT_PROMPT
 from kernel.configs import llm_models 
 from kernel.configs.tree_function import FUNCTIONS
+from core.domain.response.base_response import return_success_response 
 
 
 def _create_task(query: QueryRequest) -> str:
@@ -77,17 +75,24 @@ def task_service(query: QueryRequest):
         
         if 'create_task' in response:
             print("Start create task service")
-            return {
+            data = {
                 'type': 'create_task',
                 'response': _create_task(query=query)
             }
+            return return_success_response(
+                status_message="Create task response successfully",
+                data=data
+            ) 
         else:
             print("Start chitchat service")
-            return {
+            data = {
                 'type': 'chitchat',
                 'response': _chitchat(query=query)
             }
-        
+            return return_success_response(
+                status_message="Chitchat response successfully",
+                data=data
+            )            
     except Exception as e:
         raise e
     
