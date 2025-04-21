@@ -9,8 +9,6 @@ import (
 	"middleware_loader/kernel/utils"
 	"middleware_loader/ui/controller_services/controller_utils"
 	"net/http"
-
-	"github.com/go-chi/chi"
 )
 
 func GetAllUsers(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
@@ -53,7 +51,11 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, userService *services.Us
 }
 
 func GetUserDetail(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
-	id := chi.URLParam(r, "id")
+	id, ok := r.Context().Value("userId").(string)
+	if !ok {
+		http.Error(w, "userId not found in context", http.StatusBadRequest)
+		return
+	}
 
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "getUserDetail", QueryInput: model.IDInput{ID: id}, QueryOutput: model.UpdateUser{}})

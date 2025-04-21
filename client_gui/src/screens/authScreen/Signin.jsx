@@ -26,10 +26,11 @@ const Signin = () => {
         dispatch(signin(username, password));
     };
     useEffect(() => {
-        if (userInfo) {
+        if (userInfo ) {
             if (userInfo['data'] !== null) {
                 if (accessToken === undefined) {
                     cookieManager.saveCookie('accessToken', JSON.parse(userInfo)['accessToken'], '/');
+                    cookieManager.saveCookie('refreshToken', JSON.parse(userInfo)['refreshToken'], '/');
                     localStorage.setItem('userInfo', JSON.parse(userInfo)['username']);
                 }
                 navigate('/dashboard');

@@ -36,6 +36,7 @@ const baseRequest = async (api, method, portConfig, body, headers) => {
     for (let [key, value] of headers.entries()) {
         requestHeaders[key] = value;
     }
+    requestHeaders
 
     const controller = new AbortController();
     const timerId = setTimeout(() => controller.abort(), timeout);

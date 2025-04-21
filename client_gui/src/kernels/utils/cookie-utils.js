@@ -6,7 +6,12 @@ class CookieManager {
     }
 
     saveCookie(key, value, usedPath, options) {
-        this.cookie.set(key, value, { path: usedPath, ...options });
+        this.cookie.set(key, value, { 
+            path: usedPath, 
+            secure: true,
+            httpOnly: true,
+            sameSite: 'Strict',
+            ...options });
     }
 
     getCookie(key) {
@@ -14,7 +19,11 @@ class CookieManager {
     }
 
     deleteCookie(key, usePath, options) {
-        this.cookie.remove(key, { path: usePath, ...options });
+        this.cookie.remove(key, { path: usePath, 
+            secure: true,
+            httpOnly: true,
+            sameSite: 'Strict',
+            ...options });
     }
 }
 
