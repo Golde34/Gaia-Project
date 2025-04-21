@@ -112,6 +112,11 @@ type ComplexityRoot struct {
 		IsTaskExist func(childComplexity int) int
 	}
 
+	LLMModel struct {
+		ModelID   func(childComplexity int) int
+		ModelName func(childComplexity int) int
+	}
+
 	ListAllUsers struct {
 		Email     func(childComplexity int) int
 		ID        func(childComplexity int) int
@@ -323,6 +328,7 @@ type ComplexityRoot struct {
 		ID          func(childComplexity int) int
 		IsUsing2fa  func(childComplexity int) int
 		LastLogin   func(childComplexity int) int
+		LlmModels   func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Roles       func(childComplexity int) int
 		Secret      func(childComplexity int) int
@@ -336,6 +342,7 @@ type ComplexityRoot struct {
 		ID         func(childComplexity int) int
 		IsUsing2fa func(childComplexity int) int
 		LastLogin  func(childComplexity int) int
+		LlmModels  func(childComplexity int) int
 		Name       func(childComplexity int) int
 		Password   func(childComplexity int) int
 		Roles      func(childComplexity int) int
@@ -731,6 +738,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.IsTaskExisted.IsTaskExist(childComplexity), true
+
+	case "LLMModel.modelId":
+		if e.complexity.LLMModel.ModelID == nil {
+			break
+		}
+
+		return e.complexity.LLMModel.ModelID(childComplexity), true
+
+	case "LLMModel.modelName":
+		if e.complexity.LLMModel.ModelName == nil {
+			break
+		}
+
+		return e.complexity.LLMModel.ModelName(childComplexity), true
 
 	case "ListAllUsers.email":
 		if e.complexity.ListAllUsers.Email == nil {
@@ -2140,6 +2161,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UpdateUser.LastLogin(childComplexity), true
 
+	case "UpdateUser.llmModels":
+		if e.complexity.UpdateUser.LlmModels == nil {
+			break
+		}
+
+		return e.complexity.UpdateUser.LlmModels(childComplexity), true
+
 	case "UpdateUser.name":
 		if e.complexity.UpdateUser.Name == nil {
 			break
@@ -2209,6 +2237,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.LastLogin(childComplexity), true
+
+	case "User.llmModels":
+		if e.complexity.User.LlmModels == nil {
+			break
+		}
+
+		return e.complexity.User.LlmModels(childComplexity), true
 
 	case "User.name":
 		if e.complexity.User.Name == nil {
@@ -3631,6 +3666,8 @@ func (ec *executionContext) fieldContext_AuthToken_user(_ context.Context, field
 				return ec.fieldContext_User_secret(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
+			case "llmModels":
+				return ec.fieldContext_User_llmModels(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -5213,6 +5250,94 @@ func (ec *executionContext) fieldContext_IsTaskExisted_isTaskExist(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _LLMModel_modelId(ctx context.Context, field graphql.CollectedField, obj *model.LLMModel) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LLMModel_modelId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ModelID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LLMModel_modelId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LLMModel_modelName(ctx context.Context, field graphql.CollectedField, obj *model.LLMModel) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LLMModel_modelName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ModelName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LLMModel_modelName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LLMModel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ListAllUsers_id(ctx context.Context, field graphql.CollectedField, obj *model.ListAllUsers) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ListAllUsers_id(ctx, field)
 	if err != nil {
@@ -6292,6 +6417,8 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_secret(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
+			case "llmModels":
+				return ec.fieldContext_User_llmModels(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -6369,6 +6496,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 				return ec.fieldContext_UpdateUser_roles(ctx, field)
 			case "userSetting":
 				return ec.fieldContext_UpdateUser_userSetting(ctx, field)
+			case "llmModels":
+				return ec.fieldContext_UpdateUser_llmModels(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UpdateUser", field.Name)
 		},
@@ -6446,6 +6575,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteUser(ctx context.Context
 				return ec.fieldContext_User_secret(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
+			case "llmModels":
+				return ec.fieldContext_User_llmModels(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -10578,6 +10709,8 @@ func (ec *executionContext) fieldContext_Query_getUserByUsername(ctx context.Con
 				return ec.fieldContext_User_secret(ctx, field)
 			case "roles":
 				return ec.fieldContext_User_roles(ctx, field)
+			case "llmModels":
+				return ec.fieldContext_User_llmModels(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -10655,6 +10788,8 @@ func (ec *executionContext) fieldContext_Query_getUserDetail(ctx context.Context
 				return ec.fieldContext_UpdateUser_roles(ctx, field)
 			case "userSetting":
 				return ec.fieldContext_UpdateUser_userSetting(ctx, field)
+			case "llmModels":
+				return ec.fieldContext_UpdateUser_llmModels(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UpdateUser", field.Name)
 		},
@@ -14614,6 +14749,56 @@ func (ec *executionContext) fieldContext_UpdateUser_userSetting(_ context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _UpdateUser_llmModels(ctx context.Context, field graphql.CollectedField, obj *model.UpdateUser) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UpdateUser_llmModels(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LlmModels, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.LLMModel)
+	fc.Result = res
+	return ec.marshalNLLMModel2ᚕᚖmiddleware_loaderᚋinfrastructureᚋgraphᚋmodelᚐLLMModel(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UpdateUser_llmModels(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpdateUser",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "modelId":
+				return ec.fieldContext_LLMModel_modelId(ctx, field)
+			case "modelName":
+				return ec.fieldContext_LLMModel_modelName(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMModel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_id(ctx, field)
 	if err != nil {
@@ -15065,6 +15250,56 @@ func (ec *executionContext) fieldContext_User_roles(_ context.Context, field gra
 				return ec.fieldContext_Role_totalNumberOfUsers(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Role", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_llmModels(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_llmModels(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LlmModels, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.LLMModel)
+	fc.Result = res
+	return ec.marshalNLLMModel2ᚕᚖmiddleware_loaderᚋinfrastructureᚋgraphᚋmodelᚐLLMModel(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_llmModels(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "modelId":
+				return ec.fieldContext_LLMModel_modelId(ctx, field)
+			case "modelName":
+				return ec.fieldContext_LLMModel_modelName(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LLMModel", field.Name)
 		},
 	}
 	return fc, nil
@@ -19055,6 +19290,50 @@ func (ec *executionContext) _IsTaskExisted(ctx context.Context, sel ast.Selectio
 	return out
 }
 
+var lLMModelImplementors = []string{"LLMModel"}
+
+func (ec *executionContext) _LLMModel(ctx context.Context, sel ast.SelectionSet, obj *model.LLMModel) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lLMModelImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LLMModel")
+		case "modelId":
+			out.Values[i] = ec._LLMModel_modelId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "modelName":
+			out.Values[i] = ec._LLMModel_modelName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var listAllUsersImplementors = []string{"ListAllUsers"}
 
 func (ec *executionContext) _ListAllUsers(ctx context.Context, sel ast.SelectionSet, obj *model.ListAllUsers) graphql.Marshaler {
@@ -20880,6 +21159,11 @@ func (ec *executionContext) _UpdateUser(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "llmModels":
+			out.Values[i] = ec._UpdateUser_llmModels(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -20961,6 +21245,11 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "roles":
 			out.Values[i] = ec._User_roles(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "llmModels":
+			out.Values[i] = ec._User_llmModels(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -21640,6 +21929,44 @@ func (ec *executionContext) marshalNIsTaskExisted2ᚖmiddleware_loaderᚋinfrast
 		return graphql.Null
 	}
 	return ec._IsTaskExisted(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLLMModel2ᚕᚖmiddleware_loaderᚋinfrastructureᚋgraphᚋmodelᚐLLMModel(ctx context.Context, sel ast.SelectionSet, v []*model.LLMModel) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOLLMModel2ᚖmiddleware_loaderᚋinfrastructureᚋgraphᚋmodelᚐLLMModel(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
 }
 
 func (ec *executionContext) marshalNListAllUsers2ᚕᚖmiddleware_loaderᚋinfrastructureᚋgraphᚋmodelᚐListAllUsers(ctx context.Context, sel ast.SelectionSet, v []*model.ListAllUsers) graphql.Marshaler {
@@ -22700,6 +23027,13 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOLLMModel2ᚖmiddleware_loaderᚋinfrastructureᚋgraphᚋmodelᚐLLMModel(ctx context.Context, sel ast.SelectionSet, v *model.LLMModel) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._LLMModel(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOListAllUsers2ᚖmiddleware_loaderᚋinfrastructureᚋgraphᚋmodelᚐListAllUsers(ctx context.Context, sel ast.SelectionSet, v *model.ListAllUsers) graphql.Marshaler {

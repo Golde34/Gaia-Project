@@ -48,11 +48,12 @@ func ReturnUserObjectMapper(body map[string]interface{}) *response_dtos.UserDeta
 	input.Roles = body["roles"].([]interface{})
 	userSettingMap := body["userSetting"].(map[string]interface{})
 	input.UserSetting = &response_dtos.UserSettingDTO{
-		OptimizedTaskConfig: userSettingMap["optimizedTaskConfig"].(float64),
+		OptimizedTaskConfig:  userSettingMap["optimizedTaskConfig"].(float64),
 		PrivateProfileConfig: userSettingMap["privateProfileConfig"].(float64),
 		TaskSortingAlgorithm: userSettingMap["taskSortingAlgorithm"].(float64),
-		AutoOptimizeConfig: userSettingMap["autoOptimizeConfig"].(float64),
+		AutoOptimizeConfig:   userSettingMap["autoOptimizeConfig"].(float64),
 	}
+	input.LLMModels= body["llmModels"].([]interface{})
 	log.Println(input)
 	return &input
 }
