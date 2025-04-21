@@ -23,12 +23,13 @@ def _create_task(query: QueryRequest) -> str:
         "Status": str,
         "StartDate": Optional[str],
         "Deadline": Optional[str],
-        "Duration": Optional[str]
+        "Duration": Optional[str],
+        "ActionType": str,
+        "Response": str,
         }
     """
     try:
         prompt = CREATE_TASK_PROMPT.format(query = query.query)
-        print("Prompt:", prompt)
 
         response = llm_models.get_model_generate_content(query.model_name)(prompt=prompt,dto=CreateTaskSchema) 
         print("Response:", response)
@@ -47,7 +48,6 @@ def _chitchat(query: QueryRequest) -> str:
     
     try:
         prompt = CHITCHAT_PROMPT.format(query = query.query)
-        print("Prompt:", prompt)
 
         response = llm_models.get_model_generate_content(query.model_name)(prompt=prompt) 
         print("Response:", response)
@@ -75,10 +75,14 @@ def task_service(query: QueryRequest):
         
         if 'create_task' in response:
             print("Start create task service")
+            create_task_response = _create_task(query=query)
+            print("Create task response:", create_task_response)
             data = {
                 'type': 'create_task',
-                'response': _create_task(query=query)
+                'response': create_task_response.get('Response'),
+                'task': create_task_response
             }
+            print("Data:", data)
             return return_success_response(
                 status_message="Create task response successfully",
                 data=data
