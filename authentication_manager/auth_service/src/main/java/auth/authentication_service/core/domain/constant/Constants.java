@@ -75,4 +75,14 @@ public class Constants {
         public static String SERVICE_TOKEN_HEADER = "Service-Token";
         public static String AUTHORIZATION_HEADER = "Authorization";
     }
+
+    @UtilityClass
+    public static class ActiveStatus {
+        public static final String ACTIVE = "active";
+        public static final String INACTIVE = "inactive";
+        public static final boolean ACTIVE_BOOL = true;
+        public static final boolean INACTIVE_BOOL = false;
+        public static final int ACTIVE_INT = 1;
+        public static final int INACTIVE_INT = 0;
+    }
 }
