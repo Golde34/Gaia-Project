@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
 
-def generate_content(prompt: str, dto: any) -> str:
+def generate_content(prompt: str, dto: any = None) -> str:
     """
     Generate content using the Gemini API.
     Args:
@@ -17,16 +17,22 @@ def generate_content(prompt: str, dto: any) -> str:
         str: The generated content.
     """
     try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash", 
-            contents=[prompt],
-            config={
-                'response_mime_type': 'application/json',
-                'response_schema': dto,
-            },
-        )
+        if dto:
+            response = client.models.generate_content(
+                model="gemini-2.0-flash", 
+                contents=[prompt],
+                config={
+                    'response_mime_type': 'application/json',
+                    'response_schema': dto,
+                },
+            )
+        else:
+            response = client.models.generate_content(
+                model="gemini-2.0-flash", 
+                contents=[prompt],
+            )
 
-        print(response)
+        # print(response)
         return response.text
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -16,3 +16,10 @@ var (
 	OnlyMessage = "ONLY_MESSAGE"
 )
 
+var (
+	POST = "POST"
+	GET  = "GET"
+	PUT  = "PUT"
+	DELETE = "DELETE"
+	HEAD = "HEAD"
+)
