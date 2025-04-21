@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-class CreateTaskDto(BaseModel):
+class CreateTaskSchema(BaseModel):
     Project: str
     GroupTask: str
     Title: str
@@ -11,5 +11,3 @@ class CreateTaskDto(BaseModel):
     StartDate: Optional[str] = None
     Deadline: Optional[str] = None
     Duration: Optional[str] = None
-    ActionType: Optional[str] = None 
-    Response: str 

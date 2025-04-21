@@ -1,5 +1,4 @@
-def create_task_prompt(query: str) -> str:
-    return f"""# Task Information Extraction Prompt
+CREATE_TASK_PROMPT = """# Task Information Extraction Prompt
 
 You are an AI assistant specialized in extracting structured information from natural language queries about tasks. Your job is to analyze user queries and convert them into a standardized JSON format with specific fields.
 
@@ -21,8 +20,6 @@ You are an AI assistant specialized in extracting structured information from na
 - `StartDate`: When the task should start ("now", specific date, or null)
 - `Deadline`: When the task should be completed (e.g., "end of the week", "next month", null)
 - `Duration`: How long the task is expected to take (e.g., "2 hours", "3 days", null)
-- `ActionType`: The type of action to be performed (e.g., "create", "update", "delete", null)
-- `Response`: The response type expected from the bot to the user (e.g. "sure I will create task for you")
 
 ## Priority Mapping Guidelines:
 - "urgent", "crucial", "essential", "top priority", "as soon as possible" → "Star" or "High"
@@ -48,9 +45,7 @@ Output:
   "Status": "Pending",
   "StartDate": null,
   "Deadline": null,
-  "Duration": null,
-  "ActionType": "create",
-  "Response": "Yes sir, I will create a notification task about creating a user feedback system in the Artemis project."  
+  "Duration": null
 }}
 
 Input: "Add task to optimize the AI model training process in Project Gaia. This is a medium priority and should be done by the end of the month."
@@ -64,9 +59,7 @@ Output:
   "Status": "To Do",
   "StartDate": "now",
   "Deadline": "end of the month",
-  "Duration": null,
-  "ActionType": "create",
-  "Response": "Sure, I will create a task for optimizing the AI model training process in Project Gaia."
+  "Duration": null
 }}
 
 Input: "I need a task created for the Hermes project, involving the optimization of our database queries. No rush, but it should be monitored."
@@ -80,10 +73,38 @@ Output:
   "Status": "In Progress",
   "StartDate": null,
   "Deadline": null,
-  "Duration": null,
-  "ActionType": "create",
-  "Response": "In the Hermes project, I am creating a task for the optimization of our database queries, this task took 2 hours today, do you want to keep it on radar?"
+  "Duration": null
 }}
 
 Now, analyze the user's query and extract the requested information into the JSON format.
+User's query: {query}"""
+
+TASK_CLASSIFY_PROMPT = """You are a helpful tool selection assistant. Your only job is to match user queries with the most appropriate tool from the available options.
+
+You will receive:
+1. A user query (asking for some information or requesting a task)
+2. A list of available tools you can use
+
+Instructions:
+- Carefully analyze the user query to understand what they need
+- Review all available tools in the provided list
+- Select the ONE tool that is most appropriate for handling the query
+- Return ONLY the name of the tool, without any explanation, reasoning, or additional text
+- If multiple tools could work, choose the most specific and relevant one
+- If no tool seems appropriate, return "none"
+
+Remember: Your response must contain ONLY the tool label, nothing else.
+
+-------
+List of tools:
+{tools}
+--------
+
+User's query: {query}
+"""
+
+CHITCHAT_PROMPT = """You are a helpfull assistant. When given a user query, provide direct answers.
+Be polite.
+Your answer should be less than 50 words.
+
 User's query: {query}"""

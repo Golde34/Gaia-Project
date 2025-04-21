@@ -1,9 +1,11 @@
 from fastapi import FastAPI, HTTPException 
 from dotenv import load_dotenv
 import uvicorn
+import traceback
 
 from core.domain.request import query_request
-from ui.model_handler import handle_query
+from core.service.task_service import task_service
+
 
 
 # Load environment variables
@@ -12,12 +14,13 @@ load_dotenv()
 # Create FastAPI app
 app = FastAPI(title="Task Information Extraction API")
 
-@app.post("/extract-task")
-async def extract_task_info(request: query_request.QueryRequest):
+@app.post("/chat")
+async def chat(request: query_request.QueryRequest):
     try:
-        label = "Create Task"
-        return handle_query(request, label)
+        return task_service(query=request)
     except Exception as e:
+        stack_trace = traceback.format_exc()
+        print("ERROR:", stack_trace)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")

@@ -1,9 +1,11 @@
-from core.service.task_service import create_task
-
 FUNCTIONS = [
     {
-        'func': create_task, 
-        'label': 'Create Task',
-        'description': 'Create task information extraction prompt for Gemini API.',
+        'label': 'create_task',
+        'description': 'Create a new task/job to do in the future.',
+    },
+    {
+        'label': "chit_chat",
+        'description': 'For types of queries that are just regular chat conversations.'
     }
+    
 ]
