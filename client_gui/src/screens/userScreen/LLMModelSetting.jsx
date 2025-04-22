@@ -6,8 +6,10 @@ import { Button, Card, Flex, Table, TableBody, TableCell, TableHead, TableHeader
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from "@headlessui/react";
 import clsx from "clsx";
 import { CheckIcon, ChevronDownIcon } from "@heroicons/react/solid";
+import { useUpdateUserModelDispatch } from "../../kernels/utils/write-dialog-api-requests";
 
 const LLMModelSettingScreen = (props) => {
+    const user = props.user;
     const currentModel = props.model;
     const dispatch = useDispatch();
 
@@ -31,11 +33,14 @@ const LLMModelSettingScreen = (props) => {
         model.modelName.toLowerCase().includes(queryModel.toLowerCase())
     );
 
-    function updateModel() {
-        console.log("updateModel: ", selectedModel);
-        if (selectedModel) {
-            console.log("updateModel: ", selectedModel);
+    const updateUserModel = useUpdateUserModelDispatch();
+    const updateModel = () => {
+        if (selectedModel.modelName == currentModel) {
+            alert("Bruh it's the same model, unless you want to spam the server");
+            return;
         }
+        updateUserModel(user.id, selectedModel.modelId);
+        window.location.reload();
     }
 
     return (

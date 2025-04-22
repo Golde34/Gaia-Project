@@ -2,6 +2,7 @@ import {
     LLM_MODEL_LIST_FAILURE, LLM_MODEL_LIST_REQUEST, LLM_MODEL_LIST_SUCCESS, 
     USER_DETAIL_FAIL, USER_DETAIL_REQUEST, USER_DETAIL_SUCCESS, 
     USER_LIST_FAIL, USER_LIST_REQUEST, USER_LIST_SUCCESS, 
+    USER_MODEL_UPDATE_FAILURE, USER_MODEL_UPDATE_REQUEST, USER_MODEL_UPDATE_SUCCESS, 
     USER_SETTING_UPDATE_FAILURE, USER_SETTING_UPDATE_REQUEST, USER_SETTING_UPDATE_SUCCESS, 
     USER_UPDATE_FAIL, USER_UPDATE_REQUEST, USER_UPDATE_SUCCESS 
 } from "../../constants/auth_service/user.constants";
@@ -70,6 +71,20 @@ export const getAllLLMModelsReducer = (
         case LLM_MODEL_LIST_SUCCESS:
             return { loading: false, llmModelInfo: action.payload.llmModels };
         case LLM_MODEL_LIST_FAILURE:
+            return { loading: false, error: action.payload };
+        default:
+            return state;
+    }
+}
+
+export const updateUserModelReducer = (
+    state = {}, action) => {
+    switch (action.type) {
+        case USER_MODEL_UPDATE_REQUEST:
+            return { loading: true };
+        case USER_MODEL_UPDATE_SUCCESS:
+            return { loading: false, success: true };
+        case USER_MODEL_UPDATE_FAILURE:
             return { loading: false, error: action.payload };
         default:
             return state;

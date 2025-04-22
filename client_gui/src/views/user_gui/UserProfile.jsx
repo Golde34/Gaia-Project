@@ -62,7 +62,7 @@ function ContentArea() {
                                 <UserSettingScreen user={user} />
                             </div>
                             <div className="w-full p-2 mt-2">
-                                <LLMModelSettingScreen model={user.llmModels[0].modelName}/> 
+                                <LLMModelSettingScreen user={user} model={user.llmModels[0].modelName}/> 
                             </div>
                         </div>
                         <div className="col-span-5">

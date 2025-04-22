@@ -1,10 +1,11 @@
 import { HttpMethods, serverRequest } from "../../../baseAPI";
-import { LLM_MODEL_LIST_FAILURE, LLM_MODEL_LIST_REQUEST, LLM_MODEL_LIST_SUCCESS, 
-    USER_DETAIL_FAIL, USER_DETAIL_REQUEST, USER_DETAIL_SUCCESS, 
-    USER_LIST_FAIL, USER_LIST_REQUEST, USER_LIST_SUCCESS, 
-    USER_MODEL_UPDATE_FAILURE, USER_MODEL_UPDATE_REQUEST, USER_MODEL_UPDATE_SUCCESS, 
-    USER_SETTING_UPDATE_FAILURE, USER_SETTING_UPDATE_REQUEST, USER_SETTING_UPDATE_SUCCESS, 
-    USER_UPDATE_FAIL, USER_UPDATE_REQUEST, USER_UPDATE_SUCCESS 
+import {
+    LLM_MODEL_LIST_FAILURE, LLM_MODEL_LIST_REQUEST, LLM_MODEL_LIST_SUCCESS,
+    USER_DETAIL_FAIL, USER_DETAIL_REQUEST, USER_DETAIL_SUCCESS,
+    USER_LIST_FAIL, USER_LIST_REQUEST, USER_LIST_SUCCESS,
+    USER_MODEL_UPDATE_FAILURE, USER_MODEL_UPDATE_REQUEST, USER_MODEL_UPDATE_SUCCESS,
+    USER_SETTING_UPDATE_FAILURE, USER_SETTING_UPDATE_REQUEST, USER_SETTING_UPDATE_SUCCESS,
+    USER_UPDATE_FAIL, USER_UPDATE_REQUEST, USER_UPDATE_SUCCESS
 } from "../../constants/auth_service/user.constants";
 
 const portName = {
@@ -43,7 +44,7 @@ export const updateUser = (user) => async (dispatch) => {
 }
 
 export const userProfile = (userId) => async (dispatch) => {
-    dispatch({ type: USER_DETAIL_REQUEST , payload: userId });
+    dispatch({ type: USER_DETAIL_REQUEST, payload: userId });
     try {
         const { data } = await serverRequest(`/user/detail/${userId}`, HttpMethods.GET, portName.middlewarePort);
         dispatch({ type: USER_DETAIL_SUCCESS, payload: data.data });
@@ -81,6 +82,21 @@ export const getLLMModels = () => async (dispatch) => {
     } catch (error) {
         dispatch({
             type: LLM_MODEL_LIST_FAILURE,
+            payload: error.response && error.response.data.message
+                ? error.response.data.message
+                : error.message,
+        });
+    }
+}
+
+export const updateUserModel = (userId, modelId) => async (dispatch) => {
+    dispatch({ type: USER_MODEL_UPDATE_REQUEST, payload: { userId, modelId } });
+    try {
+        const { data } = await serverRequest('/user-model/update-user-model', HttpMethods.PUT, portName.middlewarePort, { userId, modelId });
+        dispatch({ type: USER_MODEL_UPDATE_SUCCESS, payload: data });
+    } catch (error) {
+        dispatch({
+            type: USER_MODEL_UPDATE_FAILURE,
             payload: error.response && error.response.data.message
                 ? error.response.data.message
                 : error.message,
