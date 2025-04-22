@@ -39,7 +39,15 @@ func NewUserRouter(userService *services.UserService, db database_mongo.Database
 		// r.Get("/get-user", func(w http.ResponseWriter, r *http.Request) {
 		// 	controller_services.GetUserByUsername(w, r, userService)
 		// })
-
+	})
+	r.Route("/user-model", func(r chi.Router) {
+		r.Use(middleware.CheckMicroserviceStatus(db, enums.AUTH_SERVICE))
+		r.Get("/get-all-models", func(w http.ResponseWriter, r *http.Request) {
+			controller.GetAllModels(w, r, userService)
+		})
+		r.Put("/update-user-model", func(w http.ResponseWriter, r *http.Request) {
+			controller.UpdateUserModel(w, r, userService)
+		})
 	})
 	return &UserRouter{
 		UserService: userService,

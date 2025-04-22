@@ -27,14 +27,14 @@ public class User {
     private String name;
 
     private String username;
-    
+
     private String email;
 
-    @Column(length=60)
+    @Column(length = 60)
     @JsonIgnore
     private String password;
 
-    private Date lastLogin;    
+    private Date lastLogin;
 
     private boolean enabled;
 
@@ -44,9 +44,7 @@ public class User {
 
     @JsonManagedReference
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "users_roles",
-            joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
+    @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private Collection<Role> roles;
 
     @JsonManagedReference
@@ -56,6 +54,11 @@ public class User {
 
     @OneToOne(mappedBy = "user")
     private UserSetting userSetting;
+
+    @JsonManagedReference
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "users_models", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "model_id", referencedColumnName = "modelId"))
+    private Collection<LLMModel> llmModels; 
 
     @Override
     public String toString() {

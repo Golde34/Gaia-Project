@@ -7,10 +7,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import auth.authentication_service.core.domain.dto.response.CheckTokenDtoResponse;
 
 public interface TokenService {
-    public String generateAccessToken(UserDetails userDetails);
-    public String generateRefreshToken(UserDetails userDetails);
-    public String getUsernameFromToken(String accessToken);
-    public Date getExpirationDateFromToken(String token);
-    public CheckTokenDtoResponse checkToken(String token);
-    public Boolean validateToken(String token);
+    String generateAccessToken(UserDetails userDetails);
+    String generateRefreshToken(UserDetails userDetails);
+    String getUsernameFromToken(String accessToken);
+    Date getExpirationDateFromToken(String token);
+    CheckTokenDtoResponse checkToken(String token);
+    Boolean validateToken(String token);
 }

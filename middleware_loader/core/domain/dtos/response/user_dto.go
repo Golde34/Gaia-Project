@@ -67,17 +67,17 @@ func (in *UserDTO) MapperListToGraphQLModel(input []UserDTO) []model.ListAllUser
 }
 
 type UserDetailDTO struct {
-	ID         float64       `json:"id"`
-	Name       string        `json:"name"`
-	Username   string        `json:"username"`
-	Email      string        `json:"email"`
-	Password   string        `json:"password"`
-	LastLogin  string        `json:"lastLogin"`
-	Enabled    bool          `json:"enabled"`
-	IsUsing2fa bool          `json:"isUsing2FA"`
-	Secret     string        `json:"secret"`
-	Roles      []interface{} `json:"roles"`
-
+	ID          float64         `json:"id"`
+	Name        string          `json:"name"`
+	Username    string          `json:"username"`
+	Email       string          `json:"email"`
+	Password    string          `json:"password"`
+	LastLogin   string          `json:"lastLogin"`
+	Enabled     bool            `json:"enabled"`
+	IsUsing2fa  bool            `json:"isUsing2FA"`
+	Secret      string          `json:"secret"`
+	Roles       []interface{}   `json:"roles"`
+	LLMModels   []interface{}   `json:"llmModels"`
 	UserSetting *UserSettingDTO `json:"userSetting"`
 }
 type UserSettingDTO struct {
@@ -105,6 +105,17 @@ func (in *UserDetailDTO) MapperToGraphQLModelDetail(input UserDetailDTO) model.U
 		TaskSortingAlgorithm: input.UserSetting.TaskSortingAlgorithm,
 		AutoOptimizeConfig:   input.UserSetting.AutoOptimizeConfig,
 	}
+	out.LlmModels = convertModelNameToLLMModels(input.LLMModels)
+	return out
+}
+
+func convertModelNameToLLMModels(models []interface{}) []*model.LLMModel {
+	var out []*model.LLMModel
+	for _, llmModel := range models {
+		modelMap := llmModel.(map[string]interface{})
+		modelName := modelMap["modelName"].(string)
+		out = append(out, &model.LLMModel{ModelName: modelName})
+	}
 	return out
 }
 
@@ -119,4 +130,13 @@ func (in *UserSettingDTO) MapperToGraphQLModelSetting(input UserSettingDTO) mode
 	out.TaskSortingAlgorithm = input.TaskSortingAlgorithm
 	out.AutoOptimizeConfig = input.AutoOptimizeConfig
 	return out
+}
+
+type LLMModel struct {
+	ModelId      float64 `json:"modelId"`
+	ModelName    string  `json:"modelName"`
+}
+
+func NewLLMModel() *LLMModel {
+	return &LLMModel{}
 }

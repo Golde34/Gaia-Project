@@ -1,6 +1,7 @@
 package controller_services
 
 import (
+	"encoding/json"
 	"log"
 	base_dtos "middleware_loader/core/domain/dtos/base"
 	mapper "middleware_loader/core/port/mapper/request"
@@ -75,4 +76,46 @@ func UpdateUserSetting(w http.ResponseWriter, r *http.Request, userService *serv
 	graphqlQuery := utils.GenerateGraphQLQueryWithMultipleFunction("mutation", graphqlQueryModel)
 
 	utils.ConnectToGraphQLServer(w, graphqlQuery)
+}
+
+func GetAllModels(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
+	allModels, err := services.NewUserService().GetAllModels()	
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	models := map[string]interface{}{
+		"llmModels": allModels,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(models); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}
+
+func UpdateUserModel(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
+	var body map[string]interface{}
+	body, err := controller_utils.MappingBody(w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	input := mapper.UpdateUserModelRequestDTOMapper(body)
+	updateUserModel, err := services.NewUserService().UpdateUserModel(input)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(updateUserModel); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 }

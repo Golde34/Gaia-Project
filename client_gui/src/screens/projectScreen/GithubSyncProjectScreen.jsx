@@ -172,7 +172,7 @@ const GithubSyncProjectScreen = (props) => {
                                             >
                                                 {filteredRepos.map((project) => (
                                                     <ComboboxOption
-                                                        key={project.id}
+                                                        key={project.name}
                                                         value={project}
                                                         className="group flex cursor-default items-center gap-2 rounded-lg py-1.5 px-3 select-none data-[focus]:bg-white/10"
                                                     >

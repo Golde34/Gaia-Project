@@ -55,12 +55,22 @@ PORTS = {
     "notify_agent": {
         "name": "Notify Agent",
         "port": 4003,
-        "programming_language": "Python",
+        "programming_language": "Golang",
         "description": "Notify Agent API",
         "router": "notify-agent",
         "database": "MongoDB",
         "database_name": "notify_agent",
         "shell_path": "gaia_bot/microservices/bash_shell/notify_agent.sh"
+    },
+    "chat_hub": {
+        "name": "Chat Hub",
+        "port": 4004,
+        "programming_language": "Golang",
+        "description": "Chat Hub API",
+        "router": "chat-hub",
+        "database": None,
+        "database_name": None,
+        "shell_path": "gaia_bot/microservices/bash_shell/chat_hub.sh"
     },
 
     ## BACKEND MICROSERVICES
@@ -189,6 +199,7 @@ PORT_COMPONENTS = [
     "notify_agent",
     "contribution_tracker",
     "ai_core",
+    "chat_hub",
     # 3rd Party + Pipeline
     "sor_data_transfer",
     "kafka_server",
