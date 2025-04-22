@@ -63,6 +63,7 @@ public class Constants {
         public static final String DELETE_PRIVILEGE = "delete privilege failed";
 
         public static final String GET_ALL_LLM_MODELS = "get all llm models failed";
+        public static final String UPDATE_LLM_MODELS = "update llm models failed";
     }
 
     @UtilityClass
