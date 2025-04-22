@@ -64,4 +64,20 @@ public class UserModelSettingServiceImpl implements UserModelSettingService {
             return genericResponse.matchingResponseMessage(response);
         }
     }
+
+    @Override
+    public ResponseEntity<?> getModelByUser(Long userId) {
+        try {
+            User user = userStore.findUserById(userId);
+            LLMModel model = user.getLlmModels().stream().findFirst().orElse(null);
+            return genericResponse.matchingResponseMessage(new GenericResponse<>(model, ResponseEnum.msg200));
+        } catch (Exception e) {
+            log.error("Error fetching model by user: {}", e.getMessage());
+            GenericResponse<String> response = responseUtils.returnMessage(
+                    "Get model by user failed: %s ".formatted(e.getMessage()),
+                    Constants.ResponseMessage.GET_LLM_MODEL_BY_USER,
+                    ResponseEnum.msg400);
+            return genericResponse.matchingResponseMessage(response);
+        }
+    }
 }

@@ -7,4 +7,5 @@ import auth.authentication_service.core.domain.dto.request.UpdateUserModelReques
 public interface UserModelSettingService {
     ResponseEntity<?> getListModels(); 
     ResponseEntity<?> updateModelSetting(UpdateUserModelRequest updateUserModelRequest);
+    ResponseEntity<?> getModelByUser(Long userId);
 }
