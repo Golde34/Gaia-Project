@@ -131,3 +131,12 @@ func (in *UserSettingDTO) MapperToGraphQLModelSetting(input UserSettingDTO) mode
 	out.AutoOptimizeConfig = input.AutoOptimizeConfig
 	return out
 }
+
+type LLMModel struct {
+	ModelId      float64 `json:"modelId"`
+	ModelName    string  `json:"modelName"`
+}
+
+func NewLLMModel() *LLMModel {
+	return &LLMModel{}
+}

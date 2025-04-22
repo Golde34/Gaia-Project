@@ -66,3 +66,10 @@ func ReturnUserSettingObjectMapper(body map[string]interface{}) *response_dtos.U
 	input.AutoOptimizeConfig = body["autoOptimizeConfig"].(float64)
 	return &input
 }
+
+func ReturnLLMModelObjectMapper(body map[string]interface{}) *response_dtos.LLMModel {
+	var input response_dtos.LLMModel
+	input.ModelId = body["modelId"].(float64)
+	input.ModelName = body["modelName"].(string)
+	return &input
+}

@@ -77,3 +77,12 @@ func (s *UserService) UpdateUserSetting(ctx context.Context, input model.UpdateU
 	userSettingModel := userSettingResponse.MapperToGraphQLModelSetting(userSetting)
 	return userSettingModel, nil
 }
+
+func (s *UserService) GetAllModels() ([]response_dtos.LLMModel, error) {
+	models, err := client.IUserAdapter(&adapter.UserAdapter{}).GetAllModels()
+	if err != nil {
+		return nil, err
+	}
+	
+	return models, nil
+} 

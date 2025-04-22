@@ -48,3 +48,12 @@ func NewUpdateUserSettingRequestDTO() *UpdateUserSettingRequestDTO {
 func (in *UpdateUserSettingRequestDTO) MapperToModel(input model.UpdateUserSettingInput) {
 	mapper.AutoMapper(&input, in)
 }
+
+type UpdateUserModelRequestDTO struct {
+	UserId float64 `json:"userId"`
+	ModelId float64 `json:"modelId"`
+}
+
+func NewUpdateUserModelRequestDTO() *UpdateUserModelRequestDTO {
+	return &UpdateUserModelRequestDTO{}
+}
