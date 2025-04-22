@@ -1,5 +1,5 @@
-import { Button, Card, Col, Flex, Grid, Metric, Subtitle, Text, Title } from "@tremor/react";
 import Template from "../../components/template/Template"
+import { Metric } from "@tremor/react";
 import { useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,6 +9,7 @@ import MessageBox from "../../components/subComponents/MessageBox";
 import UserSettingScreen from "../../screens/userScreen/UserSettingScreen";
 import UserProfileInfoScreen from "../../screens/userScreen/UserProfileScreen";
 import UserGithubScreen from "../../screens/userScreen/UserGihubScreen";
+import LLMModelSettingScreen from "../../screens/userScreen/LLMModelSetting";
 
 function ContentArea() {
     const navigate = useNavigate();
@@ -52,15 +53,18 @@ function ContentArea() {
                                 <div className="flex-auto w-full">
                                     <UserProfileInfoScreen user={user} />
                                 </div>
-                            </div>
 
+                            </div>
                         </div>
+
                         <div className="col-span-3 w-full">
                             <div className='w-full p-2'>
                                 <UserSettingScreen user={user} />
                             </div>
+                            <div className="w-full p-2 mt-2">
+                                <LLMModelSettingScreen model={user.llmModels[0].modelName}/> 
+                            </div>
                         </div>
-
                         <div className="col-span-5">
                             <div className="w-full flex flex-col justify-between p-2">
                                 <div className="flex-auto w-full">
