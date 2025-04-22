@@ -77,6 +77,7 @@ const LLMModelSettingScreen = (props) => {
                                                 )}
                                                 displayValue={(model) => model?.modelName}
                                                 onChange={(event) => setqueryModel(event.target.value)}
+                                                placeholder="Choose your model so Gaia can respond to you appropriately"
                                             />
                                             <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">
                                                 <ChevronDownIcon className="size-4 fill-white/60 group-data-[hover]:fill-white" />
