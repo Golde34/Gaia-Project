@@ -120,7 +120,7 @@ func (adapter *UserAdapter) GetAllModels() ([]response_dtos.LLMModel, error) {
 func (adapter *UserAdapter) UpdateUserModel(input request_dtos.UpdateUserModelRequestDTO) (string, error) {
 	updateUserModelURL := base.AuthServiceURL + "/user-model-setting/update"
 	headers := utils.BuildAuthorizationHeaders(enums.AS, "1")
-	bodyResult, err := utils.BaseAPI(updateUserModelURL, "PUT", input, headers)
+	bodyResult, err := utils.BaseAPI(updateUserModelURL, "POST", input, headers)
 	if err != nil {
 		return "", err
 	}

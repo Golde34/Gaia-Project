@@ -96,3 +96,26 @@ func GetAllModels(w http.ResponseWriter, r *http.Request, userService *services.
 		return
 	}
 }
+
+func UpdateUserModel(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
+	var body map[string]interface{}
+	body, err := controller_utils.MappingBody(w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	input := mapper.UpdateUserModelRequestDTOMapper(body)
+	updateUserModel, err := services.NewUserService().UpdateUserModel(input)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(updateUserModel); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}

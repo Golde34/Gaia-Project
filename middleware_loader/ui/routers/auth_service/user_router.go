@@ -45,9 +45,9 @@ func NewUserRouter(userService *services.UserService, db database_mongo.Database
 		r.Get("/get-all-models", func(w http.ResponseWriter, r *http.Request) {
 			controller.GetAllModels(w, r, userService)
 		})
-		// r.Put("/update-user-model-setting", func(w http.ResponseWriter, r *http.Request) {
-		// 	controller.UpdateUserModelSetting(w, r, userService)
-		// })
+		r.Put("/update-user-model", func(w http.ResponseWriter, r *http.Request) {
+			controller.UpdateUserModel(w, r, userService)
+		})
 	})
 	return &UserRouter{
 		UserService: userService,
