@@ -13,6 +13,6 @@ import lombok.ToString;
 @ToString
 public class UpdateUserModelRequest {
     
-    private String userId;
-    private String modelId;
+    private Long userId;
+    private Long modelId;
 }

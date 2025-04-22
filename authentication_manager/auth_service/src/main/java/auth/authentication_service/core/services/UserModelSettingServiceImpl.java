@@ -1,8 +1,6 @@
 package auth.authentication_service.core.services;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -49,8 +47,8 @@ public class UserModelSettingServiceImpl implements UserModelSettingService {
     @Override
     public ResponseEntity<?> updateModelSetting(UpdateUserModelRequest updateUserModelRequest) {
         try {
-            User user = userStore.findUserById(Long.parseLong(updateUserModelRequest.getUserId())); 
-            LLMModel model = llmModelStore.findModelById(Long.parseLong(updateUserModelRequest.getModelId()));
+            User user = userStore.findUserById(updateUserModelRequest.getUserId()); 
+            LLMModel model = llmModelStore.findModelById(updateUserModelRequest.getModelId());
             List<LLMModel> updateModels = new ArrayList<>(user.getLlmModels());
             updateModels.clear();
             updateModels.add(model);
