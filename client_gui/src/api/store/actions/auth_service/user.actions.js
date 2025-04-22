@@ -1,9 +1,9 @@
 import { HttpMethods, serverRequest } from "../../../baseAPI";
-import { USER_DETAIL_FAIL, USER_DETAIL_REQUEST, USER_DETAIL_SUCCESS, 
+import { LLM_MODEL_LIST_FAILURE, LLM_MODEL_LIST_REQUEST, LLM_MODEL_LIST_SUCCESS, 
+    USER_DETAIL_FAIL, USER_DETAIL_REQUEST, USER_DETAIL_SUCCESS, 
     USER_LIST_FAIL, USER_LIST_REQUEST, USER_LIST_SUCCESS, 
-    USER_SETTING_UPDATE_FAILURE, 
-    USER_SETTING_UPDATE_REQUEST, 
-    USER_SETTING_UPDATE_SUCCESS, 
+    USER_MODEL_UPDATE_FAILURE, USER_MODEL_UPDATE_REQUEST, USER_MODEL_UPDATE_SUCCESS, 
+    USER_SETTING_UPDATE_FAILURE, USER_SETTING_UPDATE_REQUEST, USER_SETTING_UPDATE_SUCCESS, 
     USER_UPDATE_FAIL, USER_UPDATE_REQUEST, USER_UPDATE_SUCCESS 
 } from "../../constants/auth_service/user.constants";
 
@@ -58,13 +58,29 @@ export const userProfile = (userId) => async (dispatch) => {
 }
 
 export const updateUserSetting = (updateUserSettingRequest) => async (dispatch) => {
-    dispatch({ type: USER_SETTING_UPDATE_REQUEST,  payload: updateUserSettingRequest });
+    dispatch({ type: USER_SETTING_UPDATE_REQUEST, payload: updateUserSettingRequest });
     try {
         const { data } = await serverRequest('/user/update-user-setting', HttpMethods.PUT, portName.middlewarePort, updateUserSettingRequest);
         dispatch({ type: USER_SETTING_UPDATE_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({
             type: USER_SETTING_UPDATE_FAILURE,
+            payload: error.response && error.response.data.message
+                ? error.response.data.message
+                : error.message,
+        });
+    }
+}
+
+export const getLLMModels = () => async (dispatch) => {
+    dispatch({ type: LLM_MODEL_LIST_REQUEST, payload: null });
+    try {
+        const { data } = await serverRequest('/user-model/get-all-models', HttpMethods.GET, portName.middlewarePort);
+        console.log("getLLMModels data: ", data.llmModels);
+        dispatch({ type: LLM_MODEL_LIST_SUCCESS, payload: data });
+    } catch (error) {
+        dispatch({
+            type: LLM_MODEL_LIST_FAILURE,
             payload: error.response && error.response.data.message
                 ? error.response.data.message
                 : error.message,

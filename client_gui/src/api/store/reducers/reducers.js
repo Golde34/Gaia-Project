@@ -27,7 +27,7 @@ import {
     commentListReducer, commentUpdateReducer
 } from './task_manager/comment.reducers'
 import { microserviceListReducer, screenListReducer } from "./middleware_loader/microservices.reducer";
-import { userDetailReducer, userListReducer, userSettingUpdateReducer, userUpdateReducer } from "./auth_service/user.reducer";
+import { getAllLLMModelsReducer, userDetailReducer, userListReducer, userSettingUpdateReducer, userUpdateReducer } from "./auth_service/user.reducer";
 import { roleCreateReducer, roleListReducer } from "./auth_service/role.reducer";
 import { privilegeListReducer } from "./auth_service/privilege.reducer";
 import { queryTaskConfigReducer, registerTaskConfigReducer } from "./work_optimization/task-registration.reducers";
@@ -55,6 +55,7 @@ export const reducer = combineReducers({
     privilegeList: privilegeListReducer,
     userSettingUpdate: userSettingUpdateReducer,
     userGithubInfo: getUserGithubInfoReducer,
+    llmModels: getAllLLMModelsReducer,
     // task manager
     projectList: projectListReducer,
     projectDetail: projectDetailReducer,
