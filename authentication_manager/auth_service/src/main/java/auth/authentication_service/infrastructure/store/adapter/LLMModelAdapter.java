@@ -33,7 +33,7 @@ public class LLMModelAdapter implements LLMModelStore {
 
     @Override
     public List<LLMModel> findAll() {
-        return llmModelRepository.findAll();
+        return llmModelRepository.findAllByActiveStatus(Constants.ActiveStatus.ACTIVE_BOOL);
     }
 
     @Override

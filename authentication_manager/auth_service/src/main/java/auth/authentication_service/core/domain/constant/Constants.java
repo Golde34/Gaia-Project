@@ -61,6 +61,8 @@ public class Constants {
         public static final String PRIVILEGE_EXISTED = "privilege existed";
         public static final String UPDATE_PRIVILEGE = "update privilege failed";
         public static final String DELETE_PRIVILEGE = "delete privilege failed";
+
+        public static final String GET_ALL_LLM_MODELS = "get all llm models failed";
     }
 
     @UtilityClass

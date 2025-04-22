@@ -86,6 +86,7 @@ public class SecurityConfig {
                             .requestMatchers(new AntPathRequestMatcher("/privilege/**")).hasRole("ADMIN")
                             .requestMatchers(new AntPathRequestMatcher("/user/**")).hasRole("ADMIN")
                             .requestMatchers(new AntPathRequestMatcher("/user-setting/**")).hasRole("ADMIN")
+                            .requestMatchers(new AntPathRequestMatcher("/user-model-setting/**")).hasRole("ADMIN")
                             .requestMatchers(new AntPathRequestMatcher("/**")).hasRole("BOSS")
                             .anyRequest().authenticated();
                 });
