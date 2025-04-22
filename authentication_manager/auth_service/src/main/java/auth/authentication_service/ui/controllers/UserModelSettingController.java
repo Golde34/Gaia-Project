@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import auth.authentication_service.core.domain.dto.request.UpdateUserModelRequest;
@@ -23,8 +24,13 @@ public class UserModelSettingController {
         return userModelSettingService.getListModels();
     }
     
-    @PostMapping("update")
+    @PostMapping("/update")
     public ResponseEntity<?> updateModelSetting(@RequestBody UpdateUserModelRequest updateUserModelRequest) {
         return userModelSettingService.updateModelSetting(updateUserModelRequest);
+    }
+
+    @GetMapping("/get-model-by-user")
+    public ResponseEntity<?> getModelsByUser(@RequestParam("userId") Long userId) {
+        return userModelSettingService.getModelByUser(userId);
     }
 }

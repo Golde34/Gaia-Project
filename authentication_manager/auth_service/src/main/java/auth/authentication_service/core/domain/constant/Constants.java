@@ -64,6 +64,7 @@ public class Constants {
 
         public static final String GET_ALL_LLM_MODELS = "get all llm models failed";
         public static final String UPDATE_LLM_MODELS = "update llm models failed";
+        public static final String GET_LLM_MODEL_BY_USER = "get llm model by user failed";
     }
 
     @UtilityClass
