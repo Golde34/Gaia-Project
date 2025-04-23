@@ -78,7 +78,8 @@ public class SecurityConfig {
                             .requestMatchers(new AntPathRequestMatcher("/auth/sign-in"),
                                     new AntPathRequestMatcher("/auth/gaia-auto-sign-in"),
                                     new AntPathRequestMatcher("/auth/check-permission"),
-                                    new AntPathRequestMatcher("/auth/status"))
+                                    new AntPathRequestMatcher("/auth/status"),
+                                    new AntPathRequestMatcher("/user/create-user"))
                             .permitAll()
                             .requestMatchers(new AntPathRequestMatcher("/auth/user/**")).hasRole("USER")
                             .requestMatchers(new AntPathRequestMatcher("/auth/admin/**")).hasRole("ADMIN")
