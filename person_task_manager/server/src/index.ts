@@ -12,9 +12,11 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import { msg200, msg400, msg405, sendResponse } from "./core/common/response-helpers";
+import { msg200, msg405, sendResponse } from "./core/common/response-helpers";
 import { userTagRouter } from "./ui/routers/user-tag.router";
 import { noteRouter } from "./ui/routers/note.router";
+import { kafkaController } from "./infrastructure/kafka/kafka-controller";
+import { KafkaConfig } from "./infrastructure/kafka/kafka-config";
 
 async function main(): Promise<void> {
     validateEnvironmentVars()
@@ -66,6 +68,9 @@ async function main(): Promise<void> {
         console.log(`Server running on port ${port}`);
     });
 
+    // Kafka consumer
+    const kafkaHandler = new KafkaConfig();
+    kafkaController(kafkaHandler);
 }
 
 main();
