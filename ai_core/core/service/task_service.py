@@ -31,7 +31,7 @@ def _create_task(query: QueryRequest) -> str:
     try:
         prompt = CREATE_TASK_PROMPT.format(query = query.query)
 
-        response = llm_models.get_model_generate_content(query.model_name)(prompt=prompt,dto=CreateTaskSchema) 
+        response = llm_models.get_model_generate_content(query.model_name)(prompt=prompt,model_name=query.model_name,dto=CreateTaskSchema) 
         print("Response:", response)
         return json.loads(response)
     except Exception as e:
@@ -49,7 +49,7 @@ def _chitchat(query: QueryRequest) -> str:
     try:
         prompt = CHITCHAT_PROMPT.format(query = query.query)
 
-        response = llm_models.get_model_generate_content(query.model_name)(prompt=prompt) 
+        response = llm_models.get_model_generate_content(query.model_name)(prompt=prompt,model_name=query.model_name) 
         print("Response:", response)
         return response
     except Exception as e:
@@ -70,7 +70,7 @@ def task_service(query: QueryRequest):
         prompt = TASK_CLASSIFY_PROMPT.format(query = query.query, tools = tools_string)
         print("Prompt:", prompt)
 
-        response = llm_models.get_model_generate_content(query.model_name)(prompt=prompt) 
+        response = llm_models.get_model_generate_content(query.model_name)(prompt=prompt,model_name=query.model_name) 
         print("Response:", response)
         
         if 'create_task' in response:
@@ -79,7 +79,7 @@ def task_service(query: QueryRequest):
             print("Create task response:", create_task_response)
             data = {
                 'type': 'create_task',
-                'response': create_task_response.get('Response'),
+                'response': create_task_response.get('response'),
                 'task': create_task_response
             }
             print("Data:", data)
