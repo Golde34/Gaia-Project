@@ -35,9 +35,9 @@ func (s *ChatService) HandleChatMessage(userId string, message string) (string, 
 		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
 		return "", err
 	}
-	
+
 	go handleChatResponse(chatResponse, userId)
-	
+
 	data, exists := chatResponse["response"].(string)
 	if !exists || data == "" {
 		return "Internal System Error", err
@@ -51,9 +51,12 @@ func handleChatResponse(chatResponse map[string]interface{}, userId string) {
 	if chatResponse["type"] == "chitchat" {
 		log.Println("Chitchat response for user " + userId)
 	}
+
 	if chatResponse["type"] == "create_task" {
 		log.Println("Create task response for user " + userId)
-		chatResponse["task"].(map[string]interface{})["user_id"] = userId
-		kafka.ProduceKafkaMessage(chatResponse["task"].(map[string]interface{}), constants.AICreateTaskTopic, constants.CreateTaskCmd)
-	}	
+		chatResponse["task"].(map[string]interface{})["userId"] = userId
+		if chatResponse["task"].(map[string]interface{})["actionType"] == "create" {
+			kafka.ProduceKafkaMessage(chatResponse["task"].(map[string]interface{}), constants.AICreateTaskTopic, constants.CreateTaskCmd)
+		}
+	}
 }
