@@ -68,6 +68,10 @@ public class AuthServiceImpl implements AuthService {
         if (!validate.getResponseMessage().equals(ResponseEnum.msg200)) {
             return genericResponse.matchingResponseMessage(validate);
         }
+        if(user.isEnabled() == false) {
+            _logger.log("User is inactive", LoggerType.ERROR);
+            return genericResponse.matchingResponseMessage(new GenericResponse<>("User is inactive", ResponseEnum.msg401));
+        }
         // Generate sign-in information
         SignInDtoResponse response = _generateSignInToken(user, userDetails, BossType.USER);
         _logger.log("User: " + user.getUsername() + " sign-in success", LoggerType.INFO);
