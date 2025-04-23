@@ -1,8 +1,10 @@
 package services
 
 import (
+	"chat_hub/core/domain/constants"
 	request_dtos "chat_hub/core/domain/dtos/request"
 	"chat_hub/infrastructure/client"
+	"chat_hub/infrastructure/kafka"
 	"log"
 )
 
@@ -51,5 +53,6 @@ func handleChatResponse(chatResponse map[string]interface{}, userId string) {
 	}
 	if chatResponse["type"] == "create_task" {
 		log.Println("Create task response for user " + userId)
+		kafka.ProduceKafkaMessage(chatResponse["task"].(map[string]interface{}), constants.AICreateTaskTopic, constants.CreateTaskCmd)
 	}	
 }
