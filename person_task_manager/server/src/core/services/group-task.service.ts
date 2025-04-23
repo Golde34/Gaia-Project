@@ -26,7 +26,7 @@ class GroupTaskService {
 
     async createGroupTaskToProject(groupTask: any, projectId: string): Promise<IResponse> {
         try {
-            groupTask = await this.checkDefaultGroupTask(groupTask);
+            // groupTask = await this.checkDefaultGroupTask(groupTask);
             groupTask.projectId = projectId;
 
             const createGroupTask = await groupTaskStore.createGroupTask(groupTask);
@@ -59,7 +59,7 @@ class GroupTaskService {
     // This fucntion does not response to client
     async createGroupTaskFromTask(groupTask: any, projectId: string): Promise<string | undefined> {
         try {
-            groupTask = await this.checkDefaultGroupTask(groupTask);
+            // groupTask = await this.checkDefaultGroupTask(groupTask);
             groupTask.projectId = projectId;
 
             const createGroupTask = await groupTaskStore.createGroupTask(groupTask);

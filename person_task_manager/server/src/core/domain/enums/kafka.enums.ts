@@ -7,6 +7,7 @@ export enum KafkaTopic {
     UPDATE_TASK = 'task-manager.update-task.topic',
     // Consumer
     CREATE_SCHEDULE_TASK = "schedule-plan.create-schedule-task.topic",
+    GAIA_CREATE_TASK = "chat-hub.create-task.topic",
 }
 
 export enum KafkaCommand {
@@ -16,7 +17,8 @@ export enum KafkaCommand {
     UPDATE_TASK = 'updateTask',
     DELETE_TASK = 'deleteTask',
     CREATE_COMMIT = 'createCommit',
-    CREATE_SCHEDULE_TASK = 'scheduleGroupCreateTask'
+    CREATE_SCHEDULE_TASK = 'scheduleGroupCreateTask',
+    GAIA_CREATE_TASK = 'gaiaCreateTask',
 }
 
 export class KafkaMessage {
