@@ -72,7 +72,7 @@ class ProjectRepository {
 
     async archiveProject(projectId: string): Promise<UpdateWriteOpResult> {
         return await ProjectEntity
-            .updateOne({ _id: projectId }, 
+            .updateOne({ _id: projectId },
                 { activeStatus: ActiveStatus.inactive },
                 { status: Status.archived });
     }
@@ -82,9 +82,9 @@ class ProjectRepository {
             .updateOne({ _id: projectId }, { activeStatus: ActiveStatus.active });
     }
 
-    async findDefaultProjectByOwnerId(ownerId: number): Promise<IProjectEntity[]> {
+    async findDefaultProjectByOwnerId(ownerId: number): Promise<IProjectEntity | null> {
         return await ProjectEntity
-            .find({ ownerId: ownerId, activeStatus: ActiveStatus.active, isDefault: BooleanStatus.true});
+            .findOne({ ownerId: ownerId, activeStatus: ActiveStatus.active, isDefault: BooleanStatus.true });
     }
 
     async getOwnerIdByProjectId(projectId: string): Promise<number> {

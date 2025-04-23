@@ -319,6 +319,7 @@ class GroupTaskService {
             if (foundedGroupTask === null) {
                 return undefined;
             }
+            console.log("Founded group task: ", foundedGroupTask);
 
             return foundedGroupTask;
         } catch (error: any) {

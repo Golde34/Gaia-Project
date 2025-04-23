@@ -58,7 +58,7 @@ class TaskUsecase {
         try {
             // Check project existed by name
             const closestProject = await projectService.getProjectByName(groupTaskProjectObj.userId, groupTaskProjectObj.project);
-            if (closestProject === undefined) return msg400('Project not found');
+            if (!closestProject) return msg400('Project not found');
             // Check project existed by name
             const closestGroupTask = await groupTaskService.getGroupTaskByName(closestProject, groupTaskProjectObj.groupTask);
             if (closestGroupTask === undefined) return msg400('Group task not found');

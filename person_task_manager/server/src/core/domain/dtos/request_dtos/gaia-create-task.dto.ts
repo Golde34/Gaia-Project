@@ -3,19 +3,19 @@ import { IsOptional, IsString } from "class-validator";
 export class GaiaCreateTaskDto {
     userId!: number;
     @IsString()
-    ActionType!: string;
+    actionType!: string;
     @IsString()
-    Project!: string;
+    project!: string;
     @IsString()
-    GroupTask!: string;
+    groupTask!: string;
     @IsString()
-    Title!: string;
-    Status!: string;
-    Priority!: string;
+    title!: string;
+    status!: string;
+    priority!: string;
     @IsOptional()
-    Duration?: string;
+    duration?: string;
     @IsOptional()
-    StartDate?: string;
+    startDate?: string;
     @IsOptional()
-    Deadline?: string;
+    deadline?: string;
 }

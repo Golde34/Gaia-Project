@@ -1,31 +1,32 @@
 import { GaiaCreateTaskDto } from "../domain/dtos/request_dtos/gaia-create-task.dto";
+import { chatHubAdapterService } from "../services/chat-hub-adapter.service";
 import { groupTaskService } from "../services/group-task.service";
 import { projectService } from "../services/project.service";
 import { taskService } from "../services/task.service";
 
 class GaiaHandleTasksUsecase {
     constructor(
-        public projectServiceImpl = projectService,
-        public groupTaskServiceImpl = groupTaskService,
-        public taskServiceImpl = taskService,
+        private projectServiceImpl = projectService,
+        private groupTaskServiceImpl = groupTaskService,
+        private taskServiceImpl = taskService,
+        private chatHubAdapterServiceImpl = chatHubAdapterService,
     ) { }
 
-    async createTask(task: GaiaCreateTaskDto) {
-        const project = await this.projectServiceImpl.getProjectByName(task.userId, task.Project);
+    async createTask(task: GaiaCreateTaskDto): Promise<void> {
+        const project = await this.projectServiceImpl.getProjectByName(task.userId, task.project);
         if (!project) {
-            throw new Error(`Project ${task.Project} not found`);
+            console.error(`Project ${task.project} not found`);
+            return;
         }
-        const groupTask = await this.groupTaskServiceImpl.getGroupTaskByName(project, task.GroupTask);
+        const groupTask = await this.groupTaskServiceImpl.getGroupTaskByName(project, task.groupTask);
         if (!groupTask) {
-            throw new Error(`Group task ${task.GroupTask} not found`);
+            console.error(`Group task ${task.groupTask} not found in project ${task.project}`);
+            return;
         }
 
-        const taskData = {
-            ...task,
-            GroupTask: groupTask._id,
-            Project: project._id,
-        };
-        return this.taskServiceImpl.createTaskInGroupTask(taskData, groupTask._id);
+        const createdTask = await this.taskServiceImpl.createTaskInGroupTask(task, groupTask._id);
+        await this.taskServiceImpl.handleAfterCreateTask(createdTask, groupTask._id);
+        await this.chatHubAdapterServiceImpl.pushCreateTaskResultMessage(createdTask, project, groupTask, "createTask");
     }
 }
 
