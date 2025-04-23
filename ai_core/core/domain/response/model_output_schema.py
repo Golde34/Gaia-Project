@@ -3,13 +3,13 @@ from typing import Optional
 
 
 class CreateTaskSchema(BaseModel):
-    Project: str
-    GroupTask: str
-    Title: str
-    Priority: str
-    Status: str
-    StartDate: Optional[str] = None
-    Deadline: Optional[str] = None
-    Duration: Optional[str] = None
-    ActionType: Optional[str] = None 
-    Response: str 
+    project: str
+    groupTask: str
+    title: str
+    priority: str
+    status: str
+    startDate: Optional[str] = None
+    deadline: Optional[str] = None
+    duration: Optional[str] = None
+    actionType: Optional[str] = None 
+    response: str 

@@ -1,12 +1,14 @@
 package services
 
 import (
+	"chat_hub/core/domain/constants"
 	request_dtos "chat_hub/core/domain/dtos/request"
 	"chat_hub/infrastructure/client"
+	"chat_hub/infrastructure/kafka"
 	"log"
 )
 
-type ChatService struct {}
+type ChatService struct{}
 
 func NewChatService() *ChatService {
 	return &ChatService{}
@@ -27,11 +29,34 @@ func (s *ChatService) HandleChatMessage(userId string, message string) (string, 
 	var input request_dtos.LLMQueryRequestDTO
 	input.UserId = userId
 	input.ModelName = userModel.ModelName
-	input.Query= message
+	input.Query = message
 	chatResponse, err := client.NewLLMCoreAdapter().UserPrompt(input)
 	if err != nil {
 		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
 		return "", err
 	}
-	return chatResponse, nil	
+
+	go handleChatResponse(chatResponse, userId)
+
+	data, exists := chatResponse["response"].(string)
+	if !exists || data == "" {
+		return "Internal System Error", err
+	}
+
+	return data, nil
+}
+
+func handleChatResponse(chatResponse map[string]interface{}, userId string) {
+	log.Println("Handling chat response for user " + userId)
+	if chatResponse["type"] == "chitchat" {
+		log.Println("Chitchat response for user " + userId)
+	}
+
+	if chatResponse["type"] == "create_task" {
+		log.Println("Create task response for user " + userId)
+		chatResponse["task"].(map[string]interface{})["userId"] = userId
+		if chatResponse["task"].(map[string]interface{})["actionType"] == "create" {
+			kafka.ProduceKafkaMessage(chatResponse["task"].(map[string]interface{}), constants.AICreateTaskTopic, constants.CreateTaskCmd)
+		}
+	}
 }

@@ -9,10 +9,11 @@ import (
 )
 
 type KafkaConfig struct {
-	BootstrapServers string
-	GroupId          string
-	Topics           []string
-	Name             string
+	BootstrapServers         string
+	GroupId                  string
+	Topics                   []string
+	Name                     string
+	ProducerBootstrapServers string
 }
 
 func (in *KafkaConfig) LoadEnv() (KafkaConfig, error) {
@@ -25,11 +26,13 @@ func (in *KafkaConfig) LoadEnv() (KafkaConfig, error) {
 	groupId := os.Getenv("KAFKA_GROUP_ID")
 	topics := os.Getenv("KAFKA_TOPICS")
 	name := os.Getenv("KAFKA_NAME")
+	producerBootstrapServers := os.Getenv("KAFKA_PRODUCER_BOOTSTRAP_SERVERS")
 
 	return KafkaConfig{
-		BootstrapServers: bootstrapServers,
-		GroupId:          groupId,
-		Topics:           strings.Split(topics, ","),
-		Name:             name,
+		BootstrapServers:         bootstrapServers,
+		GroupId:                  groupId,
+		Topics:                   strings.Split(topics, ","),
+		Name:                     name,
+		ProducerBootstrapServers: producerBootstrapServers,
 	}, nil
 }
