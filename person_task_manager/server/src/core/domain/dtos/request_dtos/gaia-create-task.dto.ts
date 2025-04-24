@@ -11,7 +11,7 @@ export class GaiaCreateTaskDto {
     @IsString()
     title!: string;
     status!: string;
-    priority!: string;
+    priority!: any;
     @IsOptional()
     duration?: string;
     @IsOptional()

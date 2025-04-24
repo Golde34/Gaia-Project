@@ -1,4 +1,5 @@
 import { GaiaCreateTaskDto } from "../domain/dtos/request_dtos/gaia-create-task.dto";
+import { kafkaGaiaCreateTaskMapper } from "../port/mapper/kafka-task.mapper";
 import { chatHubAdapterService } from "../services/chat-hub-adapter.service";
 import { groupTaskService } from "../services/group-task.service";
 import { projectService } from "../services/project.service";
@@ -24,8 +25,11 @@ class GaiaHandleTasksUsecase {
             return;
         }
 
-        const createdTask = await this.taskServiceImpl.createTaskInGroupTask(task, groupTask._id);
+        const mappedTask = kafkaGaiaCreateTaskMapper(task);
+        console.log("Mapped task: ", mappedTask);
+        const createdTask = await this.taskServiceImpl.createTaskInGroupTask(mappedTask, groupTask._id);
         await this.taskServiceImpl.handleAfterCreateTask(createdTask, groupTask._id);
+        await this.taskServiceImpl.pushKafkaToCreateTask(createdTask, groupTask._id);
         await this.chatHubAdapterServiceImpl.pushCreateTaskResultMessage(createdTask, project, groupTask, "createTask");
     }
 }
