@@ -96,9 +96,8 @@ export const kafkaGaiaCreateTaskMapper = (data: GaiaCreateTaskDto) => {
         duration = 2;
     }
     let deadline;
-    if (!data.deadline) {
-        // set deadline to 2 hours from now
-        deadline = new Date(new Date().getTime() + 2 * 60 * 60 * 1000);
+    if (!data.deadline || data.deadline == "now" || data.deadline == "today") {
+        deadline = new Date((startDate ?? new Date()).getTime() + (duration ?? 2) * 60 * 60 * 1000);
     }
     data.priority = priorities;
     data.startDate = startDate?.toDateString();
