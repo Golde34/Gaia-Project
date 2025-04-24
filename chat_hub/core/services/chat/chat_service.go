@@ -5,6 +5,7 @@ import (
 	request_dtos "chat_hub/core/domain/dtos/request"
 	"chat_hub/infrastructure/client"
 	"chat_hub/infrastructure/kafka"
+	"fmt"
 	"log"
 )
 
@@ -59,4 +60,34 @@ func handleChatResponse(chatResponse map[string]interface{}, userId string) {
 			kafka.ProduceKafkaMessage(chatResponse["task"].(map[string]interface{}), constants.AICreateTaskTopic, constants.CreateTaskCmd)
 		}
 	}
+}
+
+func (s *ChatService) ResponseTaskResultToUser(taskResult map[string]interface{}, userId string) (string, error) {
+	log.Printf("Message received from user %s: %v", userId, taskResult)
+	userModel, err := client.NewAuthAdapter().GetUserLLMModelConfig(userId)
+	log.Println("User model config: ", userModel)
+	if err != nil {
+		log.Println("Error getting user model config: " + err.Error())
+		return "", err
+	}
+	if userModel.ModelName == "" {
+		log.Println("User model name is empty, using default model")
+		userModel.ModelName = "gemini-2.0-flash"
+	}
+	var input request_dtos.LLMQueryRequestDTO
+	input.UserId = userId
+	input.ModelName = userModel.ModelName
+	input.Query = fmt.Sprintf("Task result: %v of userId: %s", taskResult, userId) 
+	chatResponse, err := client.NewLLMCoreAdapter().UserPrompt(input)
+	if err != nil {
+		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
+		return "", err
+	}
+
+	data, exists := chatResponse["response"].(string)
+	if !exists || data == "" {
+		return "Internal System Error", err
+	}
+
+	return data, nil
 }

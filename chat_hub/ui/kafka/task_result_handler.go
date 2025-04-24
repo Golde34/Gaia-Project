@@ -3,6 +3,7 @@ package consumer
 import (
 	"chat_hub/core/domain/constants"
 	base_dtos "chat_hub/core/domain/dtos/base"
+	services "chat_hub/core/services/chat"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -40,14 +41,19 @@ func (handler *TaskResultHandler) HandleMessage(topic string, key, value []byte)
 func TaskResultCmd(key []byte, data map[string]interface{}) {
 	messageId := string(key)
 
-	// Here you would typically call a service to handle the task result
-	// For example:
-	// taskService := services.NewTaskResultService()
-	// result, err := taskService.HandleTaskResult(messageId, userId, taskId, taskStatus, errorStatus, notificationFlowId)
-	// if err != nil {
-	// 	fmt.Println("Error handling task result:", err)
-	// 	return
-	// }
+	userId := data["userId"].(string)
+	handleService(data, userId)
 
 	fmt.Printf("Task result handled successfully for message ID: %s\n", messageId)
+}
+
+func handleService(messageMap map[string]interface{}, userId string) (string, error) {
+	result, err := services.NewChatService().ResponseTaskResultToUser(messageMap, userId)
+	if err != nil {
+		log.Println("Error handling task result:", err)
+		return "", err
+	}
+
+	// SendToUser(userId, []byte(result))
+	return result, nil;
 }
