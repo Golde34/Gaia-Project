@@ -3,6 +3,7 @@ package services
 import (
 	"chat_hub/core/domain/constants"
 	request_dtos "chat_hub/core/domain/dtos/request"
+	response_dtos "chat_hub/core/domain/dtos/response"
 	"chat_hub/infrastructure/client"
 	"chat_hub/infrastructure/kafka"
 	"fmt"
@@ -62,13 +63,13 @@ func handleChatResponse(chatResponse map[string]interface{}, userId string) {
 	}
 }
 
-func (s *ChatService) ResponseTaskResultToUser(taskResult map[string]interface{}, userId string) (string, error) {
+func (s *ChatService) ResponseTaskResultToUser(taskResult map[string]interface{}, userId string) (response_dtos.TaskResultMessageDTO, error) {
 	log.Printf("Message received from user %s: %v", userId, taskResult)
 	userModel, err := client.NewAuthAdapter().GetUserLLMModelConfig(userId)
 	log.Println("User model config: ", userModel)
 	if err != nil {
 		log.Println("Error getting user model config: " + err.Error())
-		return "", err
+		return response_dtos.TaskResultMessageDTO{}, err
 	}
 	if userModel.ModelName == "" {
 		log.Println("User model name is empty, using default model")
@@ -81,13 +82,13 @@ func (s *ChatService) ResponseTaskResultToUser(taskResult map[string]interface{}
 	chatResponse, err := client.NewLLMCoreAdapter().UserPrompt(input)
 	if err != nil {
 		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
-		return "", err
+		return response_dtos.TaskResultMessageDTO{}, err
 	}
 
-	data, exists := chatResponse["response"].(string)
-	if !exists || data == "" {
-		return "Internal System Error", err
-	}
+	var data response_dtos.TaskResultMessageDTO
+	data.Type = "taskResult"
+	data.Response = chatResponse["response"].(string)
+	data.TaskResult = chatResponse["task"].(map[string]interface{})	
 
 	return data, nil
 }

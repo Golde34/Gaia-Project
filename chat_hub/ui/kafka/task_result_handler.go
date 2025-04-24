@@ -44,7 +44,7 @@ func TaskResultCmd(key []byte, data map[string]interface{}) {
 	log.Println("Processing task result for data:", data)
 	userId := data["userId"].(float64)
 	userIdStr := fmt.Sprintf("%.0f", userId)
-	handleService(data, userIdStr)
+	go handleService(data, userIdStr)
 
 	fmt.Printf("Task result handled successfully for message ID: %s\n", messageId)
 }
@@ -56,6 +56,12 @@ func handleService(messageMap map[string]interface{}, userId string) (string, er
 		return "", err
 	}
 
-	websocket_service.NewWebSocketService().SendToUser(userId, []byte(result)) 
-	return result, nil;
+	resultBytes, err := json.Marshal(result)
+	if err != nil {
+		log.Println("Error marshalling task result message:", err)
+		return "", err
+	}
+
+	websocket_service.NewWebSocketService().SendToUser(userId, []byte(resultBytes)) 
+	return result.Response, nil;
 }
