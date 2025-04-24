@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import { useEffect, useRef, useState } from 'react';
-import { Button, Card, Metric, TextInput } from '@tremor/react';
+import { Button, Card, Col, Grid, Metric, TextInput } from '@tremor/react';
 import Template from '../../components/template/Template';
 import { useMultiWS } from '../../kernels/context/MultiWSContext';
 
@@ -76,33 +76,34 @@ function ContentArea() {
       <Card className="flex flex-col h-full">
         <div className="flex-1 overflow-auto p-4 space-y-3">
           {chatHistory.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`flex ${msg.from === 'bot' ? 'justify-start' : 'justify-end'}`}
-            >
-              <div
-                className={[
-                  'max-w-xs px-4 py-2 rounded-2xl break-words',
-                  msg.from === 'bot'
-                    ? 'bg-gray-200 text-gray-800'
-                    : 'bg-blue-500 text-white'
-                ].join(' ')}
-              >
-                {msg.text}
-              </div>
-              {/* Task Result card (if any) */}
-              {msg.taskResult && (
-                <div className="mt-4">
-                  <div className="bg-green-100 p-4 rounded-xl">
-                    <h4 className="font-bold">Task Created</h4>
-                    <p><strong>Title:</strong> {msg.taskResult.title}</p>
-                    <p><strong>Priority:</strong> {msg.taskResult.priority}</p>
-                    <p><strong>Start Date:</strong> {new Date(msg.taskResult.startDate).toLocaleString()}</p>
-                    <p><strong>Deadline:</strong> {new Date(msg.taskResult.deadline).toLocaleString()}</p>
-                    {/* Add more task details here if needed */}
-                  </div>
-                </div>
-              )}
+            <div key={idx} className={`flex ${msg.from === 'bot' ? 'justify-start' : 'justify-end'}`}>
+              <Grid numItems={1}>
+                <Col numColSpan={1}>
+                  <div
+                    className={[
+                      'max-w-xs px-4 py-2 rounded-2xl break-words',
+                      msg.from === 'bot'
+                        ? 'bg-gray-200 text-gray-800'
+                        : 'bg-blue-500 text-white'
+                    ].join(' ')}
+                  > {msg.text} </div>
+                </Col>
+                <Col numColSpan={1}>
+                  {/* Task Result card (if any) */}
+                  {msg.taskResult && (
+                    <div className="mt-4">
+                      <div className="bg-green-100 p-4 rounded-xl">
+                        <h4 className="font-bold">Task Created</h4>
+                        <p><strong>Title:</strong> {msg.taskResult.title}</p>
+                        <p><strong>Priority:</strong> {msg.taskResult.priority}</p>
+                        <p><strong>Start Date:</strong> {new Date(msg.taskResult.startDate).toLocaleString()}</p>
+                        <p><strong>Deadline:</strong> {new Date(msg.taskResult.deadline).toLocaleString()}</p>
+                        {/* Add more task details here if needed */}
+                      </div>
+                    </div>
+                  )}
+                </Col>
+              </Grid>
             </div>
           ))}
           <div ref={endRef} />
