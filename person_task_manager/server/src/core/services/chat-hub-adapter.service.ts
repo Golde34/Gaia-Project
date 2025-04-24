@@ -1,3 +1,4 @@
+import { ulid } from "ulid";
 import { createMessage } from "../../infrastructure/kafka/create-message";
 import { KafkaConfig } from "../../infrastructure/kafka/kafka-config";
 import { ITaskEntity } from "../domain/entities/task.entity";
@@ -32,6 +33,7 @@ class ChatHubAdapterService {
             actionType,
         }
         const messages = [{
+            key: ulid(),
             value: JSON.stringify(createMessage(
                 KafkaCommand.CHAT_HUB_TASK_RESULT, '00', 'Successful', data
             ))
