@@ -6,6 +6,9 @@ FUNCTIONS = [
     {
         'label': "chit_chat",
         'description': 'For types of queries that are just regular chat conversations.'
+    },
+    {
+        'label': 'task_result',
+        'description': 'Return task results (get task list, task created/updated/deleted, task schedule optimized, etc.).'
     }
-    
 ]
