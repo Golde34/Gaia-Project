@@ -3,7 +3,8 @@ package consumer
 import (
 	"chat_hub/core/domain/constants"
 	base_dtos "chat_hub/core/domain/dtos/base"
-	services "chat_hub/core/services/chat"
+	chat_service "chat_hub/core/services/chat"
+	websocket_service "chat_hub/core/services/websocket"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -40,20 +41,21 @@ func (handler *TaskResultHandler) HandleMessage(topic string, key, value []byte)
 
 func TaskResultCmd(key []byte, data map[string]interface{}) {
 	messageId := string(key)
-
-	userId := data["userId"].(string)
-	handleService(data, userId)
+	log.Println("Processing task result for data:", data)
+	userId := data["userId"].(float64)
+	userIdStr := fmt.Sprintf("%.0f", userId)
+	handleService(data, userIdStr)
 
 	fmt.Printf("Task result handled successfully for message ID: %s\n", messageId)
 }
 
 func handleService(messageMap map[string]interface{}, userId string) (string, error) {
-	result, err := services.NewChatService().ResponseTaskResultToUser(messageMap, userId)
+	result, err := chat_service.NewChatService().ResponseTaskResultToUser(messageMap, userId)
 	if err != nil {
 		log.Println("Error handling task result:", err)
 		return "", err
 	}
 
-	// SendToUser(userId, []byte(result))
+	websocket_service.NewWebSocketService().SendToUser(userId, []byte(result)) 
 	return result, nil;
 }
