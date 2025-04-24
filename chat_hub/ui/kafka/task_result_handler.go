@@ -3,6 +3,8 @@ package consumer
 import (
 	"chat_hub/core/domain/constants"
 	base_dtos "chat_hub/core/domain/dtos/base"
+	chat_service "chat_hub/core/services/chat"
+	websocket_service "chat_hub/core/services/websocket"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -39,15 +41,27 @@ func (handler *TaskResultHandler) HandleMessage(topic string, key, value []byte)
 
 func TaskResultCmd(key []byte, data map[string]interface{}) {
 	messageId := string(key)
-
-	// Here you would typically call a service to handle the task result
-	// For example:
-	// taskService := services.NewTaskResultService()
-	// result, err := taskService.HandleTaskResult(messageId, userId, taskId, taskStatus, errorStatus, notificationFlowId)
-	// if err != nil {
-	// 	fmt.Println("Error handling task result:", err)
-	// 	return
-	// }
+	log.Println("Processing task result for data:", data)
+	userId := data["userId"].(float64)
+	userIdStr := fmt.Sprintf("%.0f", userId)
+	go handleService(data, userIdStr)
 
 	fmt.Printf("Task result handled successfully for message ID: %s\n", messageId)
+}
+
+func handleService(messageMap map[string]interface{}, userId string) (string, error) {
+	result, err := chat_service.NewChatService().ResponseTaskResultToUser(messageMap, userId)
+	if err != nil {
+		log.Println("Error handling task result:", err)
+		return "", err
+	}
+
+	resultBytes, err := json.Marshal(result)
+	if err != nil {
+		log.Println("Error marshalling task result message:", err)
+		return "", err
+	}
+
+	websocket_service.NewWebSocketService().SendToUser(userId, []byte(resultBytes)) 
+	return result.Response, nil;
 }

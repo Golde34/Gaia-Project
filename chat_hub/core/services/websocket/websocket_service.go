@@ -71,11 +71,11 @@ func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 		}
 		// response := "Bot answered user prompt: " + messageMap["text"].(string)
 		// SendToUser(userId, []byte(response))
-		handleService(messageMap, userId)
+		s.handleService(messageMap, userId)
 	}
 }
 
-func handleService(messageMap map[string]interface{}, userId string) {
+func (s *WebSocketService) handleService(messageMap map[string]interface{}, userId string) {
 	switch messageMap["type"] {
 	case "chat_message":
 		log.Println("Handling task optimized for user:", userId)
@@ -84,7 +84,7 @@ func handleService(messageMap map[string]interface{}, userId string) {
 			log.Println("Error handling chat message:", err)
 			return
 		}
-		SendToUser(userId, []byte(result))
+		s.SendToUser(userId, []byte(result))
 		return
 	default:
 		log.Println("Unknown message type:", messageMap["type"])
@@ -92,7 +92,7 @@ func handleService(messageMap map[string]interface{}, userId string) {
 }
 
 
-func SendToUser(userId string, message []byte) {
+func (s *WebSocketService) SendToUser(userId string, message []byte) {
 	log.Println("Attempting to send message to user:", userId)
 	log.Println("Message content:", string(message))
 
@@ -133,7 +133,7 @@ func (s *WebSocketService) HandleOptimizeTask(userId string, status bool) {
 	log.Println("Response:", string(responseBytes))
 
 	LogActiveConnections()
-	SendToUser(userId, responseBytes)
+	s.SendToUser(userId, responseBytes)
 }
 
 func LogActiveConnections() {

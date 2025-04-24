@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import { useEffect, useRef, useState } from 'react';
-import { Button, Card, Metric, TextInput } from '@tremor/react';
+import { Button, Card, Col, Grid, Metric, TextInput } from '@tremor/react';
 import Template from '../../components/template/Template';
 import { useMultiWS } from '../../kernels/context/MultiWSContext';
 
@@ -10,7 +10,7 @@ function ContentArea() {
   const { messages, isConnected, sendMessage } = useMultiWS();
 
   const [chatInput, setChatInput] = useState('');
-  const [chatHistory, setChatHistory] = useState([]);      // array of {from, text}
+  const [chatHistory, setChatHistory] = useState([]);      // array of {from, text, taskResult}
   const [lastBotIndex, setLastBotIndex] = useState(0);     // how many bot msgs we've consumed
   const endRef = useRef(null);
 
@@ -19,10 +19,32 @@ function ContentArea() {
     console.log("Received chat messages in: ", messages.chat);
     const botMsgs = messages.chat || [];
     if (botMsgs.length > lastBotIndex) {
+      // const newOnes = botMsgs.slice(lastBotIndex).map(raw => {
+      //   const text = typeof raw === 'string' ? raw : raw.text || '';
+
+      //   const taskResult = raw.type === 'taskResult' ? raw.taskResult : null;
+      //   console.log("New bot message: ", text, taskResult);
+      //   return { from: 'bot', text, taskResult };
+      // });
       const newOnes = botMsgs.slice(lastBotIndex).map(raw => {
-        const text = typeof raw === 'string' ? raw : raw.text || '';
-        return { from: 'bot', text };
+        let text = '';
+        let taskResult = null;
+
+        try {
+          const parsedRaw = typeof raw === 'string' ? JSON.parse(raw) : raw;
+          if (parsedRaw && parsedRaw.type === 'taskResult') {
+            text = parsedRaw.response || '';
+            taskResult = parsedRaw.taskResult || null;
+          } else {
+            text = parsedRaw.text || raw;  // Nếu parsedRaw không có text, dùng raw (chuỗi gốc)
+          }
+        } catch (error) {
+          text = raw;
+        }
+
+        return { from: 'bot', text, taskResult };
       });
+      console.log("New bot message: ", newOnes);
       setChatHistory(prev => [...prev, ...newOnes]);
       setLastBotIndex(botMsgs.length);
     }
@@ -54,20 +76,34 @@ function ContentArea() {
       <Card className="flex flex-col h-full">
         <div className="flex-1 overflow-auto p-4 space-y-3">
           {chatHistory.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`flex ${msg.from === 'bot' ? 'justify-start' : 'justify-end'}`}
-            >
-              <div
-                className={[
-                  'max-w-xs px-4 py-2 rounded-2xl break-words',
-                  msg.from === 'bot'
-                    ? 'bg-gray-200 text-gray-800'
-                    : 'bg-blue-500 text-white'
-                ].join(' ')}
-              >
-                {msg.text}
-              </div>
+            <div key={idx} className={`flex ${msg.from === 'bot' ? 'justify-start' : 'justify-end'}`}>
+              <Grid numItems={1}>
+                <Col numColSpan={1}>
+                  <div
+                    className={[
+                      'max-w-xs px-4 py-2 rounded-2xl break-words',
+                      msg.from === 'bot'
+                        ? 'bg-gray-200 text-gray-800'
+                        : 'bg-blue-500 text-white'
+                    ].join(' ')}
+                  > {msg.text} </div>
+                </Col>
+                <Col numColSpan={1}>
+                  {/* Task Result card (if any) */}
+                  {msg.taskResult && (
+                    <div className="mt-4">
+                      <div className="bg-green-100 p-4 rounded-xl">
+                        <h4 className="font-bold">Task Created</h4>
+                        <p><strong>Title:</strong> {msg.taskResult.title}</p>
+                        <p><strong>Priority:</strong> {msg.taskResult.priority}</p>
+                        <p><strong>Start Date:</strong> {new Date(msg.taskResult.startDate).toLocaleString()}</p>
+                        <p><strong>Deadline:</strong> {new Date(msg.taskResult.deadline).toLocaleString()}</p>
+                        {/* Add more task details here if needed */}
+                      </div>
+                    </div>
+                  )}
+                </Col>
+              </Grid>
             </div>
           ))}
           <div ref={endRef} />
