@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux"
 import Template from "../../components/template/Template"
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getNoteById } from "../../api/store/actions/task_manager/note.actions";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Card, Flex, Metric, Text, Title } from "@tremor/react";
@@ -9,6 +9,7 @@ import ReactQuill from 'react-quill';
 import { Input } from "@material-tailwind/react";
 import { useUpdateNoteDispatch } from "../../kernels/utils/dialog-api-requests";
 import { saveContentAsFile } from "../../kernels/utils/display-file-handler";
+import { isAccessTokenCookieValid } from "../../kernels/utils/cookie-utils";
 
 function ContentArea() {
     const dispatch = useDispatch();
@@ -139,6 +140,13 @@ const formats = [
 ];
 
 const NoteDetail = () => {
+    const navigate = useNavigate();
+    const isUserValid = isAccessTokenCookieValid();
+    useEffect(() => {
+        if (isUserValid) {
+            navigate('/signin');
+        }
+    }, [isUserValid, navigate]);
     return (
         <Template>
             <ContentArea />

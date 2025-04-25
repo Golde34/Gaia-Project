@@ -3,9 +3,18 @@ import ManagerTemplate from "../../components/template/ManagerTemplate";
 import { useCallback, useEffect, useRef } from "react";
 import { getMicroservices } from "../../api/store/actions/middleware_loader/microservices.actions";
 import { Card, Col, Flex, Grid, Metric, Title } from "@tremor/react";
+import { useNavigate } from "react-router-dom";
+import { isAccessTokenCookieValid } from "../../kernels/utils/cookie-utils";
 
 function ContentArea() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const isUserValid = isAccessTokenCookieValid();
+    useEffect(() => {
+        if (isUserValid) {
+            navigate('/signin');
+        }
+    }, [isUserValid, navigate]);
 
     const listMicroservices = useSelector((state) => state.microserviceList);
     const { loading, error, microservices } = listMicroservices;
@@ -36,7 +45,7 @@ function ContentArea() {
                         className="text-2xl font-bold text-gray-800"> Microservices
                     </Metric>
                     <div className="grid md:grid-cols-3 w-full h-full items-center">
-                        {microservices === null  ? (
+                        {microservices === null ? (
                             <p>No microservices available</p>
                         ) : (
                             microservices.map((microservice) => (

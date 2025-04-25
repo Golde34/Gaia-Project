@@ -1,12 +1,12 @@
-import { useDispatch } from 'react-redux';
 import { useEffect, useRef, useState } from 'react';
 import { Button, Card, Col, Grid, Metric, TextInput } from '@tremor/react';
 import Template from '../../components/template/Template';
 import { useMultiWS } from '../../kernels/context/MultiWSContext';
+import { useNavigate } from 'react-router-dom';
+import { isAccessTokenCookieValid } from '../../kernels/utils/cookie-utils';
 
 function ContentArea() {
   const userId = '1';
-  const dispatch = useDispatch();
   const { messages, isConnected, sendMessage } = useMultiWS();
 
   const [chatInput, setChatInput] = useState('');
@@ -14,18 +14,10 @@ function ContentArea() {
   const [lastBotIndex, setLastBotIndex] = useState(0);     // how many bot msgs we've consumed
   const endRef = useRef(null);
 
-  // Whenever messages.chat grows, append only the new ones:
   useEffect(() => {
     console.log("Received chat messages in: ", messages.chat);
     const botMsgs = messages.chat || [];
     if (botMsgs.length > lastBotIndex) {
-      // const newOnes = botMsgs.slice(lastBotIndex).map(raw => {
-      //   const text = typeof raw === 'string' ? raw : raw.text || '';
-
-      //   const taskResult = raw.type === 'taskResult' ? raw.taskResult : null;
-      //   console.log("New bot message: ", text, taskResult);
-      //   return { from: 'bot', text, taskResult };
-      // });
       const newOnes = botMsgs.slice(lastBotIndex).map(raw => {
         let text = '';
         let taskResult = null;
@@ -36,7 +28,7 @@ function ContentArea() {
             text = parsedRaw.response || '';
             taskResult = parsedRaw.taskResult || null;
           } else {
-            text = parsedRaw.text || raw;  // Nếu parsedRaw không có text, dùng raw (chuỗi gốc)
+            text = parsedRaw.text || raw;
           }
         } catch (error) {
           text = raw;
@@ -57,9 +49,7 @@ function ContentArea() {
 
   const handleSend = () => {
     if (!chatInput.trim()) return;
-    // 1. Optimistically show the user’s own message
     setChatHistory(prev => [...prev, { from: 'user', text: chatInput }]);
-    // 2. Send it over WS
     sendMessage('chat', JSON.stringify({
       type: 'chat_message',
       userId,
@@ -126,6 +116,13 @@ function ContentArea() {
 }
 
 export default function Chat() {
+  const navigate = useNavigate();
+  const isUserValid = isAccessTokenCookieValid();
+  useEffect(() => {
+    if (isUserValid) {
+      navigate('/signin');
+    }
+  }, [isUserValid, navigate]);
   return (
     <Template>
       <ContentArea />

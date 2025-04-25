@@ -14,7 +14,7 @@ export const gaiaSigninReducer = (state = {}, action) => {
         case GAIA_SIGNIN_FAIL:
             return { loading: false, error: action.payload };
         case USER_SIGNOUT:
-            return {};
+            return { loading: false, gaiaInfo: null };
         default: 
             return state;
     }
@@ -28,6 +28,8 @@ export const bossSigninReducer = (state = {}, action) => {
             return { loading: false, userInfo: action.payload };
         case BOSS_SIGNIN_FAIL:
             return { loading: false, error: action.payload };
+        case USER_SIGNOUT:
+            return { loading: false, userInfo: null };
         default: 
             return state;
     }
@@ -41,6 +43,8 @@ export const userSigninReducer = (state = {}, action) => {
             return { loading: false, userInfo: action.payload };
         case USER_SIGNIN_FAIL:
             return { loading: false, error: action.payload };
+        case USER_SIGNOUT:
+            return { loading: false, userInfo: null };
         default: 
             return state;
     }
