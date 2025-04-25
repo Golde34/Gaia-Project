@@ -131,6 +131,11 @@ type IsTaskExisted struct {
 	IsTaskExist bool `json:"isTaskExist"`
 }
 
+type LLMModel struct {
+	ModelID   float64 `json:"modelId"`
+	ModelName string  `json:"modelName"`
+}
+
 type ListAllUsers struct {
 	ID        float64  `json:"id"`
 	Name      string   `json:"name"`
@@ -395,6 +400,7 @@ type UpdateUser struct {
 	Secret      string       `json:"secret"`
 	Roles       []*Role      `json:"roles"`
 	UserSetting *UserSetting `json:"userSetting"`
+	LlmModels   []*LLMModel  `json:"llmModels"`
 }
 
 type UpdateUserInput struct {
@@ -414,16 +420,17 @@ type UpdateUserSettingInput struct {
 }
 
 type User struct {
-	ID         float64 `json:"id"`
-	Name       string  `json:"name"`
-	Username   string  `json:"username"`
-	Email      string  `json:"email"`
-	Password   string  `json:"password"`
-	LastLogin  string  `json:"lastLogin"`
-	Enabled    bool    `json:"enabled"`
-	IsUsing2fa bool    `json:"isUsing2FA"`
-	Secret     string  `json:"secret"`
-	Roles      []*Role `json:"roles"`
+	ID         float64     `json:"id"`
+	Name       string      `json:"name"`
+	Username   string      `json:"username"`
+	Email      string      `json:"email"`
+	Password   string      `json:"password"`
+	LastLogin  string      `json:"lastLogin"`
+	Enabled    bool        `json:"enabled"`
+	IsUsing2fa bool        `json:"isUsing2FA"`
+	Secret     string      `json:"secret"`
+	Roles      []*Role     `json:"roles"`
+	LlmModels  []*LLMModel `json:"llmModels"`
 }
 
 type UserIDInput struct {

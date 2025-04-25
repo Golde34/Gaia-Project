@@ -8,12 +8,12 @@ import auth.authentication_service.core.domain.entities.User;
 import org.springframework.http.ResponseEntity;
 
 public interface UserService {
-    public ResponseEntity<?> createUser(RegisterDto userDto);
-    public ResponseEntity<?> updateUser(UpdateUserRequest userDto);
-    public ResponseEntity<?> deleteUser(UserDto userDto);
-    public ResponseEntity<?> getAllUsers();
-    public ResponseEntity<?> getUserByUsername(UserDto userDto);
-    public User getUserByEmail(String email);
-    public User getUserById(Long id, String usedClass);
-    public ResponseEntity<?> getUserResponseById(Long id);
+    ResponseEntity<?> createUser(RegisterDto userDto);
+    ResponseEntity<?> updateUser(UpdateUserRequest userDto);
+    ResponseEntity<?> deleteUser(UserDto userDto);
+    ResponseEntity<?> getAllUsers();
+    ResponseEntity<?> getUserByUsername(UserDto userDto);
+    User getUserByEmail(String email);
+    User getUserById(Long id, String usedClass);
+    ResponseEntity<?> getUserResponseById(Long id);
 }

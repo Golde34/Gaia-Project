@@ -66,7 +66,7 @@ class ProjectStore {
         return projectRepository.enableProject(projectId);
     }
 
-    async checkDefaultProject(ownerId: number): Promise<IProjectEntity[]> {
+    async checkDefaultProject(ownerId: number): Promise<IProjectEntity | null> {
         return projectRepository.findDefaultProjectByOwnerId(ownerId);
     }
 

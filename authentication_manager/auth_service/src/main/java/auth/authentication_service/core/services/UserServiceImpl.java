@@ -4,12 +4,14 @@ import auth.authentication_service.core.domain.constant.Constants;
 import auth.authentication_service.core.domain.dto.RegisterDto;
 import auth.authentication_service.core.domain.dto.UserDto;
 import auth.authentication_service.core.domain.dto.request.UpdateUserRequest;
+import auth.authentication_service.core.domain.entities.LLMModel;
 import auth.authentication_service.core.domain.entities.Role;
 import auth.authentication_service.core.domain.entities.User;
 import auth.authentication_service.core.domain.entities.UserSetting;
 import auth.authentication_service.core.domain.enums.BossType;
 import auth.authentication_service.core.domain.enums.ResponseEnum;
 import auth.authentication_service.core.port.mapper.UserMapper;
+import auth.authentication_service.core.port.store.LLMModelStore;
 import auth.authentication_service.core.port.store.RoleStore;
 import auth.authentication_service.core.port.store.UserCRUDStore;
 import auth.authentication_service.core.port.store.UserSettingStore;
@@ -39,6 +41,7 @@ public class UserServiceImpl implements UserService {
     private final UserCRUDStore userStore;
     private final RoleStore roleStore;
     private final UserSettingStore userSettingStore;
+    private final LLMModelStore llmModelStore;
 
     @Autowired
     private ModelMapperConfig modelMapperConfig;
@@ -47,10 +50,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private ResponseUtils responseUtils;
 
-    @Autowired
-    UserServiceValidation userServiceValidation;
-    @Autowired
-    UserMapper userMapper;
+    private final UserServiceValidation userServiceValidation;
+    private final UserMapper userMapper;
 
     @Override
     public ResponseEntity<?> createUser(RegisterDto userDto) {
@@ -61,8 +62,12 @@ public class UserServiceImpl implements UserService {
             return genericResponse.matchingResponseMessage(validation);
         }
 
+        List<LLMModel> llmModel = Collections.singletonList(llmModelStore.findModelById(1L));
+
         user.setPassword(new BCryptPasswordEncoder().encode(userDto.getPassword()));
         user.setRoles(Collections.singletonList(_isBoss(userDto.isBoss())));
+        user.setEnabled(true);
+        user.setLlmModels(llmModel);
         userStore.save(user);
         log.info("User created: {}", user.getName().toString());
         

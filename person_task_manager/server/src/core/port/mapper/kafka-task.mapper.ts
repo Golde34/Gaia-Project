@@ -2,6 +2,7 @@ import { EMPTY_SENTENCE } from "../../domain/constants/constants";
 import { IsString, IsOptional } from "class-validator";
 import { ITaskEntity } from "../../domain/entities/task.entity";
 import { UpdateTaskRequestDto } from "../../domain/dtos/task.dto";
+import { GaiaCreateTaskDto } from "../../domain/dtos/request_dtos/gaia-create-task.dto";
 
 export class KafkaCreateTaskMessage {
     @IsString()
@@ -82,4 +83,25 @@ export const kafkaUpdateTaskMapper = async (updatedTask: ITaskEntity, updateRequ
     message.activeStatus = updatedTask.activeStatus;
     // message.tag = updatedTask.tag; 
     return message;
+}
+
+export const kafkaGaiaCreateTaskMapper = (data: GaiaCreateTaskDto) => {
+    const priorities = [data.priority];
+    let startDate;
+    if (!data.startDate || data.startDate == "now" || data.startDate == "today") {
+        startDate = new Date();
+    }
+    let duration;
+    if (!data.duration) {
+        duration = 2;
+    }
+    let deadline;
+    if (!data.deadline || data.deadline == "now" || data.deadline == "today") {
+        deadline = new Date((startDate ?? new Date()).getTime() + (duration ?? 2) * 60 * 60 * 1000);
+    }
+    data.priority = priorities;
+    data.startDate = startDate?.toDateString();
+    data.duration = duration?.toString();
+    data.deadline = deadline?.toDateString();
+    return data;
 }

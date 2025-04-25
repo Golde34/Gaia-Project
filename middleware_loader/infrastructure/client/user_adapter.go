@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	request_dtos "middleware_loader/core/domain/dtos/request"
 	response_dtos "middleware_loader/core/domain/dtos/response"
 	"middleware_loader/core/domain/enums"
 	mapper_response "middleware_loader/core/port/mapper/response"
@@ -93,4 +94,41 @@ func (adapter *UserAdapter) UpdateUserSetting(input model.UpdateUserSettingInput
 	}
 	userSettingResponse := mapper_response.ReturnUserSettingObjectMapper(bodyResultMap["message"].(map[string]interface{}))
 	return *userSettingResponse, nil
+}
+
+func (adapter *UserAdapter) GetAllModels() ([]response_dtos.LLMModel, error) {
+	getAllModelsURL := base.AuthServiceURL + "/user-model-setting/get-models"
+	var models []response_dtos.LLMModel
+	headers := utils.BuildAuthorizationHeaders(enums.AS, "1")
+	bodyResult, err := utils.BaseAPI(getAllModelsURL, "GET", nil, headers)
+	if err != nil {
+		return []response_dtos.LLMModel{}, err
+	}
+
+	bodyResultMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return []response_dtos.LLMModel{}, fmt.Errorf("unexpected response format")
+	}
+	for _, modelElement := range bodyResultMap["message"].([]interface{}) {
+		model := mapper_response.ReturnLLMModelObjectMapper(modelElement.(map[string]interface{}))
+		models = append(models, *model)
+	}
+
+	return models, nil
+}
+
+func (adapter *UserAdapter) UpdateUserModel(input request_dtos.UpdateUserModelRequestDTO) (string, error) {
+	updateUserModelURL := base.AuthServiceURL + "/user-model-setting/update"
+	headers := utils.BuildAuthorizationHeaders(enums.AS, "1")
+	bodyResult, err := utils.BaseAPI(updateUserModelURL, "POST", input, headers)
+	if err != nil {
+		return "", err
+	}
+
+	bodyResultMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return "", fmt.Errorf("unexpected response format")
+	}
+	message := bodyResultMap["message"].(string)
+	return message, nil
 }

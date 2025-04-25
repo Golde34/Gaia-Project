@@ -61,6 +61,10 @@ public class Constants {
         public static final String PRIVILEGE_EXISTED = "privilege existed";
         public static final String UPDATE_PRIVILEGE = "update privilege failed";
         public static final String DELETE_PRIVILEGE = "delete privilege failed";
+
+        public static final String GET_ALL_LLM_MODELS = "get all llm models failed";
+        public static final String UPDATE_LLM_MODELS = "update llm models failed";
+        public static final String GET_LLM_MODEL_BY_USER = "get llm model by user failed";
     }
 
     @UtilityClass
@@ -74,5 +78,15 @@ public class Constants {
         public static String SERVICE_HEADER = "Service";
         public static String SERVICE_TOKEN_HEADER = "Service-Token";
         public static String AUTHORIZATION_HEADER = "Authorization";
+    }
+
+    @UtilityClass
+    public static class ActiveStatus {
+        public static final String ACTIVE = "active";
+        public static final String INACTIVE = "inactive";
+        public static final boolean ACTIVE_BOOL = true;
+        public static final boolean INACTIVE_BOOL = false;
+        public static final int ACTIVE_INT = 1;
+        public static final int INACTIVE_INT = 0;
     }
 }

@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 import { KafkaConfig } from "./kafka-config";
 import { KafkaTopic } from "../../core/domain/enums/kafka.enums";
-import { handleCreateScheduleTaskMessage } from "../../ui/kafka/create-schedule-task.consumer";
+import { handleGaiaCreateTaskMessage } from "../../ui/kafka/gaia-create-task.consumer";
 
 dotenv.config({ path: "./src/.env" });
 
@@ -36,5 +36,5 @@ const getKafkaTopicsFromEnv = (): string[] => {
 };
 
 const kafkaTopicHandlers: Record<string, (message: string) => void> = {
-    [KafkaTopic.CREATE_SCHEDULE_TASK]: (message: string) => handleCreateScheduleTaskMessage(message),
+    [KafkaTopic.GAIA_CREATE_TASK]: (message: string) => handleGaiaCreateTaskMessage(message),
 };

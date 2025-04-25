@@ -56,6 +56,7 @@ const UserSettingScreen = (props) => {
         updateUserSetting(userSetting);
         window.location.reload();
     }
+
     return (
         <Card className='max-w-full mx-auto'>
             <Flex justifyContent="center" alignItems="center" className="mb-4">

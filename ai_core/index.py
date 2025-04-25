@@ -17,6 +17,7 @@ app = FastAPI(title="Task Information Extraction API")
 @app.post("/chat")
 async def chat(request: query_request.QueryRequest):
     try:
+        print("Received request:", request)
         return task_service(query=request)
     except Exception as e:
         stack_trace = traceback.format_exc()

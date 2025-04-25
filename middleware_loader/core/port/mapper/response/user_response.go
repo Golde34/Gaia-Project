@@ -48,11 +48,12 @@ func ReturnUserObjectMapper(body map[string]interface{}) *response_dtos.UserDeta
 	input.Roles = body["roles"].([]interface{})
 	userSettingMap := body["userSetting"].(map[string]interface{})
 	input.UserSetting = &response_dtos.UserSettingDTO{
-		OptimizedTaskConfig: userSettingMap["optimizedTaskConfig"].(float64),
+		OptimizedTaskConfig:  userSettingMap["optimizedTaskConfig"].(float64),
 		PrivateProfileConfig: userSettingMap["privateProfileConfig"].(float64),
 		TaskSortingAlgorithm: userSettingMap["taskSortingAlgorithm"].(float64),
-		AutoOptimizeConfig: userSettingMap["autoOptimizeConfig"].(float64),
+		AutoOptimizeConfig:   userSettingMap["autoOptimizeConfig"].(float64),
 	}
+	input.LLMModels= body["llmModels"].([]interface{})
 	log.Println(input)
 	return &input
 }
@@ -63,5 +64,12 @@ func ReturnUserSettingObjectMapper(body map[string]interface{}) *response_dtos.U
 	input.PrivateProfileConfig = body["privateProfileConfig"].(float64)
 	input.TaskSortingAlgorithm = body["taskSortingAlgorithm"].(float64)
 	input.AutoOptimizeConfig = body["autoOptimizeConfig"].(float64)
+	return &input
+}
+
+func ReturnLLMModelObjectMapper(body map[string]interface{}) *response_dtos.LLMModel {
+	var input response_dtos.LLMModel
+	input.ModelId = body["modelId"].(float64)
+	input.ModelName = body["modelName"].(string)
 	return &input
 }

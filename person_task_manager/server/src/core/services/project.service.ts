@@ -7,7 +7,7 @@ import { msg200, msg400 } from "../common/response-helpers";
 import { InternalCacheConstants } from "../domain/constants/constants";
 import { EXCEPTION_PREFIX, PROJECT_EXCEPTION, PROJECT_NOT_FOUND } from "../domain/constants/error.constant";
 import { IProjectEntity } from "../domain/entities/project.entity";
-import { ActiveStatus, BooleanStatus, TimeUnit } from "../domain/enums/enums";
+import { ActiveStatus, BooleanStatus, Status, TimeUnit } from "../domain/enums/enums";
 import { projectStore } from "../port/store/project.store";
 import { projectValidation } from "../validations/project.validation";
 import { groupTaskService } from "./group-task.service";
@@ -29,7 +29,7 @@ class ProjectService {
         }
 
         const defaultProject = await projectStore.checkDefaultProject(project.ownerId);
-        if (defaultProject.length === 0 || defaultProject === null) {
+        if (defaultProject === null) {
             console.log("User does not have default project");
             project.isDefault = BooleanStatus.true;
         }
@@ -250,15 +250,34 @@ class ProjectService {
         }
     }
 
-    async getProjectByName(userId: number, projectName: string): Promise<IProjectEntity | undefined> {
+    async getProjectByName(userId: number, projectName: string): Promise<IProjectEntity | null | undefined> {
         try {
-            const projects = await projectStore.findAllProjectsByOwnerId(userId);
-            const closeProject = levenshteinDistanceProject(projectName, projects);
-            if (closeProject === null) {
-                console.log(`Project ${projectName} not found`);
-                return undefined;
+            let project: IProjectEntity | null;
+            if (projectName.toLocaleLowerCase().toString() === 'default'
+                || projectName === null || projectName === undefined) {
+                project = await projectStore.checkDefaultProject(userId);
+                if (project === null) {
+                    console.log(`Project default not found`);
+                    const createdProject = await this.createProject({
+                        name: "Default",
+                        status: Status.inProgress,
+                        ownerId: userId,
+                        isDefault: BooleanStatus.true,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    });
+                    project = createdProject.data.project; 
+                }
+            } else {
+                const projects = await projectStore.findAllProjectsByOwnerId(userId);
+                project = levenshteinDistanceProject(projectName, projects);
+                if (project === null) {
+                    console.log(`Project ${projectName} not found`);
+                    return undefined;
+                }
+                console.log(`Project ${project.name} found from projectName: ${projectName}`);
             }
-            return closeProject;
+            return project;
         } catch (err: any) {
             console.log("Could not get project by name: ", err);
             return undefined;

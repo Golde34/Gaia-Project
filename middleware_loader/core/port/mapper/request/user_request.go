@@ -41,3 +41,11 @@ func UpdateUserSettingRequestDTOMapper(body map[string]interface{}) *request_dto
 	input.AutoOptimizeConfig = utils.GetFloatValue(bodyMap, "autoOptimizeConfig", 0)
 	return &input
 }
+
+func UpdateUserModelRequestDTOMapper(body map[string]interface{}) request_dtos.UpdateUserModelRequestDTO {
+	var input request_dtos.UpdateUserModelRequestDTO
+	bodyMap := body["body"].(map[string]interface{})
+	input.UserId = utils.GetFloatValue(bodyMap, "userId", 0)
+	input.ModelId = utils.GetFloatValue(bodyMap, "modelId", 0)
+	return input
+}

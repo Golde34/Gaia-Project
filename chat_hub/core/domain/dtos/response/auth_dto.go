@@ -1,6 +1,7 @@
 package response_dtos
 
 type UserLLMModelConfigDTO struct {
-	UserId string `json:"userId"`
-	ModelName string `json:"modelName"`
+	ModelId      float64 `json:"modelId"`
+	ModelName    string  `json:"modelName"`
+	ActiveStatus bool    `json:"activeStatus"`
 }

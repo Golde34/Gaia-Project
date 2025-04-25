@@ -10,6 +10,7 @@ type User {
     secret: String!
 
     roles: [Role]!
+    llmModels: [LLMModel]!
 }
 
 input UserInput {
@@ -56,6 +57,7 @@ type UpdateUser {
 
     roles: [Role]!
 	userSetting: UserSetting!
+    llmModels: [LLMModel]!
 }
 
 type UserSetting {
@@ -72,4 +74,9 @@ input UpdateUserSettingInput {
     privateProfileConfig: Float!
     taskSortingAlgorithm: Float!
     autoOptimizeConfig: Float!
+}
+
+type LLMModel {
+    modelId: Float!
+    modelName: String!
 }

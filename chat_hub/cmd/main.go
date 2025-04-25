@@ -22,7 +22,7 @@ func main() {
 	log.Println("Kafka Config: ", kafkaCfg.GroupId)
 
 	handlers := map[string] kafka.MessageHandler {
-		"chat-hub.task-result.topic": &consumer.TaskResultHandler{},
+		"task-manager.chat-hub-result.topic": &consumer.TaskResultHandler{},
 	}
 
 	consumerGroupHandler := kafka.NewConsumerGroupHandler(kafkaCfg.Name, handlers)

@@ -14,25 +14,24 @@ func NewLLMCoreAdapter() *LLMCoreAdapter {
 	return &LLMCoreAdapter{}
 }
 
-func (adapter *LLMCoreAdapter) UserPrompt(input request_dtos.LLMQueryRequestDTO) (string, error) {
+func (adapter *LLMCoreAdapter) UserPrompt(input request_dtos.LLMQueryRequestDTO) (map[string]interface{}, error) {
 	userPrompURL := base.LLMCoreServiceURL + "/chat"
 	headers := utils.BuildDefaultHeaders()
 	bodyResult, err := utils.BaseAPI(userPrompURL, enums.POST, input, headers)
 	if err != nil {
-		return "Cannot connect with Gaia Bot, try later", err
+		log.Fatal("Cannot connect with Gaia Bot, try later: ", err)
+		return nil, err
 	}
 
 	log.Println("Response from LLMCoreAdapter: ", bodyResult)
-	bodyeResultMap, ok := bodyResult.(map[string]interface{})
+	bodyResultMap, ok := bodyResult.(map[string]interface{})
 	if !ok {
-		return "Internal System Error", nil
+		log.Fatal("Error converting response to map: ", bodyResult)
+		return nil, err
 	}
 
-	log.Println("Response map from LLMCoreAdapter: ", bodyeResultMap)
-	data, exists := bodyeResultMap["response"].(string)
-	if !exists || data == "" {
-		return "Internal System Error", err
-	}
+	log.Println("Response map from LLMCoreAdapter: ", bodyResultMap)
+	
 
-	return data, nil
+	return bodyResultMap, nil
 }

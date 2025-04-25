@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"log"
+	request_dtos "middleware_loader/core/domain/dtos/request"
 	response_dtos "middleware_loader/core/domain/dtos/response"
 	"middleware_loader/core/port/client"
 	"middleware_loader/core/validator"
@@ -64,7 +65,7 @@ func (s *UserService) GetUserDetail(ctx context.Context, input model.IDInput) (m
 	}
 	
 	userModel := userDetailResponse.MapperToGraphQLModelDetail(user)
-	log.Println("User Detail: ", userModel.UserSetting.AutoOptimizeConfig)
+	log.Println("User Detail: ", userModel.LlmModels[0].ModelName)
 	return userModel, nil
 }
 
@@ -76,4 +77,22 @@ func (s *UserService) UpdateUserSetting(ctx context.Context, input model.UpdateU
 	
 	userSettingModel := userSettingResponse.MapperToGraphQLModelSetting(userSetting)
 	return userSettingModel, nil
+}
+
+func (s *UserService) GetAllModels() ([]response_dtos.LLMModel, error) {
+	models, err := client.IUserAdapter(&adapter.UserAdapter{}).GetAllModels()
+	if err != nil {
+		return nil, err
+	}
+	
+	return models, nil
+} 
+
+func (s *UserService) UpdateUserModel(input request_dtos.UpdateUserModelRequestDTO) (string, error) {
+	userModel, err := client.IUserAdapter(&adapter.UserAdapter{}).UpdateUserModel(input)
+	if err != nil {
+		return "Something error when update user model", err
+	} else {
+		return userModel, nil
+	}
 }

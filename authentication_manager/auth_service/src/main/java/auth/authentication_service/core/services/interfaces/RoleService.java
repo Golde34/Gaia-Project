@@ -10,11 +10,11 @@ import auth.authentication_service.core.domain.dto.RoleDto;
 import auth.authentication_service.core.domain.entities.Role;
 
 public interface RoleService {
-    public ResponseEntity<?> createRole(RoleDto roleDto);
-    public ResponseEntity<?> updateRole(RoleDto roleDto);
-    public ResponseEntity<?> deleteRole(RoleDto roleDto);
-    public ResponseEntity<?> getAllRoles();
-    public ResponseEntity<?> getRoleByName(String name);
-    public ResponseEntity<?> addPrivilegeToRole(RoleDto roleDto, List<PrivilegeDto> privilegeNames);
-    public Role getBiggestRole(Collection<Role> roles);
+    ResponseEntity<?> createRole(RoleDto roleDto);
+    ResponseEntity<?> updateRole(RoleDto roleDto);
+    ResponseEntity<?> deleteRole(RoleDto roleDto);
+    ResponseEntity<?> getAllRoles();
+    ResponseEntity<?> getRoleByName(String name);
+    ResponseEntity<?> addPrivilegeToRole(RoleDto roleDto, List<PrivilegeDto> privilegeNames);
+    Role getBiggestRole(Collection<Role> roles);
 }

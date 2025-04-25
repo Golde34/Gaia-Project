@@ -1,24 +1,26 @@
 package auth.authentication_service.ui.controllers;
 
+import auth.authentication_service.core.domain.dto.RegisterDto;
 import auth.authentication_service.core.domain.dto.TokenDto;
 import auth.authentication_service.core.domain.dto.UserPermissionDto;
 import auth.authentication_service.core.domain.dto.request.SignInDtoRequest;
 import auth.authentication_service.core.domain.enums.ResponseEnum;
 import auth.authentication_service.core.services.interfaces.AuthService;
+import auth.authentication_service.core.services.interfaces.UserService;
 import auth.authentication_service.kernel.utils.GenericResponse;
+import lombok.RequiredArgsConstructor;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private AuthService authService;
-    @Autowired
-    private GenericResponse<String> genericResponse;
+    private final AuthService authService;
+    private final UserService userService;
+    private final GenericResponse<String> genericResponse;
 
     @GetMapping("/")
     public ResponseEntity<?> home() {
@@ -48,6 +50,11 @@ public class AuthController {
     @PostMapping("/gaia-auto-sign-in")
     public ResponseEntity<?> gaiaAutoSignIn(@RequestBody SignInDtoRequest accountDto) throws Exception {
         return authService.gaiaAutoSignin(accountDto.getUsername(), accountDto.getPassword());
+    }
+
+    @PostMapping("/sign-up")
+    public ResponseEntity<?> signUp(@RequestBody RegisterDto request) throws Exception {
+        return userService.createUser(request); 
     }
 
     @GetMapping("/check-token")
