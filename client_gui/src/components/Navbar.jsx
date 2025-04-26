@@ -9,6 +9,8 @@ import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+
     const [cookies, setCookies] = useCookies(['accessToken']);
     let auth = false;
     if (cookies.accessToken) {
@@ -41,9 +43,8 @@ const Navbar = () => {
 
     const signoutHandler = () => {
         dispatch(signout());
+        navigate("/signin"); 
     }
-
-    const navigate = useNavigate();
 
     const wrapperRef = useRef(null);
     useEffect(() => {

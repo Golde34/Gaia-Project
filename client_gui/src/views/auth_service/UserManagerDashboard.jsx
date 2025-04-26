@@ -1,10 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ManagerTemplate from "../../components/template/ManagerTemplate";
 import UserListScreen from "../../screens/userScreen/admin/UserListScreen";
 import UserSearchScreen from "../../screens/userScreen/admin/UserSearchScreen";
 import UserRolesScreen from "../../screens/userScreen/admin/UserRolesScreen";
+import { useNavigate } from "react-router-dom";
+import { isAccessTokenCookieValid } from "../../kernels/utils/cookie-utils";
 
 function ContentArea() {
+    const navigate = useNavigate();
+    const isUserValid = isAccessTokenCookieValid();
+    useEffect(() => {
+        if (isUserValid) {
+            navigate('/signin');
+        }
+    }, [isUserValid, navigate]);
+
     const [searchText, setSearchText] = useState("");
 
     return (
@@ -13,13 +23,13 @@ function ContentArea() {
                 <div className="col-span-2">
                     <div className="w-full flex flex-col justify-between p-2">
                         <div className="flex-auto w-full">
-                            <UserListScreen searchText={searchText}/>
+                            <UserListScreen searchText={searchText} />
                         </div>
                     </div>
                 </div>
                 <div className="w-full">
                     <div className="w-full p-2">
-                        <UserSearchScreen onSearch={setSearchText}/>
+                        <UserSearchScreen onSearch={setSearchText} />
                         <UserRolesScreen />
                     </div>
                 </div>

@@ -1,12 +1,22 @@
 import { Card, Col, Grid, Metric, Tab, TabGroup, TabList, TabPanel, TabPanels } from "@tremor/react"
 import Template from "../../components/template/Template"
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import TaskDashboard from "./TaskDashboard";
 import CompareCommitChart from "../../components/subComponents/CompareCommitsChart";
 import ProjectContributionCalendar from "../../screens/dashboardScreen/ProjectContributionCalendar";
+import { useEffect } from "react";
+import { isAccessTokenCookieValid } from "../../kernels/utils/cookie-utils";
 
 function ContentArea() {
     const projectId = useParams().id;
+    const navigate = useNavigate();
+
+    const isUserValid = isAccessTokenCookieValid();
+    useEffect(() => {
+        if (isUserValid) {
+            navigate('/signin');
+        }
+    }, [isUserValid, navigate]);
     return (
         <>
             <Metric style={{ marginBottom: '30px', marginTop: '30px' }}

@@ -1,5 +1,5 @@
 import Template from "../../components/template/Template";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import '@fullcalendar/react/dist/vdom';
 import FullCalendar, { formatDate } from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -16,6 +16,8 @@ import {
 import { tokens } from "../../kernels/utils/theme";
 import "./calendar-custom-color.css";
 import { Card, Metric } from "@tremor/react";
+import { isAccessTokenCookieValid } from "../../kernels/utils/cookie-utils";
+import { useNavigate } from "react-router-dom";
 
 function ContentArea() {
     const colors = tokens("dark");
@@ -137,6 +139,14 @@ function ContentArea() {
 };
 
 const Calendar = () => {
+    const navigate = useNavigate();
+    const isUserValid = isAccessTokenCookieValid();
+    useEffect(() => {
+        if (isUserValid) {
+            navigate('/signin');
+        }
+    }, [isUserValid, navigate]);
+
     return (
         <Template>
             <ContentArea />

@@ -9,12 +9,20 @@ import RadioButtonIcon from "../../components/icons/RadioButtonIcon";
 import CheckBoxIcon from "../../components/icons/CheckboxIcon";
 import { priorityColor, pullPriority, pushPriority, statusColor } from "../../kernels/utils/field-utils";
 import { useUpdateTaskDispatch } from "../../kernels/utils/write-dialog-api-requests";
+import { isAccessTokenCookieValid } from "../../kernels/utils/cookie-utils";
 
 function ContentArea() {
     const userId = 1;
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const taskId = useParams().id;
+
+    const isUserValid = isAccessTokenCookieValid();
+    useEffect(() => {
+        if (isUserValid) {
+            navigate('/signin');
+        }
+    }, [isUserValid, navigate]);
 
     const taskDetail = useSelector((state) => state.taskDetail);
     const { loading, error, detail } = taskDetail;
@@ -57,11 +65,11 @@ function ContentArea() {
 
     const updateTask = useUpdateTaskDispatch();
     const setTaskObject = (title, description, startDate, deadline, duration, status, isHighPriority, isMediumPriority, isLowPriority, isStarPriority, taskOrder, stopTime) => {
-        if (title === null && description === null && startDate === null && deadline === null && duration === null 
-            && status === null && isHighPriority === null && isMediumPriority === null && isLowPriority === null && isStarPriority === null 
+        if (title === null && description === null && startDate === null && deadline === null && duration === null
+            && status === null && isHighPriority === null && isMediumPriority === null && isLowPriority === null && isStarPriority === null
             && taskOrder === null && stopTime === null) {
-                alert("Please update at least one field");
-                return;
+            alert("Please update at least one field");
+            return;
         }
         if (isHighPriority === null && isMediumPriority === null && isLowPriority === null && isStarPriority === null) {
             isHighPriority = priorities[0];

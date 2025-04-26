@@ -1,12 +1,20 @@
 import { Button, Card, Col, Grid, Metric, Switch, Title } from "@tremor/react";
 import RoleDashboard from "./RoleDashboard";
 import PrivilegeDashboard from "./PrivilegeDashboard";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ManagerTemplate from "../../components/template/ManagerTemplate";
+import { isAccessTokenCookieValid } from "../../kernels/utils/cookie-utils";
 
 function ContentArea() {
     const navigate = useNavigate();
+
+    const isUserValid = isAccessTokenCookieValid();
+    useEffect(() => {
+        if (isUserValid) {
+            navigate('/signin');
+        }
+    }, [isUserValid, navigate]);
 
     const [isRoleSwitchOn, setIsRoleSwitchOn] = useState(true);
     const [isPrivilegeSwitchOn, setIsPrivilegeSwitchOn] = useState(false);

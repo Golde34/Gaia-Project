@@ -60,5 +60,6 @@ export const signout = () => (dispatch) => {
     // remove coookies
     const cookieManager = new CookieManager();
     cookieManager.deleteCookie('accessToken', '/');
+    cookieManager.deleteCookie('refreshToken', '/');
     dispatch({ type: USER_SIGNOUT });
 };

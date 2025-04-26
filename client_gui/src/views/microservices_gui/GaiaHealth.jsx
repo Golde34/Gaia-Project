@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ManagerTemplate from '../../components/template/ManagerTemplate';
 import { Button, Card, Flex, Metric, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, TextInput, Title } from '@tremor/react';
 import { useDispatch } from 'react-redux';
 import { uploadRagFile } from '../../api/store/actions/gaia/rag_file.actions';
+import { useNavigate } from 'react-router-dom';
+import { isAccessTokenCookieValid } from '../../kernels/utils/cookie-utils';
 
 function ContentArea() {
     const dispatch = useDispatch();
@@ -77,7 +79,7 @@ function ContentArea() {
         console.log('File to upload:', selectedFile);
         dispatch(uploadRagFile(formData));
 
-        
+
     };
 
     return (
@@ -214,6 +216,13 @@ function ContentArea() {
 }
 
 const GaiaHealth = () => {
+    const navigation = useNavigate();
+    const isUserValid = isAccessTokenCookieValid();
+    useEffect(() => {
+        if (isUserValid) {
+            navigate('/signin');
+        }
+    }, [isUserValid, navigate]);
     return (
         <ManagerTemplate>
             <ContentArea />
