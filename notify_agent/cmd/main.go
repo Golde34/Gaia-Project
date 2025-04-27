@@ -36,6 +36,7 @@ func main() {
 
 	handlers := map[string] kafka.MessageHandler {
 		"notify-agent.optimize-task-notify.topic": &consumer.OptimizeTaskNotifyHandler{Database: db},
+		"chat-hub.task-result.topic": &consumer.TaskResultHandler{Database: db},
 	}
 
 	consumerGroupHandler := kafka.NewConsumerGroupHandler(kafkaCfg.Name, handlers)
