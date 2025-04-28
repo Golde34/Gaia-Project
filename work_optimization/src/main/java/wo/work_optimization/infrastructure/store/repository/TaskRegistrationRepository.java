@@ -12,7 +12,7 @@ import wo.work_optimization.core.domain.entity.TaskRegistration;
 import java.util.Optional;
 
 @Repository
-public interface TaskRegistrationRepository extends JpaRepository<TaskRegistration, Long> {
+public interface TaskRegistrationRepository extends JpaRepository<TaskRegistration, String> {
     Optional<TaskRegistration> findByUserIdAndStatus(Long userId, int status);
 
     @Query("select tr from TaskRegistration tr join ParentTask pt on pt.userId = tr.userId join Task t on t.parentTask.id = pt.id where t.id = :taskId")
