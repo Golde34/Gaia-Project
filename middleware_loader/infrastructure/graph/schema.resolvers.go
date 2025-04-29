@@ -58,8 +58,10 @@ func (r *mutationResolver) QueryTaskConfig(ctx context.Context, input model.User
 
 // Signin is the resolver for the signin field.
 func (r *mutationResolver) Signin(ctx context.Context, input model.SigninInput) (*model.AuthTokenResponse, error) {
-	authToken, err := authService.Signin(ctx, input)
-	return &authToken, err
+	// didn't use anymore
+	// authToken, err := authService.Signin(ctx, input)
+	// return &authToken, err
+	return nil, nil
 }
 
 // GaiaAutoSignin is the resolver for the gaiaAutoSignin field.

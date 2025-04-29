@@ -23,19 +23,19 @@ func NewAuthService() *AuthService {
 var authValidator = validator.NewAuthDTOValidator()
 var signinResponesDTO = response_dtos.NewSigninResponseDTO()
 
-func (s *AuthService) Signin(ctx context.Context, input model.SigninInput) (model.AuthTokenResponse, error) {
+func (s *AuthService) Signin(ctx context.Context, input model.SigninInput) (model.AuthTokenResponse, response_dtos.AuthTokenResponseDTO, error) {
 	err := authValidator.AuthValidate(input)
 	if err != nil {
-		return model.AuthTokenResponse{}, err
+		return model.AuthTokenResponse{}, response_dtos.AuthTokenResponseDTO{}, err 
 	}	
 	log.Println("Validation passed!")
 
 	authTokenResponse , err := client.IAuthAdapter(&adapter.AuthAdapter{}).Signin(input)
 	if err != nil {
-		return model.AuthTokenResponse{}, err
+		return model.AuthTokenResponse{}, response_dtos.AuthTokenResponseDTO{}, err 
 	} else {
-		authTokenResponse := signinResponesDTO.MapperToGraphQLModel(authTokenResponse)
-		return authTokenResponse, nil
+		modelSigninResponse := signinResponesDTO.MapperToGraphQLModel(authTokenResponse)
+		return modelSigninResponse, authTokenResponse, nil
 	}	
 }
 
