@@ -93,7 +93,7 @@ public class AuthServiceImpl implements AuthService {
                 .maxAge(Duration.ofDays(1))
                 .build();
         Role userRole = roleService.getBiggestRole(user.getRoles());
-        SignInDtoResponse signinResponse = userMapper.signInMapper(user, userRole, BossType.USER);
+        SignInDtoResponse signinResponse = userMapper.signInMapper(user, userRole, accessToken, refreshToken, BossType.USER);
         log.info("User: " + user.getUsername() + " sign-in success");
         ResponseEntity<?> responseBody = genericResponse
                 .matchingResponseMessage(new GenericResponse<>(signinResponse, ResponseEnum.msg200));

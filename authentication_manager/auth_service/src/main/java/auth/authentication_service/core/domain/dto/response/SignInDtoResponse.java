@@ -13,6 +13,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SignInDtoResponse {
+    private String accessToken;
+    private String refreshToken;
     private String name;
     private String username;
     private String email;

@@ -18,8 +18,11 @@ public class UserMapper {
         return user;
     }
 
-    public SignInDtoResponse signInMapper(User user, Role role, BossType bossType) {
+    public SignInDtoResponse signInMapper(User user, Role role, String accessToken, String refreshToken,
+            BossType bossType) {
         return SignInDtoResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .name(user.getName())
                 .username(user.getUsername())
                 .email(user.getEmail())
