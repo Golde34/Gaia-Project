@@ -9,9 +9,9 @@ import auth.authentication_service.core.domain.entities.Privilege;
 import auth.authentication_service.core.domain.entities.Role;
 import auth.authentication_service.core.domain.entities.User;
 import auth.authentication_service.core.domain.enums.BossType;
-import auth.authentication_service.core.domain.enums.LoggerType;
 import auth.authentication_service.core.domain.enums.ResponseEnum;
 import auth.authentication_service.core.domain.enums.TokenType;
+import auth.authentication_service.core.port.mapper.UserMapper;
 import auth.authentication_service.core.port.store.TokenStore;
 import auth.authentication_service.core.port.store.UserCRUDStore;
 import auth.authentication_service.core.services.interfaces.AuthService;
@@ -19,80 +19,88 @@ import auth.authentication_service.core.services.interfaces.RoleService;
 import auth.authentication_service.core.services.interfaces.TokenService;
 import auth.authentication_service.core.services.interfaces.UserService;
 import auth.authentication_service.core.validations.service_validations.UserServiceValidation;
-import auth.authentication_service.infrastructure.store.repositories.TokenRepository;
 import auth.authentication_service.kernel.utils.GenericResponse;
-import auth.authentication_service.kernel.utils.LoggerUtils;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Date;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements AuthService {
 
-    @Autowired
-    private LoggerUtils _logger;
-    @Autowired
-    private TokenService tokenService;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private RoleService roleService;
-
+    private final TokenService tokenService;
+    private final UserService userService;
+    private final RoleService roleService;
+    private final UserDetailsServices userDetailService;
     private final UserCRUDStore userStore;
     private final TokenStore tokenStore;
-    private final UserDetailsServices userDetailService;
+    private final UserMapper userMapper;
+    private final UserServiceValidation userServiceValidation;
 
-    @Autowired
-    private GenericResponse<String> genericResponse;
-    @Autowired
-    private UserServiceValidation userServiceValidation;
-
-    public AuthServiceImpl(UserCRUDStore userStore, TokenStore tokenStore, UserDetailsServices userDetailService, TokenRepository tokenRepository) {
-        this.userStore = userStore;
-        this.tokenStore = tokenStore;
-        this.userDetailService = userDetailService;
-    }    
+    private final GenericResponse<String> genericResponse;
 
     // This function is similar to the Sign-in function
     public ResponseEntity<?> authenticated(String username, String password) throws Exception {
-        User user = userStore.findByUsername(username);
-        final UserDetails userDetails = userDetailService.loadUserByUsername(username);
-        // Validate User
-        GenericResponse<String> validate = userServiceValidation._validateUserSignin(userDetails, username, password,
-                user);
-        if (!validate.getResponseMessage().equals(ResponseEnum.msg200)) {
-            return genericResponse.matchingResponseMessage(validate);
+        try {
+            User user = userStore.findByUsername(username);
+            final UserDetails userDetails = userDetailService.loadUserByUsername(username);
+            // Validate User
+            GenericResponse<String> validate = userServiceValidation._validateUserSignin(userDetails, username,
+                    password,
+                    user);
+            if (!validate.getResponseMessage().equals(ResponseEnum.msg200)) {
+                return genericResponse.matchingResponseMessage(validate);
+            }
+            if (user.isEnabled() == false) {
+                log.error("User is inactive");
+                return genericResponse
+                        .matchingResponseMessage(new GenericResponse<>("User is inactive", ResponseEnum.msg401));
+            }
+            // Generate sign-in information
+            return generateSigninToken(user, userDetails, BossType.USER);
+        } catch (Exception e) {
+            log.error("Error during sign-in: {}", e.getMessage(), e);
+            return genericResponse
+                    .matchingResponseMessage(
+                            new GenericResponse<>("The system encountered an unexpected error", ResponseEnum.msg500));
         }
-        if(user.isEnabled() == false) {
-            _logger.log("User is inactive", LoggerType.ERROR);
-            return genericResponse.matchingResponseMessage(new GenericResponse<>("User is inactive", ResponseEnum.msg401));
-        }
-        // Generate sign-in information
-        SignInDtoResponse response = _generateSignInToken(user, userDetails, BossType.USER);
-        _logger.log("User: " + user.getUsername() + " sign-in success", LoggerType.INFO);
-
-        return genericResponse.matchingResponseMessage(new GenericResponse<>(response, ResponseEnum.msg200));
     }
 
-    private SignInDtoResponse _generateSignInToken(User user, UserDetails userDetails, BossType bossType) {
+    private ResponseEntity<?> generateSigninToken(User user, UserDetails userDetails, BossType bossType) {
         String accessToken = _generateAccessToken(user, userDetails);
-        String refreshToken = _generateRefreshToken(user, userDetails);
-        Role role = roleService.getBiggestRole(user.getRoles());
-        return SignInDtoResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .name(user.getName())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .lastLogin(user.getLastLogin())
-                .bossType(bossType.getValue())
-                .role(role.getName())
+        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", accessToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .sameSite("Strict")
+                .maxAge(Duration.ofHours(2))
                 .build();
+        String refreshToken = _generateRefreshToken(user, userDetails);
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .sameSite("Strict")
+                .maxAge(Duration.ofDays(1))
+                .build();
+        Role userRole = roleService.getBiggestRole(user.getRoles());
+        SignInDtoResponse signinResponse = userMapper.signInMapper(user, userRole, BossType.USER);
+        log.info("User: " + user.getUsername() + " sign-in success");
+        ResponseEntity<?> responseBody = genericResponse
+                .matchingResponseMessage(new GenericResponse<>(signinResponse, ResponseEnum.msg200));
+        return ResponseEntity.ok()
+                .header("Set-Cookie", accessTokenCookie.toString())
+                .header("Set-Cookie", refreshTokenCookie.toString())
+                .body(responseBody);
     }
 
     private String _generateAccessToken(User user, UserDetails userDetails) {
@@ -130,9 +138,7 @@ public class AuthServiceImpl implements AuthService {
         }
         // Generate sign-in information
         if (user.getRoles().stream().anyMatch(role -> role.getName().equals(BossType.BOSS.getRole()))) {
-            SignInDtoResponse response = _generateSignInToken(user, userDetails, BossType.BOSS);
-            _logger.log("Boss: " + user.getUsername() + " sign-in success", LoggerType.INFO);
-            return genericResponse.matchingResponseMessage(new GenericResponse<>(response, ResponseEnum.msg200));
+            return generateSigninToken(user, userDetails, BossType.BOSS);
         } else {
             return genericResponse
                     .matchingResponseMessage(new GenericResponse<>("Permission denied", ResponseEnum.msg401));
