@@ -50,6 +50,7 @@ const baseRequest = async (api, method, portConfig, body, headers) => {
     );
     try {
         const response = await _fetchData(url, method, body, headers);
+        console.log("Response cookies: ", response.headers.get('set-cookie'));
         clearTimeout(timerId);
         return response;
     } catch (error) {
@@ -68,72 +69,47 @@ const getDefaultHeaders = () => {
 };
 
 const _fetchData = async (url, method, body, headers) => {
+    const config = {
+        headers: headers || {}, 
+        withCredentials: true 
+    };
+
     switch (method) {
         case "GET":
             try {
-                const getResponse = await Axios.get(url, {
-                    headers: headers,
-                    body: body,
-                    withCredentials: true,
-                })
+                const getResponse = await Axios.get(url, config);
                 return getResponse;
             } catch (error) {
                 return error;
             }
         case "POST":
             try {
-                const postResponse = await Axios.post(url, {
-                    headers: headers,
-                    body: body,
-                    withCredentials: true,
-                })
+                const postResponse = await Axios.post(url, body, config);
                 return postResponse;
             } catch (error) {
                 return error;
             }
         case "PUT":
             try {
-                const putResponse = await Axios.put(url, {
-                    headers: headers,
-                    body: body,
-                    withCredentials: true,
-                })
+                const putResponse = await Axios.put(url, body, config);
                 return putResponse;
             } catch (error) {
                 return error;
             }
         case "DELETE":
             try {
-                const deleteResponse = await Axios.delete(url, {
-                    headers: headers,
-                    body: body,
-                    withCredentials: true,
-                })
+                if (body) {
+                    config.data = body;
+                }
+                const deleteResponse = await Axios.delete(url, config);
                 return deleteResponse;
             } catch (error) {
                 return error;
             }
-        // case "CREDENTIAL_POST":
-        //     try {
-        //         const credentialResponse = Axios.create({
-        //             withCredentials: true,
-        //             headers: {
-        //                 "Content-Type": "application/json",
-        //             },
-        //         });
-        //         return credentialResponse.post(
-        //             url, {
-        //                 headers: headers,
-        //                 body: body
-        //             }
-        //         )
-        //     } catch (error) {
-        //         return error;
-        //     }
         default:
             return null;
     }
-}
+};
 
 const postFile = async (api, portName, formData) => {
     const apiHost = config[portName];
