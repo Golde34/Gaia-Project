@@ -39,7 +39,7 @@ export const signin = (username, password) => async (dispatch) => {
     dispatch({ type: USER_SIGNIN_REQUEST, payload: { username, password } });
     try {
         const response = await serverRequest('/auth/sign-in', HttpMethods.POST, portName.middleware, { username, password });
-        const data = JSON.stringify(response.data.data.signin)
+        const data = JSON.stringify(response.data.userInfo)
         dispatch({ type: USER_SIGNIN_SUCCESS, payload: data });
         localStorage.setItem('userInfo', data);
     } catch (error) {
