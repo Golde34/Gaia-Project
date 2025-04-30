@@ -13,26 +13,24 @@ func GetId(id string) *request_dtos.IdInputDTO {
 
 func CreateProjectRequestDTOMapper(body map[string]interface{}) *request_dtos.CreateProjectRequestDTO {
 	var input request_dtos.CreateProjectRequestDTO
-	bodyMap := body["body"].(map[string]interface{})
-	input.Name = utils.GetStringValue(bodyMap, "name", "")
-	input.Description = utils.GetStringValue(bodyMap, "description", "")
-	input.Status = utils.GetStringValue(bodyMap, "status", "")
-	input.Color = utils.GetStringValue(bodyMap, "color", "")
-	input.OwnerId = utils.GetStringValue(bodyMap, "ownerId", "")
-	input.ActiveStatus = utils.GetStringValue(bodyMap, "activeStatus", "")
+	input.Name = utils.GetStringValue(body, "name", "")
+	input.Description = utils.GetStringValue(body, "description", "")
+	input.Status = utils.GetStringValue(body, "status", "")
+	input.Color = utils.GetStringValue(body, "color", "")
+	input.OwnerId = utils.GetStringValue(body, "ownerId", "")
+	input.ActiveStatus = utils.GetStringValue(body, "activeStatus", "")
 
 	return &input
 }
 
 func UpdateProjectRequestDTOMapper(body map[string]interface{}, projectId string) *request_dtos.UpdateProjectRequestDTO {
 	var input request_dtos.UpdateProjectRequestDTO
-	bodyMap := body["body"].(map[string]interface{})
-	input.Name = bodyMap["name"].(string)
-	input.Description = bodyMap["description"].(string)
-	input.Status = bodyMap["status"].(string)
-	input.Color = bodyMap["color"].(string)
-	input.Owner = bodyMap["owner"].(string)
-	input.ActiveStatus = bodyMap["activeStatus"].(string)
+	input.Name = body["name"].(string)
+	input.Description = body["description"].(string)
+	input.Status = body["status"].(string)
+	input.Color = body["color"].(string)
+	input.Owner = body["owner"].(string)
+	input.ActiveStatus = body["activeStatus"].(string)
 	input.ProjectId = projectId
 
 	return &input
@@ -40,8 +38,7 @@ func UpdateProjectRequestDTOMapper(body map[string]interface{}, projectId string
 
 func UpdateProjectNameRequestDTOMapper(body map[string]interface{}, projectId string) *request_dtos.UpdateProjectNameInputDTO {
 	var input request_dtos.UpdateProjectNameInputDTO
-	bodyMap := body["body"].(map[string]interface{})
-	input.Name = bodyMap["newName"].(string)
+	input.Name = body["newName"].(string)
 	input.ID = projectId
 
 	return &input
@@ -49,8 +46,7 @@ func UpdateProjectNameRequestDTOMapper(body map[string]interface{}, projectId st
 
 func UpdateProjectColorRequestDTOMapper(body map[string]interface{}, projectId string) *request_dtos.UpdateProjectColorInputDTO {
 	var input request_dtos.UpdateProjectColorInputDTO
-	bodyMap := body["body"].(map[string]interface{})
-	input.Color = bodyMap["color"].(string)
+	input.Color = body["color"].(string)
 	input.ID = projectId
 
 	return &input

@@ -48,23 +48,21 @@ func UpdateNoteRequestDTOMapper(r *http.Request, fileObject base_dtos.FileObject
 
 func LockNoteRequestDTOMapper(body map[string]interface{}, noteId string) *request_dtos.LockNoteRequestDTO {
 	var input request_dtos.LockNoteRequestDTO
-	bodyMap := body["body"].(map[string]interface{})
-	input.NoteId = utils.GetStringValue(bodyMap, "noteId", "")
+	input.NoteId = utils.GetStringValue(body, "noteId", "")
 	if noteId != input.NoteId {
 		return nil
 	}
-	input.NotePassword = utils.GetStringValue(bodyMap, "notePassword", "")
-	input.PasswordSuggestion = utils.GetStringValue(bodyMap, "passwordSuggestion", "")
+	input.NotePassword = utils.GetStringValue(body, "notePassword", "")
+	input.PasswordSuggestion = utils.GetStringValue(body, "passwordSuggestion", "")
 	return &input
 }
 
 func UnlockNoteRequestDTOMapper(body map[string]interface{}, noteId string) *request_dtos.UnlockNoteRequestDTO {
 	var input request_dtos.UnlockNoteRequestDTO
-	bodyMap := body["body"].(map[string]interface{})
-	input.NoteId = utils.GetStringValue(bodyMap, "noteId", "")
+	input.NoteId = utils.GetStringValue(body, "noteId", "")
 	if noteId != input.NoteId {
 		return nil
 	}
-	input.NotePassword = utils.GetStringValue(bodyMap, "notePassword", "")
+	input.NotePassword = utils.GetStringValue(body, "notePassword", "")
 	return &input
 }
