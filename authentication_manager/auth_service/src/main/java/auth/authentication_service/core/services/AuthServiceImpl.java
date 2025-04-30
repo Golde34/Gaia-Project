@@ -27,6 +27,7 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Date;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -66,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
                         .matchingResponseMessage(new GenericResponse<>("User is inactive", ResponseEnum.msg401));
             }
             // Generate sign-in information
-            return generateSigninToken(user, userDetails, BossType.USER);
+            return generateSignInToken(user, userDetails, BossType.USER);
         } catch (Exception e) {
             log.error("Error during sign-in: {}", e.getMessage(), e);
             return genericResponse
@@ -75,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    private ResponseEntity<?> generateSigninToken(User user, UserDetails userDetails, BossType bossType) {
+    private ResponseEntity<?> generateSignInToken(User user, UserDetails userDetails, BossType bossType) {
         String accessToken = _generateAccessToken(user, userDetails);
         ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(true)
@@ -93,14 +94,12 @@ public class AuthServiceImpl implements AuthService {
                 .maxAge(Duration.ofDays(1))
                 .build();
         Role userRole = roleService.getBiggestRole(user.getRoles());
-        SignInDtoResponse signinResponse = userMapper.signInMapper(user, userRole, accessToken, refreshToken, BossType.USER);
+        SignInDtoResponse signInResponse = userMapper.signInMapper(user, userRole, accessToken, refreshToken, BossType.USER);
         log.info("User: " + user.getUsername() + " sign-in success");
-        ResponseEntity<?> responseBody = genericResponse
-                .matchingResponseMessage(new GenericResponse<>(signinResponse, ResponseEnum.msg200));
-        return ResponseEntity.ok()
-                .header("Set-Cookie", accessTokenCookie.toString())
-                .header("Set-Cookie", refreshTokenCookie.toString())
-                .body(responseBody);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+        headers.add(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+        return genericResponse.matchingResponseWithHeader(new GenericResponse<>(signInResponse, ResponseEnum.msg200), 200, headers);
     }
 
     private String _generateAccessToken(User user, UserDetails userDetails) {
@@ -138,7 +137,7 @@ public class AuthServiceImpl implements AuthService {
         }
         // Generate sign-in information
         if (user.getRoles().stream().anyMatch(role -> role.getName().equals(BossType.BOSS.getRole()))) {
-            return generateSigninToken(user, userDetails, BossType.BOSS);
+            return generateSignInToken(user, userDetails, BossType.BOSS);
         } else {
             return genericResponse
                     .matchingResponseMessage(new GenericResponse<>("Permission denied", ResponseEnum.msg401));

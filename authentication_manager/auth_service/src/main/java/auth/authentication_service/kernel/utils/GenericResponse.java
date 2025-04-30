@@ -4,6 +4,7 @@ import auth.authentication_service.core.domain.constant.Constants;
 import auth.authentication_service.core.domain.dto.BaseResponseDto;
 import auth.authentication_service.core.domain.enums.ResponseEnum;
 import lombok.Data;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -96,5 +97,15 @@ public class GenericResponse<T> {
                         .build());
             }
         }
+    }
+
+    public ResponseEntity<?> matchingResponseWithHeader(GenericResponse<?> data, int errorCode, HttpHeaders headers) {
+        return ResponseEntity.ok().headers(headers).body(BaseResponseDto.builder()
+                .status(Constants.HttpStatus.SUCCESS)
+                .statusMessage(Constants.HttpStatus.SUCCESS)
+                .errorCode(errorCode)
+                .errorMessage(Constants.ErrorMessage.OK)
+                .data(data)
+                .build());
     }
 }
