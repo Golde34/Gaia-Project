@@ -1,8 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import Template from "../../components/template/Template";
 import { useCallback, useEffect, useRef } from "react";
-import { isAccessTokenCookieValid } from "../../kernels/utils/cookie-utils";
-import { useNavigate } from "react-router-dom";
 import { getNoteList } from "../../api/store/actions/task_manager/note.actions";
 import { Metric } from "@tremor/react";
 import NoteItem from "../../components/subComponents/NoteItem";
@@ -10,16 +8,8 @@ import CreateNewNote from "../../screens/noteScreen/CreateNewNote";
 
 function ContentArea() {
     const dispatch = useDispatch();
-    const navigate = useNavigate();
     // const userId = localStorage.getItem('userInfo');
     const userId = "1";
-
-    const isUserValid = isAccessTokenCookieValid();
-    useEffect(() => {
-        if (isUserValid) {
-            navigate('/signin');
-        }
-    }, [isUserValid, navigate]);
 
     const listNotes = useSelector(state => state.noteList);
     const { loading, error, notes } = listNotes;

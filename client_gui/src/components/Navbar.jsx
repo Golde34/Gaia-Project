@@ -16,6 +16,10 @@ const Navbar = () => {
     if (cookies.accessToken) {
         auth = true;
     }
+    const user = localStorage.getItem("userInfo");
+    if (user) {
+        auth = true;
+    }
 
     // List screen active
     const listScreen = useSelector((state) => state.screenList);

@@ -63,7 +63,7 @@ const getDefaultHeaders = () => {
 
     headers.append('Content-Type', 'application/json');
     headers.append('Accept', 'application/json');
- 
+
     return headers;
 };
 
@@ -74,6 +74,7 @@ const _fetchData = async (url, method, body, headers) => {
                 const getResponse = await Axios.get(url, {
                     headers: headers,
                     body: body,
+                    withCredentials: true,
                 })
                 return getResponse;
             } catch (error) {
@@ -84,6 +85,7 @@ const _fetchData = async (url, method, body, headers) => {
                 const postResponse = await Axios.post(url, {
                     headers: headers,
                     body: body,
+                    withCredentials: true,
                 })
                 return postResponse;
             } catch (error) {
@@ -94,6 +96,7 @@ const _fetchData = async (url, method, body, headers) => {
                 const putResponse = await Axios.put(url, {
                     headers: headers,
                     body: body,
+                    withCredentials: true,
                 })
                 return putResponse;
             } catch (error) {
@@ -104,6 +107,7 @@ const _fetchData = async (url, method, body, headers) => {
                 const deleteResponse = await Axios.delete(url, {
                     headers: headers,
                     body: body,
+                    withCredentials: true,
                 })
                 return deleteResponse;
             } catch (error) {
@@ -154,7 +158,7 @@ const postFile = async (api, portName, formData) => {
     });
 
     return response;
-} 
+}
 
 export {
     HttpMethods,
