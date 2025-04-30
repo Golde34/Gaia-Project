@@ -7,14 +7,13 @@ import (
 
 func RegisterTaskConfigRequestDTOMapper(body map[string]interface{}) *request_dtos.TaskRegisterConfigRequestDTO {
 	var input request_dtos.TaskRegisterConfigRequestDTO
-	bodyMap := body["body"].(map[string]interface{})
-	input.UserId = utils.GetFloatValue(bodyMap, "userId", 0)
-	input.SleepDuration = utils.GetFloatValue(bodyMap, "sleepDuration", 0)
-	input.StartSleepTime = utils.GetStringValue(bodyMap, "startSleepTime", "")
-	input.EndSleepTime = utils.GetStringValue(bodyMap, "endSleepTime", "")
-	input.RelaxTime = utils.GetFloatValue(bodyMap, "relaxTime", 0)
-	input.TravelTime = utils.GetFloatValue(bodyMap, "travelTime", 0)
-	input.EatTime = utils.GetFloatValue(bodyMap, "eatTime", 0)
-	input.WorkTime = utils.GetFloatValue(bodyMap, "workTime", 0)
+	input.UserId = utils.GetFloatValue(body, "userId", 0)
+	input.SleepDuration = utils.GetFloatValue(body, "sleepDuration", 0)
+	input.StartSleepTime = utils.GetStringValue(body, "startSleepTime", "")
+	input.EndSleepTime = utils.GetStringValue(body, "endSleepTime", "")
+	input.RelaxTime = utils.GetFloatValue(body, "relaxTime", 0)
+	input.TravelTime = utils.GetFloatValue(body, "travelTime", 0)
+	input.EatTime = utils.GetFloatValue(body, "eatTime", 0)
+	input.WorkTime = utils.GetFloatValue(body, "workTime", 0)
 	return &input
 }

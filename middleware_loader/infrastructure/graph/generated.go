@@ -56,15 +56,13 @@ type ComplexityRoot struct {
 	}
 
 	AuthTokenResponse struct {
-		AccessToken  func(childComplexity int) int
-		BossType     func(childComplexity int) int
-		Email        func(childComplexity int) int
-		GaiaHealth   func(childComplexity int) int
-		LastLogin    func(childComplexity int) int
-		Name         func(childComplexity int) int
-		RefreshToken func(childComplexity int) int
-		Role         func(childComplexity int) int
-		Username     func(childComplexity int) int
+		BossType   func(childComplexity int) int
+		Email      func(childComplexity int) int
+		GaiaHealth func(childComplexity int) int
+		LastLogin  func(childComplexity int) int
+		Name       func(childComplexity int) int
+		Role       func(childComplexity int) int
+		Username   func(childComplexity int) int
 	}
 
 	Comment struct {
@@ -487,13 +485,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AuthToken.User(childComplexity), true
 
-	case "AuthTokenResponse.accessToken":
-		if e.complexity.AuthTokenResponse.AccessToken == nil {
-			break
-		}
-
-		return e.complexity.AuthTokenResponse.AccessToken(childComplexity), true
-
 	case "AuthTokenResponse.bossType":
 		if e.complexity.AuthTokenResponse.BossType == nil {
 			break
@@ -528,13 +519,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AuthTokenResponse.Name(childComplexity), true
-
-	case "AuthTokenResponse.refreshToken":
-		if e.complexity.AuthTokenResponse.RefreshToken == nil {
-			break
-		}
-
-		return e.complexity.AuthTokenResponse.RefreshToken(childComplexity), true
 
 	case "AuthTokenResponse.role":
 		if e.complexity.AuthTokenResponse.Role == nil {
@@ -3675,94 +3659,6 @@ func (ec *executionContext) fieldContext_AuthToken_user(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _AuthTokenResponse_accessToken(ctx context.Context, field graphql.CollectedField, obj *model.AuthTokenResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthTokenResponse_accessToken(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AccessToken, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AuthTokenResponse_accessToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AuthTokenResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _AuthTokenResponse_refreshToken(ctx context.Context, field graphql.CollectedField, obj *model.AuthTokenResponse) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AuthTokenResponse_refreshToken(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RefreshToken, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AuthTokenResponse_refreshToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AuthTokenResponse",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _AuthTokenResponse_name(ctx context.Context, field graphql.CollectedField, obj *model.AuthTokenResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AuthTokenResponse_name(ctx, field)
 	if err != nil {
@@ -6121,10 +6017,6 @@ func (ec *executionContext) fieldContext_Mutation_signin(ctx context.Context, fi
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "accessToken":
-				return ec.fieldContext_AuthTokenResponse_accessToken(ctx, field)
-			case "refreshToken":
-				return ec.fieldContext_AuthTokenResponse_refreshToken(ctx, field)
 			case "name":
 				return ec.fieldContext_AuthTokenResponse_name(ctx, field)
 			case "username":
@@ -6196,10 +6088,6 @@ func (ec *executionContext) fieldContext_Mutation_gaiaAutoSignin(ctx context.Con
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "accessToken":
-				return ec.fieldContext_AuthTokenResponse_accessToken(ctx, field)
-			case "refreshToken":
-				return ec.fieldContext_AuthTokenResponse_refreshToken(ctx, field)
 			case "name":
 				return ec.fieldContext_AuthTokenResponse_name(ctx, field)
 			case "username":
@@ -18892,16 +18780,6 @@ func (ec *executionContext) _AuthTokenResponse(ctx context.Context, sel ast.Sele
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("AuthTokenResponse")
-		case "accessToken":
-			out.Values[i] = ec._AuthTokenResponse_accessToken(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "refreshToken":
-			out.Values[i] = ec._AuthTokenResponse_refreshToken(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "name":
 			out.Values[i] = ec._AuthTokenResponse_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

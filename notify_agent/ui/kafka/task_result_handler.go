@@ -1,5 +1,14 @@
 package consumer
 
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"notify_agent/core/domain/constants"
+	base_dtos "notify_agent/core/domain/dtos/base"
+	database_mongo "notify_agent/kernel/database/mongo"
+)
+
 type TaskResultHandler struct{
 	Database database_mongo.Database
 }
@@ -38,6 +47,6 @@ func TaskResultCmd(key []byte, data map[string]interface{}, db database_mongo.Da
 	userId := data["userId"].(float64)
 	userIdStr := fmt.Sprintf("%.0f", userId)
 	// go handleService(data, userIdStr, db)
-
+	fmt.Printf("Task result command received for user ID: %s\n", userIdStr)
 	fmt.Printf("Task result handled successfully for message ID: %s\n", messageId)
 }

@@ -6,8 +6,6 @@ import { formatHourNumber } from "../../kernels/utils/date-picker";
 import { queryTaskConfig, registerTaskConfig } from "../../api/store/actions/work_optimization/task-registration.actions";
 import ProjectList from "./ProjectList";
 import SchedulingTable from "../schedule_plan/SchedulingTable";
-import { isAccessTokenCookieValid } from "../../kernels/utils/cookie-utils";
-import { useNavigate } from "react-router-dom";
 import { isNullOrUndefined } from "../../kernels/utils/cn";
 
 function ContentArea(props) {
@@ -267,15 +265,6 @@ function ContentArea(props) {
 }
 
 const TaskRegistration = (props) => {
-    const navigate = useNavigate();
-
-    const isUserValid = isAccessTokenCookieValid();
-    useEffect(() => {
-        if (isUserValid) {
-            navigate('/signin');
-        }
-    }, [isUserValid, navigate]);
-
     const [userId, setUserId] = useState("1");
     const redirectPage = props.redirectPage;
     const dispatch = useDispatch();

@@ -11,15 +11,13 @@ type AuthToken struct {
 }
 
 type AuthTokenResponse struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
-	Name         string `json:"name"`
-	Username     string `json:"username"`
-	Email        string `json:"email"`
-	LastLogin    string `json:"lastLogin"`
-	BossType     string `json:"bossType"`
-	Role         string `json:"role"`
-	GaiaHealth   string `json:"gaiaHealth"`
+	Name       string `json:"name"`
+	Username   string `json:"username"`
+	Email      string `json:"email"`
+	LastLogin  string `json:"lastLogin"`
+	BossType   string `json:"bossType"`
+	Role       string `json:"role"`
+	GaiaHealth string `json:"gaiaHealth"`
 }
 
 type Comment struct {

@@ -7,9 +7,8 @@ import (
 )
 
 func ChooseTaskBatch(body map[string]interface{}) (float64, float64) {
-	bodyMap := body["body"].(map[string]interface{})
-	batchNumber := bodyMap["batchNumber"].(string)
-	userId := bodyMap["userId"].(string)
+	batchNumber := body["batchNumber"].(string)
+	userId := body["userId"].(string)
 	userFloat, err := strconv.ParseFloat(userId, 64)
 	if err != nil {
 		return 0, 0
@@ -23,26 +22,25 @@ func ChooseTaskBatch(body map[string]interface{}) (float64, float64) {
 
 func CreateScheduleGroupRequestDTOMapper(body map[string]any) request_dtos.CreateScheduleGroupRequestDTO {
 	var input request_dtos.CreateScheduleGroupRequestDTO
-	bodyMap := body["body"].(map[string]interface{})
-	input.UserId = bodyMap["userId"].(string)
-	input.Title = bodyMap["title"].(string)
-	if bodyMap["projectId"] != nil {
-		input.ProjectId = bodyMap["projectId"].(string)
+	input.UserId = body["userId"].(string)
+	input.Title = body["title"].(string)
+	if body["projectId"] != nil {
+		input.ProjectId = body["projectId"].(string)
 	} else {
 		input.ProjectId = ""
 	}
-	if bodyMap["groupTaskId"] != nil {
-		input.GroupTaskId = bodyMap["groupTaskId"].(string)
+	if body["groupTaskId"] != nil {
+		input.GroupTaskId = body["groupTaskId"].(string)
 	} else {
 		input.GroupTaskId = ""
 	}
-	input.Title = bodyMap["title"].(string)
-	input.Priority = utils.ConvertStringToStringArray(bodyMap["priority"].([]interface{}))
-	input.StartHour = bodyMap["startHour"].(string)
-	input.EndHour = bodyMap["endHour"].(string)
-	input.Duration = bodyMap["duration"].(float64)
-	input.Repeat = utils.ConvertStringToStringArray(bodyMap["repeat"].([]interface{}))
-	input.IsNotify = bodyMap["isNotify"].(bool)
-	input.ActiveStatus = bodyMap["activeStatus"].(string)
+	input.Title = body["title"].(string)
+	input.Priority = utils.ConvertStringToStringArray(body["priority"].([]interface{}))
+	input.StartHour = body["startHour"].(string)
+	input.EndHour = body["endHour"].(string)
+	input.Duration = body["duration"].(float64)
+	input.Repeat = utils.ConvertStringToStringArray(body["repeat"].([]interface{}))
+	input.IsNotify = body["isNotify"].(bool)
+	input.ActiveStatus = body["activeStatus"].(string)
 	return input
 }

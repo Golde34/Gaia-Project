@@ -1,20 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ManagerTemplate from "../../components/template/ManagerTemplate";
 import UserListScreen from "../../screens/userScreen/admin/UserListScreen";
 import UserSearchScreen from "../../screens/userScreen/admin/UserSearchScreen";
 import UserRolesScreen from "../../screens/userScreen/admin/UserRolesScreen";
-import { useNavigate } from "react-router-dom";
-import { isAccessTokenCookieValid } from "../../kernels/utils/cookie-utils";
 
 function ContentArea() {
-    const navigate = useNavigate();
-    const isUserValid = isAccessTokenCookieValid();
-    useEffect(() => {
-        if (isUserValid) {
-            navigate('/signin');
-        }
-    }, [isUserValid, navigate]);
-
     const [searchText, setSearchText] = useState("");
 
     return (

@@ -1,9 +1,7 @@
 import Template from "../../components/template/Template"
 import { Metric } from "@tremor/react";
-import { useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { isAccessTokenCookieValid } from "../../kernels/utils/cookie-utils";
 import { userProfile } from "../../api/store/actions/auth_service/user.actions";
 import MessageBox from "../../components/subComponents/MessageBox";
 import UserSettingScreen from "../../screens/userScreen/UserSettingScreen";
@@ -12,17 +10,9 @@ import UserGithubScreen from "../../screens/userScreen/UserGihubScreen";
 import LLMModelSettingScreen from "../../screens/userScreen/LLMModelSetting";
 
 function ContentArea() {
-    const navigate = useNavigate();
     const dispatch = useDispatch();
 
     const userId = "1";
-
-    const isUserValid = isAccessTokenCookieValid();
-    useEffect(() => {
-        if (isUserValid) {
-            navigate('/signin');
-        }
-    }, [isUserValid, navigate]);
 
     const profile = useSelector(state => state.userDetail);
     const { loading, error, user } = profile;

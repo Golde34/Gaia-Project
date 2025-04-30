@@ -6,13 +6,10 @@ import "../../assets/husky.scss";
 import CheckBoxIcon from "../../components/icons/CheckboxIcon";
 import { signin } from "../../api/store/actions/auth_service/auth.actions";
 import MessageBox from "../../components/subComponents/MessageBox";
-import CookieManager from "../../kernels/utils/cookie-utils";
 
 const Signin = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const cookieManager = new CookieManager();
-    const accessToken = cookieManager.getCookie('accessToken');
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -27,15 +24,10 @@ const Signin = () => {
     };
     useEffect(() => {
         if (userInfo) {
-            if (userInfo['data'] !== null) {
-                if (accessToken === undefined) {
-                    cookieManager.saveCookie('accessToken', JSON.parse(userInfo)['accessToken'], '/');
-                    localStorage.setItem('userInfo', JSON.parse(userInfo)['username']);
-                }
-                navigate('/dashboard');
-            } else {
-                setErrorMessage(userInfo['errors'][0]['message']);
-            }
+            localStorage.setItem('userInfo', JSON.parse(userInfo)['username']);
+            navigate('/dashboard');
+        } else if (error) {
+            setErrorMessage(error);
         }
     }, [navigate, userInfo]);
 

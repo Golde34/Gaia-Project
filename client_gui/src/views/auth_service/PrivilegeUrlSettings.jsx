@@ -1,19 +1,9 @@
 import { Button, Card, Col, Flex, Grid, Metric, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, TextInput, Title } from "@tremor/react";
 import { SearchCircleIcon } from "@heroicons/react/solid";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ManagerTemplate from "../../components/template/ManagerTemplate";
-import { useDispatch } from "react-redux";
-import { isAccessTokenCookieValid } from "../../kernels/utils/cookie-utils";
 
 function ContentArea() {
-    const dispatch = useDispatch();
-    const isUserValid = isAccessTokenCookieValid();
-    useEffect(() => {
-        if (isUserValid) {
-            navigate('/signin');
-        }
-    }, [isUserValid, navigate]);
-
     const [text, setText] = useState("");
     const searchInput = () => {
         onSearch(text);

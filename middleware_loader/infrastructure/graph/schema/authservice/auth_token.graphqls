@@ -13,8 +13,6 @@ input SigninInput {
 }
 
 type AuthTokenResponse {
-	accessToken: String!
-	refreshToken: String!
 	name: String!
 	username: String!
 	email: String!

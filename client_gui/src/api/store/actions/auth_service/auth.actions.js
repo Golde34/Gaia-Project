@@ -1,4 +1,3 @@
-import CookieManager from '../../../../kernels/utils/cookie-utils';
 import { HttpMethods, serverRequest } from '../../../baseAPI';
 import {
     GAIA_SIGNIN_FAIL, GAIA_SIGNIN_REQUEST, GAIA_SIGNIN_SUCCESS,
@@ -39,7 +38,7 @@ export const signin = (username, password) => async (dispatch) => {
     dispatch({ type: USER_SIGNIN_REQUEST, payload: { username, password } });
     try {
         const response = await serverRequest('/auth/sign-in', HttpMethods.POST, portName.middleware, { username, password });
-        const data = JSON.stringify(response.data.data.signin)
+        const data = JSON.stringify(response.data.userInfo)
         dispatch({ type: USER_SIGNIN_SUCCESS, payload: data });
         localStorage.setItem('userInfo', data);
     } catch (error) {
@@ -58,8 +57,5 @@ export const signout = () => (dispatch) => {
     localStorage.removeItem('gaiaAccessToken');
     localStorage.removeItem('bossInfo');
     // remove coookies
-    const cookieManager = new CookieManager();
-    cookieManager.deleteCookie('accessToken', '/');
-    cookieManager.deleteCookie('refreshToken', '/');
     dispatch({ type: USER_SIGNOUT });
 };

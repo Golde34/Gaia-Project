@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Button, Card, Col, Grid, Metric, TextInput } from '@tremor/react';
 import Template from '../../components/template/Template';
 import { useMultiWS } from '../../kernels/context/MultiWSContext';
-import { useNavigate } from 'react-router-dom';
-import { isAccessTokenCookieValid } from '../../kernels/utils/cookie-utils';
 
 function ContentArea() {
   const userId = '1';
@@ -116,13 +114,6 @@ function ContentArea() {
 }
 
 export default function Chat() {
-  const navigate = useNavigate();
-  const isUserValid = isAccessTokenCookieValid();
-  useEffect(() => {
-    if (isUserValid) {
-      navigate('/signin');
-    }
-  }, [isUserValid, navigate]);
   return (
     <Template>
       <ContentArea />

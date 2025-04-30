@@ -9,20 +9,10 @@ import MessageBox from '../../components/subComponents/MessageBox';
 import TaskBatchScreen from '../../screens/scheduleTaskScreen/TaskBatchScreen';
 import CalendarChart from '../../screens/scheduleTaskScreen/CalendarChart';
 import { ScheduleGroups } from '../../screens/scheduleTaskScreen/ScheduleGroups';
-import { useNavigate } from 'react-router-dom';
-import { isAccessTokenCookieValid } from '../../kernels/utils/cookie-utils';
 
 function ContentArea() {
     const userId = "1";
     const dispatch = useDispatch();
-    const navigate = useNavigate();
-
-    const isUserValid = isAccessTokenCookieValid();
-    useEffect(() => {
-        if (isUserValid) {
-            navigate('/signin');
-        }
-    }, [isUserValid, navigate]);
 
     const currentDate = dayjs();
     const [selectDate, setSelectDate] = useState(currentDate);

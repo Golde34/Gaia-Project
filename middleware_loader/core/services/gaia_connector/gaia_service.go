@@ -6,7 +6,6 @@ import (
 
 	response_dtos "middleware_loader/core/domain/dtos/response"
 	"middleware_loader/infrastructure/client/base"
-	"middleware_loader/infrastructure/graph/model"
 	"middleware_loader/kernel/utils"
 )
 
@@ -30,7 +29,7 @@ func (s *GaiaService) GaiaConnect() (interface{}, error) {
 	if err != nil {
 		return "", err
 	}
-	var authToken model.AuthTokenResponse
+	var authToken response_dtos.AuthTokenResponseDTO 
 	err = json.Unmarshal(dataBytes, &authToken)
 	if err != nil {
 		return "", err
