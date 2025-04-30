@@ -50,7 +50,6 @@ const baseRequest = async (api, method, portConfig, body, headers) => {
     );
     try {
         const response = await _fetchData(url, method, body, headers);
-        console.log("Response cookies: ", response.headers.get('set-cookie'));
         clearTimeout(timerId);
         return response;
     } catch (error) {
