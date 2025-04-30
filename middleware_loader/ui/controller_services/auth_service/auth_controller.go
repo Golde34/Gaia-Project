@@ -35,8 +35,8 @@ func Signin(w http.ResponseWriter, r *http.Request, authService *services.AuthSe
 		Value:    token.AccessToken, // lấy từ AuthTokenResponse
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   true, // Bắt buộc phải HTTPS nếu dùng Secure
-		SameSite: http.SameSiteStrictMode,
+		// Secure:   true, // Bắt buộc phải HTTPS nếu dùng Secure
+		SameSite: http.SameSiteLaxMode,
 		MaxAge:   15 * 60, // 15 phút
 	}
 	http.SetCookie(w, accessTokenCookie)
@@ -47,8 +47,8 @@ func Signin(w http.ResponseWriter, r *http.Request, authService *services.AuthSe
 		Value:    token.RefreshToken, // lấy từ AuthTokenResponse
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		// Secure:   true,
+		SameSite: http.SameSiteLaxMode,
 		MaxAge:   7 * 24 * 60 * 60, // 7 ngày
 	}
 	http.SetCookie(w, refreshTokenCookie)
