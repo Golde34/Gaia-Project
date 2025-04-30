@@ -41,8 +41,8 @@ func Setup(router *chi.Mux, db database_mongo.Database) {
 	contributionService := contribution_tracker.NewContributionService()
 
 	// GRAPHQL FEDERATION
-	router.Handle("/graphql", playground.Handler("GraphQL playground", "/query"))
-	router.Handle("/query", handler.NewDefaultServer(
+	router.Handle("/graphql", playground.Handler("GraphQL playground", "/grapql-query"))
+	router.Handle("/graphql-query", handler.NewDefaultServer(
 		graph.NewExecutableSchema(
 			graph.Config{
 				Resolvers: &graph.Resolver{

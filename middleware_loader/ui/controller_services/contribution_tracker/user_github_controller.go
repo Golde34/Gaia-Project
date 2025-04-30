@@ -89,10 +89,9 @@ func SyncProjectRepo(w http.ResponseWriter, r *http.Request, userGithubService *
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	bodyMap := body["body"].(map[string]interface{})
-	userId := bodyMap["userId"].(string)
-	project := bodyMap["project"].(map[string]interface{})
-	repo := bodyMap["repo"].(map[string]interface{})
+	userId := body["userId"].(string)
+	project := body["project"].(map[string]interface{})
+	repo := body["repo"].(map[string]interface{})
 
 	syncResult, err := userGithubService.SyncProjectRepo(userId, project, repo)
 	if err != nil {
@@ -116,9 +115,8 @@ func DeleteProjectRepo(w http.ResponseWriter, r *http.Request, userGithubService
 		return
 	}
 
-	bodyMap := body["body"].(map[string]interface{})
-	userId := bodyMap["userId"].(string)
-	projectId := bodyMap["projectId"].(string)
+	userId := body["userId"].(string)
+	projectId := body["projectId"].(string)
 
 	deleteResult, err := userGithubService.DeleteProjectRepo(userId, projectId)
 	if err != nil {

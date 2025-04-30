@@ -215,7 +215,7 @@ func ConnectToGraphQLServer(w http.ResponseWriter, query string) {
 	}
 
 	//Send the query to the GraphQL server
-	resp, err := http.Post("http://localhost:4000/query", "application/json", &buf)
+	resp, err := http.Post("http://localhost:4000/graphql-query", "application/json", &buf)
 	if err != nil {
 		log.Printf("err: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -239,7 +239,7 @@ func GraphQLResponse(w http.ResponseWriter, query string) io.ReadCloser {
 		return nil
 	}
 
-	resp, err := http.Post("http://localhost:4000/query", "application/json", &buf)
+	resp, err := http.Post("http://localhost:4000/graphql-query", "application/json", &buf)
 	if err != nil {
 		log.Printf("err: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
