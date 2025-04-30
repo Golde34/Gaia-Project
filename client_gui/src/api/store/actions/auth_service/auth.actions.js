@@ -1,4 +1,3 @@
-import CookieManager from '../../../../kernels/utils/cookie-utils';
 import { HttpMethods, serverRequest } from '../../../baseAPI';
 import {
     GAIA_SIGNIN_FAIL, GAIA_SIGNIN_REQUEST, GAIA_SIGNIN_SUCCESS,
@@ -58,8 +57,5 @@ export const signout = () => (dispatch) => {
     localStorage.removeItem('gaiaAccessToken');
     localStorage.removeItem('bossInfo');
     // remove coookies
-    const cookieManager = new CookieManager();
-    cookieManager.deleteCookie('accessToken', '/');
-    cookieManager.deleteCookie('refreshToken', '/');
     dispatch({ type: USER_SIGNOUT });
 };
