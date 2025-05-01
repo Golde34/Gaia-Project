@@ -1,22 +1,29 @@
-import { createCluster, RedisClusterType } from "redis";
+import { createClient, createCluster, RedisClientType, RedisClusterType } from "redis";
 import { valkeyConfig } from "../../kernel/config/valkey.configuration";
 
 class RedisClient {
-    private static instance: RedisClusterType | null = null;
+    // private static instance: RedisClusterType | null = null;
+    private static instance: RedisClientType | null = null;
 
     private constructor() { }
 
-    public static async getInstance(): Promise<RedisClusterType> {
+    public static async getInstance(): Promise<RedisClientType> {
+    // public static async getInstance(): Promise<RedisClusterType> {
         if (!RedisClient.instance) {
-            RedisClient.instance = createCluster({
-                rootNodes: [
-                    {
-                        url: `redis://${valkeyConfig.valkey.redisHost}:${valkeyConfig.valkey.redisPort}`,
-                    },
-                ],
-                defaults: {
-                    password: valkeyConfig.valkey.redisPassword,
-                },
+            // RedisClient.instance = createCluster({
+            //     rootNodes: [
+            //         {
+            //             url: `redis://${valkeyConfig.valkey.redisHost}:${valkeyConfig.valkey.redisPort}`,
+            //         },
+            //     ],
+            //     defaults: {
+            //         password: valkeyConfig.valkey.redisPassword,
+            //     },
+            // });
+
+            RedisClient.instance = createClient({
+                url: `redis://${valkeyConfig.valkey.redisHost}:${valkeyConfig.valkey.redisPort}`,
+                password: valkeyConfig.valkey.redisPassword,
             });
 
             RedisClient.instance.on("error", (error) => {
