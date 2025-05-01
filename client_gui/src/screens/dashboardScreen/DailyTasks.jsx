@@ -30,7 +30,7 @@ const DailyTasks = () => {
       ) : error ? (
         <MessageBox message={error} />
       ) : (
-        activeTaskBatch && activeTaskBatch.length === 0 ? (
+        activeTaskBatch === null || activeTaskBatch === undefined || activeTaskBatch.length === 0 ? (
           <div></div>
         ) :
           <Card className="mt-4">
