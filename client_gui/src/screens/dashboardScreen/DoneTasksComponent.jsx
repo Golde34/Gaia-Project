@@ -32,7 +32,7 @@ const DoneTasksComponent = () => {
       ) : error ? (
         <MessageBox message={error} />
       ) : (
-        doneTasks.length === 0 ? (
+        doneTasks === undefined || doneTasks === null || doneTasks.length === 0 ? (
           <div></div>
         ) : (
           <div>
