@@ -1,12 +1,16 @@
 package auth.authentication_service.kernel.loaders;
 
+import auth.authentication_service.core.domain.entities.LLMModel;
 import auth.authentication_service.core.domain.entities.Privilege;
 import auth.authentication_service.core.domain.entities.Role;
 import auth.authentication_service.core.domain.entities.User;
+import auth.authentication_service.infrastructure.store.repositories.LLMModelRepository;
 import auth.authentication_service.infrastructure.store.repositories.PrivilegeRepository;
 import auth.authentication_service.infrastructure.store.repositories.RoleRepository;
 import auth.authentication_service.infrastructure.store.repositories.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -19,21 +23,16 @@ import java.util.Collection;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class SetupDataLoader implements ApplicationListener<ContextRefreshedEvent> {
 
     private boolean alreadySetup = false;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
-    private PrivilegeRepository privilegeRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PrivilegeRepository privilegeRepository;
+    private final LLMModelRepository llmModelRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // API
 
@@ -44,7 +43,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
             return;
         }
 
-        // == create initial privileges  
+        // == create initial privileges
         final Privilege readPrivilege = createPrivilegeIfNotFound("READ_PRIVILEGE");
         final Privilege writPrivilege = createPrivilegeIfNotFound("WRITE_PRIVILEGE");
         final Privilege passwordPrivilege = createPrivilegeIfNotFound("CHANGE_PASSWORD_PRIVILEGE");
@@ -54,18 +53,23 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
         final Privilege writeUser = createPrivilegeIfNotFound("WRITE_USER");
         final Privilege readTaskService = createPrivilegeIfNotFound("READ_TASK_SERVICE");
         final Privilege writeTaskService = createPrivilegeIfNotFound("WRITE_TASK_SERVICE");
-  
+
         // == create initial roles
-        final List<Privilege> bossPrivileges = new ArrayList<>(Arrays.asList(readPrivilege, writPrivilege, passwordPrivilege, readRole, writeRole, readUser, writeUser, readTaskService, writeTaskService));
-        final List<Privilege> authAdminPrivileges = new ArrayList<>(Arrays.asList(readPrivilege, readRole, readUser, writeUser));
+        final List<Privilege> bossPrivileges = new ArrayList<>(Arrays.asList(readPrivilege, writPrivilege,
+                passwordPrivilege, readRole, writeRole, readUser, writeUser, readTaskService, writeTaskService));
+        final List<Privilege> authAdminPrivileges = new ArrayList<>(
+                Arrays.asList(readPrivilege, readRole, readUser, writeUser));
         final List<Privilege> serviceUserPrivileges = new ArrayList<>(Arrays.asList(readTaskService, writeTaskService));
 
         final Role bossRole = createRoleIfNotFound("ROLE_BOSS", bossPrivileges);
         final Role adminRole = createRoleIfNotFound("ROLE_ADMIN", authAdminPrivileges);
-        createRoleIfNotFound("ROLE_USER", serviceUserPrivileges);
+
+        final LLMModel geminiModel = createLLMModelIfNotFound("gemini-2.0-flash");
+        final LLMModel unslothModel = createLLMModelIfNotFound("unsloth");
 
         // == create initial user
-        createUserIfNotFound("nguyendongducviet2001@gmail.com", "Nguyen Dong Duc Viet", "golde", "483777", new ArrayList<>(Arrays.asList(bossRole)));
+        createUserIfNotFound("nguyendongducviet2001@gmail.com", "Nguyen Dong Duc Viet", "golde", "483777",
+                new ArrayList<>(Arrays.asList(bossRole)));
         createUserIfNotFound("test@test.com", "Test", "Test", "test", new ArrayList<>(Arrays.asList(adminRole)));
 
         alreadySetup = true;
@@ -93,7 +97,8 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     }
 
     @Transactional
-    public User createUserIfNotFound(final String email, final String name, final String username, final String password, final Collection<Role> roles) {
+    public User createUserIfNotFound(final String email, final String name, final String username,
+            final String password, final Collection<Role> roles) {
         User user = userRepository.findByUsername(username);
         if (user == null) {
             user = new User();
@@ -106,5 +111,18 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
         user.setRoles(roles);
         user = userRepository.save(user);
         return user;
+    }
+
+    @Transactional
+    public LLMModel createLLMModelIfNotFound(final String name) {
+        LLMModel llmModel = llmModelRepository.findLLMModelByModelNameAndActiveStatus(name, true);
+        if (llmModel == null) {
+            LLMModel model = LLMModel.builder()
+                    .modelName(name)
+                    .activeStatus(true)
+                    .build();
+            llmModel = llmModelRepository.save(model);
+        }
+        return llmModel;
     }
 }
