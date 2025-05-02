@@ -47,6 +47,7 @@ public class Constants {
         public static final String REGISTERED_ACCOUNT = "registered account";
         public static final String EMAIL_EXISTS = "email exists ";
         public static final String MATCHING_PASSWORD = "passwords are not matching";
+        public static final String CREATE_USER = "create user failed";
         public static final String UPDATE_USER = "update user failed";
         public static final String DELETE_USER = "delete user failed";
         public static final String GET_ALL_USERS = "get all users failed";

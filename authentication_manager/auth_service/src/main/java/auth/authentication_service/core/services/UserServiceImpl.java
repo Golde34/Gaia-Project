@@ -1,9 +1,6 @@
 package auth.authentication_service.core.services;
 
 import auth.authentication_service.core.domain.constant.Constants;
-import auth.authentication_service.core.domain.constant.ErrorConstants;
-import auth.authentication_service.core.domain.constant.TopicConstants;
-import auth.authentication_service.core.domain.dto.KafkaBaseDto;
 import auth.authentication_service.core.domain.dto.RegisterDto;
 import auth.authentication_service.core.domain.dto.UserDto;
 import auth.authentication_service.core.domain.dto.request.UpdateUserRequest;
@@ -23,14 +20,12 @@ import auth.authentication_service.core.services.interfaces.UserService;
 import auth.authentication_service.core.validations.service_validations.UserServiceValidation;
 import auth.authentication_service.kernel.utils.*;
 import jakarta.transaction.Transactional;
-import kafka.lib.java.adapter.producer.KafkaPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -51,35 +46,45 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final UserSettingMapper userSettingMapper;
     private final ModelMapperConfig modelMapperConfig;
+    private final PushKafkaMessage pushKafkaMessageService;
+
     private final ResponseUtils responseUtils;
-    private final KafkaPublisher kafkaPublisher;
 
     @Autowired
     private GenericResponse<?> genericResponse;
 
     @Override
     public ResponseEntity<?> createUser(RegisterDto userDto) {
-        User user = modelMapperConfig._mapperDtoToEntity(userDto);
+        try {
+            User user = modelMapperConfig._mapperDtoToEntity(userDto);
 
-        GenericResponse<?> validation = userServiceValidation._validateUserCreation(userDto, user);
-        if (validation.getResponseMessage() != ResponseEnum.msg200) {
-            return genericResponse.matchingResponseMessage(validation);
+            GenericResponse<?> validation = userServiceValidation._validateUserCreation(userDto, user);
+            if (validation.getResponseMessage() != ResponseEnum.msg200) {
+                return genericResponse.matchingResponseMessage(validation);
+            }
+
+            List<LLMModel> llmModel = Collections.singletonList(llmModelStore.findModelById(1L));
+
+            user.setPassword(new BCryptPasswordEncoder().encode(userDto.getPassword()));
+            user.setRoles(Collections.singletonList(_isBoss(userDto.isBoss())));
+            user.setEnabled(true);
+            user.setLlmModels(llmModel);
+            userStore.save(user);
+            log.info("User created: {}", user.getName().toString());
+
+            UserSetting userSetting = userSettingMapper.createUserSettingMapper(user);
+            userSettingStore.save(userSetting);
+            log.info("Create default setting for user: {}", user.getId().toString());
+
+            pushKafkaMessageService.pushCreateUserMessage(user);
+            log.info("Push message to kafka successfully");
+            return genericResponse.matchingResponseMessage(new GenericResponse<>(user, ResponseEnum.msg200));
+        } catch (Exception e) {
+            GenericResponse<String> response = responseUtils.returnMessage(
+                    "Create User failed: %s ".formatted(e.getMessage()), Constants.ResponseMessage.CREATE_USER,
+                    ResponseEnum.msg400);
+            return genericResponse.matchingResponseMessage(response);
         }
-
-        List<LLMModel> llmModel = Collections.singletonList(llmModelStore.findModelById(1L));
-
-        user.setPassword(new BCryptPasswordEncoder().encode(userDto.getPassword()));
-        user.setRoles(Collections.singletonList(_isBoss(userDto.isBoss())));
-        user.setEnabled(true);
-        user.setLlmModels(llmModel);
-        userStore.save(user);
-        log.info("User created: {}", user.getName().toString());
-
-        UserSetting userSetting = userSettingMapper.createUserSettingMapper(user);
-        userSettingStore.save(userSetting);
-        log.info("Create default setting for user: {}", user.getName().toString());
-
-        return genericResponse.matchingResponseMessage(new GenericResponse<>(user, ResponseEnum.msg200));
     }
 
     private Role _isBoss(final boolean isBoss) {
@@ -88,20 +93,6 @@ public class UserServiceImpl implements UserService {
         } else {
             return roleStore.findByName(BossType.USER.getRole());
         }
-    }
-
-    @Async
-    private void pushCreateUserMessage(User user) {
-        log.info("Push create user message: {}", user);
-        KafkaBaseDto<User> message = KafkaBaseDto.<User>builder()
-                .cmd(Constants.KafkaCommand.CREATE_USER)
-                .errorCode(ErrorConstants.ErrorCode.SUCCESS)
-                .errorMessage(ErrorConstants.ErrorMessage.SUCCESS)
-                .data(user)
-                .build(); 
-        kafkaPublisher.pushAsync(message, TopicConstants.UserTopic.CREATE_USER_TOPIC,
-                Constants.AuthConfiguration.KAFKA_CONTAINER_NAME, null);
-        log.info("Sent kafka to create user");
     }
 
     @Override
