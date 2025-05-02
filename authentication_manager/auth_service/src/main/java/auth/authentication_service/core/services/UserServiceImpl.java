@@ -11,6 +11,7 @@ import auth.authentication_service.core.domain.entities.UserSetting;
 import auth.authentication_service.core.domain.enums.BossType;
 import auth.authentication_service.core.domain.enums.ResponseEnum;
 import auth.authentication_service.core.port.mapper.UserMapper;
+import auth.authentication_service.core.port.mapper.UserSettingMapper;
 import auth.authentication_service.core.port.store.LLMModelStore;
 import auth.authentication_service.core.port.store.RoleStore;
 import auth.authentication_service.core.port.store.UserCRUDStore;
@@ -28,7 +29,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 @Service
@@ -42,48 +42,49 @@ public class UserServiceImpl implements UserService {
     private final RoleStore roleStore;
     private final UserSettingStore userSettingStore;
     private final LLMModelStore llmModelStore;
-
-    @Autowired
-    private ModelMapperConfig modelMapperConfig;
-    @Autowired
-    private GenericResponse<?> genericResponse;
-    @Autowired
-    private ResponseUtils responseUtils;
-
     private final UserServiceValidation userServiceValidation;
     private final UserMapper userMapper;
+    private final UserSettingMapper userSettingMapper;
+    private final ModelMapperConfig modelMapperConfig;
+    private final PushKafkaMessage pushKafkaMessageService;
+
+    private final ResponseUtils responseUtils;
+
+    @Autowired
+    private GenericResponse<?> genericResponse;
 
     @Override
     public ResponseEntity<?> createUser(RegisterDto userDto) {
-        User user = modelMapperConfig._mapperDtoToEntity(userDto);
+        try {
+            User user = modelMapperConfig._mapperDtoToEntity(userDto);
 
-        GenericResponse<?> validation = userServiceValidation._validateUserCreation(userDto, user);
-        if (validation.getResponseMessage() != ResponseEnum.msg200) {
-            return genericResponse.matchingResponseMessage(validation);
+            GenericResponse<?> validation = userServiceValidation._validateUserCreation(userDto, user);
+            if (validation.getResponseMessage() != ResponseEnum.msg200) {
+                return genericResponse.matchingResponseMessage(validation);
+            }
+
+            List<LLMModel> llmModel = Collections.singletonList(llmModelStore.findModelById(1L));
+
+            user.setPassword(new BCryptPasswordEncoder().encode(userDto.getPassword()));
+            user.setRoles(Collections.singletonList(_isBoss(userDto.isBoss())));
+            user.setEnabled(true);
+            user.setLlmModels(llmModel);
+            userStore.save(user);
+            log.info("User created: {}", user.getName().toString());
+
+            UserSetting userSetting = userSettingMapper.createUserSettingMapper(user);
+            userSettingStore.save(userSetting);
+            log.info("Create default setting for user: {}", user.getId().toString());
+
+            pushKafkaMessageService.pushCreateUserMessage(user);
+            log.info("Push message to kafka successfully");
+            return genericResponse.matchingResponseMessage(new GenericResponse<>(user, ResponseEnum.msg200));
+        } catch (Exception e) {
+            GenericResponse<String> response = responseUtils.returnMessage(
+                    "Create User failed: %s ".formatted(e.getMessage()), Constants.ResponseMessage.CREATE_USER,
+                    ResponseEnum.msg400);
+            return genericResponse.matchingResponseMessage(response);
         }
-
-        List<LLMModel> llmModel = Collections.singletonList(llmModelStore.findModelById(1L));
-
-        user.setPassword(new BCryptPasswordEncoder().encode(userDto.getPassword()));
-        user.setRoles(Collections.singletonList(_isBoss(userDto.isBoss())));
-        user.setEnabled(true);
-        user.setLlmModels(llmModel);
-        userStore.save(user);
-        log.info("User created: {}", user.getName().toString());
-        
-        UserSetting userSetting = UserSetting.builder()
-            .autoOptimizeConfig(1)
-            .optimizedTaskConfig(2)
-            .privateProfileConfig(1)
-            .taskSortingAlgorithm(3)
-            .createdDate(new Date())
-            .updatedDate(new Date())
-            .user(user)
-            .build();
-        userSettingStore.save(userSetting);
-        log.info("Create default setting for user: {}", user.getName().toString());
-
-        return genericResponse.matchingResponseMessage(new GenericResponse<>(user, ResponseEnum.msg200));
     }
 
     private Role _isBoss(final boolean isBoss) {
@@ -204,7 +205,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    // @Cacheable(value = "userResponseById", key = "#id", cacheManager = "cacheManager") ??? TODO: Replace by Redis
+    // @Cacheable(value = "userResponseById", key = "#id", cacheManager =
+    // "cacheManager") ??? TODO: Replace by Redis
     public ResponseEntity<?> getUserResponseById(Long id) {
         try {
             User user = getUserById(id, "Get User Response");
@@ -215,6 +217,6 @@ public class UserServiceImpl implements UserService {
                     "Get user failed: %s ".formatted(e.getMessage()), Constants.ResponseMessage.USER_NOT_FOUND,
                     ResponseEnum.msg400);
             return genericResponse.matchingResponseMessage(response);
-        } 
+        }
     }
 }

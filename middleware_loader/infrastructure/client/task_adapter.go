@@ -302,3 +302,24 @@ func (adapter *TaskAdapter) GetDoneTasks(userId string) ([]response_dtos.CountDo
 
 	return doneTasks, nil
 }
+
+func (adapter *TaskAdapter) GetTopTasks(userId string) ([]response_dtos.TaskResponseDTO, error) {
+	getTopTasksURL := base.TaskManagerServiceURL + "/dashboard/top-tasks/" + userId
+	var topTasks []response_dtos.TaskResponseDTO
+	headers := utils.BuildDefaultHeaders()
+	bodyResult, err := utils.BaseAPI(getTopTasksURL, "GET", nil, headers)
+	if err != nil {
+		return []response_dtos.TaskResponseDTO{}, err
+	}
+	bodyResultMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return []response_dtos.TaskResponseDTO{}, nil
+	}
+
+	for _, taskElement := range bodyResultMap["topTasks"].([]interface{}) {
+		task := mapper_response.ReturnTaskObjectMapper(taskElement.(map[string]interface{}))
+		topTasks = append(topTasks, *task)
+	}
+
+	return topTasks, nil
+}
