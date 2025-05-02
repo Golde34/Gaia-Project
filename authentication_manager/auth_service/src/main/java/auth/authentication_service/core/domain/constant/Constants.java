@@ -71,6 +71,7 @@ public class Constants {
     public static class AuthConfiguration {
         public static String SYSTEM_CACHE_RELOAD_MINUTE = "global.config.minute";
         public static String ROLE_HIERARCHY = "role.role_hierarchy";
+        public static String KAFKA_CONTAINER_NAME = "as";
     }
 
     @UtilityClass
@@ -88,5 +89,10 @@ public class Constants {
         public static final boolean INACTIVE_BOOL = false;
         public static final int ACTIVE_INT = 1;
         public static final int INACTIVE_INT = 0;
+    }
+
+    @UtilityClass
+    public static class KafkaCommand {
+        public static final String CREATE_USER = "createUser";
     }
 }
