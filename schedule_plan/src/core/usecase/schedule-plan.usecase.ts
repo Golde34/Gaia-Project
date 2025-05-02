@@ -1,9 +1,8 @@
-import { ISchedulePlanEntity } from "../../infrastructure/entities/schedule-plan.entity";
 import { IResponse, msg200 } from "../common/response";
 import { scheduleCalendarService } from "../services/schedule-calendar.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
 
-class SchedulePlanUsercase {
+class SchedulePlanUsecase {
     constructor() {}
 
     async registerSchedulePlan(userId: number): Promise<IResponse> {
@@ -37,4 +36,4 @@ class SchedulePlanUsercase {
     // }
 }
 
-export const schedulePlanUsecase = new SchedulePlanUsercase;
+export const schedulePlanUsecase = new SchedulePlanUsecase;
