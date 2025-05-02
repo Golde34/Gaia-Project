@@ -21,6 +21,9 @@ func NewTaskRouter(taskService *services.TaskService, db database_mongo.Database
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.ListAllTasks(w, r, taskService)
 		})
+		r.Get("/top-tasks/{userId}", func(w http.ResponseWriter, r *http.Request) {
+			controller_services.ListTopTasks(w, r, taskService)
+		})
 		r.Get("/done-tasks/{userId}", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.ListDoneTasks(w, r, taskService)
 		})

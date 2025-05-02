@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	base_dtos "middleware_loader/core/domain/dtos/base"
+	response_dtos "middleware_loader/core/domain/dtos/response"
 	mapper "middleware_loader/core/port/mapper/request"
 	services "middleware_loader/core/services/task_manager"
 	"middleware_loader/infrastructure/graph/model"
@@ -197,6 +198,29 @@ func ListDoneTasks(w http.ResponseWriter, r *http.Request, taskService *services
 	}
 	response := map[string]interface{}{
 		"data": doneTasks,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}
+
+func ListTopTasks(w http.ResponseWriter, r *http.Request, taskService *services.TaskService) {
+	userId := chi.URLParam(r, "userId")
+
+	topTasks, err := services.NewTaskService().GetTopTasks(userId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if len(topTasks) == 0  || topTasks == nil {
+		topTasks = []response_dtos.TaskResponseDTO{}
+	}
+	response := map[string]interface{}{
+		"data": topTasks,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
