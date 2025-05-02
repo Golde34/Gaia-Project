@@ -28,7 +28,7 @@ const TopTask = () => {
                     ) : error ? (
                         <div><MessageBox message={error} /></div>
                     ) : (
-                        topTasks.length === 0 ? (
+                        topTasks === null || topTasks === undefined || topTasks.length === 0 ? (
                             // <div><MessageBox message="No tasks found"/></div>
                             <div></div>
                         ) :

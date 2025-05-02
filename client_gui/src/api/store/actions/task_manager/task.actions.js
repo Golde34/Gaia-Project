@@ -170,7 +170,7 @@ export const getTasksCompleted = (groupTaskId) => async (dispatch) => {
 export const getTopTasks = (userId) => async (dispatch) => {
     dispatch({ type: TOP_TASK_REQUEST, payload: userId });
     try {
-        const { data } = await serverRequest(`/dashboard/top-tasks/${userId}`, HttpMethods.GET, portName.taskManager);
+        const { data } = await serverRequest(`/task/top-tasks/${userId}`, HttpMethods.GET, portName.middleware);
         dispatch({ type: TOP_TASK_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({
