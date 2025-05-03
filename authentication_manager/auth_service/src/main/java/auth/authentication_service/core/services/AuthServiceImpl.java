@@ -172,7 +172,7 @@ public class AuthServiceImpl implements AuthService {
                 new GenericResponse<>("Authentication service is running", ResponseEnum.msg200));
     }
 
-    public ResponseEntity<?> refreshToken(String token) throws Exception {
+    public ResponseEntity<?> refreshToken(String token) {
         try {
             final UserDetails userDetails = userDetailService
                     .loadUserByUsername(tokenService.getUsernameFromToken(token));

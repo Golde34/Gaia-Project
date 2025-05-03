@@ -115,7 +115,6 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
         user.setRoles(roles);
         user.setLlmModels(llmModels);
         user = userRepository.save(user);
-        log.info("Auto create new user: {}", user);
     }
 
     @Transactional

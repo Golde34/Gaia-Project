@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 @Entity
 @Data
@@ -14,7 +15,6 @@ import java.util.Date;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class User {
     @Id
     @Column(unique = true, nullable = false)
@@ -56,4 +56,20 @@ public class User {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "users_models", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "model_id", referencedColumnName = "modelId"))
     private Collection<LLMModel> llmModels; 
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", lastLogin=" + lastLogin +
+                ", enabled=" + enabled +
+                ", isUsing2FA=" + isUsing2FA +
+                ", secret='" + secret + '\'' +
+                ", roles=" + roles.stream().map(Role::getId).toList() +
+                '}';
+    }
 }
