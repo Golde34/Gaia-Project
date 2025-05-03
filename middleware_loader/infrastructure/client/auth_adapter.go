@@ -130,23 +130,23 @@ func (adapter *AuthAdapter) CheckToken(input model.TokenInput) (model.TokenRespo
 	return tokenResponse, nil
 }
 
-func (adapter *AuthAdapter) RefreshToken(refreshToken string) (response_dtos.AuthTokenResponseDTO, error) {
+func (adapter *AuthAdapter) RefreshToken(refreshToken string) (string, error) {
 	authServiceURL := base.AuthServiceURL + "/auth/refresh-token"
 	headers := utils.BuildDefaultHeaders()
 	bodyResult, err := utils.BaseAPI(authServiceURL, "POST", refreshToken, headers)
 	if err != nil {
-		return response_dtos.AuthTokenResponseDTO{}, err
+		return "", err
 	}
 
-	dataBytes, err := utils.ConvertResponseToMap(bodyResult)
-	if err != nil {
-		return response_dtos.AuthTokenResponseDTO{}, err
-	}
-	var authToken response_dtos.AuthTokenResponseDTO
-	err = json.Unmarshal(dataBytes, &authToken)
-	if err != nil {
-		return response_dtos.AuthTokenResponseDTO{}, err
+	bodyResultMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return "Cannot convert the response to map", err
 	}
 
-	return authToken, nil
+	newAccessToken, ok := bodyResultMap["message"].(string)
+	if !ok {
+		return "Cannot convert the response to string", err
+	}
+
+	return newAccessToken, nil
 }

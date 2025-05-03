@@ -70,12 +70,11 @@ func (s *AuthService) CheckToken(ctx context.Context, input model.TokenInput) (m
 	}
 }
 
-func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (model.AuthTokenResponse, response_dtos.AuthTokenResponseDTO, error) {
-	authTokenResponse, err := client.IAuthAdapter(&adapter.AuthAdapter{}).RefreshToken(refreshToken)
+func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (string, error) {
+	newAccessToken, err := client.IAuthAdapter(&adapter.AuthAdapter{}).RefreshToken(refreshToken)
 	if err != nil {
-		return model.AuthTokenResponse{}, response_dtos.AuthTokenResponseDTO{}, err
+		return "", err
 	} else {
-		modelRefreshToken := signinResponesDTO.MapperToGraphQLModel(authTokenResponse)
-		return modelRefreshToken, authTokenResponse, nil
-	}
+		return newAccessToken, nil
+	}	
 }
