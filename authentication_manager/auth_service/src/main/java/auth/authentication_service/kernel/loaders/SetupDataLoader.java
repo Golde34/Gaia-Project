@@ -11,7 +11,7 @@ import auth.authentication_service.infrastructure.store.repositories.UserReposit
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,8 +20,10 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class SetupDataLoader implements ApplicationListener<ContextRefreshedEvent> {
@@ -63,15 +65,18 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
 
         final Role bossRole = createRoleIfNotFound("ROLE_BOSS", bossPrivileges);
         final Role adminRole = createRoleIfNotFound("ROLE_ADMIN", authAdminPrivileges);
+        final Role userTestRole = createRoleIfNotFound("ROLE_USER", serviceUserPrivileges);
 
         final LLMModel geminiModel = createLLMModelIfNotFound("gemini-2.0-flash");
         final LLMModel unslothModel = createLLMModelIfNotFound("unsloth");
 
         // == create initial user
         createUserIfNotFound("nguyendongducviet2001@gmail.com", "Nguyen Dong Duc Viet", "golde", "483777",
-                new ArrayList<>(Arrays.asList(bossRole)));
-        createUserIfNotFound("test@test.com", "Test", "Test", "test", new ArrayList<>(Arrays.asList(adminRole)));
-
+                new ArrayList<>(Arrays.asList(bossRole)), new ArrayList<>(Arrays.asList(geminiModel )));
+        createUserIfNotFound("test@test.com", "Test", "Test", "test", new ArrayList<>(Arrays.asList(adminRole)),
+                new ArrayList<>(Arrays.asList(unslothModel)));
+        createUserIfNotFound("user@test.com", "User", "usertest", "483777", new ArrayList<>(Arrays.asList(userTestRole)),
+                new ArrayList<>(Arrays.asList(unslothModel)));
         alreadySetup = true;
     }
 
@@ -97,8 +102,8 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     }
 
     @Transactional
-    public User createUserIfNotFound(final String email, final String name, final String username,
-            final String password, final Collection<Role> roles) {
+    public void createUserIfNotFound(final String email, final String name, final String username,
+                                     final String password, final Collection<Role> roles, final Collection<LLMModel> llmModels) {
         User user = userRepository.findByUsername(username);
         if (user == null) {
             user = new User();
@@ -109,8 +114,9 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
             user.setEnabled(true);
         }
         user.setRoles(roles);
+        user.setLlmModels(llmModels);
         user = userRepository.save(user);
-        return user;
+        log.info("Auto create new user: {}", user);
     }
 
     @Transactional
