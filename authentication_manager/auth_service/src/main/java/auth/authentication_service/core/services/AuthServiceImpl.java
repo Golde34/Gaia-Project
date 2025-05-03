@@ -94,12 +94,14 @@ public class AuthServiceImpl implements AuthService {
                 .maxAge(Duration.ofDays(1))
                 .build();
         Role userRole = roleService.getBiggestRole(user.getRoles());
-        SignInDtoResponse signInResponse = userMapper.signInMapper(user, userRole, accessToken, refreshToken, BossType.USER);
+        SignInDtoResponse signInResponse = userMapper.signInMapper(user, userRole, accessToken, refreshToken,
+                BossType.USER);
         log.info("User: " + user.getUsername() + " sign-in success");
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
         headers.add(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
-        return genericResponse.matchingResponseWithHeader(new GenericResponse<>(signInResponse, ResponseEnum.msg200), 200, headers);
+        return genericResponse.matchingResponseWithHeader(new GenericResponse<>(signInResponse, ResponseEnum.msg200),
+                200, headers);
     }
 
     private String _generateAccessToken(User user, UserDetails userDetails) {
@@ -170,26 +172,33 @@ public class AuthServiceImpl implements AuthService {
                 new GenericResponse<>("Authentication service is running", ResponseEnum.msg200));
     }
 
-    // public GenericResponse<?> getNewAccessTokenResponse(String refreshToken)
-    // throws Exception {
-    // final UserDetails userDetails =
-    // userDetailService.loadUserByUsername(tokenService.getUsernameFromToken(refreshToken));
-    // User user =
-    // userStore.findByUsername(tokenService.getUsernameFromToken(refreshToken));
-    // if (user == null) {
-    // _logger.log("User not found", LoggerType.ERROR);
-    // return new GenericResponse<>("User not found", ResponseMessage.msg401);
-    // }
-    // if (!user.isEnabled()) {
-    // _logger.log("User is inactive", LoggerType.ERROR);
-    // return new GenericResponse<>("User is inactive", ResponseMessage.msg401);
-    // }
-    // if (!tokenService.validateToken(refreshToken)) {
-    // _logger.log("Invalid refresh token", LoggerType.ERROR);
-    // return new GenericResponse<>("Invalid refresh token",
-    // ResponseMessage.msg401);
-    // }
-    // String newAccessToken = tokenService.generateAccessToken(userDetails);
-    // return new GenericResponse<>(newAccessToken, ResponseMessage.msg200);
-    // }
+    public ResponseEntity<?> refreshToken(String token) throws Exception {
+        try {
+            final UserDetails userDetails = userDetailService
+                    .loadUserByUsername(tokenService.getUsernameFromToken(token));
+            User user = userStore.findByUsername(tokenService.getUsernameFromToken(token));
+            if (user == null) {
+                log.error("User not found");
+                return genericResponse
+                        .matchingResponseMessage(new GenericResponse<>("User not found", ResponseEnum.msg401));
+            }
+            if (!user.isEnabled()) {
+                log.error("User is inactive");
+                return genericResponse
+                        .matchingResponseMessage(new GenericResponse<>("User is inactive", ResponseEnum.msg401));
+            }
+            if (!tokenService.validateToken(token)) {
+                log.error("Invalid refresh token");
+                return genericResponse
+                        .matchingResponseMessage(new GenericResponse<>("Invalid refresh token", ResponseEnum.msg401));
+            }
+            String newAccessToken = tokenService.generateAccessToken(userDetails);
+            return genericResponse.matchingResponseMessage(new GenericResponse<>(newAccessToken, ResponseEnum.msg200));
+        } catch (Exception e) {
+            log.error("Error during refresh token: {}", e.getMessage(), e);
+            return genericResponse
+                    .matchingResponseMessage(
+                            new GenericResponse<>("The system encountered an unexpected error", ResponseEnum.msg500));
+        }
+    }
 }

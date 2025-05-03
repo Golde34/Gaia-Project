@@ -12,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 @RestController
 @RequestMapping("/auth")
@@ -66,12 +69,9 @@ public class AuthController {
     public ResponseEntity<?> checkPermission(@RequestBody UserPermissionDto permission) throws Exception {
         return authService.checkPermission(permission);
     }
-
-    // @RequestMapping("/regenerateAccessToken", method = RequestMethod.GET)
-    // public ResponseEntity<?> regenerateAccessToken(@RequestBody TokenDto
-    // tokenDto) throws Exception {
-    // String jwtReponse = tokenService.regenerateToken(tokenDto.getToken(),
-    // TokenType.ACCESS_TOKEN);
-    // return ResponseEntity.ok(new TokenDto(jwtReponse));
-    // }
+    
+    @PostMapping("refresh-token")
+    public ResponseEntity<?> refreshToken(@RequestBody TokenDto token) throws Exception {
+        return authService.refreshToken(token.getToken());
+    }
 }
