@@ -33,7 +33,6 @@ func ValidateAccessToken() func(next http.Handler) http.Handler {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
-			log.Println("AAAAAAAAAAAAAAAAAAAAAA")
 			accessToken := cookie.Value
 			if accessToken == "" {
 				w.WriteHeader(http.StatusUnauthorized)

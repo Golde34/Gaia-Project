@@ -24,6 +24,9 @@ func NewAuthRouter(authService *services.AuthService, db database_mongo.Database
 		r.Post("/gaia-auto-sign-in", func(w http.ResponseWriter, r *http.Request) {
 			controller.GaiaAutoSignin(w, r, authService)
 		})
+		r.Post("/refresh-token", func(w http.ResponseWriter, r *http.Request) {
+			controller.RefreshToken(w, r, authService)
+		})
 	})
 	return &AuthRouter{
 		AuthService: authService,

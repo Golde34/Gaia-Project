@@ -29,10 +29,29 @@ func Signin(w http.ResponseWriter, r *http.Request, authService *services.AuthSe
 		return
 	}
 
-	// SET COOKIE: Access Token
+	setTokenCookie(w, token.AccessToken, token.RefreshToken)	
+
+	// Response JSON nếu cần (ví dụ chỉ gửi message)
+	w.Header().Set("Content-Type", "application/json")
+	response := map[string]interface{}{
+		"message": "Login successfully",
+		"userInfo": result,
+	}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	
+	// query := utils.GenerateGraphQLQueryWithInput("mutation", "signin", input, model.AuthTokenResponse{})	
+	// utils.ConnectToGraphQLServer(w, query)
+}
+
+func setTokenCookie(w http.ResponseWriter, accessToken, refreshToken string) {
+// SET COOKIE: Access Token
 	accessTokenCookie := &http.Cookie{
 		Name:     "accessToken",
-		Value:    token.AccessToken, // lấy từ AuthTokenResponse
+		Value:    accessToken, // lấy từ AuthTokenResponse
 		Path:     "/",
 		HttpOnly: true,
 		// Secure:   true, // Bắt buộc phải HTTPS nếu dùng Secure
@@ -44,7 +63,7 @@ func Signin(w http.ResponseWriter, r *http.Request, authService *services.AuthSe
 	// SET COOKIE: Refresh Token
 	refreshTokenCookie := &http.Cookie{
 		Name:     "refreshToken",
-		Value:    token.RefreshToken, // lấy từ AuthTokenResponse
+		Value:    refreshToken, // lấy từ AuthTokenResponse
 		Path:     "/",
 		HttpOnly: true,
 		// Secure:   true,
@@ -53,20 +72,6 @@ func Signin(w http.ResponseWriter, r *http.Request, authService *services.AuthSe
 	}
 	http.SetCookie(w, refreshTokenCookie)
 
-	// Response JSON nếu cần (ví dụ chỉ gửi message)
-	w.Header().Set("Content-Type", "application/json")
-	response := map[string]interface{}{
-		"message": "Login successful",
-		"userInfo": result,
-	}
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Printf("Error encoding response: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	
-	// query := utils.GenerateGraphQLQueryWithInput("mutation", "signin", input, model.AuthTokenResponse{})	
-	// utils.ConnectToGraphQLServer(w, query)
 }
 
 func GaiaAutoSignin(w http.ResponseWriter, r *http.Request, authService *services.AuthService) {
@@ -84,3 +89,37 @@ func Status(w http.ResponseWriter, r *http.Request, authService *services.AuthSe
 	query := utils.GenerateGraphQLQueryNoInput("query", "status", model.User{})	
 	utils.ConnectToGraphQLServer(w, query)
 }
+
+func RefreshToken(w http.ResponseWriter, r *http.Request, authService *services.AuthService) {
+	cookie, err := r.Cookie("refreshToken")
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+	refreshToken := cookie.Value
+	if refreshToken == "" {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	result, token, err := authService.RefreshToken(r.Context(), refreshToken)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	setTokenCookie(w, token.AccessToken, token.RefreshToken)	
+
+	// Response JSON nếu cần (ví dụ chỉ gửi message)
+	w.Header().Set("Content-Type", "application/json")
+	response := map[string]interface{}{
+		"message": "Refresh token successfully",
+		"userInfo": result,
+	}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}
+

@@ -9,4 +9,5 @@ type IAuthAdapter interface {
 	Signin(input model.SigninInput) (response_dtos.AuthTokenResponseDTO, error)
 	GaiaAutoSignin(input model.SigninInput) (response_dtos.AuthTokenResponseDTO, error)
 	CheckToken(input model.TokenInput) (model.TokenResponse, error)
+	RefreshToken(refreshToken string) (response_dtos.AuthTokenResponseDTO, error)
 }

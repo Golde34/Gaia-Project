@@ -129,3 +129,24 @@ func (adapter *AuthAdapter) CheckToken(input model.TokenInput) (model.TokenRespo
 
 	return tokenResponse, nil
 }
+
+func (adapter *AuthAdapter) RefreshToken(refreshToken string) (response_dtos.AuthTokenResponseDTO, error) {
+	authServiceURL := base.AuthServiceURL + "/auth/refresh-token"
+	headers := utils.BuildDefaultHeaders()
+	bodyResult, err := utils.BaseAPI(authServiceURL, "POST", refreshToken, headers)
+	if err != nil {
+		return response_dtos.AuthTokenResponseDTO{}, err
+	}
+
+	dataBytes, err := utils.ConvertResponseToMap(bodyResult)
+	if err != nil {
+		return response_dtos.AuthTokenResponseDTO{}, err
+	}
+	var authToken response_dtos.AuthTokenResponseDTO
+	err = json.Unmarshal(dataBytes, &authToken)
+	if err != nil {
+		return response_dtos.AuthTokenResponseDTO{}, err
+	}
+
+	return authToken, nil
+}

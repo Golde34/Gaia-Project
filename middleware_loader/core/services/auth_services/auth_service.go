@@ -26,17 +26,17 @@ var signinResponesDTO = response_dtos.NewSigninResponseDTO()
 func (s *AuthService) Signin(ctx context.Context, input model.SigninInput) (model.AuthTokenResponse, response_dtos.AuthTokenResponseDTO, error) {
 	err := authValidator.AuthValidate(input)
 	if err != nil {
-		return model.AuthTokenResponse{}, response_dtos.AuthTokenResponseDTO{}, err 
-	}	
+		return model.AuthTokenResponse{}, response_dtos.AuthTokenResponseDTO{}, err
+	}
 	log.Println("Validation passed!")
 
-	authTokenResponse , err := client.IAuthAdapter(&adapter.AuthAdapter{}).Signin(input)
+	authTokenResponse, err := client.IAuthAdapter(&adapter.AuthAdapter{}).Signin(input)
 	if err != nil {
-		return model.AuthTokenResponse{}, response_dtos.AuthTokenResponseDTO{}, err 
+		return model.AuthTokenResponse{}, response_dtos.AuthTokenResponseDTO{}, err
 	} else {
 		modelSigninResponse := signinResponesDTO.MapperToGraphQLModel(authTokenResponse)
 		return modelSigninResponse, authTokenResponse, nil
-	}	
+	}
 }
 
 func (s *AuthService) GaiaAutoSignin(ctx context.Context, input model.SigninInput) (model.AuthTokenResponse, error) {
@@ -46,13 +46,13 @@ func (s *AuthService) GaiaAutoSignin(ctx context.Context, input model.SigninInpu
 	}
 	log.Println("Validation passed!")
 
-	authTokenResponse , err := client.IAuthAdapter(&adapter.AuthAdapter{}).GaiaAutoSignin(input)
+	authTokenResponse, err := client.IAuthAdapter(&adapter.AuthAdapter{}).GaiaAutoSignin(input)
 	if err != nil {
 		return model.AuthTokenResponse{}, err
 	} else {
 		authTokenResponse := signinResponesDTO.MapperToGraphQLModel(authTokenResponse)
 		return authTokenResponse, nil
-	}	
+	}
 }
 
 func (s *AuthService) CheckToken(ctx context.Context, input model.TokenInput) (model.TokenResponse, error) {
@@ -62,10 +62,20 @@ func (s *AuthService) CheckToken(ctx context.Context, input model.TokenInput) (m
 	}
 	log.Println("Validation passed!")
 
-	tokenResponse , err := client.IAuthAdapter(&adapter.AuthAdapter{}).CheckToken(input)
+	tokenResponse, err := client.IAuthAdapter(&adapter.AuthAdapter{}).CheckToken(input)
 	if err != nil {
 		return model.TokenResponse{}, err
 	} else {
 		return tokenResponse, nil
+	}
+}
+
+func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (model.AuthTokenResponse, response_dtos.AuthTokenResponseDTO, error) {
+	authTokenResponse, err := client.IAuthAdapter(&adapter.AuthAdapter{}).RefreshToken(refreshToken)
+	if err != nil {
+		return model.AuthTokenResponse{}, response_dtos.AuthTokenResponseDTO{}, err
+	} else {
+		modelRefreshToken := signinResponesDTO.MapperToGraphQLModel(authTokenResponse)
+		return modelRefreshToken, authTokenResponse, nil
 	}
 }
