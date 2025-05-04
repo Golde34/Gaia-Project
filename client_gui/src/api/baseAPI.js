@@ -51,11 +51,35 @@ const baseRequest = async (api, method, portConfig, body, headers) => {
     try {
         const response = await _fetchData(url, method, body, headers);
         clearTimeout(timerId);
+        if (response.status !== 200) {
+            // handleUnauthorizedResponse(response, portName);
+            if (response.status === 401) {
+                const refreshUrl = `http://${config.serverHost}:${config[portName]}/auth/refresh-token`;
+                console.info('Access token expired, trying to refresh...');
+                try {
+                    await _fetchData(refreshUrl, HttpMethods.POST, null, headers);
+                    // Retry the original request with the new access token
+                    const retry = await _fetchData(url, method, body, headers);
+                    return retry;
+                } catch (refreshErr) {
+                    console.error('Refresh token failed, redirecting to login', refreshErr);
+                    throw refreshErr;
+                }
+            }
+
+            if (response.status === 403) {
+                // refresh token expired
+                console.error('Refresh token expired, redirecting to login');
+                // window.location.href = '/client-gui/signin';
+            }
+        }
         return response;
     } catch (error) {
         clearTimeout(timerId);
         return error;
     }
+
+
 }
 
 const getDefaultHeaders = () => {
@@ -69,8 +93,8 @@ const getDefaultHeaders = () => {
 
 const _fetchData = async (url, method, body, headers) => {
     const config = {
-        headers: headers || {}, 
-        withCredentials: true 
+        headers: headers || {},
+        withCredentials: true
     };
 
     switch (method) {
@@ -133,6 +157,11 @@ const postFile = async (api, portName, formData) => {
     });
 
     return response;
+}
+
+const handleUnauthorizedResponse = async (response, portName, headers) => {
+    // refresh access token if needed
+
 }
 
 export {

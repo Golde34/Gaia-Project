@@ -9,6 +9,7 @@ public interface AuthService{
     ResponseEntity<?> authenticated(String username, String password) throws Exception;
     ResponseEntity<?> gaiaAutoSignin(String username, String password) throws Exception;
     ResponseEntity<?> checkToken(TokenDto token) throws Exception;
+    ResponseEntity<?> refreshToken(String token) throws Exception;
     ResponseEntity<?> checkPermission(UserPermissionDto permission) throws Exception;
     ResponseEntity<?> checkStatus();
 }
