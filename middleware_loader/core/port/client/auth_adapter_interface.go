@@ -8,6 +8,6 @@ import (
 type IAuthAdapter interface {
 	Signin(input model.SigninInput) (response_dtos.AuthTokenResponseDTO, error)
 	GaiaAutoSignin(input model.SigninInput) (response_dtos.AuthTokenResponseDTO, error)
-	CheckToken(input model.TokenInput) (model.TokenResponse, error)
+	CheckToken(token string) (response_dtos.TokenResponse, error)
 	RefreshToken(refreshToken string) (string, error)
 }

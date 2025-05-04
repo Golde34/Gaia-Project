@@ -80,7 +80,8 @@ public class SecurityConfig {
                                     new AntPathRequestMatcher("/auth/check-permission"),
                                     new AntPathRequestMatcher("/auth/status"),
                                     new AntPathRequestMatcher("/auth/sign-up"),
-                                    new AntPathRequestMatcher("/auth/refresh-token"))
+                                    new AntPathRequestMatcher("/auth/refresh-token"),
+                                    new AntPathRequestMatcher("/auth/check-token"))
                             .permitAll()
                             .requestMatchers(new AntPathRequestMatcher("/auth/user/**")).hasRole("USER")
                             .requestMatchers(new AntPathRequestMatcher("/auth/admin/**")).hasRole("ADMIN")

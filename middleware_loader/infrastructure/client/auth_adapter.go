@@ -2,6 +2,7 @@ package client_adapter
 
 import (
 	"encoding/json"
+	"log"
 
 	response_dtos "middleware_loader/core/domain/dtos/response"
 	"middleware_loader/core/domain/enums"
@@ -109,24 +110,32 @@ func (adapter *AuthAdapter) GaiaAutoSignin(input model.SigninInput) (response_dt
 	}
 }
 
-func (adapter *AuthAdapter) CheckToken(input model.TokenInput) (model.TokenResponse, error) {
+func (adapter *AuthAdapter) CheckToken(token string) (response_dtos.TokenResponse, error) {
 	authServiceURL := base.AuthServiceURL + "/auth/check-token"
 	headers := utils.BuildDefaultHeaders()
-	bodyResult, err := utils.BaseAPI(authServiceURL, "POST", input, headers)
+	input := map[string]interface{}{
+		"token": token,
+	}
+	bodyResult, err := utils.BaseAPI(authServiceURL, "GET", input, headers)
 	if err != nil {
-		return model.TokenResponse{}, err
+		return response_dtos.TokenResponse{}, err
+	}
+	bodyMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return response_dtos.TokenResponse{}, err
 	}
 
-	dataBytes, err := utils.ConvertResponseToMap(bodyResult)
+	dataBytes, err := utils.ConvertResponseToMap(bodyMap["message"])
 	if err != nil {
-		return model.TokenResponse{}, err
+		return response_dtos.TokenResponse{}, err
 	}
-	var tokenResponse model.TokenResponse
+	var tokenResponse response_dtos.TokenResponse 
 	err = json.Unmarshal(dataBytes, &tokenResponse)
 	if err != nil {
-		return model.TokenResponse{}, err
+		return response_dtos.TokenResponse{}, err
 	}
 
+	log.Println("Token response: ", tokenResponse)
 	return tokenResponse, nil
 }
 

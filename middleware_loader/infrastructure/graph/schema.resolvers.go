@@ -72,8 +72,10 @@ func (r *mutationResolver) GaiaAutoSignin(ctx context.Context, input model.Signi
 
 // CheckToken is the resolver for the checkToken field.
 func (r *mutationResolver) CheckToken(ctx context.Context, input model.TokenInput) (*model.TokenResponse, error) {
-	authToken, err := authService.CheckToken(ctx, input)
-	return &authToken, err
+	// didn't use anymore
+	// authToken, err := authService.CheckToken(ctx, input)
+	// return &authToken, err
+	return nil, nil
 }
 
 // CheckPermission is the resolver for the checkPermission field.
