@@ -1,19 +1,21 @@
 package middleware
 
 import (
+	"context"
 	"log"
 	services "middleware_loader/core/services/auth_services"
 	"net/http"
 	"strings"
+	"time"
 )
 
-type ValidateAccessTokenMiddleware struct {
-	AuthService *services.AuthService
-}
+// type ValidateAccessTokenMiddleware struct {
+// 	AuthService *services.AuthService
+// }
 
-func NewValidateAccessTokenMiddleware(authService *services.AuthService) *ValidateAccessTokenMiddleware {
-	return &ValidateAccessTokenMiddleware{AuthService: authService}
-}
+// func NewValidateAccessTokenMiddleware(authService *services.AuthService) *ValidateAccessTokenMiddleware {
+// 	return &ValidateAccessTokenMiddleware{AuthService: authService}
+// }
 
 func ValidateAccessToken() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -39,7 +41,7 @@ func ValidateAccessToken() func(next http.Handler) http.Handler {
 				return
 			}
 
-			if !ValidateToken(accessToken) {
+			if !ValidateToken(r.Context(), accessToken) {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
@@ -49,6 +51,14 @@ func ValidateAccessToken() func(next http.Handler) http.Handler {
 	}
 }
 
-func ValidateToken(token string) bool {
+func ValidateToken(ctx context.Context, token string) bool {
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	_, err := services.NewAuthService().CheckToken(ctx ,token)
+	if err != nil {
+		log.Println("Error validating token:", err)
+		return false
+	}
+
 	return true
 }

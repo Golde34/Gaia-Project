@@ -30,6 +30,14 @@ func (in *AuthTokenResponseDTO) MapperToGraphQLModel(input AuthTokenResponseDTO)
 }
 
 type GaiaTokenResponse struct {
-	AccessToken string `json:"accessToken"`
+	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
+}
+
+type TokenResponse struct {
+	Id          float64 `json:"id"`
+	Username    string  `json:"username"`
+	AccessToken string  `json:"accessToken"`
+	ExpiryDate  string  `json:"expiryDate"`
+	Valid       bool    `json:"valid"`
 }

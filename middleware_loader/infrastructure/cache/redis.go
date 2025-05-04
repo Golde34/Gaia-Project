@@ -11,7 +11,7 @@ import (
 )
 
 var (
-    rdb  *redis.Client
+    rdb  *redis.ClusterClient
     once sync.Once
 )
 
@@ -21,23 +21,22 @@ func initClient() {
     if err != nil {
         panic(fmt.Sprintf("failed to load Redis config: %v", err))
     }
-    rdb = redis.NewClient(&redis.Options{
-        Addr:     fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
+    rdb = redis.NewClusterClient(&redis.ClusterOptions{
+        Addrs:     []string{fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)},
         Password: cfg.Password,
-        DB:       0,  // default DB
     })
 }
 
-func Client() *redis.Client {
+func Client() *redis.ClusterClient{
     once.Do(initClient)
     return rdb
 }
 
-func SetKey(ctx context.Context, key, value string) error {
+func SetKey(ctx context.Context, key string, value interface{}) error {
     return Client().Set(ctx, key, value, 0).Err()
 }
 
-func SetKeyWithTTL(ctx context.Context, key, value string, ttl time.Duration) error {
+func SetKeyWithTTL(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
     return Client().Set(ctx, key, value, ttl).Err()
 }
 
