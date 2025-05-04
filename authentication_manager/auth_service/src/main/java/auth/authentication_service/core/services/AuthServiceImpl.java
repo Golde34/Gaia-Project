@@ -147,7 +147,13 @@ public class AuthServiceImpl implements AuthService {
     }
 
     public ResponseEntity<?> checkToken(TokenDto token) {
+        boolean isValid = false;
         CheckTokenDtoResponse userResponse = tokenService.checkToken(token.getToken());
+        if (userResponse.getExpiryDate().after(new Date())) {
+            isValid = true;
+        }
+        log.info("Token of user {} is valid: {}", userResponse.getUsername(), isValid);
+        userResponse.setValid(isValid);
         return genericResponse.matchingResponseMessage(new GenericResponse<>(userResponse, ResponseEnum.msg200));
     }
 
