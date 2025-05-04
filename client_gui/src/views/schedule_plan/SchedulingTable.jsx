@@ -90,7 +90,8 @@ function ContentArea() {
                     <Metric style={{ marginBottom: '30px', marginTop: '30px' }}
                         className="text-2xl font-bold text-gray-800"> Schedule Calendar
                     </Metric>
-                    <Card className='mb-4'>
+                    <ScheduleGroups />
+                    <Card className='mt-4'>
                         <div className="flex gap-10 sm:divide-x justify-center mt-10">
                             <CalendarChart currentDate={currentDate} selectDate={selectDate}
                                 checkEmptyScheduleTaskList={checkEmptyTaskListAndOpenModal}
@@ -125,7 +126,6 @@ function ContentArea() {
                             </div>
                         </div>
                     </Card>
-                    <ScheduleGroups />    
 
                     <Dialog
                         open={isOpen}
