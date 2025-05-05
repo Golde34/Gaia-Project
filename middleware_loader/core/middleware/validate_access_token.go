@@ -6,16 +6,7 @@ import (
 	services "middleware_loader/core/services/auth_services"
 	"net/http"
 	"strings"
-	"time"
 )
-
-// type ValidateAccessTokenMiddleware struct {
-// 	AuthService *services.AuthService
-// }
-
-// func NewValidateAccessTokenMiddleware(authService *services.AuthService) *ValidateAccessTokenMiddleware {
-// 	return &ValidateAccessTokenMiddleware{AuthService: authService}
-// }
 
 func ValidateAccessToken() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -29,30 +20,15 @@ func ValidateAccessToken() func(next http.Handler) http.Handler {
 				}
 			}
 
-			refreshCookie, err := r.Cookie("refreshToken")
-			if err != nil {
+			validateRefreshToken := validateRefreshToken(r.Context(), r, w)
+			if !validateRefreshToken {
 				http.Error(w, "Unauthorized", http.StatusForbidden)
 				return
 			}
-			refreshToken := refreshCookie.Value
-			if refreshToken == "" {
-				w.WriteHeader(http.StatusForbidden)
-				return
-			}
 
-			accessCookie, err := r.Cookie("accessToken")
-			if err != nil {
+			validateAccessToken := validateAccessToken(r.Context(), r, w)
+			if !validateAccessToken {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
-			accessToken := accessCookie.Value
-			if accessToken == "" {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-
-			if !ValidateToken(r.Context(), accessToken) {
-				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
 
@@ -61,10 +37,29 @@ func ValidateAccessToken() func(next http.Handler) http.Handler {
 	}
 }
 
-func ValidateToken(ctx context.Context, token string) bool {
-	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
-	defer cancel()
-	_, err := services.NewAuthService().CheckToken(ctx ,token)
+func validateRefreshToken(ctx context.Context, r *http.Request, w http.ResponseWriter) bool {
+	refreshCookie, err := r.Cookie("refreshToken")
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return false
+	}
+	refreshToken := refreshCookie.Value
+	return refreshToken != ""
+}
+
+func validateAccessToken(ctx context.Context, r *http.Request, w http.ResponseWriter) bool {
+	accessCookie, err := r.Cookie("accessToken")
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return false
+	}
+	accessToken := accessCookie.Value
+	if accessToken == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		return false
+	}
+
+	_, err = services.NewAuthService().CheckToken(ctx, accessToken)
 	if err != nil {
 		log.Println("Error validating token:", err)
 		return false

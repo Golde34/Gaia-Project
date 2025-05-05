@@ -29,11 +29,3 @@ func (in *AuthValidator) AuthValidate(input model.SigninInput) error {
 
 	return nil
 }
-
-func (in *AuthValidator) TokenValidate(accessToken string) error {
-	if accessToken == "" {
-		return fmt.Errorf("%w: token is required", enums.ErrValidation)
-	}
-
-	return nil
-}
