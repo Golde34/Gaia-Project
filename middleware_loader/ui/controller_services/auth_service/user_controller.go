@@ -2,16 +2,16 @@ package controller_services
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	base_dtos "middleware_loader/core/domain/dtos/base"
+	"middleware_loader/core/middleware"
 	mapper "middleware_loader/core/port/mapper/request"
 	services "middleware_loader/core/services/auth_services"
 	"middleware_loader/infrastructure/graph/model"
 	"middleware_loader/kernel/utils"
 	"middleware_loader/ui/controller_services/controller_utils"
 	"net/http"
-
-	"github.com/go-chi/chi"
 )
 
 func GetAllUsers(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
@@ -44,7 +44,8 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, userService *services.Us
 		return
 	}
 
-	input := mapper.UpdateUserRequestDTOMapper(body)
+	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+	input := mapper.UpdateUserRequestDTOMapper(body, userId)
 	log.Println(input)
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "updateUser", QueryInput: input, QueryOutput: model.UpdateUser{}})
@@ -54,10 +55,10 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, userService *services.Us
 }
 
 func GetUserDetail(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
-	id := chi.URLParam(r, "id")
+	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
 
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
-	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "getUserDetail", QueryInput: model.IDInput{ID: id}, QueryOutput: model.UpdateUser{}})
+	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "getUserDetail", QueryInput: model.IDInput{ID: userId}, QueryOutput: model.UpdateUser{}})
 	graphqlQuery := utils.GenerateGraphQLQueryWithMultipleFunction("query", graphqlQueryModel)
 	utils.ConnectToGraphQLServer(w, graphqlQuery)
 }
@@ -70,7 +71,8 @@ func UpdateUserSetting(w http.ResponseWriter, r *http.Request, userService *serv
 		return
 	}
 
-	input := mapper.UpdateUserSettingRequestDTOMapper(body)
+	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+	input := mapper.UpdateUserSettingRequestDTOMapper(body, userId)
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "updateUserSetting", QueryInput: input, QueryOutput: model.UserSetting{}})
 	graphqlQuery := utils.GenerateGraphQLQueryWithMultipleFunction("mutation", graphqlQueryModel)
@@ -105,7 +107,8 @@ func UpdateUserModel(w http.ResponseWriter, r *http.Request, userService *servic
 		return
 	}
 
-	input := mapper.UpdateUserModelRequestDTOMapper(body)
+	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+	input := mapper.UpdateUserModelRequestDTOMapper(body, userId)
 	updateUserModel, err := services.NewUserService().UpdateUserModel(input)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
