@@ -23,10 +23,10 @@ export const getUserContributions = (userId) => async (dispatch) => {
     }
 }
 
-export const getCompareCommits = (userId) => async (dispatch) => {
-    dispatch({ type: COMPARE_COMMTIS_REQUEST, payload: userId });
+export const getCompareCommits = () => async (dispatch) => {
+    dispatch({ type: COMPARE_COMMTIS_REQUEST });
     try {
-        const { data } = await serverRequest(`/contribution/${userId}/compare-commits`, HttpMethods.GET, portName.middlewarePort);
+        const { data } = await serverRequest(`/contribution/compare-commits`, HttpMethods.GET, portName.middlewarePort);
         dispatch({ type: COMPARE_COMMTIS_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({

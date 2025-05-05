@@ -5,7 +5,6 @@ import MessageBox from "./MessageBox";
 import { AreaChart, Card, Title } from "@tremor/react";
 
 const CompareCommitChart = () => {
-    const userId = "1";
     const dispatch = useDispatch();
 
     const compareCommits = useSelector((state) => state.compareCommits);
@@ -16,7 +15,7 @@ const CompareCommitChart = () => {
     useEffect(() => {
         clearTimeout(debounceChartRef.current);
         debounceChartRef.current = setTimeout(() => {
-            dispatch(getCompareCommits(userId));
+            dispatch(getCompareCommits());
         }, 200);
     }, []);
 

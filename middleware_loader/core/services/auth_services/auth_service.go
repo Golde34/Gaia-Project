@@ -63,7 +63,11 @@ func (s *AuthService) CheckToken(ctx context.Context, accessToken string) (respo
 	existedUserAccessToken, err := redis_cache.GetKey(ctx, accessToken)
 	if err == nil || existedUserAccessToken != "" {
 		log.Println("Token found in Redis: ", existedUserAccessToken)
-		return response_dtos.TokenResponse{AccessToken: existedUserAccessToken}, nil
+		var tr response_dtos.TokenResponse
+		if err := json.Unmarshal([]byte(existedUserAccessToken), &tr); err != nil {
+			return tr, err
+		}
+		return tr, nil
 	}
 
 	tokenResponse, err := client.IAuthAdapter(&adapter.AuthAdapter{}).CheckToken(accessToken)

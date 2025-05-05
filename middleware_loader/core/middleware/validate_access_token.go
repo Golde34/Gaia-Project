@@ -8,6 +8,12 @@ import (
 	"strings"
 )
 
+type contextKey string
+
+const (
+	ContextKeyUserId = contextKey("user")
+)
+
 func ValidateAccessToken() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -20,24 +26,24 @@ func ValidateAccessToken() func(next http.Handler) http.Handler {
 				}
 			}
 
-			validateRefreshToken := validateRefreshToken(r.Context(), r, w)
+			validateRefreshToken := validateRefreshToken(r, w)
 			if !validateRefreshToken {
 				http.Error(w, "Unauthorized", http.StatusForbidden)
 				return
 			}
 
-			validateAccessToken := validateAccessToken(r.Context(), r, w)
-			if !validateAccessToken {
+			accessToken, ctxWithUser := validateAccessToken(r, w)
+			if accessToken == "" || ctxWithUser == nil {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
 
-			next.ServeHTTP(w, r)
+			next.ServeHTTP(w, r.WithContext(ctxWithUser))
 		})
 	}
 }
 
-func validateRefreshToken(ctx context.Context, r *http.Request, w http.ResponseWriter) bool {
+func validateRefreshToken(r *http.Request, w http.ResponseWriter) bool {
 	refreshCookie, err := r.Cookie("refreshToken")
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
@@ -47,23 +53,24 @@ func validateRefreshToken(ctx context.Context, r *http.Request, w http.ResponseW
 	return refreshToken != ""
 }
 
-func validateAccessToken(ctx context.Context, r *http.Request, w http.ResponseWriter) bool {
+func validateAccessToken(r *http.Request, w http.ResponseWriter) (string, context.Context) {
 	accessCookie, err := r.Cookie("accessToken")
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return false
+		return "", nil
 	}
 	accessToken := accessCookie.Value
 	if accessToken == "" {
 		w.WriteHeader(http.StatusUnauthorized)
-		return false
+		return "", nil
 	}
 
-	_, err = services.NewAuthService().CheckToken(ctx, accessToken)
+	tokenResponse, err := services.NewAuthService().CheckToken(r.Context(), accessToken)
 	if err != nil {
 		log.Println("Error validating token:", err)
-		return false
+		return "", nil
 	}
 
-	return true
+	ctxWithUser := context.WithValue(r.Context(), ContextKeyUserId, tokenResponse.Id)
+	return accessToken, ctxWithUser
 }

@@ -2,7 +2,9 @@ package controller_services
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"middleware_loader/core/middleware"
 	services "middleware_loader/core/services/contribution_tracker"
 	"net/http"
 
@@ -26,7 +28,8 @@ func GetUserContribution(w http.ResponseWriter, r *http.Request, contributionSer
 }
 
 func CompareCommits(w http.ResponseWriter, r *http.Request, contributionService *services.ContributionService) {
-	userId := chi.URLParam(r, "userId")
+	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+
 	compareCommits, err := contributionService.CompareCommits(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
