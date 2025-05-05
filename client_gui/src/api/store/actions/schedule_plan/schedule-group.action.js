@@ -24,10 +24,10 @@ export const createScheduleGroupAction = (scheduleGroup) => async (dispatch) => 
     }
 }
 
-export const scheduleGroupList = (userId) => async (dispatch) => {
-    dispatch({ type: SCHEDULE_GROUP_LIST_REQUEST, payload: userId });
+export const scheduleGroupList = () => async (dispatch) => {
+    dispatch({ type: SCHEDULE_GROUP_LIST_REQUEST });
     try {
-        const { data } = await serverRequest(`/schedule-group/list/${userId}`, HttpMethods.GET, portName.middleware);
+        const { data } = await serverRequest(`/schedule-group/list`, HttpMethods.GET, portName.middleware);
         dispatch({ type: SCHEDULE_GROUP_LIST_SUCCESS, payload: data });
     } catch (error) {
         dispatch({

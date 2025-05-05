@@ -5,7 +5,6 @@ import { Badge, Col, Grid } from "@tremor/react";
 import { useChooseTaskBatchDispatch } from '../../kernels/utils/write-dialog-api-requests';
 
 const TaskBatchScreen = (props) => {
-    const userId = "1";
     const { taskBatchList } = props;
     const batchNumbers = Object.keys(taskBatchList);
     const batchCount = batchNumbers.length;
@@ -25,8 +24,8 @@ const TaskBatchScreen = (props) => {
 
     const chooseTaskBatch = useChooseTaskBatchDispatch();
     const setObjectTaskBatch = (batchNumber) => {
-        chooseTaskBatch(userId, batchNumber);
-        // window.location.reload();
+        chooseTaskBatch(batchNumber);
+        window.location.reload();
     }
 
     return (

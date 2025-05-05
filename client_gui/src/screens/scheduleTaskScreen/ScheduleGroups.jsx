@@ -7,21 +7,20 @@ import { CreateScheduleGroupDialog } from "./CreateScheduleGroup";
 import EllipsisMenu from "../../components/EllipsisMenu";
 
 export const ScheduleGroups = (props) => {
-    const userId = "1";
     const dispatch = useDispatch();
 
     const listScheduleGroup = useSelector(state => state.scheduleGroupList);
     const { loading, error, scheduleGroups } = listScheduleGroup;
     const getTasks = useCallback(() => {
-        dispatch(scheduleGroupList(userId));
-    }, [dispatch, userId]);
+        dispatch(scheduleGroupList());
+    }, [dispatch]);
     const debounceRef = useRef(null);
     useEffect(() => {
         clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
             getTasks();
         }, 200);
-    }, [userId]);
+    }, []);
 
     function randomDecoration() {
         const colors = ["indigo", "red", "green", "blue", "yellow", "purple", "pink", "gray"];
@@ -47,7 +46,7 @@ export const ScheduleGroups = (props) => {
                             </Col>
                             <Col numColSpan={5}>
                                 <Flex justifyContent='end'>
-                                    <CreateScheduleGroupDialog userId={userId} />
+                                    <CreateScheduleGroupDialog />
                                 </Flex>
                             </Col>
                         </Grid>
