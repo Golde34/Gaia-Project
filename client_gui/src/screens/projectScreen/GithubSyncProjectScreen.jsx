@@ -7,16 +7,14 @@ import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOption
 import clsx from "clsx";
 import { CheckIcon, ChevronDownIcon } from "@heroicons/react/solid";
 
-const GithubSyncProjectScreen = (props) => {
-    const user = props.user;
-
+const GithubSyncProjectScreen = () => {
     const dispatch = useDispatch();
 
     const projectsAndRepos = useSelector(state => state.projectsAndRepos);
     const { loading, error, projectAndRepo } = projectsAndRepos;
     const projectsAndReposDispatch = useCallback(() => {
-        dispatch(getProjectsAndRepos(user.id));
-    }, [dispatch, user.id]);
+        dispatch(getProjectsAndRepos());
+    }, [dispatch]);
     const debounceRef = useRef(null);
     useEffect(() => {
         clearTimeout(debounceRef.current);
@@ -39,7 +37,7 @@ const GithubSyncProjectScreen = (props) => {
     const getProjectCommitList = projectAndRepo?.getProjectCommitList;
 
     const synchorizeProjectAndRepo = () => {
-        dispatch(syncProjectAndRepo(user.id.toString(), selectedProject, selectedRepo));
+        dispatch(syncProjectAndRepo(selectedProject, selectedRepo));
         window.location.reload();
     }
 
@@ -54,7 +52,7 @@ const GithubSyncProjectScreen = (props) => {
     }
 
     const deleteProjectAndRepo = () => {
-        dispatch(deleteProjectCommit(user.id.toString(), viewedProject));
+        dispatch(deleteProjectCommit(viewedProject));
         window.location.reload();
     }
 
