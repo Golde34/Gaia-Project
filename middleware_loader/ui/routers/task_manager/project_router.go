@@ -18,7 +18,7 @@ type ProjectRouter struct {
 func NewProjectRouter(projectService *services.ProjectService, db database_mongo.Database, r *chi.Mux) *ProjectRouter {
 	r.Route("/project", func(r chi.Router) {
 		r.Use(middleware.CheckMicroserviceStatus(db, enums.TASK_MANAGER))
-		r.Get("/all/{userId}", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/all", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.ListAll(w, r, projectService)
 		})
 		r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
