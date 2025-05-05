@@ -8,10 +8,10 @@ const portName = {
     middlewarePort: 'middlewarePort'
 }
 
-export const getUserContributions = (userId) => async (dispatch) => {
-    dispatch({ type: USER_CONTRIBUTIONS_REQUEST, payload: userId });
+export const getUserContributions = () => async (dispatch) => {
+    dispatch({ type: USER_CONTRIBUTIONS_REQUEST });
     try {
-        const { data } = await serverRequest(`/contribution/${userId}`, HttpMethods.GET, portName.middlewarePort);
+        const { data } = await serverRequest(`/contribution/display-chart`, HttpMethods.GET, portName.middlewarePort);
         dispatch({ type: USER_CONTRIBUTIONS_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({
@@ -38,10 +38,10 @@ export const getCompareCommits = () => async (dispatch) => {
     }
 }
 
-export const getProjectContribution = (userId, projectId) => async (dispatch) => {
-    dispatch({ type: PROJECT_CONTRIBUTIONS_REQUEST, payload: userId });
+export const getProjectContribution = (projectId) => async (dispatch) => {
+    dispatch({ type: PROJECT_CONTRIBUTIONS_REQUEST, payload: projectId});
     try {
-        const { data } = await serverRequest(`/contribution/${userId}/${projectId}`, HttpMethods.GET, portName.middlewarePort);
+        const { data } = await serverRequest(`/contribution/${projectId}`, HttpMethods.GET, portName.middlewarePort);
         dispatch({ type: PROJECT_CONTRIBUTIONS_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({
