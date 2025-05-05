@@ -12,7 +12,7 @@ import (
 )
 
 func GetUserContribution(w http.ResponseWriter, r *http.Request, contributionService *services.ContributionService) {
-	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 
 	userContribution, err := contributionService.GetUserContribution(userId)
 	if err != nil {
@@ -29,7 +29,7 @@ func GetUserContribution(w http.ResponseWriter, r *http.Request, contributionSer
 }
 
 func CompareCommits(w http.ResponseWriter, r *http.Request, contributionService *services.ContributionService) {
-	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 
 	compareCommits, err := contributionService.CompareCommits(userId)
 	if err != nil {
@@ -46,7 +46,7 @@ func CompareCommits(w http.ResponseWriter, r *http.Request, contributionService 
 }
 
 func GetUserProjectContribution(w http.ResponseWriter, r *http.Request, contributionService *services.ContributionService) {
-	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	projectId := chi.URLParam(r, "projectId")
 	userContribution, err := contributionService.GetUserProjectContribution(userId, projectId)
 	if err != nil {

@@ -44,7 +44,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, userService *services.Us
 		return
 	}
 
-	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	input := mapper.UpdateUserRequestDTOMapper(body, userId)
 	log.Println(input)
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
@@ -55,7 +55,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, userService *services.Us
 }
 
 func GetUserDetail(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
-	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "getUserDetail", QueryInput: model.IDInput{ID: userId}, QueryOutput: model.UpdateUser{}})
@@ -71,7 +71,7 @@ func UpdateUserSetting(w http.ResponseWriter, r *http.Request, userService *serv
 		return
 	}
 
-	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	input := mapper.UpdateUserSettingRequestDTOMapper(body, userId)
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "updateUserSetting", QueryInput: input, QueryOutput: model.UserSetting{}})
@@ -107,7 +107,7 @@ func UpdateUserModel(w http.ResponseWriter, r *http.Request, userService *servic
 		return
 	}
 
-	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	input := mapper.UpdateUserModelRequestDTOMapper(body, userId)
 	updateUserModel, err := services.NewUserService().UpdateUserModel(input)
 	if err != nil {

@@ -15,7 +15,7 @@ import (
 )
 
 func GetUserGithubInfo(w http.ResponseWriter, r *http.Request, userGithubService *services.UserGithubService) {
-	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 
 	userGithubInfo, err := userGithubService.GetUserGithubInfo(userId)
 	if err != nil {
@@ -57,7 +57,7 @@ func GithubAuthorize(w http.ResponseWriter, r *http.Request, userGithubService *
 }
 
 func SynchronizeUserGithub(w http.ResponseWriter, r *http.Request, userGithubService *services.UserGithubService) {
-	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	userGithubInfo, err := userGithubService.SynchronizeUserGithub(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -73,7 +73,7 @@ func SynchronizeUserGithub(w http.ResponseWriter, r *http.Request, userGithubSer
 }
 
 func GetProjectsAndRepos(w http.ResponseWriter, r *http.Request, userGithubService *services.UserGithubService) {
-	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "listAllProjectsByUserId", QueryInput: model.IDInput{ID: userId}, QueryOutput: model.Project{}})
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "getAllGithubRepos", QueryInput: model.IDInput{ID: userId}, QueryOutput: model.GithubRepo{}})
@@ -92,7 +92,7 @@ func SyncProjectRepo(w http.ResponseWriter, r *http.Request, userGithubService *
 		return
 	}
 
-	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	project := body["project"].(map[string]interface{})
 	repo := body["repo"].(map[string]interface{})
 
@@ -118,7 +118,7 @@ func DeleteProjectRepo(w http.ResponseWriter, r *http.Request, userGithubService
 		return
 	}
 
-	userId := fmt.Sprintf("%f", r.Context().Value(middleware.ContextKeyUserId))
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	projectId := body["projectId"].(string)
 
 	deleteResult, err := userGithubService.DeleteProjectRepo(userId, projectId)
