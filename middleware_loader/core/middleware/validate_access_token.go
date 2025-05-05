@@ -29,13 +29,23 @@ func ValidateAccessToken() func(next http.Handler) http.Handler {
 				}
 			}
 
-			cookie, err := r.Cookie("accessToken")
-			log.Println("Cookie: ", cookie)
+			refreshCookie, err := r.Cookie("refreshToken")
+			if err != nil {
+				http.Error(w, "Unauthorized", http.StatusForbidden)
+				return
+			}
+			refreshToken := refreshCookie.Value
+			if refreshToken == "" {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+
+			accessCookie, err := r.Cookie("accessToken")
 			if err != nil {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
-			accessToken := cookie.Value
+			accessToken := accessCookie.Value
 			if accessToken == "" {
 				w.WriteHeader(http.StatusUnauthorized)
 				return

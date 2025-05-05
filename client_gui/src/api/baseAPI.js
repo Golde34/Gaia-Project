@@ -70,7 +70,7 @@ const baseRequest = async (api, method, portConfig, body, headers) => {
             if (response.status === 403) {
                 // refresh token expired
                 console.error('Refresh token expired, redirecting to login');
-                // window.location.href = '/client-gui/signin';
+                window.location.href = '/client-gui/signin';
             }
         }
         return response;
