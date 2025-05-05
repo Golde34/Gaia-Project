@@ -132,8 +132,8 @@ export const useCreateScheduletaskDispatch = () => {
 export const useUpdateUserModelDispatch = () => {
     const dispatch = useDispatch();
 
-    const updateUserModelDispatch = (userId, model) => {
-        dispatch(updateUserModel(userId, model));
+    const updateUserModelDispatch = (model) => {
+        dispatch(updateUserModel(model));
     }
 
     return updateUserModelDispatch;

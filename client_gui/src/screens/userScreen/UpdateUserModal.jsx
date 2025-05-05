@@ -66,7 +66,6 @@ const UpdateUserModal = (props) => {
         updatedUser.username = username === "" ? currentUser.username : username;
         updatedUser.email = email === "" ? currentUser.email : email;
         updatedUser.roles = roleList;
-        updatedUser.userId = currentUser.id;
         updateUser(updatedUser);
         window.location.reload();
     }
