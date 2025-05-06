@@ -8,15 +8,13 @@ import CreateNewNote from "../../screens/noteScreen/CreateNewNote";
 
 function ContentArea() {
     const dispatch = useDispatch();
-    // const userId = localStorage.getItem('userInfo');
-    const userId = "1";
 
     const listNotes = useSelector(state => state.noteList);
     const { loading, error, notes } = listNotes;
 
     const getListNotes = useCallback(() => {
-        dispatch(getNoteList(userId));
-    }, [dispatch, userId]);
+        dispatch(getNoteList());
+    }, [dispatch]);
 
     const debounceRef = useRef(null);
     useEffect(() => {
@@ -48,7 +46,7 @@ function ContentArea() {
                             ))
                         }
                         <div key={'create-note'} className="ms-5 me-5 mt-7 flex justify-center">
-                            <CreateNewNote userId={userId} />
+                            <CreateNewNote />
                         </div>
                     </div>
 

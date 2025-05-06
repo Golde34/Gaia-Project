@@ -1,12 +1,11 @@
 import React, { useState, Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { Card, Title } from '@tremor/react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css'; // Import Quill styles
 import { useCreateNoteDispatch } from '../../kernels/utils/write-dialog-api-requests';
 
-export const CreateNewNote = (props) => {
-    const userId = props.userId;
+export const CreateNewNote = () => {
     let [isOpen, setIsOpen] = useState(false);
 
     function closeModal() {
@@ -25,7 +24,6 @@ export const CreateNewNote = (props) => {
     const setObjectNote = (name, contentFile) => {
         note.name = name;
         note.contentFile = contentFile;
-        note.userId = userId;
         createNewNote(note);
         window.location.reload();
     };
@@ -63,7 +61,7 @@ export const CreateNewNote = (props) => {
 
             <Transition appear show={isOpen} as={Fragment}>
                 <Dialog as="div" className="relative z-10" onClose={closeModal}>
-                    <Transition.Child
+                    <TransitionChild
                         as={Fragment}
                         enter="ease-out duration-300"
                         enterFrom="opacity-0"
@@ -73,11 +71,11 @@ export const CreateNewNote = (props) => {
                         leaveTo="opacity-0"
                     >
                         <div className="fixed inset-0 bg-black/25" />
-                    </Transition.Child>
+                    </TransitionChild>
 
                     <div className="fixed inset-0 overflow-y-auto">
                         <div className="flex min-h-full items-center justify-center p-4 text-center">
-                            <Transition.Child
+                            <TransitionChild
                                 as={Fragment}
                                 enter="ease-out duration-300"
                                 enterFrom="opacity-0 scale-95"
@@ -86,13 +84,13 @@ export const CreateNewNote = (props) => {
                                 leaveFrom="opacity-100 scale-100"
                                 leaveTo="opacity-0 scale-95"
                             >
-                                <Dialog.Panel className="w-[50%] transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                                    <Dialog.Title
+                                <DialogPanel className="w-[50%] transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                                    <DialogTitle
                                         as="h3"
                                         className="text-lg font-medium leading-6 text-gray-900"
                                     >
                                         Create New Note
-                                    </Dialog.Title>
+                                    </DialogTitle>
                                     {/* Note Title Input */}
                                     <div className="mt-2">
                                         <input
@@ -138,8 +136,8 @@ export const CreateNewNote = (props) => {
                                             Save Note
                                         </button>
                                     </div>
-                                </Dialog.Panel>
-                            </Transition.Child>
+                                </DialogPanel>
+                            </TransitionChild>
                         </div>
                     </div>
                 </Dialog>
