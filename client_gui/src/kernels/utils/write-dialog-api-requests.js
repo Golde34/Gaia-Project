@@ -102,8 +102,8 @@ export const useUpdateUserSettingDispatch = () => {
 export const useChooseTaskBatchDispatch = () => {
     const dispatch = useDispatch();
 
-    const chooseTaskBatchDispatch = (userId, batchNumber) => {
-        dispatch(chooseTaskBatch(userId, batchNumber));
+    const chooseTaskBatchDispatch = (batchNumber) => {
+        dispatch(chooseTaskBatch(batchNumber));
     }
 
     return chooseTaskBatchDispatch;
