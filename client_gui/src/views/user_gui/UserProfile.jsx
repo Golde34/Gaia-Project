@@ -12,13 +12,11 @@ import LLMModelSettingScreen from "../../screens/userScreen/LLMModelSetting";
 function ContentArea() {
     const dispatch = useDispatch();
 
-    const userId = "1";
-
     const profile = useSelector(state => state.userDetail);
     const { loading, error, user } = profile;
     const getUserProfile = useCallback(() => {
-        dispatch(userProfile(userId));
-    }, [dispatch, userId]);
+        dispatch(userProfile());
+    }, [dispatch]);
     const debounceRef = useRef(null);
     useEffect(() => {
         clearTimeout(debounceRef.current);

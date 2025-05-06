@@ -6,9 +6,8 @@ import (
 	"strconv"
 )
 
-func ChooseTaskBatch(body map[string]interface{}) (float64, float64) {
+func ChooseTaskBatch(body map[string]interface{}, userId string) (float64, float64) {
 	batchNumber := body["batchNumber"].(string)
-	userId := body["userId"].(string)
 	userFloat, err := strconv.ParseFloat(userId, 64)
 	if err != nil {
 		return 0, 0
@@ -20,9 +19,9 @@ func ChooseTaskBatch(body map[string]interface{}) (float64, float64) {
 	return userFloat, batchFloat 
 }
 
-func CreateScheduleGroupRequestDTOMapper(body map[string]any) request_dtos.CreateScheduleGroupRequestDTO {
+func CreateScheduleGroupRequestDTOMapper(body map[string]any, userId string) request_dtos.CreateScheduleGroupRequestDTO {
 	var input request_dtos.CreateScheduleGroupRequestDTO
-	input.UserId = body["userId"].(string)
+	input.UserId = userId
 	input.Title = body["title"].(string)
 	if body["projectId"] != nil {
 		input.ProjectId = body["projectId"].(string)

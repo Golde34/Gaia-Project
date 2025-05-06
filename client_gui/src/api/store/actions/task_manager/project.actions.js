@@ -1,4 +1,3 @@
-import addAuthHeaders from "../../../../kernels/utils/add-headers";
 import { HttpMethods, serverRequest } from "../../../baseAPI";
 import { PROJECT_COLOR_UPDATE_FAIL, PROJECT_COLOR_UPDATE_REQUEST, PROJECT_COLOR_UPDATE_SUCCESS, 
     PROJECT_CREATE_FAIL, PROJECT_CREATE_REQUEST, PROJECT_CREATE_SUCCESS, 
@@ -13,12 +12,10 @@ const portName = {
     middlewarePort: 'middlewarePort'
 }
 
-export const getProjects = (userId) => async (dispatch) => {
+export const getProjects = () => async (dispatch) => {
     dispatch({ type: PROJECT_LIST_REQUEST });
     try {
-        // const headers = addAuthHeaders();
-        // const { data } = await serverRequest('/project/all', HttpMethods.GET, portName.middlewarePort, null, headers);  
-        const { data } = await serverRequest(`/project/all/${userId}`, HttpMethods.GET, portName.middlewarePort, null);    
+        const { data } = await serverRequest(`/project/all`, HttpMethods.GET, portName.middlewarePort, null);    
         dispatch({ type: PROJECT_LIST_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({
@@ -48,12 +45,6 @@ export const getDetailProject = (projectId) => async (dispatch) => {
 export const createProject = (project) => async (dispatch) => {
     dispatch({ type: PROJECT_CREATE_REQUEST, payload: project });
     try {
-        // header is here maybe need it
-        // const { userSignin: { userInfo } } = getState();
-        // const header = {
-        //     'Content-Type': 'multipart/form-data',
-        //     'Authorization': `Bearer ${userInfo.token}`
-        // } 
         const { data } = await serverRequest('/project/create', HttpMethods.POST, portName.middlewarePort, project);
         dispatch({ type: PROJECT_CREATE_SUCCESS, payload: data.data });
     } catch (error) {
@@ -69,12 +60,6 @@ export const createProject = (project) => async (dispatch) => {
 export const updateProject = (project) => async (dispatch) => {
     dispatch({ type: PROJECT_UPDATE_REQUEST, payload: project });
     try {
-        // header is here maybe need it 
-        // const { userSignin: { userInfo } } = getState();
-        // const headers = {
-        //     'Content-Type': 'multipart/form-data',
-        //     'Authorization': `Bearer ${userInfo.token}`
-        // }
         const { data } = await serverRequest(`/project/${project.id}`, HttpMethods.PUT, portName.middlewarePort, project);
         dispatch({ type: PROJECT_UPDATE_SUCCESS, payload: data.data });
     } catch (error) {
@@ -90,12 +75,6 @@ export const updateProject = (project) => async (dispatch) => {
 export const deleteProject = (projectId) => async (dispatch) => {
     dispatch({ type: PROJECT_DELETE_REQUEST, payload: projectId });
     try {
-        // header is here maybe need it 
-        // const { userSignin: { userInfo } } = getState();
-        // const headers = {
-        //     'Content-Type': 'multipart/form-data',
-        //     'Authorization': `Bearer ${userInfo.token}`
-        // }
         const { data } = await serverRequest(`/project/${projectId}`, HttpMethods.DELETE, portName.middlewarePort, null);
         dispatch({ type: PROJECT_DELETE_SUCCESS, payload: data.data });
     } catch (error) {

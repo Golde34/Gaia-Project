@@ -6,7 +6,6 @@ import MessageBox from "../../components/subComponents/MessageBox";
 import AreaChartComponent from "../../components/subComponents/AreaChartComponent";
 
 const UserContributionCalendar = () => {
-    const userId = "1";
     const dispatch = useDispatch();
     const userContributionList = useSelector((state) => state.userContributions);
     const { loading, error, contributions } = userContributionList;
@@ -16,7 +15,7 @@ const UserContributionCalendar = () => {
     useEffect(() => {
         clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
-            dispatch(getUserContributions(userId));
+            dispatch(getUserContributions());
         }, 200);
     }, [])
 

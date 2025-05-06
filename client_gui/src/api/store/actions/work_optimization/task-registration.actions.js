@@ -9,10 +9,10 @@ const portName = {
     middlewarePort: 'middlewarePort'
 }
 
-export const queryTaskConfig = (userId) => async (dispatch) => {
-    dispatch({ type: QUERY_TASK_CONFIG_REQUEST, payload: userId });
+export const queryTaskConfig = () => async (dispatch) => {
+    dispatch({ type: QUERY_TASK_CONFIG_REQUEST });
     try {
-        const { data } = await serverRequest(`/work-optimization/query-task-config/${userId}`,
+        const { data } = await serverRequest(`/work-optimization/query-task-config`,
             HttpMethods.GET,
             portName.middlewarePort);
         dispatch({ type: QUERY_TASK_CONFIG_SUCCESS, payload: data });

@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import MessageBox from "../../components/subComponents/MessageBox";
 
 const DoneTasksComponent = () => {
-  const userId = "1";
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -15,7 +14,7 @@ const DoneTasksComponent = () => {
   const didGetDoneTaskRef = useRef();
   useEffect(() => {
     if (didGetDoneTaskRef.current) return;
-    dispatch(getDoneTasks(userId));
+    dispatch(getDoneTasks());
     didGetDoneTaskRef.current = true;
   }, [dispatch]);
 

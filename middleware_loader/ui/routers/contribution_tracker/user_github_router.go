@@ -14,16 +14,16 @@ type UserGithubRouter struct {
 
 func NewUserGithubRouter(userGithubService *services.UserGithubService, r *chi.Mux) *UserGithubRouter {
 	r.Route("/user-commit", func(r chi.Router) {
-		r.Get("/user-github/{userId}", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/user-github", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.GetUserGithubInfo(w, r, userGithubService)
 		})
 		r.Post("/user-github/authorize", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.GithubAuthorize(w, r, userGithubService)
 		})
-		r.Get("/user-github/synchronize/{userId}", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/user-github/synchronize", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.SynchronizeUserGithub(w, r, userGithubService)
 		})
-		r.Get("/user-github/get-project-repo/{userId}", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/user-github/get-project-repo", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.GetProjectsAndRepos(w, r, userGithubService)
 		})
 	})

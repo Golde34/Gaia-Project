@@ -43,10 +43,10 @@ export const updateUser = (user) => async (dispatch) => {
     }
 }
 
-export const userProfile = (userId) => async (dispatch) => {
-    dispatch({ type: USER_DETAIL_REQUEST, payload: userId });
+export const userProfile = () => async (dispatch) => {
+    dispatch({ type: USER_DETAIL_REQUEST });
     try {
-        const { data } = await serverRequest(`/user/detail/${userId}`, HttpMethods.GET, portName.middlewarePort);
+        const { data } = await serverRequest(`/user/detail`, HttpMethods.GET, portName.middlewarePort);
         dispatch({ type: USER_DETAIL_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({
@@ -89,10 +89,10 @@ export const getLLMModels = () => async (dispatch) => {
     }
 }
 
-export const updateUserModel = (userId, modelId) => async (dispatch) => {
-    dispatch({ type: USER_MODEL_UPDATE_REQUEST, payload: { userId, modelId } });
+export const updateUserModel = (modelId) => async (dispatch) => {
+    dispatch({ type: USER_MODEL_UPDATE_REQUEST, payload: { modelId } });
     try {
-        const { data } = await serverRequest('/user-model/update-user-model', HttpMethods.PUT, portName.middlewarePort, { userId, modelId });
+        const { data } = await serverRequest('/user-model/update-user-model', HttpMethods.PUT, portName.middlewarePort, { modelId });
         dispatch({ type: USER_MODEL_UPDATE_SUCCESS, payload: data });
     } catch (error) {
         dispatch({

@@ -39,7 +39,7 @@ const LLMModelSettingScreen = (props) => {
             alert("Bruh it's the same model, unless you want to spam the server");
             return;
         }
-        updateUserModel(user.id, selectedModel.modelId);
+        updateUserModel(selectedModel.modelId);
         window.location.reload();
     }
 

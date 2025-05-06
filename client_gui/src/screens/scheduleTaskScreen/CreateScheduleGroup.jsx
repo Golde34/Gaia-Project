@@ -14,7 +14,6 @@ import { getGroupTaskList } from "../../api/store/actions/task_manager/group-tas
 import { useNavigate } from "react-router-dom";
 
 export const CreateScheduleGroupDialog = () => {
-    const userId = "1";
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -48,7 +47,6 @@ export const CreateScheduleGroupDialog = () => {
     const setObjectTask = (title, duration, startHour, endHour,
         isHighPriority, isMediumPriority, isLowPriority, isStarPriority,
         isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday) => {
-        scheduleTask.userId = userId;
         scheduleTask.title = title;
         scheduleTask.projectId = selectedProject.id;
         scheduleTask.groupTaskId = selectedGroupTask.id;
@@ -75,8 +73,8 @@ export const CreateScheduleGroupDialog = () => {
     const listProject = useSelector((state) => state.projectList);
     const { loading, error, projects } = listProject;
     const getListProjects = useCallback(() => {
-        dispatch(getProjects(userId));
-    }, [dispatch, userId]);
+        dispatch(getProjects());
+    }, [dispatch]);
     const debounceRef = useRef(null);
     useEffect(() => {
         clearTimeout(debounceRef.current);

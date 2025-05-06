@@ -14,10 +14,10 @@ const portName = {
     middleware: 'middlewarePort',
 }
 
-export const getNoteList = (userId) => async (dispatch) => {
-    dispatch({ type: NOTE_LIST_REQUEST, payload: userId });
+export const getNoteList = () => async (dispatch) => {
+    dispatch({ type: NOTE_LIST_REQUEST });
     try {
-        const { data } = await serverRequest(`/note/${userId}`, 'GET', portName.middleware);
+        const { data } = await serverRequest(`/note/list`, 'GET', portName.middleware);
         dispatch({ type: NOTE_LIST_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({
@@ -36,7 +36,6 @@ export const createNote = (note) => async (dispatch) => {
 
         const formData = new FormData();
         formData.append('name', note.name);
-        formData.append('userId', note.userId);
         formData.append('file', note.contentFile);
 
         const response = await postFile(api, portName.middleware, formData);

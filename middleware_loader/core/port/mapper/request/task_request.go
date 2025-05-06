@@ -11,7 +11,7 @@ func GetTaskId(id string) request_dtos.IdInputDTO {
 	return input
 }
 
-func CreateTaskRequestDTOMapper(body map[string]interface{}) request_dtos.CreateTaskRequestDTO {
+func CreateTaskRequestDTOMapper(body map[string]interface{}, userId string) request_dtos.CreateTaskRequestDTO {
 	var input request_dtos.CreateTaskRequestDTO
 	input.Title = utils.ConvertStringWithPunctuation(body["title"].(string))
 	input.Description = utils.ConvertStringWithPunctuation(body["description"].(string))
@@ -22,13 +22,13 @@ func CreateTaskRequestDTOMapper(body map[string]interface{}) request_dtos.Create
 	input.ActiveStatus = body["activeStatus"].(string)
 	input.GroupTaskId = body["groupTaskId"].(string)
 	input.Priority = utils.ConvertStringToStringArray(body["priority"].([]interface{}))
-	input.UserId = body["userId"].(float64)
+	input.UserId = utils.ParseFloatValue(userId)
 	return input
 }
 
-func UpdateTaskRequestDTOMapper(body map[string]interface{}, taskId string) request_dtos.UpdateTaskRequestDTO {
+func UpdateTaskRequestDTOMapper(body map[string]interface{}, taskId string, userId string) request_dtos.UpdateTaskRequestDTO {
 	var input request_dtos.UpdateTaskRequestDTO
-	input.UserId = body["userId"].(float64)
+	input.UserId = utils.ParseFloatValue(userId)
 	input.TaskId = taskId
 	input.Title = utils.ConvertStringWithPunctuation(body["title"].(string))
 	input.Description = utils.ConvertStringWithPunctuation(body["description"].(string))
@@ -39,11 +39,11 @@ func UpdateTaskRequestDTOMapper(body map[string]interface{}, taskId string) requ
 	input.Priority = utils.ConvertStringToStringArray(body["priority"].([]interface{}))
 	input.TaskOrder = body["taskOrder"].(float64)
 	input.StopTime = body["stopTime"].(float64)
-	input.ScheduleTaskId= body["scheduleTaskId"].(string)
+	input.ScheduleTaskId = body["scheduleTaskId"].(string)
 	return input
 }
 
-func GenerateTaskRequestDTOMapper(body map[string]interface{}) request_dtos.GenerateTaskRequestDTO {
+func GenerateTaskRequestDTOMapper(body map[string]interface{}, userId string) request_dtos.GenerateTaskRequestDTO {
 	var input request_dtos.GenerateTaskRequestDTO
 	input.Title = utils.ConvertStringWithPunctuation(body["title"].(string))
 	input.Description = utils.ConvertStringWithPunctuation(body["description"].(string))
@@ -54,7 +54,7 @@ func GenerateTaskRequestDTOMapper(body map[string]interface{}) request_dtos.Gene
 	input.ActiveStatus = body["activeStatus"].(string)
 	input.Priority = utils.ConvertStringToStringArray(body["priority"].([]interface{}))
 	input.ProjectID = body["projectId"].(string)
-	input.UserID = body["userId"].(float64)
+	input.UserID = utils.ParseFloatValue(userId)
 	return input
 }
 
@@ -76,4 +76,3 @@ func MoveTaskRequestDTOMapper(body map[string]interface{}, taskId string) reques
 
 	return input
 }
-	

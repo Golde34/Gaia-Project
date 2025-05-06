@@ -51,7 +51,7 @@ export const TaskCard = (props) => {
     const deleteTaskApi = useDeleteComponentDispatch();
     const deleteTask = (taskId) => {
         deleteTaskApi(taskId, "Task");
-        // window.location.reload();
+        window.location.reload();
     }
 
     return (

@@ -14,16 +14,16 @@ type ScheduleTaskRouter struct {
 
 func NewScheduleTaskRouter(scheduleTaskService *services.ScheduleTaskService, r *chi.Mux) *ScheduleTaskRouter {
 	r.Route("/schedule-task", func(r chi.Router) {
-		r.Get("/{userId}", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/list", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.GetScheduleTaskListByUserId(w, r, scheduleTaskService)
 		})
-		r.Get("/task-batch-list/{userId}", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/task-batch-list", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.GetTaskBatchListByUserId(w, r, scheduleTaskService)
 		})
 		r.Post("/choose-task-batch", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.ChooseTaskBatch(w, r, scheduleTaskService)
 		})
-		r.Get("/active-task-batch/{userId}", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/active-task-batch", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.GetActiveTaskBatch(w, r, scheduleTaskService)
 		})
 	})
@@ -31,7 +31,7 @@ func NewScheduleTaskRouter(scheduleTaskService *services.ScheduleTaskService, r 
 		r.Post("/create", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.CreateScheduleGroup(w, r, scheduleTaskService)
 		})
-		r.Get("/list/{userId}", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/list", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.ListScheduleGroupByUserId(w, r, scheduleTaskService)
 		})
 		r.Delete("/delete/{scheduleGroupId}", func(w http.ResponseWriter, r *http.Request) {

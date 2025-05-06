@@ -6,7 +6,6 @@ import MessageBox from "../../components/subComponents/MessageBox";
 import AreaChartComponent from "../../components/subComponents/AreaChartComponent";
 
 const ProjectContributionCalendar = (props) => {
-    const userId = "1";
     const projectId = props.projectId;
     const dispatch = useDispatch();
     const projectContributionList = useSelector((state) => state.projectContributions);
@@ -17,7 +16,7 @@ const ProjectContributionCalendar = (props) => {
     useEffect(() => {
         clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
-            dispatch(getProjectContribution(userId, projectId));
+            dispatch(getProjectContribution(projectId));
         }, 200);
     }, [])
 

@@ -1,14 +1,11 @@
-import { Dialog, Transition } from "@headlessui/react";
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 import { Input, Textarea } from "@material-tailwind/react";
 import { Card, Title } from "@tremor/react";
 import { Fragment, useState } from "react";
-import { useParams } from "react-router-dom"
 import RadioButtonIcon from "../../components/icons/RadioButtonIcon";
 import { useCreateProjectDispatch } from "../../kernels/utils/write-dialog-api-requests";
 
 export const CreateNewProject = () => {
-    const useParam = useParams();
-
     let [isOpen, setIsOpen] = useState(false);
 
     function closeModal() {
@@ -29,7 +26,6 @@ export const CreateNewProject = () => {
         project.name = name;
         project.description = description;
         project.status = status;
-        project.ownerId = "1";
         createNewProject(project);
         window.location.reload();
     }
@@ -43,7 +39,7 @@ export const CreateNewProject = () => {
 
             <Transition appear show={isOpen} as={Fragment}>
                 <Dialog as="div" className="relative z-10" onClose={closeModal}>
-                    <Transition.Child
+                    <TransitionChild
                         as={Fragment}
                         enter="ease-out duration-300"
                         enterFrom="opacity-0"
@@ -53,11 +49,11 @@ export const CreateNewProject = () => {
                         leaveTo="opacity-0"
                     >
                         <div className="fixed inset-0 bg-black/25" />
-                    </Transition.Child>
+                    </TransitionChild>
 
                     <div className="fixed inset-0 overflow-y-auto">
                         <div className="flex min-h-full items-center justify-center p-4 text-center">
-                            <Transition.Child
+                            <TransitionChild
                                 as={Fragment}
                                 enter="ease-out duration-300"
                                 enterFrom="opacity-0 scale-95"
@@ -66,13 +62,13 @@ export const CreateNewProject = () => {
                                 leaveFrom="opacity-100 scale-100"
                                 leaveTo="opacity-0 scale-95"
                             >
-                                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                                    <Dialog.Title
+                                <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                                    <DialogTitle
                                         as="h3"
                                         className="text-lg font-medium leading-6 text-gray-900"
                                     >
                                         Create New Project
-                                    </Dialog.Title>
+                                    </DialogTitle>
                                     {/* Task Title Input */}
                                     <div className="mt-2">
                                         <label htmlFor="project-title" className="block text-md font-medium text-gray-700 mb-3">Project Name</label>
@@ -164,8 +160,8 @@ export const CreateNewProject = () => {
                                         </button>
                                     </div>
 
-                                </Dialog.Panel>
-                            </Transition.Child>
+                                </DialogPanel>
+                            </TransitionChild>
                         </div>
                     </div>
                 </Dialog>

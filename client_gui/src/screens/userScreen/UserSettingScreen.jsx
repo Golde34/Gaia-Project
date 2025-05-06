@@ -47,7 +47,6 @@ const UserSettingScreen = (props) => {
         if (!isChanged) {
             return;
         }
-        userSetting.userId = user.id;
         userSetting.optimizedTaskConfig = Number(optimizedTaskConfig);
         userSetting.privateProfileConfig = Number(privateProfileConfig);
         userSetting.taskSortingAlgorithm = Number(taskSortingAlgorithm);

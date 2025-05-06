@@ -2,19 +2,21 @@ package controller_services
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	
 	base_dtos "middleware_loader/core/domain/dtos/base"
+	"middleware_loader/core/middleware"
 	services "middleware_loader/core/services/contribution_tracker"
 	"middleware_loader/infrastructure/graph/model"
 	"middleware_loader/kernel/utils"
 	"middleware_loader/ui/controller_services/controller_utils"
 	"net/http"
-
-	"github.com/go-chi/chi"
 )
 
 func GetUserGithubInfo(w http.ResponseWriter, r *http.Request, userGithubService *services.UserGithubService) {
-	userId := chi.URLParam(r, "userId")
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+
 	userGithubInfo, err := userGithubService.GetUserGithubInfo(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -55,7 +57,7 @@ func GithubAuthorize(w http.ResponseWriter, r *http.Request, userGithubService *
 }
 
 func SynchronizeUserGithub(w http.ResponseWriter, r *http.Request, userGithubService *services.UserGithubService) {
-	userId := chi.URLParam(r, "userId")
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	userGithubInfo, err := userGithubService.SynchronizeUserGithub(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -71,7 +73,7 @@ func SynchronizeUserGithub(w http.ResponseWriter, r *http.Request, userGithubSer
 }
 
 func GetProjectsAndRepos(w http.ResponseWriter, r *http.Request, userGithubService *services.UserGithubService) {
-	userId := chi.URLParam(r, "userId")
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "listAllProjectsByUserId", QueryInput: model.IDInput{ID: userId}, QueryOutput: model.Project{}})
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "getAllGithubRepos", QueryInput: model.IDInput{ID: userId}, QueryOutput: model.GithubRepo{}})
@@ -89,7 +91,8 @@ func SyncProjectRepo(w http.ResponseWriter, r *http.Request, userGithubService *
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	userId := body["userId"].(string)
+
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	project := body["project"].(map[string]interface{})
 	repo := body["repo"].(map[string]interface{})
 
@@ -115,7 +118,7 @@ func DeleteProjectRepo(w http.ResponseWriter, r *http.Request, userGithubService
 		return
 	}
 
-	userId := body["userId"].(string)
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	projectId := body["projectId"].(string)
 
 	deleteResult, err := userGithubService.DeleteProjectRepo(userId, projectId)

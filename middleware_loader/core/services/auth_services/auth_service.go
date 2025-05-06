@@ -60,40 +60,43 @@ func (s *AuthService) GaiaAutoSignin(ctx context.Context, input model.SigninInpu
 }
 
 func (s *AuthService) CheckToken(ctx context.Context, accessToken string) (response_dtos.TokenResponse, error) {
-	err := authValidator.TokenValidate(accessToken)
-	if err != nil {
-		return response_dtos.TokenResponse{}, err
-	}
-	log.Println("Validation passed!")
-
 	existedUserAccessToken, err := redis_cache.GetKey(ctx, accessToken)
 	if err == nil || existedUserAccessToken != "" {
 		log.Println("Token found in Redis: ", existedUserAccessToken)
-		return response_dtos.TokenResponse{AccessToken: existedUserAccessToken}, nil
+		var tr response_dtos.TokenResponse
+		if err := json.Unmarshal([]byte(existedUserAccessToken), &tr); err != nil {
+			return tr, err
+		}
+		return tr, nil
 	}
 
 	tokenResponse, err := client.IAuthAdapter(&adapter.AuthAdapter{}).CheckToken(accessToken)
 	if err != nil {
 		return response_dtos.TokenResponse{}, err
-	} 
+	}
 	if !tokenResponse.Valid {
 		log.Println("Token is not valid: ", tokenResponse)
-		return response_dtos.TokenResponse{}, fmt.Errorf("token is not valid") 
+		return response_dtos.TokenResponse{}, fmt.Errorf("token is not valid")
 	}
 
+	go s.buildAccessTokenRedis(ctx, tokenResponse)
+
+	return tokenResponse, nil
+}
+
+func (s *AuthService) buildAccessTokenRedis(ctx context.Context, tokenResponse response_dtos.TokenResponse) error {
 	expiredTimeStamp, err := time.Parse(time.RFC3339, tokenResponse.ExpiryDate)
 	if err != nil {
-		return response_dtos.TokenResponse{}, err
+		return fmt.Errorf("failed to parse expiry date: %v", err)
 	}
 	ttl := time.Until(expiredTimeStamp).Seconds()
 	tokenResponseInterface, err := json.Marshal(tokenResponse)
 	if err != nil {
-		return response_dtos.TokenResponse{}, err
+		return fmt.Errorf("failed to marshal token response: %v", err)
 	}
-	userAccessTokenResponse := redis_cache.SetKeyWithTTL(ctx, accessToken, tokenResponseInterface, time.Duration(ttl)*time.Second)
-	log.Println("Set token in Redis: ", userAccessTokenResponse)
-
-	return tokenResponse, nil
+	redis_cache.SetKeyWithTTL(ctx, tokenResponse.AccessToken, tokenResponseInterface, time.Duration(ttl)*time.Second)
+	log.Println("Set token in Redis of username: ", tokenResponse.Username, " successfully")
+	return nil
 }
 
 func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (string, error) {
@@ -102,5 +105,5 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (st
 		return "", err
 	} else {
 		return newAccessToken, nil
-	}	
+	}
 }

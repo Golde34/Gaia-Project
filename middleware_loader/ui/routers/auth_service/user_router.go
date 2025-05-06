@@ -21,7 +21,7 @@ func NewUserRouter(userService *services.UserService, db database_mongo.Database
 		r.Get("/get-all-users", func(w http.ResponseWriter, r *http.Request) {
 			controller.GetAllUsers(w, r, userService)
 		})
-		r.Get("/detail/{id}", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/detail", func(w http.ResponseWriter, r *http.Request) {
 			controller.GetUserDetail(w, r, userService)
 		})
 		// r.Post("/create-user", func(w http.ResponseWriter, r *http.Request) {

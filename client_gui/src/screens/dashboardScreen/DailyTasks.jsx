@@ -8,7 +8,6 @@ import { useNavigate } from "react-router-dom";
 import { getActiveTaskBatch } from "../../api/store/actions/schedule_plan/schedule-task.action";
 
 const DailyTasks = () => {
-  const userId = "1"; // Replace with actual user ID
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -16,7 +15,7 @@ const DailyTasks = () => {
   const didActiveTaskBatch = useRef();
   useEffect(() => {
     if (didActiveTaskBatch.current) return;
-    dispatch(getActiveTaskBatch(userId));
+    dispatch(getActiveTaskBatch());
     didActiveTaskBatch.current = true;
   }, [dispatch]);
 

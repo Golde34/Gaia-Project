@@ -8,10 +8,10 @@ const portName = {
     middlewarePort: 'middlewarePort'
 }
 
-export const getProjectsAndRepos = (userId) => async (dispatch) => {
-    dispatch({ type: GET_PROJECT_AND_REPO_REQUEST, payload: userId });
+export const getProjectsAndRepos = () => async (dispatch) => {
+    dispatch({ type: GET_PROJECT_AND_REPO_REQUEST });
     try {
-        const { data } = await serverRequest(`/user-commit/user-github/get-project-repo/${userId}`, HttpMethods.GET, portName.middlewarePort);
+        const { data } = await serverRequest(`/user-commit/user-github/get-project-repo`, HttpMethods.GET, portName.middlewarePort);
         dispatch({ type: GET_PROJECT_AND_REPO_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({
@@ -23,11 +23,10 @@ export const getProjectsAndRepos = (userId) => async (dispatch) => {
     }
 }
 
-export const syncProjectAndRepo = (userId, project, repo) => async (dispatch) => {
-    dispatch({ type: SYNC_PROJECT_AND_REPO_REQUEST, payload: userId });
+export const syncProjectAndRepo = (project, repo) => async (dispatch) => {
+    dispatch({ type: SYNC_PROJECT_AND_REPO_REQUEST });
     try {
         const body = {
-            userId,
             project,
             repo
         }
@@ -43,11 +42,10 @@ export const syncProjectAndRepo = (userId, project, repo) => async (dispatch) =>
     }
 }
 
-export const deleteProjectCommit = (userId, projectId) => async (dispatch) => {
-    dispatch({ type: DELETE_PROJECT_COMMIT_REQUEST, payload: userId });
+export const deleteProjectCommit = (projectId) => async (dispatch) => {
+    dispatch({ type: DELETE_PROJECT_COMMIT_REQUEST });
     try {
         const body = {
-            userId,
             projectId
         }
         const { data } = await serverRequest(`/project-commit/delete-project-repo`, HttpMethods.POST, portName.middlewarePort, body);

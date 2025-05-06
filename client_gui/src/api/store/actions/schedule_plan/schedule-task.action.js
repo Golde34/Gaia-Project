@@ -10,10 +10,10 @@ const portName = {
     middleware: 'middlewarePort'
 }
 
-export const getScheduleTaskList = (userId) => async (dispatch) => {
-    dispatch({ type: SCHEDULE_TASK_LIST_REQUEST, payload: userId });
+export const getScheduleTaskList = () => async (dispatch) => {
+    dispatch({ type: SCHEDULE_TASK_LIST_REQUEST });
     try {
-        const { data } = await serverRequest(`/schedule-task/${userId}`, HttpMethods.GET, portName.middleware);
+        const { data } = await serverRequest(`/schedule-task/list`, HttpMethods.GET, portName.middleware);
         if (data == null) {
             dispatch({
                 type: SCHEDULE_TASK_LIST_FAILURE,
@@ -32,11 +32,11 @@ export const getScheduleTaskList = (userId) => async (dispatch) => {
     }
 }
 
-export const getScheduleTaskBatchList = (userId) => {
+export const getScheduleTaskBatchList = () => {
     return async (dispatch) => {
-        dispatch({ type: TASK_BATCH_LIST_REQUEST, payload: userId });
+        dispatch({ type: TASK_BATCH_LIST_REQUEST });
         try {
-            const { data } = await serverRequest(`/schedule-task/task-batch-list/${userId}`, HttpMethods.GET, portName.middleware);
+            const { data } = await serverRequest(`/schedule-task/task-batch-list`, HttpMethods.GET, portName.middleware);
             dispatch({ type: TASK_BATCH_LIST_SUCCESS, payload: data });
             return data.scheduleBatchTask;
         } catch (error) {
@@ -53,11 +53,10 @@ export const getScheduleTaskBatchList = (userId) => {
 }
 
 
-export const chooseTaskBatch = (userId, batchNumber) => async (dispatch) => {
+export const chooseTaskBatch = (batchNumber) => async (dispatch) => {
     dispatch({ type: CHOOSE_TASK_BATCH_REQUEST, payload: batchNumber });
     try {
         const body = {
-            userId: userId,
             batchNumber: batchNumber
         }
         const { data } = await serverRequest(`/schedule-task/choose-task-batch`, HttpMethods.POST, portName.middleware, body);
@@ -73,10 +72,10 @@ export const chooseTaskBatch = (userId, batchNumber) => async (dispatch) => {
 
 }
 
-export const getActiveTaskBatch = (userId) => async (dispatch) => {
-    dispatch({ type: SCHEDULE_TASK_BATCH_REQUEST, payload: userId });
+export const getActiveTaskBatch = () => async (dispatch) => {
+    dispatch({ type: SCHEDULE_TASK_BATCH_REQUEST });
     try {
-        const { data } = await serverRequest(`/schedule-task/active-task-batch/${userId}`, HttpMethods.GET, portName.middleware);
+        const { data } = await serverRequest(`/schedule-task/active-task-batch`, HttpMethods.GET, portName.middleware);
         dispatch({ type: SCHEDULE_TASK_BATCH_SUCCESS, payload: data });
     } catch (error) {
         dispatch({

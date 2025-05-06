@@ -11,7 +11,6 @@ import CalendarChart from '../../screens/scheduleTaskScreen/CalendarChart';
 import { ScheduleGroups } from '../../screens/scheduleTaskScreen/ScheduleGroups';
 
 function ContentArea() {
-    const userId = "1";
     const dispatch = useDispatch();
 
     const currentDate = dayjs();
@@ -21,8 +20,8 @@ function ContentArea() {
     const { loading, error, scheduleTasks } = listScheduleTasks;
 
     const getListScheduleTasks = useCallback(() => {
-        dispatch(getScheduleTaskList(userId));
-    }, [dispatch, userId]);
+        dispatch(getScheduleTaskList());
+    }, [dispatch]);
 
     const debounceRef = useRef(null);
     useEffect(() => {
@@ -42,7 +41,7 @@ function ContentArea() {
     const checkEmptyTaskListAndOpenModal = () => {
         if (scheduleTasks.length === 0) {
             setIsOpen(true);
-            dispatch(getScheduleTaskBatchList(userId))
+            dispatch(getScheduleTaskBatchList())
                 .then((batchList) => {
                     setTaskBatchList(batchList);
                 })
@@ -54,7 +53,7 @@ function ContentArea() {
     useEffect(() => {
         if (!loading && !error && scheduleTasks.length === 0) {
             setIsOpen(true);
-            dispatch(getScheduleTaskBatchList(userId))
+            dispatch(getScheduleTaskBatchList())
                 .then((batchList) => {
                     setTaskBatchList(batchList);
                 })
@@ -69,7 +68,7 @@ function ContentArea() {
     const chooseTaskBatch = () => {
         return () => {
             openModal();
-            dispatch(getScheduleTaskBatchList(userId))
+            dispatch(getScheduleTaskBatchList())
                 .then((batchList) => {
                     setTaskBatchList(batchList);
                 })
@@ -90,7 +89,8 @@ function ContentArea() {
                     <Metric style={{ marginBottom: '30px', marginTop: '30px' }}
                         className="text-2xl font-bold text-gray-800"> Schedule Calendar
                     </Metric>
-                    <Card className='mb-4'>
+                    <ScheduleGroups />
+                    <Card className='mt-4'>
                         <div className="flex gap-10 sm:divide-x justify-center mt-10">
                             <CalendarChart currentDate={currentDate} selectDate={selectDate}
                                 checkEmptyScheduleTaskList={checkEmptyTaskListAndOpenModal}
@@ -125,7 +125,6 @@ function ContentArea() {
                             </div>
                         </div>
                     </Card>
-                    <ScheduleGroups />    
 
                     <Dialog
                         open={isOpen}

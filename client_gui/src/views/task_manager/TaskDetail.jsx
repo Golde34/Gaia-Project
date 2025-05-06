@@ -11,7 +11,6 @@ import { priorityColor, pullPriority, pushPriority, statusColor } from "../../ke
 import { useUpdateTaskDispatch } from "../../kernels/utils/write-dialog-api-requests";
 
 function ContentArea() {
-    const userId = 1;
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const taskId = useParams().id;
@@ -21,7 +20,6 @@ function ContentArea() {
     const didTaskDetailRef = useRef();
 
     const body = {
-        userId: userId,
         taskId: taskId,
         taskDetailType: 'TASK_MANAGER'
     }
@@ -71,7 +69,6 @@ function ContentArea() {
         }
         const priority = pushPriority(isHighPriority, isMediumPriority, isLowPriority, isStarPriority);
         const body = {
-            userId: userId,
             taskId: taskId,
             title: title === null ? detail?.title : title,
             description: description === null ? detail?.description : description,

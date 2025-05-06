@@ -1,7 +1,9 @@
 package controller_services
 
 import (
+	"fmt"
 	base_dtos "middleware_loader/core/domain/dtos/base"
+	"middleware_loader/core/middleware"
 	mapper "middleware_loader/core/port/mapper/request"
 	services "middleware_loader/core/services/task_manager"
 	"middleware_loader/infrastructure/graph/model"
@@ -13,7 +15,7 @@ import (
 )
 
 func ListAll(w http.ResponseWriter, r *http.Request, projectService *services.ProjectService) {
-	userId := chi.URLParam(r, "userId")
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	input := mapper.GetId(userId)
 
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
@@ -43,7 +45,8 @@ func CreateProject(w http.ResponseWriter, r *http.Request, projectService *servi
 		return
 	}
 
-	input := mapper.CreateProjectRequestDTOMapper(body)
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	input := mapper.CreateProjectRequestDTOMapper(body, userId)
 
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "createProject", QueryInput: input, QueryOutput: model.Project{}})
@@ -60,9 +63,10 @@ func UpdateProject(w http.ResponseWriter, r *http.Request, projectService *servi
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	projectId := chi.URLParam(r, "id")
 
-	input := mapper.UpdateProjectRequestDTOMapper(body, projectId)
+	projectId := chi.URLParam(r, "id")
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	input := mapper.UpdateProjectRequestDTOMapper(body, projectId, userId)
 
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "updateProject", QueryInput: input, QueryOutput: model.Project{}})

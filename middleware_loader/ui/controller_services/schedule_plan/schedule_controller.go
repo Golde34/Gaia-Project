@@ -2,7 +2,9 @@ package controller_services
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"middleware_loader/core/middleware"
 	mapper "middleware_loader/core/port/mapper/request"
 	services "middleware_loader/core/services/schedule_plan"
 	"middleware_loader/ui/controller_services/controller_utils"
@@ -12,7 +14,7 @@ import (
 )
 
 func GetScheduleTaskListByUserId(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
-	userId := chi.URLParam(r, "userId")
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	scheduleTaskList, err := services.NewScheduleTaskService().GetScheduleTaskListByUserId(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -31,7 +33,7 @@ func GetScheduleTaskListByUserId(w http.ResponseWriter, r *http.Request, schedul
 }
 
 func GetTaskBatchListByUserId(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
-	userId := chi.URLParam(r, "userId")
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	taskBatchList, err := services.NewScheduleTaskService().GetTaskBatchListByUserId(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -54,7 +56,8 @@ func ChooseTaskBatch(w http.ResponseWriter, r *http.Request, scheduleTaskService
 		return
 	}
 
-	userId, batchNumber := mapper.ChooseTaskBatch(body)
+	userIdStr := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	userId, batchNumber := mapper.ChooseTaskBatch(body, userIdStr)
 		
 	scheduleTaskBatch, err := services.NewScheduleTaskService().ChooseTaskBatch(userId, batchNumber)
 	if err != nil {
@@ -78,7 +81,8 @@ func CreateScheduleGroup(w http.ResponseWriter, r *http.Request, scheduleTaskSer
 		return
 	}
 
-	scheduleTaskDto := mapper.CreateScheduleGroupRequestDTOMapper(body)	
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	scheduleTaskDto := mapper.CreateScheduleGroupRequestDTOMapper(body, userId)	
 	
 	scheduleGroup, err := services.NewScheduleGroupService().CreateScheduleGroup(scheduleTaskDto)
 	if err != nil {
@@ -95,7 +99,7 @@ func CreateScheduleGroup(w http.ResponseWriter, r *http.Request, scheduleTaskSer
 }
 
 func ListScheduleGroupByUserId(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
-	userId := chi.URLParam(r, "userId")
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	scheduleList, err := services.NewScheduleGroupService().ListScheduleGroupByUserId(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -131,7 +135,7 @@ func DeleteScheduleGroup(w http.ResponseWriter, r *http.Request, scheduleTaskSer
 }
 
 func GetActiveTaskBatch(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
-	userId := chi.URLParam(r, "userId")		
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	scheduleTaskBatch, err := services.NewScheduleTaskService().GetActiveTaskBatch(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

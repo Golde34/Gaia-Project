@@ -13,7 +13,6 @@ function ContentArea(props) {
     const redirectPage = props.redirectPage;
 
     const [ validateErrors, setValidateErrors ] = useState({});
-    const userId = "1";
     const [sleepTime, setSleepTime] = useState(0);
     const [startSleepTime, setStartSleepTime] = useState("");
     const [endSleepTime, setEndSleepTime] = useState("");
@@ -43,7 +42,6 @@ function ContentArea(props) {
         if (!validateFields()) return;
 
         const taskConfig = {
-            userId: parseInt(userId),
             sleepDuration: parseInt(sleepDuration),
             startSleepTime: startSleepTime,
             endSleepTime: endSleepTime,
@@ -265,7 +263,6 @@ function ContentArea(props) {
 }
 
 const TaskRegistration = (props) => {
-    const [userId, setUserId] = useState("1");
     const redirectPage = props.redirectPage;
     const dispatch = useDispatch();
 
@@ -273,8 +270,8 @@ const TaskRegistration = (props) => {
     const { loading, error, taskRegistry } = taskRegistration;
 
     const taskConfig = useCallback(() => {
-        dispatch(queryTaskConfig(userId));
-    }, [dispatch, userId]);
+        dispatch(queryTaskConfig());
+    }, [dispatch]);
 
     const debounceRef = useRef();
 

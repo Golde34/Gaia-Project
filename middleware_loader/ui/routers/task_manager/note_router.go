@@ -18,7 +18,7 @@ type NoteRouter struct {
 func NewNoteRouter(noteService *services.NoteService, db database_mongo.Database, r *chi.Mux) *NoteRouter {
 	r.Route("/note", func(r chi.Router) {
 		r.Use(middleware.CheckMicroserviceStatus(db, enums.TASK_MANAGER))
-		r.Get("/{userId}", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/list", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.GetAllNotes(w, r, noteService)
 		})
 		r.Post("/create", func(w http.ResponseWriter, r *http.Request) {

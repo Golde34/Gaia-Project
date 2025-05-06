@@ -11,25 +11,25 @@ func GetId(id string) *request_dtos.IdInputDTO {
 	return &input
 }
 
-func CreateProjectRequestDTOMapper(body map[string]interface{}) *request_dtos.CreateProjectRequestDTO {
+func CreateProjectRequestDTOMapper(body map[string]interface{}, userId string) *request_dtos.CreateProjectRequestDTO {
 	var input request_dtos.CreateProjectRequestDTO
 	input.Name = utils.GetStringValue(body, "name", "")
 	input.Description = utils.GetStringValue(body, "description", "")
 	input.Status = utils.GetStringValue(body, "status", "")
 	input.Color = utils.GetStringValue(body, "color", "")
-	input.OwnerId = utils.GetStringValue(body, "ownerId", "")
+	input.OwnerId = userId 
 	input.ActiveStatus = utils.GetStringValue(body, "activeStatus", "")
 
 	return &input
 }
 
-func UpdateProjectRequestDTOMapper(body map[string]interface{}, projectId string) *request_dtos.UpdateProjectRequestDTO {
+func UpdateProjectRequestDTOMapper(body map[string]interface{}, projectId string, userId string) *request_dtos.UpdateProjectRequestDTO {
 	var input request_dtos.UpdateProjectRequestDTO
 	input.Name = body["name"].(string)
 	input.Description = body["description"].(string)
 	input.Status = body["status"].(string)
 	input.Color = body["color"].(string)
-	input.Owner = body["owner"].(string)
+	input.Owner = userId 
 	input.ActiveStatus = body["activeStatus"].(string)
 	input.ProjectId = projectId
 

@@ -70,7 +70,7 @@ const baseRequest = async (api, method, portConfig, body, headers) => {
             if (response.status === 403) {
                 // refresh token expired
                 console.error('Refresh token expired, redirecting to login');
-                // window.location.href = '/client-gui/signin';
+                window.location.href = '/client-gui/signin';
             }
         }
         return response;
@@ -151,10 +151,14 @@ const postFile = async (api, portName, formData) => {
     const url = `http://${config.serverHost}:${config[portName]}${api}`;
     console.log(`Posting file to ${url}`);
 
-    const response = await fetch(url, {
-        method: 'POST',
-        body: formData,
-    });
+    const response = await Axios.post(url, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            'Accept': 'application/json',
+        },
+        withCredentials: true,
+        timeout: timeOut,
+    })
 
     return response;
 }

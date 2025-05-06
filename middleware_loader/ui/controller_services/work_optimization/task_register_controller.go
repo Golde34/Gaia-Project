@@ -1,15 +1,15 @@
 package controller_services
 
 import (
+	"fmt"
 	base_dtos "middleware_loader/core/domain/dtos/base"
+	"middleware_loader/core/middleware"
 	mapper "middleware_loader/core/port/mapper/request"
 	services "middleware_loader/core/services/work_optimization"
 	"middleware_loader/infrastructure/graph/model"
 	"middleware_loader/kernel/utils"
 	"middleware_loader/ui/controller_services/controller_utils"
 	"net/http"
-
-	"github.com/go-chi/chi"
 )
 
 func RegisterTaskConfig(w http.ResponseWriter, r *http.Request, taskRegisterService *services.TaskRegisterService) {
@@ -19,7 +19,8 @@ func RegisterTaskConfig(w http.ResponseWriter, r *http.Request, taskRegisterServ
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	registerTaskInput := mapper.RegisterTaskConfigRequestDTOMapper(body)
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	registerTaskInput := mapper.RegisterTaskConfigRequestDTOMapper(body, userId)
 	userInput := mapper.GetUserIdInBody(body)
 
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
@@ -34,7 +35,7 @@ func RegisterTaskConfig(w http.ResponseWriter, r *http.Request, taskRegisterServ
 }
 
 func QueryTaskConfig(w http.ResponseWriter, r *http.Request, taskRegisterService *services.TaskRegisterService) {
-	userId := chi.URLParam(r, "userId")
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	input := mapper.GetUserId(userId)
 
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}

@@ -13,8 +13,8 @@ const UserGithubScreen = (props) => {
     const userGithub = useSelector(state => state.userGithubInfo);
     const { loading, error, userGithubInfo } = userGithub;
     const findUserGithubInfo = useCallback(() => {
-        dispatch(getUserGithubInfo(user.id));
-    }, [dispatch, user.id]);
+        dispatch(getUserGithubInfo());
+    }, [dispatch]);
     const debounceRef = useRef(null);
     useEffect(() => {
         clearTimeout(debounceRef.current);
@@ -25,7 +25,7 @@ const UserGithubScreen = (props) => {
     }, []);
 
     const syncUserGithubInfo = () => {
-        dispatch(synchronizeUserGithubInfo(user.id));
+        dispatch(synchronizeUserGithubInfo());
         window.location.reload();
     }
 
@@ -102,7 +102,7 @@ const UserGithubScreen = (props) => {
                         </div>
                         <div className="col-span-3 w-full">
                             <div className='w-full p-2'>
-                                <GithubSyncProjectScreen user={user} />
+                                <GithubSyncProjectScreen />
                             </div>
                         </div>
                     </div>
