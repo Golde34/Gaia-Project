@@ -2,9 +2,11 @@ package controller_services
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	base_dtos "middleware_loader/core/domain/dtos/base"
 	response_dtos "middleware_loader/core/domain/dtos/response"
+	"middleware_loader/core/middleware"
 	mapper "middleware_loader/core/port/mapper/request"
 	services "middleware_loader/core/services/task_manager"
 	"middleware_loader/infrastructure/graph/model"
@@ -42,7 +44,8 @@ func CreateTask(w http.ResponseWriter, r *http.Request, taskService *services.Ta
 		return
 	}
 
-	input := mapper.CreateTaskRequestDTOMapper(body)
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	input := mapper.CreateTaskRequestDTOMapper(body, userId)
 
 	query := utils.GenerateGraphQLQueryWithInput("mutation", "createTask", input, model.Task{})
 	utils.ConnectToGraphQLServer(w, query)
@@ -55,9 +58,10 @@ func UpdateTask(w http.ResponseWriter, r *http.Request, taskService *services.Ta
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	taskId := chi.URLParam(r, "id")
 
-	input := mapper.UpdateTaskRequestDTOMapper(body, taskId)
+	taskId := chi.URLParam(r, "id")
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	input := mapper.UpdateTaskRequestDTOMapper(body, taskId, userId)
 
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "updateTask", QueryInput: input, QueryOutput: model.Task{}})
@@ -93,7 +97,8 @@ func GenerateTaskWithoutGroupTask(w http.ResponseWriter, r *http.Request, taskSe
 		return
 	}
 
-	input := mapper.GenerateTaskRequestDTOMapper(body)
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	input := mapper.GenerateTaskRequestDTOMapper(body, userId)
 
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "generateTaskWithoutGroupTask", QueryInput: input, QueryOutput: model.Task{}})
@@ -168,7 +173,8 @@ func GetTaskDetail(w http.ResponseWriter, r *http.Request, taskService *services
 		return
 	}
 
-	input := mapper.GetTaskDetailRequestDTOMapper(body)
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	input := mapper.GetTaskDetailRequestDTOMapper(body, userId)
 
 	taskDetail, err := services.NewTaskService().GetTaskDetail(input)
 	if err != nil {
@@ -189,8 +195,7 @@ func GetTaskDetail(w http.ResponseWriter, r *http.Request, taskService *services
 }
 
 func ListDoneTasks(w http.ResponseWriter, r *http.Request, taskService *services.TaskService) {
-	userId := chi.URLParam(r, "userId")
-
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	doneTasks, err := services.NewTaskService().GetDoneTasks(userId)	
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -209,8 +214,7 @@ func ListDoneTasks(w http.ResponseWriter, r *http.Request, taskService *services
 }
 
 func ListTopTasks(w http.ResponseWriter, r *http.Request, taskService *services.TaskService) {
-	userId := chi.URLParam(r, "userId")
-
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	topTasks, err := services.NewTaskService().GetTopTasks(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

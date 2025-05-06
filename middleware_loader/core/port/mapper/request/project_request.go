@@ -23,13 +23,13 @@ func CreateProjectRequestDTOMapper(body map[string]interface{}, userId string) *
 	return &input
 }
 
-func UpdateProjectRequestDTOMapper(body map[string]interface{}, projectId string) *request_dtos.UpdateProjectRequestDTO {
+func UpdateProjectRequestDTOMapper(body map[string]interface{}, projectId string, userId string) *request_dtos.UpdateProjectRequestDTO {
 	var input request_dtos.UpdateProjectRequestDTO
 	input.Name = body["name"].(string)
 	input.Description = body["description"].(string)
 	input.Status = body["status"].(string)
 	input.Color = body["color"].(string)
-	input.Owner = body["owner"].(string)
+	input.Owner = userId 
 	input.ActiveStatus = body["activeStatus"].(string)
 	input.ProjectId = projectId
 

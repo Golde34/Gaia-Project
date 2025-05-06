@@ -63,9 +63,10 @@ func UpdateProject(w http.ResponseWriter, r *http.Request, projectService *servi
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	projectId := chi.URLParam(r, "id")
 
-	input := mapper.UpdateProjectRequestDTOMapper(body, projectId)
+	projectId := chi.URLParam(r, "id")
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	input := mapper.UpdateProjectRequestDTOMapper(body, projectId, userId)
 
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "updateProject", QueryInput: input, QueryOutput: model.Project{}})
