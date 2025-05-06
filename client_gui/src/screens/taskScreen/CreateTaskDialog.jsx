@@ -8,7 +8,6 @@ import CheckBoxIcon from "../../components/icons/CheckboxIcon";
 import { pushPriority } from "../../kernels/utils/field-utils";
 
 export const CreateTaskDialog = (props) => {
-    const userId = "1";
     const projectId = props.projectId;
     const groupTaskId = props.groupTaskId;
 
@@ -53,7 +52,6 @@ export const CreateTaskDialog = (props) => {
             task.duration = duration.toString();
         }
         task.activeStatus = 'ACTIVE';
-        task.userId = Number(userId);
         initiateTaskDispatch(projectId, task);
         
         window.location.reload();

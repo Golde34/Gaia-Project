@@ -6,7 +6,6 @@ import { Grid } from "@tremor/react";
 import CardItem from "../../components/subComponents/CardItem";
 
 const TopTask = () => {
-    const userId = "1";
     const dispatch = useDispatch();
 
     const taskList = useSelector((state) => state.topTask);
@@ -15,7 +14,7 @@ const TopTask = () => {
 
     useEffect(() => {
         if (didGetTopTaskRef.current) return;
-        dispatch(getTopTasks(userId));
+        dispatch(getTopTasks());
         didGetTopTaskRef.current = true;
     }, [dispatch]);
 

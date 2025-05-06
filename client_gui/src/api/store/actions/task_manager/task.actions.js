@@ -50,12 +50,6 @@ export const getDetailTask = (body) => async (dispatch) => {
 export const createTask = (task) => async (dispatch) => {
     dispatch({ type: TASK_CREATE_REQUEST, payload: task });
     try {
-        // header is here maybe need it
-        // const { userSignin: { userInfo } } = getState();
-        // const header = {
-        //     'Content-Type': 'multipart/form-data',
-        //     'Authorization': `Bearer ${userInfo.token}`
-        // }
         const { data } = await serverRequest('/task/create', HttpMethods.POST, portName.middleware, task);
         dispatch({ type: TASK_CREATE_SUCCESS, payload: data.data });
     } catch (error) {
@@ -71,12 +65,6 @@ export const createTask = (task) => async (dispatch) => {
 export const updateTask = (task) => async (dispatch) => {
     dispatch({ type: TASK_UPDATE_REQUEST, payload: task });
     try {
-        // header is here maybe need it
-        // const { userSignin: { userInfo } } = getState();
-        // const header = {
-        //     'Content-Type': 'multipart/form-data',
-        //     'Authorization': `Bearer ${userInfo.token}`
-        // }
         const { data } = await serverRequest(`/task/${task.taskId}`, HttpMethods.PUT, portName.middleware, task);
         dispatch({ type: TASK_UPDATE_SUCCESS, payload: data.data });
     } catch (error) {
@@ -92,12 +80,6 @@ export const updateTask = (task) => async (dispatch) => {
 export const deleteTask = (taskId) => async (dispatch) => {
     dispatch({ type: TASK_DELETE_REQUEST, payload: taskId });
     try {
-        // header is here maybe need it
-        // const { userSignin: { userInfo } } = getState();
-        // const header = {
-        //     'Content-Type': 'multipart/form-data',
-        //     'Authorization': `Bearer ${userInfo.token}`
-        // }
         const { data } = await serverRequest(`/task/${taskId}`, HttpMethods.DELETE, portName.middleware);
         dispatch({ type: TASK_DELETE_SUCCESS, payload: data.data });
     } catch (error) {
@@ -113,12 +95,6 @@ export const deleteTask = (taskId) => async (dispatch) => {
 export const generateTaskFromScratch = (task) => async (dispatch) => {
     dispatch({ type: TASK_GENERATE_REQUEST, payload: task });
     try {
-        // header is here maybe need it
-        // const { userSignin: { userInfo } } = getState();
-        // const header = {
-        //     'Content-Type': 'multipart/form-data',
-        //     'Authorization': `Bearer ${userInfo.token}`
-        // } 
         const { data } = await serverRequest('/task/generate', HttpMethods.POST, portName.middleware, task);
         dispatch({ type: TASK_GENERATE_SUCCESS, payload: data.data });
     } catch (error) {
@@ -134,12 +110,6 @@ export const generateTaskFromScratch = (task) => async (dispatch) => {
 export const updateTaskInDialog = (task) => async (dispatch) => {
     dispatch({ type: TASK_UPDATE_REQUEST, payload: task });
     try {
-        // header is here maybe need it
-        // const { userSignin: { userInfo } } = getState();
-        // const header = {
-        //     'Content-Type': 'multipart/form-data',
-        //     'Authorization': `Bearer ${userInfo.token}`
-        // }
         const { data } = await serverRequest(`/task/${task.id}/update-task-in-dialog`, HttpMethods.PUT, portName.middleware, task);
         dispatch({ type: TASK_UPDATE_SUCCESS, payload: data.data });
     } catch (error) {
@@ -167,10 +137,10 @@ export const getTasksCompleted = (groupTaskId) => async (dispatch) => {
     }
 }
 
-export const getTopTasks = (userId) => async (dispatch) => {
-    dispatch({ type: TOP_TASK_REQUEST, payload: userId });
+export const getTopTasks = () => async (dispatch) => {
+    dispatch({ type: TOP_TASK_REQUEST });
     try {
-        const { data } = await serverRequest(`/task/top-tasks/${userId}`, HttpMethods.GET, portName.middleware);
+        const { data } = await serverRequest(`/task/top-tasks`, HttpMethods.GET, portName.middleware);
         dispatch({ type: TOP_TASK_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({
@@ -212,10 +182,10 @@ export const getTableTaskList = (groupTaskId) => async (dispatch) => {
     }
 }
 
-export const getDoneTasks = (userId) => async (dispatch) => {
-    dispatch({ type: DONE_TASKS_REQUEST, payload: userId });
+export const getDoneTasks = () => async (dispatch) => {
+    dispatch({ type: DONE_TASKS_REQUEST });
     try {
-        const { data } = await serverRequest(`/task/done-tasks/${userId}`, HttpMethods.GET, portName.middleware);
+        const { data } = await serverRequest(`/task/done-tasks`, HttpMethods.GET, portName.middleware);
         dispatch({ type: DONE_TASKS_SUCCESS, payload: data.data });
     } catch (error) {
         dispatch({
