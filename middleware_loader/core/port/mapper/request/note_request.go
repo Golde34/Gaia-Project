@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-func CreateNoteRequestDTOMapper(r *http.Request, fileObject base_dtos.FileObject) (*request_dtos.CreateNoteRequestDTO, error) {
+func CreateNoteRequestDTOMapper(r *http.Request, fileObject base_dtos.FileObject, userIdStr string) (*request_dtos.CreateNoteRequestDTO, error) {
 	var input request_dtos.CreateNoteRequestDTO
 	// Extract "name" from the form data
 	name := r.FormValue("name")
@@ -18,8 +18,6 @@ func CreateNoteRequestDTOMapper(r *http.Request, fileObject base_dtos.FileObject
 	}
 	input.Name = name
 	
-	// Extract "userId" from the form data
-	userIdStr := r.FormValue("userId")
 	userId, err := strconv.Atoi(userIdStr)
 	if err != nil {
 		return nil, fmt.Errorf("userId is required")

@@ -2,8 +2,11 @@ package controller_services
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+
 	base_dtos "middleware_loader/core/domain/dtos/base"
+	"middleware_loader/core/middleware"
 	mapper "middleware_loader/core/port/mapper/request"
 	services "middleware_loader/core/services/task_manager"
 	"middleware_loader/infrastructure/graph/model"
@@ -15,7 +18,7 @@ import (
 )
 
 func GetAllNotes(w http.ResponseWriter, r *http.Request, noteService *services.NoteService) {
-	userId := chi.URLParam(r, "userId")
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	input := mapper.GetId(userId)
 
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
@@ -33,7 +36,8 @@ func CreateNote(w http.ResponseWriter, r *http.Request, noteService *services.No
 	}
 	log.Println("File path:", filePath)
 
-	input, err := mapper.CreateNoteRequestDTOMapper(r, fileObject)
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	input, err := mapper.CreateNoteRequestDTOMapper(r, fileObject, userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
