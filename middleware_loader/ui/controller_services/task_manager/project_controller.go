@@ -45,7 +45,8 @@ func CreateProject(w http.ResponseWriter, r *http.Request, projectService *servi
 		return
 	}
 
-	input := mapper.CreateProjectRequestDTOMapper(body)
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	input := mapper.CreateProjectRequestDTOMapper(body, userId)
 
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "createProject", QueryInput: input, QueryOutput: model.Project{}})

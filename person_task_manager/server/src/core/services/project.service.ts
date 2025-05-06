@@ -50,6 +50,10 @@ class ProjectService {
         try {
             const existedProject = await projectValidationImpl.checkExistedProjectById(projectId);
             if (existedProject !== null) {
+                if (project.ownerId != existedProject.ownerId) {
+                    console.error("Project ownerId is not allowed to change when updating project");
+                    return msg400("Project ownerId is not allowed to change when updating project");
+                }
                 const updateProject = await projectStore.updateOneProject(projectId, project);
                 this.projectCache.clear(InternalCacheConstants.TASK_LIST + existedProject.ownerId);
                 return msg200({
