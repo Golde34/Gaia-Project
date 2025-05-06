@@ -21,7 +21,7 @@ func NewTaskRegistrationRouter(taskRegisterService *services.TaskRegisterService
 		r.Post("/register-task-config", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.RegisterTaskConfig(w, r, taskRegisterService)
 		})
-		r.Get("/query-task-config/{userId}", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/query-task-config", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.QueryTaskConfig(w, r, taskRegisterService)
 		})
 	})
