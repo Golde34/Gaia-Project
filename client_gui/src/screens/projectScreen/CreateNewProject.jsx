@@ -2,13 +2,10 @@ import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@
 import { Input, Textarea } from "@material-tailwind/react";
 import { Card, Title } from "@tremor/react";
 import { Fragment, useState } from "react";
-import { useParams } from "react-router-dom"
 import RadioButtonIcon from "../../components/icons/RadioButtonIcon";
 import { useCreateProjectDispatch } from "../../kernels/utils/write-dialog-api-requests";
 
 export const CreateNewProject = () => {
-    const useParam = useParams();
-
     let [isOpen, setIsOpen] = useState(false);
 
     function closeModal() {
@@ -29,7 +26,6 @@ export const CreateNewProject = () => {
         project.name = name;
         project.description = description;
         project.status = status;
-        project.ownerId = "1";
         createNewProject(project);
         window.location.reload();
     }
