@@ -7,6 +7,7 @@ import auth.authentication_service.core.services.interfaces.TokenService;
 import auth.authentication_service.kernel.utils.JwtUtil;
 import auth.authentication_service.kernel.utils.ModelMapperConfig;
 
+import java.time.Duration;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,7 @@ public class TokenServiceImpl implements TokenService {
         this.jwtUtil = jwtUtil;
         this.userDetailsServices = userDetailsServices;
         this.userStore = userStore;
-    }    
+    }
 
     @Override
     public String generateAccessToken(UserDetails user) {
@@ -61,7 +62,8 @@ public class TokenServiceImpl implements TokenService {
             // AuthToken authToken = tokenRepository.findByToken(token);
             // Date expiryDate = authToken.getExpiryDate();
             User user = userStore.findByUsername(username);
-            CheckTokenDtoResponse tokenResponse = new CheckTokenDtoResponse(user.getId(), user.getUsername(), token, expiryDate);
+            CheckTokenDtoResponse tokenResponse = new CheckTokenDtoResponse(user.getId(), user.getUsername(), token,
+                    expiryDate);
             return tokenResponse;
         } else {
             return null;
@@ -75,4 +77,8 @@ public class TokenServiceImpl implements TokenService {
         return jwtUtil.validateToken(token, userDetails);
     }
 
+    @Override
+    public String generateServiceToken(UserDetails user, Duration serviceDuration) {
+        return jwtUtil.generateToken(user, serviceDuration.getSeconds() * 1000L);
+    }
 }

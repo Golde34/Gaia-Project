@@ -3,6 +3,7 @@ package auth.authentication_service.ui.controllers;
 import auth.authentication_service.core.domain.dto.RegisterDto;
 import auth.authentication_service.core.domain.dto.TokenDto;
 import auth.authentication_service.core.domain.dto.UserPermissionDto;
+import auth.authentication_service.core.domain.dto.request.ServiceJwtRequest;
 import auth.authentication_service.core.domain.dto.request.SignInDtoRequest;
 import auth.authentication_service.core.domain.enums.ResponseEnum;
 import auth.authentication_service.core.services.interfaces.AuthService;
@@ -70,8 +71,14 @@ public class AuthController {
         return authService.checkPermission(permission);
     }
     
-    @PostMapping("refresh-token")
+    @PostMapping("/refresh-token")
     public ResponseEntity<?> refreshToken(@RequestBody TokenDto token) throws Exception {
         return authService.refreshToken(token.getToken());
     }
+
+    @PostMapping("/get-service-jwt")
+    public ResponseEntity<?> getServiceJwt(@RequestBody ServiceJwtRequest request) {
+        return authService.getServiceJwt(request); 
+    }
+    
 }

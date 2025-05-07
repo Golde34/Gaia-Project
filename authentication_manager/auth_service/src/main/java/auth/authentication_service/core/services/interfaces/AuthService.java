@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 
 import auth.authentication_service.core.domain.dto.TokenDto;
 import auth.authentication_service.core.domain.dto.UserPermissionDto;
+import auth.authentication_service.core.domain.dto.request.ServiceJwtRequest;
 
 public interface AuthService{
     ResponseEntity<?> authenticated(String username, String password) throws Exception;
@@ -12,4 +13,5 @@ public interface AuthService{
     ResponseEntity<?> refreshToken(String token) throws Exception;
     ResponseEntity<?> checkPermission(UserPermissionDto permission) throws Exception;
     ResponseEntity<?> checkStatus();
+    ResponseEntity<?> getServiceJwt(ServiceJwtRequest request);
 }

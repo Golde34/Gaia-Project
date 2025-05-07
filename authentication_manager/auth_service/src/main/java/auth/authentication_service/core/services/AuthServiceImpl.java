@@ -2,6 +2,7 @@ package auth.authentication_service.core.services;
 
 import auth.authentication_service.core.domain.dto.TokenDto;
 import auth.authentication_service.core.domain.dto.UserPermissionDto;
+import auth.authentication_service.core.domain.dto.request.ServiceJwtRequest;
 import auth.authentication_service.core.domain.dto.response.CheckTokenDtoResponse;
 import auth.authentication_service.core.domain.dto.response.SignInDtoResponse;
 import auth.authentication_service.core.domain.entities.AuthToken;
@@ -19,6 +20,7 @@ import auth.authentication_service.core.services.interfaces.RoleService;
 import auth.authentication_service.core.services.interfaces.TokenService;
 import auth.authentication_service.core.services.interfaces.UserService;
 import auth.authentication_service.core.validations.service_validations.UserServiceValidation;
+import auth.authentication_service.kernel.configs.JwtServiceConfig;
 import auth.authentication_service.kernel.utils.GenericResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +40,9 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@EnableConfigurationProperties({
+        JwtServiceConfig.class,
+})
 public class AuthServiceImpl implements AuthService {
 
     private final TokenService tokenService;
@@ -48,6 +55,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserServiceValidation userServiceValidation;
 
     private final GenericResponse<String> genericResponse;
+    private final JwtServiceConfig listJwtServiceConfig;
 
     // This function is similar to the Sign-in function
     public ResponseEntity<?> authenticated(String username, String password) throws Exception {
@@ -206,5 +214,44 @@ public class AuthServiceImpl implements AuthService {
                     .matchingResponseMessage(
                             new GenericResponse<>("The system encountered an unexpected error", ResponseEnum.msg500));
         }
+    }
+
+    @Override
+    public ResponseEntity<?> getServiceJwt(ServiceJwtRequest request) {
+        try {
+            User user = userStore.findUserById(request.getUserId());
+            final UserDetails userDetails = userDetailService
+                    .loadUserByUsername(user.getUsername());
+
+            Duration serviceDuration = convertServiceDuration(request.getService());
+            if (serviceDuration == null) {
+                log.error("Service not found");
+                return genericResponse
+                        .matchingResponseMessage(new GenericResponse<>("Service not found", ResponseEnum.msg401));
+            }
+
+            String jwtToken = tokenService.generateServiceToken(userDetails, serviceDuration);
+            return genericResponse
+                    .matchingResponseMessage(new GenericResponse<>(jwtToken, ResponseEnum.msg200));
+        } catch (Exception e) {
+            log.error("Error during get service jwt: {}", e.getMessage(), e);
+            return genericResponse
+                    .matchingResponseMessage(
+                            new GenericResponse<>("The system encountered an unexpected error", ResponseEnum.msg500));
+        }
+    }
+
+    private Duration convertServiceDuration(String service) {
+        Long serviceDuration = 0L;
+        Map<String, JwtServiceConfig.JwtServiceProperties> services = listJwtServiceConfig.getServices();
+        for (Map.Entry<String, JwtServiceConfig.JwtServiceProperties> entry : services.entrySet()) {
+            if (entry.getKey().equals(service)) {
+                String duration = entry.getValue().getDuration();
+                serviceDuration = Long.parseLong(duration) * 60 * 60;
+                return Duration.ofSeconds(serviceDuration);
+            }
+        }
+        log.error("Service not found");
+        return null; 
     }
 }

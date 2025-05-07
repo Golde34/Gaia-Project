@@ -1,5 +1,6 @@
 package auth.authentication_service.core.services.interfaces;
 
+import java.time.Duration;
 import java.util.Date;
 
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,4 +14,5 @@ public interface TokenService {
     Date getExpirationDateFromToken(String token);
     CheckTokenDtoResponse checkToken(String token);
     Boolean validateToken(String token);
+    String generateServiceToken(UserDetails userDetails, Duration duration);   
 }
