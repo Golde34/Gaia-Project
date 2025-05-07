@@ -61,10 +61,13 @@ export const signout = () => (dispatch) => {
     dispatch({ type: USER_SIGNOUT });
 };
 
-export const getUserChatHubJwt = () => async (dispatch) => {
+export const getUserChatHubJwt = (service) => async (dispatch) => {
     dispatch({ type: GET_CHAT_HUB_JWT_REQUEST });
     try {
-        const response = await serverRequest('/auth/get-chat-hub-jwt', HttpMethods.GET, portName.middleware, null);
+        const body = {
+            service: service, 
+        }
+        const response = await serverRequest('/auth/get-service-jwt', HttpMethods.POST, portName.middleware, body);
         const data = JSON.stringify(response.data);
         dispatch({ type: GET_CHAT_HUB_JWT_SUCCESS, payload: data });
     } catch (error) {

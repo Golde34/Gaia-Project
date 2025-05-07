@@ -3,9 +3,9 @@ import { Button, Card, Col, Grid, Metric, TextInput } from '@tremor/react';
 import Template from '../../components/template/Template';
 import { useMultiWS } from '../../kernels/context/MultiWSContext';
 import { useSelector } from 'react-redux';
+import { getUserChatHubJwt } from '../../api/store/actions/auth_service/auth.actions';
 
 function ContentArea() {
-  const userId = '1';
   const { messages, isConnected, sendMessage } = useMultiWS();
 
   const [chatInput, setChatInput] = useState('');
@@ -16,7 +16,7 @@ function ContentArea() {
   const jwtUserChatHub = useSelector((state) => state.jwtUserChatHub)
   const { jwtToken } = jwtUserChatHub;
   const getUserJwt = useCallback(() => {
-    dispatch(getUserChatHubJWt());
+    dispatch(getUserChatHubJwt("ChatHub"));
   }, [dispatch]);
 
   useEffect(() => {
