@@ -159,3 +159,24 @@ func (adapter *AuthAdapter) RefreshToken(refreshToken string) (string, error) {
 
 	return newAccessToken, nil
 }
+
+func (adapter *AuthAdapter) GetServiceJWT(serviceName string) (string, error) {
+	authServiceURL := base.AuthServiceURL + "/auth/get-service-jwt"
+	headers := utils.BuildDefaultHeaders()
+	bodyResult, err := utils.BaseAPI(authServiceURL, "POST", serviceName, headers)
+	if err != nil {
+		return "", err
+	}
+
+	bodyMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return "", err
+	}
+
+	jwtResponse, ok := bodyMap["message"].(string)
+	if !ok {
+		return "", err
+	}
+
+	return jwtResponse, nil
+}

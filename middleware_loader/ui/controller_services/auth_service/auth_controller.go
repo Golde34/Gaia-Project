@@ -7,6 +7,7 @@ import (
 	"middleware_loader/core/services/auth_services"
 	"middleware_loader/infrastructure/graph/model"
 	"middleware_loader/kernel/utils"
+	"middleware_loader/ui/controller_services/controller_utils"
 	"net/http"
 )
 
@@ -46,23 +47,23 @@ func Signin(w http.ResponseWriter, r *http.Request, authService *services.AuthSe
 func setTokenCookie(w http.ResponseWriter, accessToken, refreshToken string) {
 	accessTokenCookie := &http.Cookie{
 		Name:     "accessToken",
-		Value:    accessToken, 
+		Value:    accessToken,
 		Path:     "/",
 		HttpOnly: true,
-		// Secure:   true, // Must be HTTPS if using Secure 
+		// Secure:   true, // Must be HTTPS if using Secure
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   15 * 60, // 15 minutes 
+		MaxAge:   15 * 60, // 15 minutes
 	}
 	http.SetCookie(w, accessTokenCookie)
 
 	refreshTokenCookie := &http.Cookie{
 		Name:     "refreshToken",
-		Value:    refreshToken, 
+		Value:    refreshToken,
 		Path:     "/",
 		HttpOnly: true,
 		// Secure:   true,
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   7 * 24 * 60 * 60, // 7 days 
+		MaxAge:   7 * 24 * 60 * 60, // 7 days
 	}
 	http.SetCookie(w, refreshTokenCookie)
 }
@@ -102,14 +103,43 @@ func RefreshToken(w http.ResponseWriter, r *http.Request, authService *services.
 	}
 	accessTokenCookie := &http.Cookie{
 		Name:     "accessToken",
-		Value:    newAccessToken, 
+		Value:    newAccessToken,
 		Path:     "/",
 		HttpOnly: true,
-		// Secure:   true, // 
+		// Secure:   true, //
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   15 * 60, // 15 minutes 
+		MaxAge:   15 * 60, // 15 minutes
 	}
 	http.SetCookie(w, accessTokenCookie)
 
 	w.Header().Set("Content-Type", "application/json")
+}
+
+func GetServiceJWT(w http.ResponseWriter, r *http.Request, authService *services.AuthService) {
+	var body map[string]interface{}
+	body, err := controller_utils.MappingBody(w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	serviceName := body["service"].(string)
+
+	jwt, err := authService.GetServiceJWT(r.Context(), serviceName)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	response := map[string]interface{}{
+		"message": "Get JWT successfully",
+		"jwt":     jwt,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 }
