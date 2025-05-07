@@ -1,8 +1,10 @@
 import {
-    USER_SIGNIN_REQUEST, USER_SIGNIN_SUCCESS, USER_SIGNIN_FAIL, 
-    BOSS_SIGNIN_REQUEST, BOSS_SIGNIN_SUCCESS, BOSS_SIGNIN_FAIL, 
-    GAIA_SIGNIN_REQUEST, GAIA_SIGNIN_SUCCESS, GAIA_SIGNIN_FAIL, 
-    USER_SIGNOUT, 
+    USER_SIGNIN_REQUEST, USER_SIGNIN_SUCCESS, USER_SIGNIN_FAIL,
+    BOSS_SIGNIN_REQUEST, BOSS_SIGNIN_SUCCESS, BOSS_SIGNIN_FAIL,
+    GAIA_SIGNIN_REQUEST, GAIA_SIGNIN_SUCCESS, GAIA_SIGNIN_FAIL,
+    USER_SIGNOUT,
+    GET_CHAT_HUB_JWT_REQUEST, GET_CHAT_HUB_JWT_SUCCESS,
+    GET_CHAT_HUB_JWT_FAIL,
 } from '../../constants/auth_service/auth.constants';
 
 export const gaiaSigninReducer = (state = {}, action) => {
@@ -15,7 +17,7 @@ export const gaiaSigninReducer = (state = {}, action) => {
             return { loading: false, error: action.payload };
         case USER_SIGNOUT:
             return { loading: false, gaiaInfo: null };
-        default: 
+        default:
             return state;
     }
 }
@@ -30,7 +32,7 @@ export const bossSigninReducer = (state = {}, action) => {
             return { loading: false, error: action.payload };
         case USER_SIGNOUT:
             return { loading: false, userInfo: null };
-        default: 
+        default:
             return state;
     }
 }
@@ -45,7 +47,20 @@ export const userSigninReducer = (state = {}, action) => {
             return { loading: false, error: action.payload };
         case USER_SIGNOUT:
             return { loading: false, userInfo: null };
-        default: 
+        default:
             return state;
+    }
+}
+
+export const getChatHubJwtReducer = (state = {}, action) => {
+    switch (action.type) {
+        case GET_CHAT_HUB_JWT_REQUEST:
+            return { loading: true };
+        case GET_CHAT_HUB_JWT_SUCCESS:
+            return { loading: false, chatHubJwt: action.payload };
+        case GET_CHAT_HUB_JWT_FAIL:
+            return { loading: false, error: action.payload };
+        default:
+            return state; I
     }
 }

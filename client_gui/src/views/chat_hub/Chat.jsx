@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Card, Col, Grid, Metric, TextInput } from '@tremor/react';
 import Template from '../../components/template/Template';
 import { useMultiWS } from '../../kernels/context/MultiWSContext';
+import { useSelector } from 'react-redux';
 
 function ContentArea() {
   const userId = '1';
@@ -11,6 +12,19 @@ function ContentArea() {
   const [chatHistory, setChatHistory] = useState([]);      // array of {from, text, taskResult}
   const [lastBotIndex, setLastBotIndex] = useState(0);     // how many bot msgs we've consumed
   const endRef = useRef(null);
+
+  const jwtUserChatHub = useSelector((state) => state.jwtUserChatHub)
+  const { jwtToken } = jwtUserChatHub;
+  const getUserJwt = useCallback(() => {
+    dispatch(getUserChatHubJWt());
+  }, [dispatch]);
+
+  useEffect(() => {
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      getUserJwt();
+    }, 200);
+  }, []);
 
   useEffect(() => {
     console.log("Received chat messages in: ", messages.chat);
@@ -48,9 +62,13 @@ function ContentArea() {
   const handleSend = () => {
     if (!chatInput.trim()) return;
     setChatHistory(prev => [...prev, { from: 'user', text: chatInput }]);
+    if (!jwtToken) {
+      console.error("JWT token is not available, Auth Service Timeout");
+      return;
+    }
     sendMessage('chat', JSON.stringify({
       type: 'chat_message',
-      userId,
+      jwtToken,
       text: chatInput
     }));
     setChatInput('');
