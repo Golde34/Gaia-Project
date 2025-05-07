@@ -2,7 +2,9 @@ package controller_services
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"middleware_loader/core/middleware"
 	mapper "middleware_loader/core/port/mapper/request"
 	"middleware_loader/core/services/auth_services"
 	"middleware_loader/infrastructure/graph/model"
@@ -123,9 +125,10 @@ func GetServiceJWT(w http.ResponseWriter, r *http.Request, authService *services
 		return
 	}
 
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	serviceName := body["service"].(string)
 
-	jwt, err := authService.GetServiceJWT(r.Context(), serviceName)
+	jwt, err := authService.GetServiceJWT(r.Context(), serviceName, userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
