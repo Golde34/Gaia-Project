@@ -58,4 +58,20 @@ public class JwtUtil {
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY) // signature
                 .compact();
     }
+
+    public String generateServiceToken(String username, String service, Long expiration) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("username", username);
+        claims.put("service", service);
+        return createToken(claims, username, expiration);
+    }
+
+    public String validateServiceToken(String token, String service) {
+        final String username = extractClaim(token, Claims::getSubject);
+        final String tokenService = (String) extractAllClaims(token).get("service");
+        if (tokenService.equals(service) && !isTokenExpired(token)) {
+            return username;
+        }
+        return null;
+    }
 }

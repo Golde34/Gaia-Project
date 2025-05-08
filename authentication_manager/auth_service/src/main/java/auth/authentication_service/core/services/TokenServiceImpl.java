@@ -78,7 +78,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public String generateServiceToken(UserDetails user, Duration serviceDuration) {
-        return jwtUtil.generateToken(user, serviceDuration.getSeconds() * 1000L);
+    public String generateServiceToken(String username, String service, Duration serviceDuration) {
+        return jwtUtil.generateServiceToken(username, service, serviceDuration.getSeconds() * 1000L);
     }
 }

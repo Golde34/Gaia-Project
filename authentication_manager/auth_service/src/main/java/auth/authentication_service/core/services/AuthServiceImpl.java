@@ -219,10 +219,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ResponseEntity<?> getServiceJwt(ServiceJwtRequest request) {
         try {
-            User user = userStore.findUserById(request.getUserId());
-            final UserDetails userDetails = userDetailService
-                    .loadUserByUsername(user.getUsername());
-
+            User user = userStore.getUserById(request.getUserId());
             Duration serviceDuration = convertServiceDuration(request.getService());
             if (serviceDuration == null) {
                 log.error("Service not found");
@@ -230,7 +227,7 @@ public class AuthServiceImpl implements AuthService {
                         .matchingResponseMessage(new GenericResponse<>("Service not found", ResponseEnum.msg401));
             }
 
-            String jwtToken = tokenService.generateServiceToken(userDetails, serviceDuration);
+            String jwtToken = tokenService.generateServiceToken(user.getUsername(), request.getService(), serviceDuration);
             return genericResponse
                     .matchingResponseMessage(new GenericResponse<>(jwtToken, ResponseEnum.msg200));
         } catch (Exception e) {
@@ -244,14 +241,14 @@ public class AuthServiceImpl implements AuthService {
     private Duration convertServiceDuration(String service) {
         Long serviceDuration = 0L;
         Map<String, JwtServiceConfig.JwtServiceProperties> services = listJwtServiceConfig.getServices();
+        log.info("Services: {}", services);
         for (Map.Entry<String, JwtServiceConfig.JwtServiceProperties> entry : services.entrySet()) {
-            if (entry.getKey().equals(service)) {
+            if (entry.getValue().getName().equals(service)) {
                 String duration = entry.getValue().getDuration();
                 serviceDuration = Long.parseLong(duration) * 60 * 60;
                 return Duration.ofSeconds(serviceDuration);
             }
         }
-        log.error("Service not found");
-        return null; 
+        return null;
     }
 }

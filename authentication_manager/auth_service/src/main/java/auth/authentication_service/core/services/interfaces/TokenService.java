@@ -14,5 +14,5 @@ public interface TokenService {
     Date getExpirationDateFromToken(String token);
     CheckTokenDtoResponse checkToken(String token);
     Boolean validateToken(String token);
-    String generateServiceToken(UserDetails userDetails, Duration duration);   
+    String generateServiceToken(String userId, String service, Duration duration);   
 }
