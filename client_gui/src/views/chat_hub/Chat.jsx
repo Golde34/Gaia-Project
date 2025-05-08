@@ -30,8 +30,7 @@ function ContentArea() {
 
   useEffect(() => {
     if (chatHubJwt) {
-      localStorage.setItem('chatHubJwt', chatHubJwt);
-      console.log("ChatHub JWT: ", chatHubJwt);
+      localStorage.setItem('chatHubJwt', JSON.parse(chatHubJwt).jwt);
     }
   })
 
@@ -72,10 +71,6 @@ function ContentArea() {
     if (!chatInput.trim()) return;
     setChatHistory(prev => [...prev, { from: 'user', text: chatInput }]);
     console.log("Chathub JWT: ", chatHubJwt);
-    if (!chatHubJwt) {
-      console.error("JWT token is not available, Auth Service Timeout");
-      return;
-    }
     sendMessage('chat', JSON.stringify({
       type: 'chat_message',
       chatHubJwt,
