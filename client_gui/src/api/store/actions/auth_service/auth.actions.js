@@ -1,6 +1,7 @@
 import { HttpMethods, serverRequest } from '../../../baseAPI';
 import {
     GAIA_SIGNIN_FAIL, GAIA_SIGNIN_REQUEST, GAIA_SIGNIN_SUCCESS,
+    GET_CHAT_HUB_JWT_FAIL, GET_CHAT_HUB_JWT_REQUEST, GET_CHAT_HUB_JWT_SUCCESS,
     USER_SIGNIN_FAIL, USER_SIGNIN_REQUEST, USER_SIGNIN_SUCCESS,
     USER_SIGNOUT
 } from '../../constants/auth_service/auth.constants';
@@ -59,3 +60,22 @@ export const signout = () => (dispatch) => {
     // remove coookies
     dispatch({ type: USER_SIGNOUT });
 };
+
+export const getUserChatHubJwt = (service) => async (dispatch) => {
+    dispatch({ type: GET_CHAT_HUB_JWT_REQUEST });
+    try {
+        const body = {
+            service: service, 
+        }
+        const response = await serverRequest('/auth/get-service-jwt', HttpMethods.POST, portName.middleware, body);
+        const data = JSON.stringify(response.data);
+        dispatch({ type: GET_CHAT_HUB_JWT_SUCCESS, payload: data });
+    } catch (error) {
+        dispatch({
+            type: GET_CHAT_HUB_JWT_FAIL,
+            payload: error.response && error.response.data.message
+                ? error.response.data.message
+                : error.message,
+        });
+    }
+}

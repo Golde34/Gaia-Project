@@ -27,6 +27,9 @@ func NewAuthRouter(authService *services.AuthService, db database_mongo.Database
 		r.Post("/refresh-token", func(w http.ResponseWriter, r *http.Request) {
 			controller.RefreshToken(w, r, authService)
 		})
+		r.Post("/get-service-jwt", func(w http.ResponseWriter, r *http.Request) {
+			controller.GetServiceJWT(w, r, authService)
+		})
 	})
 	return &AuthRouter{
 		AuthService: authService,

@@ -107,3 +107,12 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (st
 		return newAccessToken, nil
 	}
 }
+
+func (s *AuthService) GetServiceJWT(ctx context.Context, serviceName, userId string) (string, error) {
+	serviceJWT, err := client.IAuthAdapter(&adapter.AuthAdapter{}).GetServiceJWT(serviceName, userId)
+	if err != nil {
+		return "", err
+	} else {
+		return serviceJWT, nil
+	}
+}
