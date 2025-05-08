@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Card, Col, Grid, Metric, TextInput } from '@tremor/react';
 import Template from '../../components/template/Template';
 import { useMultiWS } from '../../kernels/context/MultiWSContext';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { getUserChatHubJwt } from '../../api/store/actions/auth_service/auth.actions';
 
 function ContentArea() {
+  const dispatch = useDispatch();
   const { messages, isConnected, sendMessage } = useMultiWS();
 
   const [chatInput, setChatInput] = useState('');
@@ -13,11 +14,12 @@ function ContentArea() {
   const [lastBotIndex, setLastBotIndex] = useState(0);     // how many bot msgs we've consumed
   const endRef = useRef(null);
 
-  const jwtUserChatHub = useSelector((state) => state.jwtUserChatHub)
-  const { jwtToken } = jwtUserChatHub;
+  const jwtUserChatHub = useSelector((state) => state.userChatHubJwt)
+  const { loading, error, chatHubJwt } = jwtUserChatHub;
   const getUserJwt = useCallback(() => {
     dispatch(getUserChatHubJwt("ChatHub"));
   }, [dispatch]);
+  const debounceRef = useRef(null);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -25,6 +27,13 @@ function ContentArea() {
       getUserJwt();
     }, 200);
   }, []);
+
+  useEffect(() => {
+    if (chatHubJwt) {
+      localStorage.setItem('chatHubJwt', chatHubJwt);
+      console.log("ChatHub JWT: ", chatHubJwt);
+    }
+  })
 
   useEffect(() => {
     console.log("Received chat messages in: ", messages.chat);
@@ -62,13 +71,14 @@ function ContentArea() {
   const handleSend = () => {
     if (!chatInput.trim()) return;
     setChatHistory(prev => [...prev, { from: 'user', text: chatInput }]);
-    if (!jwtToken) {
+    console.log("Chathub JWT: ", chatHubJwt);
+    if (!chatHubJwt) {
       console.error("JWT token is not available, Auth Service Timeout");
       return;
     }
     sendMessage('chat', JSON.stringify({
       type: 'chat_message',
-      jwtToken,
+      chatHubJwt,
       text: chatInput
     }));
     setChatInput('');

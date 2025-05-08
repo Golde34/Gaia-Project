@@ -76,7 +76,7 @@ public class AuthController {
         return authService.refreshToken(token.getToken());
     }
 
-    @PostMapping("/get-service-jwt")
+    @PostMapping("/admin/get-service-jwt")
     public ResponseEntity<?> getServiceJwt(@RequestBody ServiceJwtRequest request) {
         return authService.getServiceJwt(request); 
     }
