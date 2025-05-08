@@ -38,6 +38,9 @@ func ValidateAccessToken() func(next http.Handler) http.Handler {
 				return
 			}
 
+			// test without validate access token
+			// ctxWithUser := context.WithValue(r.Context(), ContextKeyUserId, "1")
+
 			next.ServeHTTP(w, r.WithContext(ctxWithUser))
 		})
 	}

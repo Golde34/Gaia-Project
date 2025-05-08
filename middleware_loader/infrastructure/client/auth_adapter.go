@@ -165,8 +165,8 @@ func (adapter *AuthAdapter) GetServiceJWT(serviceName, userId string) (string, e
 		"service": serviceName,
 		"userId": utils.ParseFloatValue(userId),
 	}
-	authServiceURL := base.AuthServiceURL + "/auth/get-service-jwt"
-	headers := utils.BuildDefaultHeaders()
+	authServiceURL := base.AuthServiceURL + "/auth/admin/get-service-jwt"
+	headers := utils.BuildAuthorizationHeaders(enums.AS, "1")
 	bodyResult, err := utils.BaseAPI(authServiceURL, "POST", body, headers)
 	if err != nil {
 		return "", err
