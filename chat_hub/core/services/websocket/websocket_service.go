@@ -2,6 +2,7 @@ package services
 
 import (
 	services "chat_hub/core/services/chat"
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -25,6 +26,7 @@ var upgrader = websocket.Upgrader{
 var userConnections sync.Map
 
 func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("WebSocket upgrade error:", err)
@@ -39,7 +41,7 @@ func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 	}
 
 	log.Println("Client connected, jwt:", jwt)
-	userId := s.validateUserJwt(jwt)
+	userId := s.validateUserJwt(ctx, jwt)
 
 	if existingConn, ok := userConnections.Load(userId); ok {
 		log.Println("Closing existing connection for user:", userId)
@@ -76,8 +78,8 @@ func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (s *WebSocketService) validateUserJwt(jwt string) string {
-	userId, err := services.NewAuthService().ValidateJwt(jwt)
+func (s *WebSocketService) validateUserJwt(ctx context.Context, jwt string) string {
+	userId, err := services.NewAuthService().ValidateJwt(ctx, jwt)
 	if err != nil {
 		log.Println("JWT validation error, it should never happen:", err)
 		return ""
