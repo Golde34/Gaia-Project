@@ -42,6 +42,7 @@ import { getUserGithubInfoReducer } from "./contribution_tracker/user-commit.red
 import { getProjectAndRepoRequestReducer } from "./contribution_tracker/project-commit.reducer";
 import { compareCommitsReducer, getProjectContributionReducer, getUserContributionsReducer } from "./contribution_tracker/contribution.reducer";
 import { createScheduleGroupReducer, scheduleGroupListReducer } from "./schedule_plan/schedule-group.reducers";
+import { getNotificationJwt } from "../actions/auth_service/auth.actions";
 
 export const reducer = combineReducers({
     // auth service
@@ -59,6 +60,7 @@ export const reducer = combineReducers({
     llmModels: getAllLLMModelsReducer,
     userModelUpdate: updateUserModelReducer,
     userChatHubJwt: getChatHubJwtReducer,
+    notificationJwt: getNotificationJwt,
     // task manager
     projectList: projectListReducer,
     projectDetail: projectDetailReducer,

@@ -17,7 +17,7 @@ function ContentArea() {
   const jwtUserChatHub = useSelector((state) => state.userChatHubJwt)
   const { loading, error, chatHubJwt } = jwtUserChatHub;
   const getUserJwt = useCallback(() => {
-    dispatch(getUserChatHubJwt("ChatHub"));
+    dispatch(getUserChatHubJwt());
   }, [dispatch]);
   const debounceRef = useRef(null);
 
