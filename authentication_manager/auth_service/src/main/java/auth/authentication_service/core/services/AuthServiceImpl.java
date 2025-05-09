@@ -3,6 +3,7 @@ package auth.authentication_service.core.services;
 import auth.authentication_service.core.domain.dto.TokenDto;
 import auth.authentication_service.core.domain.dto.UserPermissionDto;
 import auth.authentication_service.core.domain.dto.request.ServiceJwtRequest;
+import auth.authentication_service.core.domain.dto.request.ValidateJwtRequest;
 import auth.authentication_service.core.domain.dto.response.CheckTokenDtoResponse;
 import auth.authentication_service.core.domain.dto.response.SignInDtoResponse;
 import auth.authentication_service.core.domain.entities.AuthToken;
@@ -227,7 +228,8 @@ public class AuthServiceImpl implements AuthService {
                         .matchingResponseMessage(new GenericResponse<>("Service not found", ResponseEnum.msg401));
             }
 
-            String jwtToken = tokenService.generateServiceToken(user.getUsername(), request.getService(), serviceDuration);
+            String jwtToken = tokenService.generateServiceToken(user.getUsername(), request.getService(),
+                    serviceDuration);
             return genericResponse
                     .matchingResponseMessage(new GenericResponse<>(jwtToken, ResponseEnum.msg200));
         } catch (Exception e) {
@@ -250,5 +252,19 @@ public class AuthServiceImpl implements AuthService {
             }
         }
         return null;
+    }
+
+    @Override
+    public ResponseEntity<?> validateServiceJwt(ValidateJwtRequest request) {
+        try {
+            String username= tokenService.validateServiceToken(request.getJwt(), request.getService());
+            String userId = userStore.findByUsername(username).getId().toString();
+            return genericResponse.matchingResponseMessage(new GenericResponse<>(userId, ResponseEnum.msg200));
+        } catch (Exception e) {
+            log.error("Error during validate service jwt: {}", e.getMessage(), e);
+            return genericResponse
+                    .matchingResponseMessage(
+                            new GenericResponse<>("The system encountered an unexpected error", ResponseEnum.msg500));
+        }
     }
 }

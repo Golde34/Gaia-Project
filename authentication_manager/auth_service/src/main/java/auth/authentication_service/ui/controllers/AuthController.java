@@ -5,6 +5,7 @@ import auth.authentication_service.core.domain.dto.TokenDto;
 import auth.authentication_service.core.domain.dto.UserPermissionDto;
 import auth.authentication_service.core.domain.dto.request.ServiceJwtRequest;
 import auth.authentication_service.core.domain.dto.request.SignInDtoRequest;
+import auth.authentication_service.core.domain.dto.request.ValidateJwtRequest;
 import auth.authentication_service.core.domain.enums.ResponseEnum;
 import auth.authentication_service.core.services.interfaces.AuthService;
 import auth.authentication_service.core.services.interfaces.UserService;
@@ -80,5 +81,9 @@ public class AuthController {
     public ResponseEntity<?> getServiceJwt(@RequestBody ServiceJwtRequest request) {
         return authService.getServiceJwt(request); 
     }
-    
+
+    @PostMapping("/admin/validate-service-jwt")
+    public ResponseEntity<?> validateServiceJwt(@RequestBody ValidateJwtRequest request) throws Exception{
+        return authService.validateServiceJwt(request); 
+    }
 }

@@ -15,4 +15,5 @@ public interface TokenService {
     CheckTokenDtoResponse checkToken(String token);
     Boolean validateToken(String token);
     String generateServiceToken(String userId, String service, Duration duration);   
+    String validateServiceToken(String token, String service);
 }
