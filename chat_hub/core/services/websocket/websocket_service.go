@@ -32,13 +32,14 @@ func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 	}
 	defer conn.Close()
 
-	userId := r.URL.Query().Get("userId")
-	if userId == "" {
-		log.Println("Missing userId in WebSocket connection")
+	jwt := r.URL.Query().Get("jwt")
+	if jwt == "" || jwt == "null" || len(jwt) < 10 {
+		log.Println("Missing jwt in WebSocket connection")
 		return
 	}
 
-	log.Println("Client connected, userId:", userId)
+	log.Println("Client connected, jwt:", jwt)
+	userId := s.validateUserJwt(jwt)
 
 	if existingConn, ok := userConnections.Load(userId); ok {
 		log.Println("Closing existing connection for user:", userId)
@@ -75,6 +76,16 @@ func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+func (s *WebSocketService) validateUserJwt(jwt string) string {
+	userId, err := services.NewAuthService().ValidateJwt(jwt)
+	if err != nil {
+		log.Println("JWT validation error, it should never happen:", err)
+		return ""
+	}
+	log.Println("JWT validated successfully, userId:", userId)
+	return userId
+}
+
 func (s *WebSocketService) handleService(messageMap map[string]interface{}, userId string) {
 	switch messageMap["type"] {
 	case "chat_message":
@@ -90,7 +101,6 @@ func (s *WebSocketService) handleService(messageMap map[string]interface{}, user
 		log.Println("Unknown message type:", messageMap["type"])
 	}
 }
-
 
 func (s *WebSocketService) SendToUser(userId string, message []byte) {
 	log.Println("Attempting to send message to user:", userId)
