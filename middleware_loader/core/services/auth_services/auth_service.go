@@ -61,7 +61,7 @@ func (s *AuthService) GaiaAutoSignin(ctx context.Context, input model.SigninInpu
 
 func (s *AuthService) CheckToken(ctx context.Context, accessToken string) (response_dtos.TokenResponse, error) {
 	existedUserAccessToken, err := redis_cache.GetKey(ctx, accessToken)
-	if err == nil || existedUserAccessToken != "" {
+	if err == nil && existedUserAccessToken != "" {
 		log.Println("Token found in Redis: ", existedUserAccessToken)
 		var tr response_dtos.TokenResponse
 		if err := json.Unmarshal([]byte(existedUserAccessToken), &tr); err != nil {
@@ -109,10 +109,24 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (st
 }
 
 func (s *AuthService) GetServiceJWT(ctx context.Context, serviceName, userId string) (string, error) {
+	existedServiceJWT, err := redis_cache.GetKey(ctx, serviceName+userId)
+	if err == nil && existedServiceJWT != "" {
+		log.Println("Service JWT found in Redis: ", existedServiceJWT)
+		return existedServiceJWT, nil
+	}
 	serviceJWT, err := client.IAuthAdapter(&adapter.AuthAdapter{}).GetServiceJWT(serviceName, userId)
 	if err != nil {
 		return "", err
-	} else {
-		return serviceJWT, nil
 	}
+
+	go s.buildServiceJwtRedis(ctx, serviceName+userId, serviceJWT)
+
+	return serviceJWT, nil
+}
+
+func (s *AuthService) buildServiceJwtRedis(ctx context.Context, key, jwt string) error {
+	// All of service jst ttl is 1 hour
+	redis_cache.SetKeyWithTTL(ctx, key, jwt, time.Duration(1)*time.Hour)
+	log.Println("Set service JWT in Redis of key: ", key, " successfully")
+	return nil
 }
