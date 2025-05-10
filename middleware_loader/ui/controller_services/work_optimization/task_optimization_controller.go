@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"middleware_loader/core/middleware"
 	mapper "middleware_loader/core/port/mapper/request"
 	services "middleware_loader/core/services/work_optimization"
 	"middleware_loader/ui/controller_services/controller_utils"
@@ -17,7 +18,9 @@ func OptimizeTaskByUser(w http.ResponseWriter, r *http.Request, taskOptimization
 		http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
 		return
 	}
-	input := mapper.OptimizeTaskByUserRequestDTOMapper(body)
+
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	input := mapper.OptimizeTaskByUserRequestDTOMapper(body, userId)
 
 	result, err := taskOptimizationService.OptimizeTaskByUser(input)
 	if err != nil {

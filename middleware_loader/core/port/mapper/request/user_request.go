@@ -24,9 +24,9 @@ func GetUserId(userId string) *request_dtos.UserIdInputDTO {
 	return &input
 }
 
-func GetUserIdInBody(body map[string]interface{}) *request_dtos.UserIdInputDTO {
+func GetUserIdInBody(userId string) *request_dtos.UserIdInputDTO {
 	var input request_dtos.UserIdInputDTO
-	input.UserId = utils.GetFloatValue(body, "userId", 0)
+	input.UserId = utils.ParseFloatValue(userId) 
 	return &input
 }
 

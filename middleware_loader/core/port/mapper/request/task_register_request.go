@@ -8,7 +8,6 @@ import (
 func RegisterTaskConfigRequestDTOMapper(body map[string]interface{}, userId string) *request_dtos.TaskRegisterConfigRequestDTO {
 	var input request_dtos.TaskRegisterConfigRequestDTO
 	input.UserId = utils.ParseFloatValue(userId) 
-	input.UserId = utils.GetFloatValue(body, "userId", 0)
 	input.SleepDuration = utils.GetFloatValue(body, "sleepDuration", 0)
 	input.StartSleepTime = utils.GetStringValue(body, "startSleepTime", "")
 	input.EndSleepTime = utils.GetStringValue(body, "endSleepTime", "")
