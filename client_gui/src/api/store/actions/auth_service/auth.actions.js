@@ -90,6 +90,7 @@ export const getNotificationJwt = () => async (dispatch) => {
             service: "NotifyAgent",
         }
         const response = await serverRequest('/auth/get-service-jwt', HttpMethods.POST, portName.middleware, body);
+        localStorage.setItem('notificationJwt', response.data.jwt);
         const data = JSON.stringify(response.data);
         dispatch({ type: GET_NOTIFICATION_JWT_SUCCESS, payload: data });
     } catch (error) {

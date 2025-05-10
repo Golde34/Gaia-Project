@@ -20,13 +20,7 @@ function ContentArea() {
     debounceRef.current = setTimeout(() => {
       userNotification();
     }, 200);
-  })
-
-  useEffect(() => {
-    if (notificationJwt) {
-      localStorage.setItem('notificationJwt', JSON.parse(notificationJwt).jwt);
-    }
-  })
+  }, [])
 
   return (
     <div className="grid md:grid-cols-3 grid-cols-1 w-full">
