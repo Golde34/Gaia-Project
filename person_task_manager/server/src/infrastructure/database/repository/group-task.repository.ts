@@ -1,4 +1,4 @@
-import { DeleteResult } from "mongodb";
+import { DeleteResult, ObjectId } from "mongodb";
 import { GroupTaskEntity } from "../model-repository/group-task.model";
 import { UpdateWriteOpResult } from "mongoose";
 import { ActiveStatus, BooleanStatus, Status } from "../../../core/domain/enums/enums";
@@ -83,8 +83,19 @@ class GroupTaskRepository {
     }
 
     async pullTaskFromSpecifiedGroupTask(groupTaskId: string, taskId: string): Promise<UpdateWriteOpResult> {
-        return await GroupTaskEntity
-            .updateOne({ _id: groupTaskId }, { $pull: { tasks: taskId } });
+        const groupId = new ObjectId(groupTaskId);  
+        const taskObjectId = new ObjectId(taskId);  
+
+        try {
+            return await GroupTaskEntity
+                .updateOne(
+                    { _id: groupId },  
+                    { $pull: { tasks: taskObjectId } }  
+                );
+        } catch (error) {
+            console.error('Error during pull operation:', error);
+            throw error;
+        }
     }
 
     async findActiveTasksInActiveGroupTask(groupTaskId: string): Promise<any> {
@@ -97,7 +108,7 @@ class GroupTaskRepository {
     }
 
     async findDefaultGroupTaskByProjectId(projectId: string): Promise<IGroupTaskEntity[]> {
-        return await ProjectEntity.find({ projectId: projectId, activeStatus: ActiveStatus.active, isDefault: BooleanStatus.true})
+        return await ProjectEntity.find({ projectId: projectId, activeStatus: ActiveStatus.active, isDefault: BooleanStatus.true })
     }
 
     async checkExitedTask(taskId: string, groupTaskId: string): Promise<boolean> {
