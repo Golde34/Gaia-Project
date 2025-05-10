@@ -2,7 +2,6 @@ import { Flex, TextInput } from "@tremor/react"
 import { SearchIcon } from "@heroicons/react/outline"
 import { useDispatch, useSelector } from "react-redux"
 import { signout } from "../api/store/actions/auth_service/auth.actions";
-import { useCookies } from "react-cookie";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getScreenConfiguration } from "../api/store/actions/middleware_loader/microservices.actions";
 import { useNavigate } from "react-router-dom";
@@ -11,11 +10,7 @@ const Navbar = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const [cookies, setCookies] = useCookies(['accessToken']);
     let auth = false;
-    if (cookies.accessToken) {
-        auth = true;
-    }
     const user = localStorage.getItem("userInfo");
     if (user) {
         auth = true;

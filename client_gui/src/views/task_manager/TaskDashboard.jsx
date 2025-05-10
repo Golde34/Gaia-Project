@@ -6,14 +6,11 @@ import TabGroupTask from "../../screens/groupTaskScreen/TabGroupTask";
 import { CreateTaskDialog } from "../../screens/taskScreen/CreateTaskDialog";
 import { CreateNewGroupTask } from "../../screens/groupTaskScreen/CreateNewGroupTask";
 import MessageBox from "../../components/subComponents/MessageBox";
-import { useCookies } from "react-cookie";
 
 const TaskDashboard = (props) => {
     const dispatch = useDispatch();
 
     const projectId = props.projectId;
-    const [cookies] = useCookies(['accessToken'])
-    console.log("my cookie: " + cookies.accessToken)
 
     const listGroupTasks = useSelector((state) => state.groupTaskList);
     const { groupTaskLoading, groupTaskError, groupTasks } = listGroupTasks;

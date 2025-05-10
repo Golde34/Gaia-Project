@@ -4,7 +4,6 @@ import { BrowserRouter } from 'react-router-dom'
 
 import { checkLocalStorage } from './kernels/utils/set-interval'
 import RenderRouter from './kernels/routers'
-import { CookiesProvider } from 'react-cookie'
 import { MultiWSProvider } from './kernels/context/MultiWSContext'
 import { config } from './kernels/configs/configuration';
 
@@ -21,7 +20,6 @@ function App() {
 
   return (
     <>
-      <CookiesProvider>
         <main className='flex'>
           <MultiWSProvider endpoints={endpoints}>
             <BrowserRouter basename='/client-gui'>
@@ -29,7 +27,6 @@ function App() {
             </BrowserRouter>
           </MultiWSProvider >
         </main>
-      </CookiesProvider>
     </>
   )
 }
