@@ -1,6 +1,6 @@
-import { Flex, TextInput } from "@tremor/react"
-import { SearchIcon } from "@heroicons/react/outline"
-import { useDispatch, useSelector } from "react-redux"
+import { Flex, TextInput } from "@tremor/react";
+import { SearchIcon } from "@heroicons/react/outline";
+import { useDispatch, useSelector } from "react-redux";
 import { signout } from "../api/store/actions/auth_service/auth.actions";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getScreenConfiguration } from "../api/store/actions/middleware_loader/microservices.actions";
@@ -20,30 +20,39 @@ const Navbar = () => {
     const listScreen = useSelector((state) => state.screenList);
     const { loading, error, screens } = listScreen;
 
+    const [query, setQuery] = useState("");
+    const [localScreens, setLocalScreens] = useState(null);  
+
     const getListScreen = useCallback(() => {
         dispatch(getScreenConfiguration());
     }, [dispatch]);
-    const debounceRef = useRef(null);
 
     useEffect(() => {
-        clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            getListScreen();
-            localStorage.setItem("gaia-screens", JSON.stringify(screens));
-        }, 200);
+        const savedScreens = localStorage.getItem("gaia-screens");
+        if (savedScreens) {
+            setLocalScreens(JSON.parse(savedScreens)); 
+        } else {
+            getListScreen();  
+        }
     }, [getListScreen]);
 
-    const [query, setQuery] = useState("");
+    useEffect(() => {
+        if (screens.length > 0) {
+            localStorage.setItem("gaia-screens", JSON.stringify(screens));  
+            setLocalScreens(screens);  
+        }
+    }, [screens]);
+
     const filterScreens = query === ''
         ? []
-        : screens.filter((screen) =>
+        : (localScreens || []).filter((screen) =>
             screen.screenName.toLowerCase().includes(query.toLowerCase())
         );
 
     const signoutHandler = () => {
         dispatch(signout());
-        navigate("/signin"); 
-    }
+        navigate("/signin");
+    };
 
     const wrapperRef = useRef(null);
     useEffect(() => {
@@ -100,7 +109,6 @@ const Navbar = () => {
                 )}
             {/* Make item end */}
             <Flex justifyContent="end">
-
                 {!auth ? (
                     <div className="flex">
                         <a href="/client-gui/signin">
@@ -124,10 +132,9 @@ const Navbar = () => {
                         </a>
                     </div>
                 )}
-
             </Flex>
         </div>
     )
-}
+};
 
 export default Navbar;

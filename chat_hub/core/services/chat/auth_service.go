@@ -17,7 +17,7 @@ func NewAuthService() *AuthService {
 
 func (s *AuthService) ValidateJwt(ctx context.Context, jwt string) (string, error) {
 	// get jwt from redis
-	key := constants.RedisPrefix + "validate_jwt::" + jwt
+	key := constants.RedisPrefix + constants.ValidateServiceJwt + jwt
 	existedUserChatHub, err := redis_cache.GetKey(ctx, key)
 	if err == nil && existedUserChatHub != "" {
 		log.Println("JWT found in Redis: ", existedUserChatHub)
