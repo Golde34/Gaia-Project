@@ -37,12 +37,8 @@ export const MultiWSProvider = ({
 
   const connect = useCallback(
     (channel, url) => {
-      console.log(`[${channel}] connecting to ${url}?userId=${userId}`);
       console.log(`[${channel}] connecting to ${url}?jwt=${localStorage.getItem(jwtKey[channel])}`);
-      const client = new W3CWebSocket(`${url}?userId=${userId}`);
-
-      // console.log(`[${channel}] connecting to ${url}?jwt=${localStorage.getItem(jwtKey[channel])}`);
-      // const client = new W3CWebSocket(`${url}?jwt=${localStorage.getItem(jwtKey[channel])}`);
+      const client = new W3CWebSocket(`${url}?jwt=${localStorage.getItem(jwtKey[channel])}`);
       client.onopen = () => {
         console.log(`[${channel}] connected`);
         setIsConnected((prev) => ({ ...prev, [channel]: true }));

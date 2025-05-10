@@ -27,3 +27,8 @@ var (
 	TaskManagerDetail = "Task Manager"
 	SchedulePlanDetail = "Schedule Plan"
 )
+
+var (
+	RedisPrefix = "middleware_loader::"
+	GetServiceJwt = "get_service_jwt::"
+)
