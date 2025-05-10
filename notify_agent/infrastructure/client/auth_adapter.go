@@ -17,12 +17,12 @@ func NewAuthAdapter() *AuthAdapter {
 }
 
 func (adapter *AuthAdapter) ValidateServiceJwt(jwt string) (string, error) {
-	serviceName := "ChatHub" 
+	serviceName := "NotifyAgent"
 	authServiceURL := base.AuthServiceURL + "/auth/admin/validate-service-jwt"
 	headers := utils.BuildAuthorizationHeaders("authentication_service", "1")
 	body := map[string]interface{}{
 		"service": serviceName,
-		"jwt":         jwt,
+		"jwt":     jwt,
 	}
 	bodyResult, err := utils.BaseAPI(authServiceURL, "POST", body, headers)
 	if err != nil {
@@ -31,7 +31,7 @@ func (adapter *AuthAdapter) ValidateServiceJwt(jwt string) (string, error) {
 
 	bodyResultMap, ok := bodyResult.(map[string]interface{})
 	if !ok {
-		return "", fmt.Errorf("failed to convert object: %w", err) 
+		return "", fmt.Errorf("failed to convert object: %w", err)
 	}
 
 	return bodyResultMap["message"].(string), nil
