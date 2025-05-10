@@ -1,7 +1,7 @@
 import { Flex, TextInput } from "@tremor/react";
 import { SearchIcon } from "@heroicons/react/outline";
 import { useDispatch, useSelector } from "react-redux";
-import { signout } from "../api/store/actions/auth_service/auth.actions";
+import { getNotificationJwt, getUserChatHubJwt, signout } from "../api/store/actions/auth_service/auth.actions";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getScreenConfiguration } from "../api/store/actions/middleware_loader/microservices.actions";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +16,11 @@ const Navbar = () => {
         auth = true;
     }
 
+    const signoutHandler = () => {
+        dispatch(signout());
+        navigate("/signin");
+    };
+
     // List screen active
     const listScreen = useSelector((state) => state.screenList);
     const { loading, error, screens } = listScreen;
@@ -28,7 +33,7 @@ const Navbar = () => {
     }, [dispatch]);
 
     useEffect(() => {
-        const savedScreens = localStorage.getItem("gaia-screens");
+        const savedScreens = localStorage.getItem("gaiaScreens");
         if (savedScreens) {
             setLocalScreens(JSON.parse(savedScreens));
         } else {
@@ -38,7 +43,7 @@ const Navbar = () => {
 
     useEffect(() => {
         if (loading == false && screens.length > 0) {
-            localStorage.setItem("gaia-screens", JSON.stringify(screens));
+            localStorage.setItem("gaiaScreens", JSON.stringify(screens));
             setLocalScreens(screens);
         }
     }, [screens]);
@@ -48,11 +53,6 @@ const Navbar = () => {
         : (localScreens || []).filter((screen) =>
             screen.screenName.toLowerCase().includes(query.toLowerCase())
         );
-
-    const signoutHandler = () => {
-        dispatch(signout());
-        navigate("/signin");
-    };
 
     const wrapperRef = useRef(null);
     useEffect(() => {
@@ -67,6 +67,47 @@ const Navbar = () => {
         };
     }, []);
 
+    // Loading notification websocket
+    const jwtNotification = useSelector((state) => state.notificationJwt)
+    const { notiLoading, notiError, notificationJwt } = jwtNotification;
+    const userNotification = useCallback(() => {
+        dispatch(getNotificationJwt());
+    }, [dispatch]);
+    const debounceRef = useRef(null);
+
+    useEffect(() => {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            userNotification();
+        }, 200);
+    }, [])
+
+    useEffect(() => {
+        if (notiLoading == false && notificationJwt) {
+            console.log("Connected to notification service");
+        }
+    }, [notificationJwt]);
+
+    // Loading chat hub websocket
+    const jwtUserChatHub = useSelector((state) => state.userChatHubJwt)
+    const { chLoading, chError, chatHubJwt } = jwtUserChatHub;
+    const getUserJwt = useCallback(() => {
+        dispatch(getUserChatHubJwt());
+    }, [dispatch]);
+    const chDebounceRef = useRef(null);
+
+    useEffect(() => {
+        clearTimeout(chDebounceRef.current);
+        chDebounceRef.current = setTimeout(() => {
+            getUserJwt();
+        }, 200);
+    }, []);
+
+    useEffect(() => {
+        if (chLoading == false &&chatHubJwt) {
+            console.log("Connected to chat service");
+        }
+    })
     return (
         <div id="top" className="relative w-full sm:flex justify-between item-center p-2 mb-10">
             {/* Make item center */}
