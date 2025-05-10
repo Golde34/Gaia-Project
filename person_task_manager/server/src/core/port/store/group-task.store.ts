@@ -59,6 +59,7 @@ class GroupTaskStore {
     }
 
     async pullTaskFromSpecifiedGroupTask(groupTaskId: string, taskId: string): Promise<UpdateWriteOpResult> {
+        console.log(`Pulling task ${taskId} from group task ${groupTaskId}`);
         return await groupTaskRepository.pullTaskFromSpecifiedGroupTask(groupTaskId, taskId);
     }
 
