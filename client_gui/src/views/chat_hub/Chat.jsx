@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, Card, Col, Grid, Metric, TextInput } from '@tremor/react';
 import Template from '../../components/template/Template';
 import { useMultiWS } from '../../kernels/context/MultiWSContext';
-import { useDispatch, useSelector } from 'react-redux';
-import { getUserChatHubJwt } from '../../api/store/actions/auth_service/auth.actions';
+import { useDispatch } from 'react-redux';
 
 function ContentArea() {
   const dispatch = useDispatch();
@@ -12,27 +11,7 @@ function ContentArea() {
   const [chatInput, setChatInput] = useState('');
   const [chatHistory, setChatHistory] = useState([]);      // array of {from, text, taskResult}
   const [lastBotIndex, setLastBotIndex] = useState(0);     // how many bot msgs we've consumed
-  const endRef = useRef(null);
-
-  const jwtUserChatHub = useSelector((state) => state.userChatHubJwt)
-  const { loading, error, chatHubJwt } = jwtUserChatHub;
-  const getUserJwt = useCallback(() => {
-    dispatch(getUserChatHubJwt());
-  }, [dispatch]);
-  const debounceRef = useRef(null);
-
-  useEffect(() => {
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      getUserJwt();
-    }, 200);
-  }, []);
-
-  useEffect(() => {
-    if (chatHubJwt) {
-      localStorage.setItem('chatHubJwt', JSON.parse(chatHubJwt).jwt);
-    }
-  })
+  const endRef = useRef(null); 
 
   useEffect(() => {
     console.log("Received chat messages in: ", messages.chat);
@@ -70,10 +49,10 @@ function ContentArea() {
   const handleSend = () => {
     if (!chatInput.trim()) return;
     setChatHistory(prev => [...prev, { from: 'user', text: chatInput }]);
-    console.log("Chathub JWT: ", chatHubJwt);
+    console.log("Chathub JWT: ", localStorage.getItem('chatHubJwt'));
     sendMessage('chat', JSON.stringify({
       type: 'chat_message',
-      chatHubJwt,
+      localStorage: localStorage.getItem('chatHubJwt'),
       text: chatInput
     }));
     setChatInput('');

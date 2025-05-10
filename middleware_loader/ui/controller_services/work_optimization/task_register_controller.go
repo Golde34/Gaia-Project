@@ -21,7 +21,7 @@ func RegisterTaskConfig(w http.ResponseWriter, r *http.Request, taskRegisterServ
 	}
 	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	registerTaskInput := mapper.RegisterTaskConfigRequestDTOMapper(body, userId)
-	userInput := mapper.GetUserIdInBody(body)
+	userInput := mapper.GetUserIdInBody(userId)
 
 	graphqlQueryModel := []base_dtos.GraphQLQuery{}
 	graphqlQueryModel = append(graphqlQueryModel, base_dtos.GraphQLQuery{FunctionName: "registerTaskConfig", QueryInput: registerTaskInput, QueryOutput: model.RegisterTaskConfig{}})

@@ -9,8 +9,6 @@ export const MultiWSProvider = ({
   endpoints = {},       // { notification: "ws://...", chat: "ws://..." }
   reconnectDelay = 5000, // ms
 }) => {
-  const userId = "1";
-
   const jwtKey = {
     notification: "notificationJwt",
     chat: "chatHubJwt",
@@ -65,7 +63,7 @@ export const MultiWSProvider = ({
 
       socketsRef.current[channel] = client;
     },
-    [userId, attemptReconnect]
+    [attemptReconnect]
   );
 
   const sendMessage = (channel, msg) => {

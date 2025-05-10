@@ -58,11 +58,11 @@ export const userSigninReducer = (state = {}, action) => {
 export const getChatHubJwtReducer = (state = {}, action) => {
     switch (action.type) {
         case GET_CHAT_HUB_JWT_REQUEST:
-            return { loading: true };
+            return { chLoading: true };
         case GET_CHAT_HUB_JWT_SUCCESS:
-            return { loading: false, chatHubJwt: action.payload };
+            return { chLoading: false, chatHubJwt: action.payload };
         case GET_CHAT_HUB_JWT_FAIL:
-            return { loading: false, error: action.payload };
+            return { chLoading: false, chError: action.payload };
         default:
             return state; I
     }
@@ -71,11 +71,11 @@ export const getChatHubJwtReducer = (state = {}, action) => {
 export const getNotificationJwtReducer = (state = {}, action) => {
     switch (action.type) {
         case GET_NOTIFICATION_JWT_REQUEST:
-            return { loading: true };
+            return { notiLoading: true };
         case GET_NOTIFICATION_JWT_SUCCESS:
-            return { loading: false, notificationJwt: action.payload };
+            return { notiLoading: false, notificationJwt: action.payload };
         case GET_NOTIFICATION_JWT_FAIL:
-            return { loading: false, error: action.payload };
+            return { notiLoading: false, notiError: action.payload };
         default:
             return state;
     }

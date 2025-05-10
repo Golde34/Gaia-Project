@@ -58,8 +58,10 @@ export const signin = (username, password) => async (dispatch) => {
 export const signout = () => (dispatch) => {
     localStorage.removeItem('gaiaInfo');
     localStorage.removeItem('userInfo');
-    localStorage.removeItem('gaiaAccessToken');
     localStorage.removeItem('bossInfo');
+    localStorage.removeItem('notificationJwt');
+    localStorage.removeItem('chatHubJwt');
+    localStorage.removeItem('gaiaScreens');
     // remove coookies
     dispatch({ type: USER_SIGNOUT });
 };
@@ -71,6 +73,7 @@ export const getUserChatHubJwt = () => async (dispatch) => {
             service: "ChatHub",
         }
         const response = await serverRequest('/auth/get-service-jwt', HttpMethods.POST, portName.middleware, body);
+        localStorage.setItem('chatHubJwt', response.data.jwt);
         const data = JSON.stringify(response.data);
         dispatch({ type: GET_CHAT_HUB_JWT_SUCCESS, payload: data });
     } catch (error) {
@@ -90,6 +93,7 @@ export const getNotificationJwt = () => async (dispatch) => {
             service: "NotifyAgent",
         }
         const response = await serverRequest('/auth/get-service-jwt', HttpMethods.POST, portName.middleware, body);
+        localStorage.setItem('notificationJwt', response.data.jwt);
         const data = JSON.stringify(response.data);
         dispatch({ type: GET_NOTIFICATION_JWT_SUCCESS, payload: data });
     } catch (error) {

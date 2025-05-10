@@ -10,7 +10,6 @@ import ListCenterButton from "../../components/subComponents/ListCenterButton";
 import cn from "../../kernels/utils/cn";
 
 const CalendarChart = (props) => {
-    const userId = "1";
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
@@ -26,29 +25,29 @@ const CalendarChart = (props) => {
     useEffect(() => {
         const handleMessage = (message) => {
             const data = JSON.parse(message);
-            if (data.type === 'task_optimized' && data.userId === userId) {
+            if (data.type === 'task_optimized') {
                 setIsLoading(false);
                 setResult('success');
                 checkEmptyTaskList();
-            } else if (data.type === 'task_failed' && data.userId === userId) {
+            } else if (data.type === 'task_failed') {
                 setIsLoading(false);
                 setResult('failed');
             }
         };
 
         messages.notification.forEach(handleMessage);
-    }, [messages, userId]);
+    }, [messages]);
 
-    const handleOptimizeClick = (userId) => {
+    const handleOptimizeClick = () => {
         setIsLoading(true);
         setResult(null);
-        dispatch(optimizeTaskByUserId(userId))
-        sendMessage(JSON.stringify({ type: 'optimize_task', userId }));
+        dispatch(optimizeTaskByUserId())
+        sendMessage(JSON.stringify({ type: 'optimize_task' }));
     };
 
     const listCenterButton = [
         { name: 'Add Event', color: 'rose' },
-        { name: 'Optimize task list', color: 'green', onClick: () => handleOptimizeClick(userId) },
+        { name: 'Optimize task list', color: 'green', onClick: () => handleOptimizeClick() },
         { name: 'Full calendar', color: 'indigo', onClick: () => navigate('/calendar') },
     ]
 

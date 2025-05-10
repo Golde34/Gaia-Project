@@ -19,12 +19,12 @@ func NewAuthAdapter() *AuthAdapter {
 }
 
 func (adapter *AuthAdapter) ValidateServiceJwt(jwt string) (string, error) {
-	serviceName := "ChatHub" 
+	serviceName := "ChatHub"
 	authServiceURL := base.AuthServiceURL + "/auth/admin/validate-service-jwt"
 	headers := utils.BuildAuthorizationHeaders("authentication_service", "1")
 	body := map[string]interface{}{
 		"service": serviceName,
-		"jwt":         jwt,
+		"jwt":     jwt,
 	}
 	bodyResult, err := utils.BaseAPI(authServiceURL, "POST", body, headers)
 	if err != nil {
@@ -33,7 +33,7 @@ func (adapter *AuthAdapter) ValidateServiceJwt(jwt string) (string, error) {
 
 	bodyResultMap, ok := bodyResult.(map[string]interface{})
 	if !ok {
-		return "", fmt.Errorf("failed to convert object: %w", err) 
+		return "", fmt.Errorf("failed to convert object: %w", err)
 	}
 
 	return bodyResultMap["message"].(string), nil
@@ -50,7 +50,7 @@ func (adapter *AuthAdapter) GetUserLLMModelConfig(userId string) (response_dtos.
 
 	bodyResultMap, ok := bodyResult.(map[string]interface{})
 	if !ok {
-		return response_dtos.UserLLMModelConfigDTO{}, fmt.Errorf("failed to convert object: %w", err) 
+		return response_dtos.UserLLMModelConfigDTO{}, fmt.Errorf("failed to convert object: %w", err)
 	}
 	data, err := json.Marshal(bodyResultMap["message"])
 	if err != nil {
