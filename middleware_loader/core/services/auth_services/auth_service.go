@@ -9,6 +9,7 @@ import (
 
 	request_dtos "middleware_loader/core/domain/dtos/request"
 	response_dtos "middleware_loader/core/domain/dtos/response"
+	"middleware_loader/core/domain/enums"
 	"middleware_loader/core/port/client"
 	"middleware_loader/core/validator"
 	redis_cache "middleware_loader/infrastructure/cache"
@@ -79,7 +80,7 @@ func (s *AuthService) CheckToken(ctx context.Context, accessToken string) (respo
 		return response_dtos.TokenResponse{}, fmt.Errorf("token is not valid")
 	}
 
-	go s.buildAccessTokenRedis(ctx, tokenResponse)
+	s.buildAccessTokenRedis(ctx, tokenResponse)
 
 	return tokenResponse, nil
 }
@@ -109,8 +110,11 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (st
 }
 
 func (s *AuthService) GetServiceJWT(ctx context.Context, serviceName, userId string) (string, error) {
-	existedServiceJWT, err := redis_cache.GetKey(ctx, serviceName+userId)
-	if err == nil && existedServiceJWT != "" {
+	key := enums.RedisPrefix + enums.GetServiceJwt + serviceName + "::" + userId
+	existedServiceJWT, err := redis_cache.GetKey(ctx, key)
+	log.Println("Get service JWT from redis: ", existedServiceJWT)
+	log.Println("Get error from redis: ", err)
+	if err == nil {
 		log.Println("Service JWT found in Redis: ", existedServiceJWT)
 		return existedServiceJWT, nil
 	}
@@ -119,7 +123,7 @@ func (s *AuthService) GetServiceJWT(ctx context.Context, serviceName, userId str
 		return "", err
 	}
 
-	go s.buildServiceJwtRedis(ctx, serviceName+userId, serviceJWT)
+	s.buildServiceJwtRedis(ctx, key, serviceJWT)
 
 	return serviceJWT, nil
 }

@@ -1,13 +1,15 @@
 package redis_cache
 
 import (
-    "context"
-    "fmt"
-    "sync"
-    "time"
+	"context"
+	"fmt"
+	"log"
+	"sync"
+	"time"
 
-    "middleware_loader/kernel/configs"
-    "github.com/redis/go-redis/v9"
+	"middleware_loader/kernel/configs"
+
+	"github.com/redis/go-redis/v9"
 )
 
 var (
@@ -37,7 +39,10 @@ func SetKey(ctx context.Context, key string, value interface{}) error {
 }
 
 func SetKeyWithTTL(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
-    return Client().Set(ctx, key, value, ttl).Err()
+    result := Client().Set(ctx, key, value, ttl).Err()
+    log.Println("Set key in Redis: ", key, " with value: ", value, " and ttl: ", ttl)
+    log.Println("Set error in Redis: ", result)
+    return result
 }
 
 func GetKey(ctx context.Context, key string) (string, error) {
