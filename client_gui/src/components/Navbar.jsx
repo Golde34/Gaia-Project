@@ -21,7 +21,7 @@ const Navbar = () => {
     const { loading, error, screens } = listScreen;
 
     const [query, setQuery] = useState("");
-    const [localScreens, setLocalScreens] = useState(null);  
+    const [localScreens, setLocalScreens] = useState(null);
 
     const getListScreen = useCallback(() => {
         dispatch(getScreenConfiguration());
@@ -30,16 +30,16 @@ const Navbar = () => {
     useEffect(() => {
         const savedScreens = localStorage.getItem("gaia-screens");
         if (savedScreens) {
-            setLocalScreens(JSON.parse(savedScreens)); 
+            setLocalScreens(JSON.parse(savedScreens));
         } else {
-            getListScreen();  
+            getListScreen();
         }
     }, [getListScreen]);
 
     useEffect(() => {
-        if (screens.length > 0) {
-            localStorage.setItem("gaia-screens", JSON.stringify(screens));  
-            setLocalScreens(screens);  
+        if (loading == false && screens.length > 0) {
+            localStorage.setItem("gaia-screens", JSON.stringify(screens));
+            setLocalScreens(screens);
         }
     }, [screens]);
 
@@ -71,42 +71,36 @@ const Navbar = () => {
         <div id="top" className="relative w-full sm:flex justify-between item-center p-2 mb-10">
             {/* Make item center */}
             <Flex justifyContent="center"></Flex>
-                {loading ? (
-                    <p>Loading</p>
-                ) : error ? (
-                    <p>{error}</p>
-                ) : (
-                    <div ref={wrapperRef} className="w-full">
-                        <TextInput
-                            icon={SearchIcon}
-                            placeholder="Search Gaia Features"
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                        />
-                        {query && (
-                            <div className="absolute z-10 bg-indigo-500 text-white border border-gray-300 w-full mt-1 rounded">
-                                {filterScreens.length > 0 ? (
-                                    filterScreens.map((screen) => (
-                                        <div
-                                            key={screen.id}
-                                            className="p-2 hover:bg-indigo-200 cursor-pointer"
-                                            onClick={() => {
-                                                setQuery("");
-                                                navigate(`${screen.screenUrl}`);
-                                            }}
-                                        >
-                                            {screen.screenName}
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="p-2 text-indigo-500">
-                                        Screen not found
-                                    </p>
-                                )}
-                            </div>
+            <div ref={wrapperRef} className="w-full">
+                <TextInput
+                    icon={SearchIcon}
+                    placeholder="Search Gaia Features"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                />
+                {query && (
+                    <div className="absolute z-10 bg-indigo-500 text-white border border-gray-300 w-full mt-1 rounded">
+                        {filterScreens.length > 0 ? (
+                            filterScreens.map((screen) => (
+                                <div
+                                    key={screen.id}
+                                    className="p-2 hover:bg-indigo-200 cursor-pointer"
+                                    onClick={() => {
+                                        setQuery("");
+                                        navigate(`${screen.screenUrl}`);
+                                    }}
+                                >
+                                    {screen.screenName}
+                                </div>
+                            ))
+                        ) : (
+                            <p className="p-2 text-indigo-500">
+                                Screen not found
+                            </p>
                         )}
                     </div>
                 )}
+            </div>
             {/* Make item end */}
             <Flex justifyContent="end">
                 {!auth ? (
