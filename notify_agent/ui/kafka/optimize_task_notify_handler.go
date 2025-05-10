@@ -8,7 +8,7 @@ import (
 	base_dtos "notify_agent/core/domain/dtos/base"
 	"notify_agent/core/port/mapper"
 	"notify_agent/core/port/store"
-	services "notify_agent/core/services/work_optimization"
+	"notify_agent/core/usecase"
 	database_mongo "notify_agent/kernel/database/mongo"
 )
 
@@ -54,7 +54,7 @@ func OptimizeTaskCmd(key []byte, data map[string]interface{}, db database_mongo.
 	}
 		
 	notifyStore := store.NewNotificationStore(db)
-	optimNotify := services.NewOptimizeTaskNotifyService(notifyStore)
+	optimNotify := usecase.NewOptimizeTaskUseCase(notifyStore)
 	result, err := optimNotify.OptimizeTaskNoti(messageId, userId, optimizeStatus, errorStatus, notificationFlowId)
 	if err != nil {
 		fmt.Println("Error initializing optimize task")

@@ -10,6 +10,8 @@ import (
 type Config struct {
 	Url  string
 	Port string
+
+	AuthServicePort string
 }
 
 func (in *Config) LoadEnv() (Config, error) {
@@ -21,8 +23,11 @@ func (in *Config) LoadEnv() (Config, error) {
 	url := os.Getenv("URL")
 	port := os.Getenv("PORT")
 
+	authServicePort := os.Getenv("AUTH_SERVICE_PORT")
+
 	return Config{
 		Url:  url,
 		Port: port,
+		AuthServicePort: authServicePort,
 	}, nil
 }

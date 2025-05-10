@@ -1,9 +1,11 @@
-package services
+package websocket_service
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
+	services "notify_agent/core/services/business"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -24,6 +26,7 @@ var upgrader = websocket.Upgrader{
 var userConnections sync.Map
 
 func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("WebSocket upgrade error:", err)
@@ -31,13 +34,14 @@ func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 	}
 	defer conn.Close()
 
-	userId := r.URL.Query().Get("userId")
-	if userId == "" {
-		log.Println("Missing userId in WebSocket connection")
+	jwt := r.URL.Query().Get("jwt")
+	if jwt == "" {
+		log.Println("Missing jwt in WebSocket connection")
 		return
 	}
 
-	log.Println("Client connected, userId:", userId)
+	log.Println("Client connected, jwt:", jwt)
+	userId := s.validateUserJwt(ctx, jwt)
 
 	if existingConn, ok := userConnections.Load(userId); ok {
 		log.Println("Closing existing connection for user:", userId)
@@ -63,6 +67,16 @@ func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 		}
 		log.Printf("Message received from userId %s: %s", userId, message)
 	}
+}
+
+func (s *WebSocketService) validateUserJwt(ctx context.Context, jwt string) string {
+	userId, err := services.NewAuthService().ValidateJwt(ctx, jwt)
+	if err != nil {
+		log.Println("JWT validation error, it should never happen:", err)
+		return ""
+	}
+	log.Println("JWT validated successfully, userId:", userId)
+	return userId
 }
 
 func SendToUser(userId string, message []byte) {

@@ -1,4 +1,4 @@
-package services
+package usecase
 
 import (
 	"context"
@@ -7,36 +7,36 @@ import (
 	"notify_agent/core/domain/entity"
 	"notify_agent/core/port/mapper"
 	"notify_agent/core/port/store"
-	websocket "notify_agent/core/services/websocket"
+	websocket_service "notify_agent/core/services/websocket"
 	"time"
 )
 
-type OptimizeTaskNotifyService struct {
+type OptimizeTaskUseCase struct {
 	Store store.NotificationStore
 }
 
-func NewOptimizeTaskNotifyService(store *store.NotificationStore) *OptimizeTaskNotifyService {
-	return &OptimizeTaskNotifyService{
+func NewOptimizeTaskUseCase(store *store.NotificationStore) *OptimizeTaskUseCase {
+	return &OptimizeTaskUseCase{
 		Store: *store,
 	}
 }
 
-func (service *OptimizeTaskNotifyService) OptimizeTaskNoti(messageId, userId, optimizedStatus, errorStatus, notificationFlowId string) (bool, error) {
+func (usecase *OptimizeTaskUseCase) OptimizeTaskNoti(messageId, userId, optimizedStatus, errorStatus, notificationFlowId string) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	log.Println("InitOptimizeTask ", ctx, messageId)
 
 	if errorStatus == "INIT" {
-		return service.initOptimizeTaskNoti(ctx, messageId, userId, optimizedStatus, errorStatus, notificationFlowId)
+		return usecase.initOptimizeTaskNoti(ctx, messageId, userId, optimizedStatus, errorStatus, notificationFlowId)
 	} else {
-		return service.finalizeOptimizeTaskNoti(ctx, messageId, userId, optimizedStatus, errorStatus, notificationFlowId)
+		return usecase.finalizeOptimizeTaskNoti(ctx, messageId, userId, optimizedStatus, errorStatus, notificationFlowId)
 	}
 }
 
-func (service *OptimizeTaskNotifyService) initOptimizeTaskNoti(ctx context.Context, messageId, userId, optimizedStatus, errorStatus, notificationFlowId string) (bool, error) {
+func (usecase *OptimizeTaskUseCase) initOptimizeTaskNoti(ctx context.Context, messageId, userId, optimizedStatus, errorStatus, notificationFlowId string) (bool, error) {
 	request := mapper.InsertOptimizeTaskRequestMapper(messageId, userId, optimizedStatus, errorStatus, notificationFlowId)
 	notification := request_dtos.NewInsertNotificationRequestDTO().MapToEntity(request)
-	savedTask, err := service.Store.CreateNotification(ctx, notification)
+	savedTask, err := usecase.Store.CreateNotification(ctx, notification)
 	if err != nil {
 		log.Println("Error saving notification: ", err)
 		return false, err
@@ -46,30 +46,30 @@ func (service *OptimizeTaskNotifyService) initOptimizeTaskNoti(ctx context.Conte
 	return true, nil
 }
 
-func (service *OptimizeTaskNotifyService) finalizeOptimizeTaskNoti(ctx context.Context, messageId, userId, optimizedStatus, errorStatus, notificationFlowId string) (bool, error) {
-	noti := service.validateUpdateOptimizeTaskNoti(ctx, messageId, userId, optimizedStatus, errorStatus, notificationFlowId)
+func (usecase *OptimizeTaskUseCase) finalizeOptimizeTaskNoti(ctx context.Context, messageId, userId, optimizedStatus, errorStatus, notificationFlowId string) (bool, error) {
+	noti := usecase.validateUpdateOptimizeTaskNoti(ctx, messageId, userId, optimizedStatus, errorStatus, notificationFlowId)
 	if (entity.Notification{}) == noti {
 		log.Println("Notification not found")
-		websocket.NewWebSocketService().HandleOptimizeTask(userId, false)
+		websocket_service.NewWebSocketService().HandleOptimizeTask(userId, false)
 		return false, nil
 	}
 	notification := mapper.UpdateOptimizeTaskRequestMapper(messageId, optimizedStatus, errorStatus, noti)
 	log.Println("Mapped Notification for update case: ", notification)
 
-	savedTask, err := service.Store.UpdateNotification(ctx, notification.ID, notification)
+	savedTask, err := usecase.Store.UpdateNotification(ctx, notification.ID, notification)
 	if err != nil {
 		log.Println("Error updating notification: ", err)
-		websocket.NewWebSocketService().HandleOptimizeTask(userId, false)
+		websocket_service.NewWebSocketService().HandleOptimizeTask(userId, false)
 		return false, err
 	}
 
 	log.Println("Optimize task saved successfully: ", savedTask)
 
-	websocket.NewWebSocketService().HandleOptimizeTask(userId, true)
+	websocket_service.NewWebSocketService().HandleOptimizeTask(userId, true)
 	return true, nil
 }
 
-func (service *OptimizeTaskNotifyService) validateUpdateOptimizeTaskNoti(ctx context.Context,
+func (usecase *OptimizeTaskUseCase) validateUpdateOptimizeTaskNoti(ctx context.Context,
 	messageId, userId, optimizedStatus, errorStatus, notificationFlowId string) entity.Notification {
 
 	if messageId == "" || userId == "" || optimizedStatus == "" || errorStatus == "" || notificationFlowId == "" {
@@ -77,7 +77,7 @@ func (service *OptimizeTaskNotifyService) validateUpdateOptimizeTaskNoti(ctx con
 		return entity.Notification{}
 	}
 
-	savedNoti, err := service.Store.GetNotificationByNotificationFLowId(ctx, notificationFlowId)
+	savedNoti, err := usecase.Store.GetNotificationByNotificationFLowId(ctx, notificationFlowId)
 	if err != nil {
 		log.Println("Error retrieving notification: ", err)
 		return entity.Notification{}
