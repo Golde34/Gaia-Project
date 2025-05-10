@@ -10,3 +10,8 @@ const (
 	TaskResultCmd = "taskResult"
 	CreateTaskCmd = "gaiaCreateTask"
 )
+
+const (
+	RedisPrefix = "chat_hub::"
+	ValidateServiceJwt = "validate_jwt::"
+)

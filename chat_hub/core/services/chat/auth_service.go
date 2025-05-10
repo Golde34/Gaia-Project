@@ -1,6 +1,7 @@
 package services
 
 import (
+	"chat_hub/core/domain/constants"
 	redis_cache "chat_hub/infrastructure/cache"
 	"chat_hub/infrastructure/client"
 	"context"
@@ -16,7 +17,8 @@ func NewAuthService() *AuthService {
 
 func (s *AuthService) ValidateJwt(ctx context.Context, jwt string) (string, error) {
 	// get jwt from redis
-	existedUserChatHub, err := redis_cache.GetKey(ctx, jwt)
+	key := constants.RedisPrefix + "validate_jwt::" + jwt
+	existedUserChatHub, err := redis_cache.GetKey(ctx, key)
 	if err == nil && existedUserChatHub != "" {
 		log.Println("JWT found in Redis: ", existedUserChatHub)
 		return existedUserChatHub, nil
@@ -26,7 +28,7 @@ func (s *AuthService) ValidateJwt(ctx context.Context, jwt string) (string, erro
 	if err != nil {
 		return "", err
 	}
-	go s.buildValidateServiceJwt(ctx, jwt, userId)
+	go s.buildValidateServiceJwt(ctx, key, userId)
 	return userId, nil
 
 }
