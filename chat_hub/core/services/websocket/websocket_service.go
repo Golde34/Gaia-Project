@@ -124,30 +124,6 @@ func (s *WebSocketService) SendToUser(userId string, message []byte) {
 	}
 }
 
-func (s *WebSocketService) HandleOptimizeTask(userId string, status bool) {
-	log.Printf("Starting optimization task for user %s...", userId)
-
-	response := map[string]interface{}{
-		"type":   "task_optimized",
-		"userId": userId,
-		"status": "success",
-	}
-	if !status {
-		response["status"] = "failed"
-		response["type"] = "task_failed"
-	}
-
-	responseBytes, err := json.Marshal(response)
-	if err != nil {
-		log.Println("Error marshaling response:", err)
-		return
-	}
-	log.Println("Response:", string(responseBytes))
-
-	LogActiveConnections()
-	s.SendToUser(userId, responseBytes)
-}
-
 func LogActiveConnections() {
 	log.Println("Active connections:")
 	userConnections.Range(func(key, value interface{}) bool {
