@@ -174,6 +174,7 @@ class TaskService {
                 const deleteTask = await taskStore.deleteTask(taskId);
                 this.taskCache.clear(InternalCacheConstants.TASK_COMPLETED + groupTaskId);
 
+                this.taskServiceUtilsImpl.clearTaskCache(this.taskCache, groupTaskId, -1);
                 // push kafka message
                 const messages = [{
                     value: JSON.stringify(createMessage(

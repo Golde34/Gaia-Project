@@ -124,7 +124,11 @@ func (in *TaskDetailResponseDTO) MapperTaskDetail(response interface{}) TaskDeta
 	var groupTask = responseData["groupTask"].(map[string]interface{})
 
 	out.Title = task["title"].(string)
-	out.Description = task["description"].(string)
+	if task["description"] == nil {
+		out.Description = ""
+	} else {
+		out.Description = task["description"].(string)
+	}
 	out.Priority = utils.ConvertStringToStringArray(task["priority"].([]interface{}))
 	out.Status = task["status"].(string)
 	out.Duration = task["duration"].(float64)
