@@ -69,7 +69,7 @@ public class JwtUtil {
     public String validateServiceToken(String token, String service) {
         final String username = extractClaim(token, Claims::getSubject);
         final String tokenService = (String) extractAllClaims(token).get("service");
-        if (tokenService.equals(service) && !isTokenExpired(token)) {
+        if (tokenService.equals(service)) {
             return username;
         }
         return null;

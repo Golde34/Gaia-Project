@@ -258,7 +258,12 @@ public class AuthServiceImpl implements AuthService {
     public ResponseEntity<?> validateServiceJwt(ValidateJwtRequest request) {
         try {
             String username= tokenService.validateServiceToken(request.getJwt(), request.getService());
-            String userId = userStore.findByUsername(username).getId().toString();
+            User user = userStore.findByUsername(username);
+            if (user == null) {
+                return genericResponse
+                        .matchingResponseMessage(new GenericResponse<>("User not found", ResponseEnum.msg401));
+            }
+            String userId = user.getId().toString();
             return genericResponse.matchingResponseMessage(new GenericResponse<>(userId, ResponseEnum.msg200));
         } catch (Exception e) {
             log.error("Error during validate service jwt: {}", e.getMessage(), e);
