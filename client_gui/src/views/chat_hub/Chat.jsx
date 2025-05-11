@@ -3,6 +3,7 @@ import { Button, Card, Col, Grid, Metric, TextInput } from '@tremor/react';
 import Template from '../../components/template/Template';
 import { useMultiWS } from '../../kernels/context/MultiWSContext';
 import { useDispatch } from 'react-redux';
+import CardItem from '../../components/subComponents/CardItem';
 
 function ContentArea() {
   const dispatch = useDispatch();
@@ -11,7 +12,7 @@ function ContentArea() {
   const [chatInput, setChatInput] = useState('');
   const [chatHistory, setChatHistory] = useState([]);      // array of {from, text, taskResult}
   const [lastBotIndex, setLastBotIndex] = useState(0);     // how many bot msgs we've consumed
-  const endRef = useRef(null); 
+  const endRef = useRef(null);
 
   useEffect(() => {
     console.log("Received chat messages in: ", messages.chat);
@@ -82,14 +83,8 @@ function ContentArea() {
                   {/* Task Result card (if any) */}
                   {msg.taskResult && (
                     <div className="mt-4">
-                      <div className="bg-green-100 p-4 rounded-xl">
-                        <h4 className="font-bold">Task Created</h4>
-                        <p><strong>Title:</strong> {msg.taskResult.title}</p>
-                        <p><strong>Priority:</strong> {msg.taskResult.priority}</p>
-                        <p><strong>Start Date:</strong> {new Date(msg.taskResult.startDate).toLocaleString()}</p>
-                        <p><strong>Deadline:</strong> {new Date(msg.taskResult.deadline).toLocaleString()}</p>
-                        {/* Add more task details here if needed */}
-                      </div>
+                      <CardItem key={msg.taskResult._id} task={msg.taskResult}
+                        taskId={msg.taskResult._id} />
                     </div>
                   )}
                 </Col>
