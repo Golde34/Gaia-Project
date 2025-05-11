@@ -65,7 +65,7 @@ func ConsumerGroup(bootstrapServers string, topics []string, group string, name 
 	defer cancel()
 	cg, err := sarama.NewConsumerGroup([]string{bootstrapServers}, group, config)
 	if err != nil {
-		log.Fatal("NewConsumerGroup err: ", err)
+		log.Println("NewConsumerGroup err: ", err)
 	}
 	defer cg.Close()
 	var wg sync.WaitGroup

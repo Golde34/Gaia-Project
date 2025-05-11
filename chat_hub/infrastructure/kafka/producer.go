@@ -18,7 +18,7 @@ func Producer(bootstrapServer, topic string, message *base_dtos.KafkaMessage) {
 	config.Producer.Return.Successes = true
 	producer, err := sarama.NewAsyncProducer([]string{bootstrapServer}, config)
 	if err != nil {
-		log.Fatal("Failed to create producer:", err)
+		log.Println("Failed to create producer:", err)
 	}
 	defer producer.AsyncClose()
 

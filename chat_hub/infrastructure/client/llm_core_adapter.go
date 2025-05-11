@@ -19,14 +19,14 @@ func (adapter *LLMCoreAdapter) UserPrompt(input request_dtos.LLMQueryRequestDTO)
 	headers := utils.BuildDefaultHeaders()
 	bodyResult, err := utils.BaseAPI(userPrompURL, enums.POST, input, headers)
 	if err != nil {
-		log.Fatal("Cannot connect with Gaia Bot, try later: ", err)
+		log.Println("Cannot connect with Gaia Bot, try later: ", err)
 		return nil, err
 	}
 
 	log.Println("Response from LLMCoreAdapter: ", bodyResult)
 	bodyResultMap, ok := bodyResult.(map[string]interface{})
 	if !ok {
-		log.Fatal("Error converting response to map: ", bodyResult)
+		log.Println("Error converting response to map: ", bodyResult)
 		return nil, err
 	}
 
