@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, Card, Col, Grid, Metric, TextInput } from '@tremor/react';
+import { Badge, Button, Card, Col, Grid, Metric, TextInput } from '@tremor/react';
 import Template from '../../components/template/Template';
 import { useMultiWS } from '../../kernels/context/MultiWSContext';
-import { useDispatch } from 'react-redux';
-import CardItem from '../../components/subComponents/CardItem';
+import { useNavigate } from 'react-router-dom';
 
 function ContentArea() {
-  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { messages, isConnected, sendMessage } = useMultiWS();
 
   const [chatInput, setChatInput] = useState('');
@@ -59,6 +58,10 @@ function ContentArea() {
     setChatInput('');
   };
 
+  const redirectToTaskDetail = (taskId) => {
+    navigate(`/task/detail/${taskId}`);
+  };
+
   return (
     <>
       <Metric className="text-2xl font-bold text-gray-800 mb-5">
@@ -83,8 +86,33 @@ function ContentArea() {
                   {/* Task Result card (if any) */}
                   {msg.taskResult && (
                     <div className="mt-4">
-                      <CardItem key={msg.taskResult._id} task={msg.taskResult}
-                        taskId={msg.taskResult._id} />
+                      <div className="bg-green-100 p-4 rounded-xl">
+                        <h4 className="font-bold">Task Created</h4>
+                        <p><strong>Title:</strong> {msg.taskResult.title}</p>
+                        <p><strong>Priority:</strong> {msg.taskResult.priority}</p>
+                        <p><strong>Start Date:</strong> {new Date(msg.taskResult.startDate).toLocaleString()}</p>
+                        <p><strong>Deadline:</strong> {new Date(msg.taskResult.deadline).toLocaleString()}</p>
+                        {/* Add more task details here if needed */}
+                      </div>
+                      <button onClick={() => { redirectToTaskDetail(msg.taskResult.taskId) }} className="me-4 mb-4 bg-green-100">
+                        <Card className="w-full" decoration="top" decorationColor="green" >
+                          <Metric>{msg.taskResult.title}</Metric>
+                          <Grid numItems={2}>
+                            <Col numColSpan={1}>
+                              <p><strong>Priority:</strong> {msg.taskResult.priority}</p>
+                            </Col>
+                            <Col numColSpan={1}>
+                              <p><strong>Status:</strong> {msg.taskResult.status}</p>
+                            </Col>
+                            <Col numColSpan={1}>
+                              <p><strong>Deadline:</strong> {new Date(msg.taskResult.deadline).toLocaleString()}</p>
+                            </Col>
+                            <Col numColSpan={1}>
+                              <p><strong>Start Date:</strong> {new Date(msg.taskResult.startDate).toLocaleString()}</p>
+                            </Col>
+                          </Grid>
+                        </Card>
+                      </button>
                     </div>
                   )}
                 </Col>
