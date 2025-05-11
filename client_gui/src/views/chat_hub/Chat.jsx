@@ -87,17 +87,12 @@ function ContentArea() {
                   {msg.taskResult && (
                     <div className="mt-4">
                       <div className="bg-green-100 p-4 rounded-xl">
-                        <h4 className="font-bold">Task Created</h4>
-                        <p><strong>Title:</strong> {msg.taskResult.title}</p>
-                        <p><strong>Priority:</strong> {msg.taskResult.priority}</p>
-                        <p><strong>Start Date:</strong> {new Date(msg.taskResult.startDate).toLocaleString()}</p>
-                        <p><strong>Deadline:</strong> {new Date(msg.taskResult.deadline).toLocaleString()}</p>
-                        {/* Add more task details here if needed */}
-                      </div>
-                      <button onClick={() => { redirectToTaskDetail(msg.taskResult.taskId) }} className="me-4 mb-4 bg-green-100">
-                        <Card className="w-full" decoration="top" decorationColor="green" >
-                          <Metric>{msg.taskResult.title}</Metric>
+                        <button onClick={() => { redirectToTaskDetail(msg.taskResult.taskId) }} className="bg-green-100 w-full mt-2 text-left">
+                          <h4 className="font-bold">Task {msg.taskResult.actionType}</h4>
                           <Grid numItems={2}>
+                            <Col numColSpan={2}>
+                              <p><strong>Title:</strong> {msg.taskResult.title}</p>
+                            </Col>  
                             <Col numColSpan={1}>
                               <p><strong>Priority:</strong> {msg.taskResult.priority}</p>
                             </Col>
@@ -105,14 +100,14 @@ function ContentArea() {
                               <p><strong>Status:</strong> {msg.taskResult.status}</p>
                             </Col>
                             <Col numColSpan={1}>
-                              <p><strong>Deadline:</strong> {new Date(msg.taskResult.deadline).toLocaleString()}</p>
+                              <p><strong>Deadline:</strong> {msg.taskResult.deadline}</p>
                             </Col>
                             <Col numColSpan={1}>
-                              <p><strong>Start Date:</strong> {new Date(msg.taskResult.startDate).toLocaleString()}</p>
+                              <p><strong>Start Date:</strong> {msg.taskResult.startDate}</p>
                             </Col>
                           </Grid>
-                        </Card>
-                      </button>
+                        </button>
+                      </div>
                     </div>
                   )}
                 </Col>
