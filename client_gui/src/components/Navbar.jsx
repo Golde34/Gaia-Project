@@ -104,7 +104,7 @@ const Navbar = () => {
     }, []);
 
     useEffect(() => {
-        if (chLoading == false &&chatHubJwt) {
+        if (chLoading == false && chatHubJwt) {
             console.log("Connected to chat service");
         }
     })

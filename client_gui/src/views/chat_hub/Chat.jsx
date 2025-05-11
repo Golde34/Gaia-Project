@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, Card, Col, Grid, Metric, TextInput } from '@tremor/react';
+import { Badge, Button, Card, Col, Grid, Metric, TextInput } from '@tremor/react';
 import Template from '../../components/template/Template';
 import { useMultiWS } from '../../kernels/context/MultiWSContext';
-import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 function ContentArea() {
-  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { messages, isConnected, sendMessage } = useMultiWS();
 
   const [chatInput, setChatInput] = useState('');
   const [chatHistory, setChatHistory] = useState([]);      // array of {from, text, taskResult}
   const [lastBotIndex, setLastBotIndex] = useState(0);     // how many bot msgs we've consumed
-  const endRef = useRef(null); 
+  const endRef = useRef(null);
 
   useEffect(() => {
     console.log("Received chat messages in: ", messages.chat);
@@ -58,6 +58,10 @@ function ContentArea() {
     setChatInput('');
   };
 
+  const redirectToTaskDetail = (taskId) => {
+    navigate(`/task/detail/${taskId}`);
+  };
+
   return (
     <>
       <Metric className="text-2xl font-bold text-gray-800 mb-5">
@@ -83,12 +87,26 @@ function ContentArea() {
                   {msg.taskResult && (
                     <div className="mt-4">
                       <div className="bg-green-100 p-4 rounded-xl">
-                        <h4 className="font-bold">Task Created</h4>
-                        <p><strong>Title:</strong> {msg.taskResult.title}</p>
-                        <p><strong>Priority:</strong> {msg.taskResult.priority}</p>
-                        <p><strong>Start Date:</strong> {new Date(msg.taskResult.startDate).toLocaleString()}</p>
-                        <p><strong>Deadline:</strong> {new Date(msg.taskResult.deadline).toLocaleString()}</p>
-                        {/* Add more task details here if needed */}
+                        <button onClick={() => { redirectToTaskDetail(msg.taskResult.taskId) }} className="bg-green-100 w-full mt-2 text-left">
+                          <h4 className="font-bold">Task {msg.taskResult.actionType}</h4>
+                          <Grid numItems={2}>
+                            <Col numColSpan={2}>
+                              <p><strong>Title:</strong> {msg.taskResult.title}</p>
+                            </Col>  
+                            <Col numColSpan={1}>
+                              <p><strong>Priority:</strong> {msg.taskResult.priority}</p>
+                            </Col>
+                            <Col numColSpan={1}>
+                              <p><strong>Status:</strong> {msg.taskResult.status}</p>
+                            </Col>
+                            <Col numColSpan={1}>
+                              <p><strong>Deadline:</strong> {msg.taskResult.deadline}</p>
+                            </Col>
+                            <Col numColSpan={1}>
+                              <p><strong>Start Date:</strong> {msg.taskResult.startDate}</p>
+                            </Col>
+                          </Grid>
+                        </button>
                       </div>
                     </div>
                   )}
