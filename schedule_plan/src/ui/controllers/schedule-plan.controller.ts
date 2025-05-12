@@ -13,6 +13,16 @@ class SchedulePlanController {
             next(error);
         }
     }
+
+    async scheduleForUser(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const userId = req.params.userId;
+            // return await schedulePlanService.scheduleForUser(userId);
+            return undefined;
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export const schedulePlanController = new SchedulePlanController();
