@@ -3,7 +3,7 @@ import { authServiceAdapter } from "../../infrastructure/client/auth-service.ada
 import { ISchedulePlanEntity } from "../../infrastructure/entities/schedule-plan.entity";
 import { schedulePlanRepository } from "../../infrastructure/repository/schedule-plan.repository";
 import { returnInternalServiceErrorResponse } from "../../kernel/utils/return-result";
-import { IResponse, msg200, msg400, msg500 } from "../common/response";
+import { IResponse, msg200, msg400 } from "../common/response";
 import { InternalCacheConstants } from "../domain/constants/constants";
 import { ActiveStatus } from "../domain/enums/enums";
 
@@ -88,7 +88,7 @@ class SchedulePlanService {
             }
             const schedulePlanCache = this.schedulePlanCache.get(InternalCacheConstants.SCHEDULE_PLAN + userId);
             if (!schedulePlanCache) {
-                const schedulePlan = await schedulePlanRepository.findSchedulePlanByUserId(userId); 
+                const schedulePlan = await schedulePlanRepository.findSchedulePlanByUserId(userId);
                 if (!schedulePlan) {
                     console.error(`Cannot find schedule plan by user id: ${userId}`);
                     return null;
