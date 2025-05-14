@@ -243,3 +243,42 @@ Be polite like a butler or an assistant.
 Your answer should be less than 50 words.
 
 User's query: {query}"""
+
+PARSING_DATE_PROMPT = """You are a helpful assistant.
+Your task is to receive information about dates and times (e.g., "today", "in 3 days", "5am this time next week") and return Python code that can be executed to get the exact datetime string for those time expressions.
+
+The input will be a JSON object. Example:
+{{'key_1': 'time string 1', 'key_2': 'time string 2',...}}
+The output should be a JSON object with the same keys. Example:
+{{'key_1': 'python code for time string 1', 'key_2': 'python code for time string 2',...}}
+
+#### Notes:
+- Only return the required JSON output — do not include any explanation or anything else.
+- The values in the output object must be Python code that can be executed using Python’s eval() function.
+- Please consider both the start date and the deadline when generating the result (e.g., if the deadline is "4 days" and a start date is provided, then the deadline should be 4 days from the start date).
+
+#### Examples:
+Input: {{'StartDate': 'now', 'Deadline': 'next month'}}
+Output: {{
+  "StartDate": "(lambda: __import__('datetime').datetime.now().isoformat())()",
+  "Deadline": "(lambda: (__import__('datetime').datetime.now().replace(day=1) + __import__('datetime').timedelta(days=32)).replace(day=1).isoformat())()"
+}}
+
+===============================
+
+Input: {{'StartDate': None, 'Deadline': 'Saturday'}}
+Output: {{
+  "StartDate": "None",
+  "Deadline": "(lambda: (__import__('datetime').datetime.now() + __import__('datetime').timedelta((5 - __import__('datetime').datetime.now().weekday()) % 7)).replace(hour=0, minute=0, second=0, microsecond=0).isoformat())()"
+}}
+
+===============================
+
+Input: {{'StartDate': 'The begin of next week', 'Deadline': '7 days after that'}}
+Output: {{
+  "StartDate": "(lambda: (__import__('datetime').datetime.now() + __import__('datetime').timedelta(days=(7 - __import__('datetime').datetime.now().weekday()))).replace(hour=0, minute=0, second=0, microsecond=0).isoformat())()",
+  "Deadline": "(lambda: ((__import__('datetime').datetime.now() + __import__('datetime').timedelta(days=(7 - __import__('datetime').datetime.now().weekday()))) + __import__('datetime').timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0).isoformat())()"
+}}
+
+### Actual Input: {input}
+Output:"""
