@@ -203,7 +203,7 @@ class ScheduleTaskService {
 
     async findScheduleTaskByScheduleGroup(scheduleGroupId: string): Promise<IScheduleTaskEntity[]> {
         try {
-            const scheduleTask = await scheduleTaskRepository.finddByScheduleGroup(scheduleGroupId);
+            const scheduleTask = await scheduleTaskRepository.findByScheduleGroup(scheduleGroupId);
             return scheduleTask;
         } catch (error) {
             console.error("Error on findScheduleTaskByScheduleGroup: ", error);
@@ -219,6 +219,21 @@ class ScheduleTaskService {
             });
         } catch (error: any) {
             return msg500(error.message.toString());
+        }
+    }
+    
+    async findUserDailyTasks(schedulePlanId: string, taskBatch: number, date: Date): Promise<IScheduleTaskEntity[] | null> {
+        try {
+            const dailyTasks = await scheduleTaskRepository.findUserDailyTasks(schedulePlanId, taskBatch, date);
+            const sortedTasks = dailyTasks.sort((a, b) => {
+                const startDateA = new Date(a.startDate);
+                const startDateB = new Date(b.startDate);
+                return startDateA.getTime() - startDateB.getTime();
+            });
+            return sortedTasks;
+        } catch (error: any) {
+            console.error("Error on findUserDailyTasks: ", error);
+            return null;
         }
     }
 }

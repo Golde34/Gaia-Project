@@ -2,6 +2,7 @@ import CacheSingleton from "../../infrastructure/cache/internal-cache/cache-sing
 import { authServiceAdapter } from "../../infrastructure/client/auth-service.adapter";
 import { ISchedulePlanEntity } from "../../infrastructure/entities/schedule-plan.entity";
 import { schedulePlanRepository } from "../../infrastructure/repository/schedule-plan.repository";
+import { scheduleTaskRepository } from "../../infrastructure/repository/schedule-task.repository";
 import { returnInternalServiceErrorResponse } from "../../kernel/utils/return-result";
 import { IResponse, msg200, msg400 } from "../common/response";
 import { InternalCacheConstants } from "../domain/constants/constants";
