@@ -11,7 +11,7 @@ import { dashboardRouter } from "./ui/routers/dashboard.router";
 import { KafkaHandler } from "./infrastructure/kafka/kafka-handler";
 import { kafkaController } from "./infrastructure/kafka/kafka-controller";
 import { scheduleTaskRouter } from "./ui/routers/schedule-task.router";
-import { scheduleGroupRouter } from "./ui/routers/schedule-group-router";
+import { scheduleGroupRouter } from "./ui/routers/schedule-group.router";
 
 async function main(): Promise<void> {
     validateEnvironmentVars();

@@ -171,7 +171,7 @@ class ScheduleTaskService {
         }
     }
 
-    async getScheduleTaskByBatchNumber(schedulePlanId: string, batchNumber: number): Promise<any> {
+    async getScheduleTaskByBatchNumber(schedulePlanId: string, batchNumber: number): Promise<IScheduleTaskEntity[]> {
         try {
             return await scheduleTaskRepository.findByTaskBatch(schedulePlanId, batchNumber);
         } catch (error) {

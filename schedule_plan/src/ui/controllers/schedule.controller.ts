@@ -67,10 +67,7 @@ class ScheduleController {
     async getActiveTaskBatch(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = parseInt(req.params.userId, 10);
-            const activeTaskBatch = await scheduleTaskUsecase.getActiveTaskBatch(userId);
-            return msg200({
-                activeTaskBatch 
-            })
+            return await scheduleTaskUsecase.getActiveTaskBatch(userId);
         } catch (error) {
             next(error);
         }

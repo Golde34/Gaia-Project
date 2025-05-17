@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  valkey-node-0:
+    environment:
+      - VALKEY_CLUSTER_ANNOUNCE_IP=host.docker.internal
+  valkey-node-1:
+    environment:
+      - VALKEY_CLUSTER_ANNOUNCE_IP=host.docker.internal
+  valkey-node-2:
+    environment:
+      - VALKEY_CLUSTER_ANNOUNCE_IP=host.docker.internal
+  valkey-node-3:
+    environment:
+      - VALKEY_CLUSTER_ANNOUNCE_IP=host.docker.internal
+  valkey-node-4:
+    environment:
+      - VALKEY_CLUSTER_ANNOUNCE_IP=host.docker.internal
+  valkey-node-5:
+    environment:
+      - VALKEY_CLUSTER_ANNOUNCE_IP=host.docker.internal

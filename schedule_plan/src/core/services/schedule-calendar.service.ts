@@ -32,6 +32,15 @@ class ScheduleCalendarService {
             throw new Error(error.message.toString());
         }
     }
+
+    async findScheduleCalendarByDate(userId: number, date: Date): Promise<any> {
+        try {
+            const scheduleCalendar = await scheduleCalendarRepository.findScheduleCalendarByDate(userId, date);
+            return scheduleCalendar;
+        } catch (error: any) {
+            throw new Error(error.message.toString());
+        }
+    } 
 }
 
 export const scheduleCalendarService = new ScheduleCalendarService();
