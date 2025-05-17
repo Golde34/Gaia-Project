@@ -83,10 +83,8 @@ class ScheduleCalendarUsecase {
                 console.error(`User ${userId} has no schedule calendar for today.`);
                 return await this.createDailyCalendar({userId: userId});
             }
-            return msg200({
-                message: "Get schedule calendar successfully.",
-                tasks: scheduleCalendar.tasks
-            })  
+                
+            return this.createDailyCalendar({userId: userId});
         } catch (error: any) {
             console.error("Error on startScheduleCalendar: ", error);
             return msg400("Cannot start schedule calendar!");
