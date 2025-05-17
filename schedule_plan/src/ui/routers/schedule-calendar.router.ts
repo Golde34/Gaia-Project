@@ -16,10 +16,22 @@ scheduleCalendarRouter.get("/daily-calendar/:userId",
         }
     }
 )
+
 scheduleCalendarRouter.post("/daily-calendar",
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const scheduleCalendarResult = await scheduleCalendarControllerImpl.createDailyCalendar(req, next);
+            return returnResult(scheduleCalendarResult, "FAIL", res, next);
+        } catch (error) {
+            next(error);
+        }
+    }
+)
+
+scheduleCalendarRouter.post("/daily-calendar/start",
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const scheduleCalendarResult = await scheduleCalendarControllerImpl.startDailyCalendar(req, next);
             return returnResult(scheduleCalendarResult, "FAIL", res, next);
         } catch (error) {
             next(error);

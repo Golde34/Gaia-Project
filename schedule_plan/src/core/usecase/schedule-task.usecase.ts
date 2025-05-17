@@ -272,7 +272,10 @@ class ScheduleTaskUsecase {
                 throw new Error(`Cannot find schedule plan by user id: ${userId}`);
             }
 
-            return await scheduleTaskService.getScheduleTaskByBatchNumber(schedulePlan._id, schedulePlan.activeTaskBatch);
+            const scheduleTasks = await scheduleTaskService.getScheduleTaskByBatchNumber(schedulePlan._id, schedulePlan.activeTaskBatch);
+            return msg200({
+                scheduleTasks
+            })
         } catch (error) {
             console.error("Error on getScheduleTasksBatch: ", error);
             return undefined;

@@ -15,6 +15,10 @@ class ScheduleCalendarRepository {
     async updateScheduleCalendar(userId: number, scheduleCalendar: any): Promise<UpdateWriteOpResult> {
         return await ScheduleCalendarEntity.updateOne({ userId: userId }, scheduleCalendar);
     }        
+
+    async findScheduleCalendarByDate(userId: number, date: Date): Promise<IScheduleCalendarEntity | null> {
+        return await ScheduleCalendarEntity.findOne({ userId: userId, startDate: date });
+    }
 }
 
 export const scheduleCalendarRepository = new ScheduleCalendarRepository();

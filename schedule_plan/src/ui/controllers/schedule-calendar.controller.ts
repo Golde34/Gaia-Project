@@ -7,9 +7,8 @@ class ScheduleCalendarController {
 
     async getDailyCalendar(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
-            const userId = req.params.userId;
-            // return await scheduleCalendarUsecase.getDailyCalendar(userId);
-            return undefined;
+            const userId = Number(req.params.userId);
+            return await scheduleCalendarUsecase.getDailyCalendar(userId);
         } catch (error) {
             next(error);
         }
@@ -18,8 +17,15 @@ class ScheduleCalendarController {
     async createDailyCalendar(req: Request, next: Function): Promise<IResponse | undefined> {
         try {
             const userId = req.body.userId;
-            // return await scheduleCalendarUsecase.createDailyCalendar(userId);
-            return undefined;
+            return await scheduleCalendarUsecase.createDailyCalendar(userId);
+        } catch (error) {
+            next(error);
+        }
+    }
+    async startDailyCalendar(req: Request, next: Function): Promise<IResponse | undefined> {
+        try {
+            const userId = req.body.userId;
+            return await scheduleCalendarUsecase.startDailyCalendar(userId);
         } catch (error) {
             next(error);
         }

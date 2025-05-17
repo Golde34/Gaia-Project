@@ -79,6 +79,16 @@ class ScheduleGroupService {
             throw new Error(error.message.toString());
         } 
     }
+
+    async getTasksInAllScheduleGroups(schedulePlanId: string, date: Date): Promise<any> {
+        try {
+            // const scheduleGroups = await scheduleGroupRepository.getTasksInAllScheduleGroups(schedulePlanId, date);
+            // return scheduleGroups;
+            return null;
+        } catch (error: any) {
+            throw new Error(error.message.toString());
+        }
+    }
 }
 
 export const scheduleGroupService = new ScheduleGroupService();
