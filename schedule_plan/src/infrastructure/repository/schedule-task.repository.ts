@@ -4,12 +4,12 @@ import { IScheduleTaskEntity, ScheduleTaskEntity } from "../entities/schedule-ta
 import { ActiveStatus } from "../../core/domain/enums/enums";
 
 class ScheduleTaskRepository {
-    constructor() {}
+    constructor() { }
 
     async createScheduleTask(scheduleTask: any): Promise<IScheduleTaskEntity> {
         return await ScheduleTaskEntity.create(scheduleTask);
     }
-    
+
     async updateScheduleTask(scheduleTaskId: string, scheduleTask: any): Promise<UpdateWriteOpResult> {
         return await ScheduleTaskEntity.updateOne({ _id: scheduleTaskId }, scheduleTask);
     }
@@ -31,7 +31,7 @@ class ScheduleTaskRepository {
     }
 
     async syncScheduleTask(scheduleTaskId: string, isSync: boolean): Promise<UpdateWriteOpResult> {
-        return await ScheduleTaskEntity.updateOne({ _id: scheduleTaskId}, {isSynchronizedWithWO: isSync});
+        return await ScheduleTaskEntity.updateOne({ _id: scheduleTaskId }, { isSynchronizedWithWO: isSync });
     }
 
     async findScheduleTaskByTaskId(taskId: string): Promise<IScheduleTaskEntity | null> {
@@ -43,8 +43,10 @@ class ScheduleTaskRepository {
     }
 
     async findByTaskBatch(schedulePlanId: string, taskBatch: number): Promise<IScheduleTaskEntity[]> {
-        return await ScheduleTaskEntity.find({ schedulePlanId: schedulePlanId, taskBatch: taskBatch, 
-            status: { $ne: 'DONE' }, activeStatus: ActiveStatus.active }).sort({ taskOrder: 1 });
+        return await ScheduleTaskEntity.find({
+            schedulePlanId: schedulePlanId, taskBatch: taskBatch,
+            status: { $ne: 'DONE' }, activeStatus: ActiveStatus.active
+        }).sort({ taskOrder: 1 });
     }
 
     async findAll(schedulePlanId: string): Promise<IScheduleTaskEntity[]> {
@@ -52,11 +54,31 @@ class ScheduleTaskRepository {
     }
 
     async findDistinctTaskBatch(schedulePlanId: string): Promise<number[]> {
-        return await ScheduleTaskEntity.distinct('taskBatch', { schedulePlanId: schedulePlanId, status: { $ne: 'DONE'} });
+        return await ScheduleTaskEntity.distinct('taskBatch', { schedulePlanId: schedulePlanId, status: { $ne: 'DONE' } });
     }
 
-    async finddByScheduleGroup(scheduleGroupId: string): Promise<IScheduleTaskEntity[]> {
+    async findByScheduleGroup(scheduleGroupId: string): Promise<IScheduleTaskEntity[]> {
         return await ScheduleTaskEntity.find({ scheduleGroupId: scheduleGroupId });
+    }
+
+    async findUserDailyTasks(schedulePlanId: string, taskBatch: number, date: Date): Promise<IScheduleTaskEntity[]> {
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+        return await ScheduleTaskEntity.find({
+            $or: [
+                {
+                    schedulePlanId: schedulePlanId, status: { $ne: 'DONE' }, activeStatus: ActiveStatus.active,
+                    scheduleGroupId: { $ne: null }, createDate: { $gte: startOfDay, $lte: endOfDay }
+                }, 
+                {
+                    schedulePlanId: schedulePlanId, status: { $ne: 'DONE' }, activeStatus: ActiveStatus.active,
+                    taskBatch: taskBatch
+                }
+            ]
+
+        })
     }
 }
 
