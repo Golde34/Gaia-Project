@@ -21,5 +21,5 @@ type ITaskAdapter interface {
 	EnableTask(id string) (response_dtos.TaskResponseDTO, error)
 	GetTaskDetail(input request_dtos.GetTaskDetailInputDTO) (interface{}, error)
 	GetDoneTasks(userId string) ([]response_dtos.CountDoneTaskListDTO, error)
-	GetTopTasks(userId string) ([]response_dtos.TaskResponseDTO, error)
+	GetTopTasks(userId string) ([]response_dtos.TopTaskResponse, error)
 }

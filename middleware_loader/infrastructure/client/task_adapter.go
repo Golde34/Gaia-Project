@@ -303,21 +303,30 @@ func (adapter *TaskAdapter) GetDoneTasks(userId string) ([]response_dtos.CountDo
 	return doneTasks, nil
 }
 
-func (adapter *TaskAdapter) GetTopTasks(userId string) ([]response_dtos.TaskResponseDTO, error) {
+func (adapter *TaskAdapter) GetTopTasks(userId string) ([]response_dtos.TopTaskResponse, error) {
 	getTopTasksURL := base.TaskManagerServiceURL + "/dashboard/top-tasks/" + userId
-	var topTasks []response_dtos.TaskResponseDTO
+	var topTasks []response_dtos.TopTaskResponse
 	headers := utils.BuildDefaultHeaders()
 	bodyResult, err := utils.BaseAPI(getTopTasksURL, "GET", nil, headers)
 	if err != nil {
-		return []response_dtos.TaskResponseDTO{}, err
+		return []response_dtos.TopTaskResponse{}, err
 	}
 	bodyResultMap, ok := bodyResult.(map[string]interface{})
 	if !ok {
-		return []response_dtos.TaskResponseDTO{}, nil
+		return []response_dtos.TopTaskResponse{}, nil
 	}
 
 	for _, taskElement := range bodyResultMap["topTasks"].([]interface{}) {
-		task := mapper_response.ReturnTaskObjectMapper(taskElement.(map[string]interface{}))
+		taskMap, ok := taskElement.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		taskData, ok := taskMap["task"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		projectId := taskMap["projectId"].(string)
+		task := mapper_response.ReturnTopTaskObjectMapper(taskData, projectId)
 		topTasks = append(topTasks, *task)
 	}
 

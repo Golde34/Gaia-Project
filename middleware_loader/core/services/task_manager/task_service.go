@@ -179,10 +179,10 @@ func (s *TaskService) GetDoneTasks(userId string) (any, error) {
 	return tasks, nil
 }
 
-func (s *TaskService) GetTopTasks(userId string) ([]response_dtos.TaskResponseDTO, error) {
+func (s *TaskService) GetTopTasks(userId string) ([]response_dtos.TopTaskResponse, error) {
 	tasks, err := client.ITaskAdapter(&adapter.TaskAdapter{}).GetTopTasks(userId)
 	if err != nil {
-		return []response_dtos.TaskResponseDTO{}, err
+		return []response_dtos.TopTaskResponse{}, err
 	}
 	return tasks, nil
 }

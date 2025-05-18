@@ -32,7 +32,7 @@ public class TaskManagerServiceAdapter implements TaskManagerServiceClient {
     public GroupTaskAndProjectResponseDTO getGroupTaskAndProject(String taskId, GetGroupTaskProjectRequestDTO request) {
         try {
             String uri = String.format(getGroupTaskAPI, taskId);
-            log.info("Calling api to taskmanager service: {}", getGroupTaskAPI);
+            log.info("Calling api to taskmanager service: {}", uri);
             ResponseEntity<GeneralResponse<GroupTaskAndProjectResponseDTO>> response = clientTemplate.post(
                     uri, null, request,
                     new ParameterizedTypeReference<GeneralResponse<GroupTaskAndProjectResponseDTO>>() {
@@ -40,7 +40,7 @@ public class TaskManagerServiceAdapter implements TaskManagerServiceClient {
             log.info("Response from taskmanager service: {}", response);
             return Objects.requireNonNull(response.getBody()).getData();
         } catch (Exception e) {
-            log.error("Error when call api to taskmanager service: {}", e.getMessage());
+            log.error("Error when call api to get group task and project in TMservice: {}", e.getMessage());
         }
         return null;
     }
@@ -48,7 +48,7 @@ public class TaskManagerServiceAdapter implements TaskManagerServiceClient {
     public OriginalTaskResponseDTO getOriginalTask(String taskId) {
         try {
             String uri = String.format(getOriginalTaskAPI, taskId);
-            log.info("Calling api to taskmanager service: {}", getOriginalTaskAPI);
+            log.info("Calling api to taskmanager service: {}", uri);
             ResponseEntity<GeneralResponse<OriginalTaskResponseDTO>> response = clientTemplate.get(
                     uri, null,
                     new ParameterizedTypeReference<GeneralResponse<OriginalTaskResponseDTO>>() {
@@ -56,7 +56,7 @@ public class TaskManagerServiceAdapter implements TaskManagerServiceClient {
             log.info("Response from taskmanager service: {}", response);
             return Objects.requireNonNull(response.getBody()).getData();
         } catch (Exception e) {
-            log.error("Error when call api to taskmanager service: {}", e.getMessage());
+            log.error("Error when call api to get original task in TM service: {}", e.getMessage());
             return null;
         }
     }
