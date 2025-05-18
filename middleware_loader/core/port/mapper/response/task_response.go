@@ -40,3 +40,29 @@ func ReturnCountDoneTaskMapper(body map[string]interface{}) *response_dtos.Count
 	input.Name = body["name"].(string)
 	return &input
 }
+
+func ReturnTopTaskObjectMapper(body map[string]interface{}, projectId string) *response_dtos.TopTaskResponse{
+	var input response_dtos.TopTaskResponse
+	input.ID = body["_id"].(string)
+	input.Title = body["title"].(string)
+	if (body["description"] != nil) {
+		input.Description = body["description"].(string)
+	}
+	input.Priority = utils.ConvertStringToStringArray(body["priority"].([]interface{}))
+	input.Status = body["status"].(string)
+	if body["startDate"] != nil {
+		input.StartDate = body["startDate"].(string)
+	}
+	input.Deadline = body["deadline"].(string)
+	if body["duration"] != nil {
+		input.Duration = body["duration"].(float64)
+	}
+	input.ActiveStatus = body["activeStatus"].(string)
+	input.CreatedAt = body["createdAt"].(string)
+	input.UpdatedAt = body["updatedAt"].(string)
+	if body["groupTaskId"] != nil {
+		input.GroupTaskId = body["groupTaskId"].(string)
+	}
+	input.ProjectId = projectId	
+	return &input	
+}

@@ -172,3 +172,21 @@ type CountDoneTaskListDTO struct {
 func NewCountDoneTaskListDTO() *CountDoneTaskListDTO {
 	return &CountDoneTaskListDTO{}
 }
+
+type TopTaskResponse struct {
+	ID           string   `json:"id"`
+	Title        string   `json:"title"`
+	Description  string   `json:"description"`
+	Priority     []string `json:"priority"`
+	Status       string   `json:"status"`
+	StartDate    string   `json:"startDate"`
+	Deadline     string   `json:"deadline"`
+	Duration     float64  `json:"duration"`
+	ActiveStatus string   `json:"activeStatus"`
+
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+
+	GroupTaskId string   `json:"groupTaskId"`
+	ProjectId string   `json:"projectId"`
+}

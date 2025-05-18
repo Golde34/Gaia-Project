@@ -221,7 +221,7 @@ func ListTopTasks(w http.ResponseWriter, r *http.Request, taskService *services.
 		return
 	}
 	if len(topTasks) == 0  || topTasks == nil {
-		topTasks = []response_dtos.TaskResponseDTO{}
+		topTasks = []response_dtos.TopTaskResponse{}
 	}
 	response := map[string]interface{}{
 		"data": topTasks,

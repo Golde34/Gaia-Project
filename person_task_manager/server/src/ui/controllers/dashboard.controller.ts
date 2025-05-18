@@ -12,9 +12,7 @@ class DashboardController {
         try {
             const NUMBER_OF_TOP_TASKS = 3;
             const userId: number = Number(req.params.userId);
-            const taskResult = await taskService.getTopTasks(userId, NUMBER_OF_TOP_TASKS);
-
-            return taskResult;
+            return await taskService.getTopTasks(userId, NUMBER_OF_TOP_TASKS);
         }
         catch (err) {
             next(err);
