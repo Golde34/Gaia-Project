@@ -54,6 +54,9 @@ class ScheduleCalendarUsecase {
                     tasks: []
                 })
             }
+
+            const optimizedUserDailyTasks = scheduleTaskService.optimizeDailyTasks(userDailyTasks);
+
             const scheduleCalendar = {
                 userId: Number(body.userId),
                 startDate: new Date(),
