@@ -274,7 +274,7 @@ class ScheduleTaskUsecase {
 
             const scheduleTasks = await scheduleTaskService.getScheduleTaskByBatchNumber(schedulePlan._id, schedulePlan.activeTaskBatch);
             return msg200({
-                scheduleTasks
+                activeTaskBatch: scheduleTasks
             })
         } catch (error) {
             console.error("Error on getScheduleTasksBatch: ", error);
