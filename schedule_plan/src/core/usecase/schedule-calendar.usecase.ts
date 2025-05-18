@@ -3,7 +3,6 @@ import { IResponse, msg200, msg400 } from "../common/response";
 import { scheduleCalendarService } from "../services/schedule-calendar.service";
 import { scheduleTaskService } from "../services/schedule-task.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
-import { scheduleGroupService } from "../services/schedule-group.service";
 
 class ScheduleCalendarUsecase {
     constructor() { }
@@ -42,12 +41,6 @@ class ScheduleCalendarUsecase {
 
     async createDailyCalendar(body: any): Promise<IResponse> {
         try {
-            let scheduleCalendar = await scheduleCalendarService.findScheduleCalendarByUserId(Number(body.userId));
-            if (!scheduleCalendar) {
-                console.error("Why schedule calendar is null with userId: ", body.userId);
-                scheduleCalendar = await scheduleCalendarService.createScheduleCalendar(Number(body.userId));
-            }
-
             const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(Number(body.userId));
             if (!schedulePlan) {
                 return msg400("Cannot find schedule plan for user!");
@@ -61,8 +54,11 @@ class ScheduleCalendarUsecase {
                     tasks: []
                 })
             }
-
-            scheduleCalendar.tasks = userDailyTasks.map((task) => task._id);
+            const scheduleCalendar = {
+                userId: Number(body.userId),
+                startDate: new Date(),
+                tasks: userDailyTasks.map((task) => task._id) 
+            }
 
             await scheduleCalendarService.updateScheduleCalendar(Number(body.userId), scheduleCalendar);
 
@@ -79,11 +75,12 @@ class ScheduleCalendarUsecase {
     async startDailyCalendar(userId: number): Promise<IResponse> {
         try {
             const scheduleCalendar = await scheduleCalendarService.findScheduleCalendarByDate(userId, new Date());
-            if (!scheduleCalendar) {
-                console.error(`User ${userId} has no schedule calendar for today.`);
-                return await this.createDailyCalendar({userId: userId});
+            if (scheduleCalendar) {
+                return msg200({
+                    message: "User has already started schedule calendar.",
+                    tasks: scheduleCalendar.tasks
+                })
             }
-                
             return this.createDailyCalendar({userId: userId});
         } catch (error: any) {
             console.error("Error on startScheduleCalendar: ", error);
