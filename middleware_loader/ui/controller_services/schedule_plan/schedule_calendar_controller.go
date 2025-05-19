@@ -16,7 +16,9 @@ func GetUserDailyTasks(w http.ResponseWriter, r *http.Request, scheduleCalendarS
 		return
 	}
 
-	// Write the response
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(dailyTasks)
+	if err := json.NewEncoder(w).Encode(dailyTasks); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}	
 }

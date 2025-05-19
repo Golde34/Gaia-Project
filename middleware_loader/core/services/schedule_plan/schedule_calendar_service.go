@@ -12,10 +12,10 @@ func NewScheduleCalendarService() *ScheduleCalendarService {
 	return &ScheduleCalendarService{}
 }
 
-func (s *ScheduleCalendarService) GetUserDailyTasks(userId string) ([]response_dtos.ScheduleTaskResponseDTO, error) {
+func (s *ScheduleCalendarService) GetUserDailyTasks(userId string) (response_dtos.DailyTasksResponseDTO, error) {
 	dailyTasks, err := client.IScheduleCalendarAdapter(&adapter.ScheduleCalendarAdapter{}).GetUserDailyTasks(userId)
 	if err != nil {
-		return nil, err
+		return response_dtos.DailyTasksResponseDTO{}, err
 	}
 	return dailyTasks, nil
 }
