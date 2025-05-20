@@ -1,6 +1,8 @@
 import { Button, Card, Col, Flex, Grid, Subtitle, Text, Title } from "@tremor/react";
+import { useNavigate } from "react-router-dom";
 
 const UserProfileInfoScreen = (props) => {
+    const navigate = useNavigate();
     const user = props.user;
     return (
         <Card>

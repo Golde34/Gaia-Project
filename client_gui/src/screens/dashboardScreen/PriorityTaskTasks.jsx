@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { StatusOnlineIcon } from "@heroicons/react/outline";
 import { useDispatch, useSelector } from "react-redux";
 import MessageBox from "../../components/subComponents/MessageBox";
@@ -7,7 +7,7 @@ import { priorityColor, statusColor } from "../../kernels/utils/field-utils";
 import { useNavigate } from "react-router-dom";
 import { getActiveTaskBatch } from "../../api/store/actions/schedule_plan/schedule-task.action";
 
-const DailyTasks = () => {
+const PriorityTasks = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -33,7 +33,7 @@ const DailyTasks = () => {
           <div></div>
         ) :
           <Card className="mt-4">
-            <Title>Daily Tasks</Title>
+            <Title>Priority Tasks</Title>
             <Table className="mt-5">
               <TableHead>
                 <TableRow>
@@ -77,4 +77,4 @@ const DailyTasks = () => {
   );
 };
 
-export default DailyTasks;
+export default PriorityTasks;
