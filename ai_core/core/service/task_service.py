@@ -1,12 +1,10 @@
 import json
 
+from core.prompts.task_prompt import CHITCHAT_PROMPT, CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT
+from kernel.config import llm_models
+from kernel.utils.parse_json import parse_json_string
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import CreateTaskResultSchema, CreateTaskSchema
-from core.prompt import CREATE_TASK_PROMPT, TASK_CLASSIFY_PROMPT, CHITCHAT_PROMPT, TASK_RESULT_PROMPT, PARSING_DATE_PROMPT
-from kernel.configs import llm_models
-from kernel.configs.tree_function import FUNCTIONS
-from core.domain.response.base_response import return_success_response
-from core.utils.utils import parse_json_string
 
 def _optimize_datetime(datetime_object: dict, model_name: str) -> dict:
     try:
@@ -18,7 +16,7 @@ def _optimize_datetime(datetime_object: dict, model_name: str) -> dict:
     except Exception as e:
         raise e
 
-def _create_task(query: QueryRequest) -> dict:
+def create_task(query: QueryRequest) -> dict:
     """
     Create task information extraction prompt for Gemini API.
     Args:
@@ -63,7 +61,7 @@ def _create_task(query: QueryRequest) -> dict:
 
 
 
-def _chitchat(query: QueryRequest) -> str:
+def chitchat(query: QueryRequest) -> str:
     """
     Chitchat pipeline
     Args:
@@ -83,7 +81,7 @@ def _chitchat(query: QueryRequest) -> str:
         raise e
 
 
-def _task_result(query: QueryRequest) -> str:
+def task_result(query: QueryRequest) -> str:
     """
     Task result pipeline
     Args:
@@ -97,7 +95,6 @@ def _task_result(query: QueryRequest) -> str:
 
         response = llm_models.get_model_generate_content(
             query.model_name)(prompt=prompt, model_name=query.model_name, dto=CreateTaskResultSchema)
-        print("Response:", response)
         return json.loads(response) 
     except Exception as e:
         raise e

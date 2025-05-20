@@ -1,52 +1,46 @@
 from core.domain.request.query_request import QueryRequest
-from core.domain.response.base_response import return_success_response 
-from core.service.task_service import _create_task, _task_result, _chitchat
+from core.domain.response.base_response import return_success_response
+from core.service.task_service import create_task, task_result, chitchat
+
+
+HANDLERS = {
+    'create_task': create_task,
+    'task_result': task_result,
+    'chitchat': chitchat
+}
 
 
 def handle_service(query: QueryRequest, response: any) -> str:
     """
-    Handle the service request based on the query type.
+    Handle the service request based on the query type dynamically.
     Args:
-        query (str): The user's query containing task information.
+        query (QueryRequest): The user's query containing task information.
+        response (any): The response content to determine service type.
     Returns:
-        str: The response from the service handler.
+        str: The response from the appropriate service handler.
     """
     try:
-        if 'create_task' in response:
-            print("Start create task service")
-            create_task_response = _create_task(query=query)
-            print("Create task response:", create_task_response)
-            data = {
-                'type': 'create_task',
-                'response': create_task_response.get('response'),
-                'task': create_task_response
-            }
-            print("Data:", data)
-            return return_success_response(
-                status_message="Create task response successfully",
-                data=data
-            )
-        elif 'task_result' in response:
-            print("Start task result service")
-            task_result_response = _task_result(query=query)
-            data = {
-                'type': 'task_result',
-                'response': task_result_response.get('response'),
-                'task': task_result_response
-            }
-            return return_success_response(
-                status_message="Task result response successfully",
-                data=data
-            )
-        else:
-            print("Start chitchat service")
+        matched_type = next(
+            (key for key in HANDLERS if key in response), 'chitchat')
+        handler = HANDLERS[matched_type]
+
+        if matched_type == 'chitchat':
+            result = handler(query=query)
             data = {
                 'type': 'chitchat',
-                'response': _chitchat(query=query)
+                'response': result
             }
-            return return_success_response(
-                status_message="Chitchat response successfully",
-                data=data
-            )
+        else:
+            result = handler(query=query)
+            data = {
+                'type': matched_type,
+                'response': result.get('response'),
+                'task': result
+            }
+
+        return return_success_response(
+            status_message=f"{matched_type.replace('_', ' ').capitalize()} response successfully",
+            data=data
+        )
     except Exception as e:
         raise e

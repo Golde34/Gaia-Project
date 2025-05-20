@@ -1,10 +1,10 @@
 import json
 
+from core.dictionary.tree_function import FUNCTIONS
+from kernel.config import llm_models
 import core.domain.request.query_request as QueryRequest
 from core.prompts.classify_prompt import CLASSIFY_PROMPT
 from core.service.base import service_handler
-from kernel.configs.tree_function import FUNCTIONS
-from kernel.configs import llm_models
 
 
 def handle_user_prompt(query: QueryRequest) -> str:
@@ -25,6 +25,7 @@ def handle_user_prompt(query: QueryRequest) -> str:
         response = llm_models.get_model_generate_content(
             query.model_name)(prompt=prompt, model_name=query.model_name)
 
+        print("Response:", response)
         return service_handler.handle_service(query=query, response=response) 
         
     except Exception as e:
