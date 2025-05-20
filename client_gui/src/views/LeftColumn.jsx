@@ -1,4 +1,4 @@
-import PriorityTasks from "../screens/dashboardScreen/PriorityTaskTasks";
+import DailyTasks from "../screens/dashboardScreen/DailyTasks";
 import TopTask from "../screens/dashboardScreen/TopTaskComponent";
 import UserContributionCalendar from "../screens/dashboardScreen/UserContributionCalendar";
 
@@ -10,7 +10,7 @@ const LeftColumn = () => {
             </div>
             <div className="flex-auto w-full">
                 <UserContributionCalendar />
-                <PriorityTasks />
+                <DailyTasks />
             </div>
         </div>
     );
