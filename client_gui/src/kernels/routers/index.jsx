@@ -1,10 +1,10 @@
-import React, { lazy, Suspense } from 'react';
 import { Navigate, useRoutes } from 'react-router-dom';
 
 import Dashboard from '../../views/Dashboard';
 import SchedulingTable from '../../views/schedule_plan/SchedulingTable';
 import TaskDashboard from '../../views/task_manager/TaskDashboard';
 import SignIn from '../../screens/authScreen/Signin';
+import SignUp from '../../screens/authScreen/Signup';
 import GaiaAutoSignin from '../../screens/authScreen/GaiaAutoSignin';
 import Microservices from '../../views/microservices_gui/Microservices';
 import UserProfile from '../../views/user_gui/UserProfile';
@@ -53,7 +53,7 @@ const routeList = [
     {
         path: '/signup',
         key: 'signup',
-        // element: <SignUp />,
+        element: <SignUp />,
     },
     {
         path: '/dashboard',
