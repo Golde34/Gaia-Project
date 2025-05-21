@@ -86,12 +86,12 @@ const Onboarding = () => {
             aria-hidden="true"
           />
           <span className="mt-0.5 text-lg font-semibold text-gray-900 dark:text-gray-50">
-            Insights
+            Gaia 
           </span>
         </div>
         <StepProgress steps={steps} />
         <Button className="ml-auto w-fit" asChild>
-          <a href="/reports">Skip to dashboard</a>
+          <a href="/client-gui/dashboard">Skip to dashboard</a>
         </Button>
       </header>
       <div
