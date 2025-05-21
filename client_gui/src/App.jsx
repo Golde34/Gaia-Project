@@ -20,13 +20,11 @@ function App() {
 
   return (
     <>
-        <main className='flex'>
-          <MultiWSProvider endpoints={endpoints}>
-            <BrowserRouter basename='/client-gui'>
-              <RenderRouter />
-            </BrowserRouter>
-          </MultiWSProvider >
-        </main>
+      <MultiWSProvider endpoints={endpoints}>
+        <BrowserRouter basename='/client-gui'>
+          <RenderRouter />
+        </BrowserRouter>
+      </MultiWSProvider >
     </>
   )
 }
