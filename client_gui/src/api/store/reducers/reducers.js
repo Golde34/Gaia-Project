@@ -4,6 +4,7 @@ import {
     gaiaSigninReducer,
     bossSigninReducer,
     getChatHubJwtReducer,
+    userSignupReducer,
 } from './auth_service/auth.reducer'
 
 import {
@@ -47,6 +48,7 @@ import { getDailyCalendarReducer } from "./schedule_plan/schedule-calendar.reduc
 
 export const reducer = combineReducers({
     // auth service
+    userSignup: userSignupReducer,
     gaiaSignin: gaiaSigninReducer,
     bossSignin: bossSigninReducer,
     userSignin: userSigninReducer,

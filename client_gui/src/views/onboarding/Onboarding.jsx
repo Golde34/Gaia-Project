@@ -5,15 +5,16 @@ import { LoginIcon } from "@heroicons/react/outline";
 import { Button } from "@tremor/react";
 import Signup from "../../screens/onboardingScreen/Signup";
 import TaskRegistration from "../task_manager/TaskRegistration";
+import OnboardingUserInfo from "../../screens/onboardingScreen/OnboardingUserInfo";
 
 const steps = [
   { name: "Sign Up", href: "client-gui/onboarding/signup" },
   { name: "Task Registration", href: "client-gui/user-task-connector" },
 ];
 
-// Map key trùng hẳn với steps.href
 const stepComponents = {
   "client-gui/onboarding/signup": <Signup />,
+  "client-gui/onboardinf/user-information": <OnboardingUserInfo />,
   "client-gui/user-task-connector": <TaskRegistration />,
 };
 
@@ -58,15 +59,12 @@ const Onboarding = () => {
   const scrolled = useScroll(15);
   const { pathname } = useLocation();
 
-  // Tìm index bước hiện tại
   const currentStepIndex = steps.findIndex((step) =>
     pathname.startsWith(`/${step.href}`)
   );
 
-  // fallback step đầu tiên nếu không match
   const safeStepIndex = currentStepIndex === -1 ? 0 : currentStepIndex;
 
-  // Lấy component tương ứng step hiện tại
   const currentStepComponent = stepComponents[steps[safeStepIndex].href];
 
   return (

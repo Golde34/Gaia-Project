@@ -4,13 +4,14 @@ import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom";
 import "../../assets/husky.scss";
 import MessageBox from "../../components/subComponents/MessageBox";
+import { signup } from "../../api/store/actions/auth_service/auth.actions";
 
 const Signup = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const userSignin = useSelector(state => state.userSignin);
-    const { userInfo, loading, error } = userSignin;
+    const userSignup= useSelector(state => state.userSignup);
+    const { userInfo, loading, error } = userSignup;
 
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -27,7 +28,7 @@ const Signup = () => {
             setErrorMessage('Passwords do not match');
             return;
         }
-        // dispatch(signup(email, name, username, password));
+        dispatch(signup(email, name, username, password));
     }
 
     return (
