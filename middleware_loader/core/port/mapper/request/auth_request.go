@@ -18,7 +18,9 @@ func GetToken(body map[string]interface{}) request_dtos.TokenInputDTO {
 func SignupRequestDTOMapper(body map[string]interface{}) request_dtos.SignupDTO {
 	var input request_dtos.SignupDTO
 	input.Username = body["username"].(string)
+	input.Name = body["name"].(string)
 	input.Password = body["password"].(string)
 	input.Email = body["email"].(string)
+	input.MatchingPassword = body["matchingPassword"].(string)
 	return input
 }

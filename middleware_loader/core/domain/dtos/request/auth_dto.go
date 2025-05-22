@@ -36,7 +36,7 @@ type SignupDTO struct {
 	Username         string `json:"username"`
 	Email            string `json:"email"`
 	Password         string `json:"password"`
-	MatchingPassword string `json:"matching_password"`
+	MatchingPassword string `json:"matchingPassword"`
 }
 
 func NewSignupDTO() *SignupDTO {
