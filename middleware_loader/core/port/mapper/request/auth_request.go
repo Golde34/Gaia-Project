@@ -14,3 +14,11 @@ func GetToken(body map[string]interface{}) request_dtos.TokenInputDTO {
 	input.Token = body["accessToken"].(string)
 	return input
 }
+
+func SignupRequestDTOMapper(body map[string]interface{}) request_dtos.SignupDTO {
+	var input request_dtos.SignupDTO
+	input.Username = body["username"].(string)
+	input.Password = body["password"].(string)
+	input.Email = body["email"].(string)
+	return input
+}

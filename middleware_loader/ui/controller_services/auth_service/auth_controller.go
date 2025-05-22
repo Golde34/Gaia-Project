@@ -146,3 +146,30 @@ func GetServiceJWT(w http.ResponseWriter, r *http.Request, authService *services
 	}
 
 }
+
+func Signup(w http.ResponseWriter, r *http.Request, authService *services.AuthService) {
+	var body map[string]interface{}
+	body, err := controller_utils.MappingBody(w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	input := mapper.SignupRequestDTOMapper(body)
+	result, err := authService.Signup(r.Context(), input)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	response := map[string]interface{}{
+		"message":  "Signup successfully",
+		"userInfo": result,
+	}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}

@@ -30,6 +30,9 @@ func NewAuthRouter(authService *services.AuthService, db database_mongo.Database
 		r.Post("/get-service-jwt", func(w http.ResponseWriter, r *http.Request) {
 			controller.GetServiceJWT(w, r, authService)
 		})
+		r.Post("/sign-up", func(w http.ResponseWriter, r *http.Request) {
+			controller.Signup(w, r, authService)
+		})
 	})
 	return &AuthRouter{
 		AuthService: authService,
