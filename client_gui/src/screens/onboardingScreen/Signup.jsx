@@ -122,10 +122,22 @@ const Signup = () => {
                                     <button
                                         type="submit"
                                         className="ml-2 inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-red-900 hover:bg-red-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+                                        disabled={loading}
                                     >
-                                        Sign up
+                                        {loading ? 'Signing up...' : 'Sign up'}
                                     </button>
                                 </div>
+                                {userInfo && (
+                                    <div className="mt-4 flex justify-center">
+                                        <button
+                                            type="button"
+                                            className="ml-2 inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                                            onClick={() => navigate('/onboarding/task-register')}
+                                        >
+                                            Continue
+                                        </button>
+                                    </div>
+                                )}
                             </form>
                         </Card>
                     </Flex>
