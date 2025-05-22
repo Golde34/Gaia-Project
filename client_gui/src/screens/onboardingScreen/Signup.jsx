@@ -28,7 +28,7 @@ const Signup = () => {
             setErrorMessage('Passwords do not match');
             return;
         }
-        dispatch(signup(email, name, username, password));
+        dispatch(signup(email, name, username, password, matchingPassword));
     }
 
     return (

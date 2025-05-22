@@ -56,10 +56,10 @@ export const signin = (username, password) => async (dispatch) => {
     }
 };
 
-export const signup = (email, name, username, password) => async (dispatch) => {
-    dispatch({ type: USER_SIGNUP_REQUEST, payload: { email, name, username, password } });
+export const signup = (email, name, username, password, matchingPassword) => async (dispatch) => {
+    dispatch({ type: USER_SIGNUP_REQUEST, payload: { username } });
     try {
-        const response = await serverRequest('/auth/sign-up', HttpMethods.POST, portName.middleware, { email, name, username, password });
+        const response = await serverRequest('/auth/sign-up', HttpMethods.POST, portName.middleware, { email, name, username, password, matchingPassword });
         dispatch({ type: USER_SIGNUP_SUCCESS, payload: response.data });
     } catch (error) {
         dispatch({
