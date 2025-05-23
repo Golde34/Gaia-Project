@@ -69,12 +69,13 @@ public class UserServiceImpl implements UserService {
             user.setRoles(Collections.singletonList(_isBoss(userDto.isBoss())));
             user.setEnabled(true);
             user.setLlmModels(llmModel);
-            UserSetting userSetting = userSettingMapper.createUserSettingMapper(user);
-            userSettingStore.save(userSetting);
-            log.info("Create default setting for user: {}", user.getId().toString());
-
             userStore.save(user);
             log.info("User created: {}", user.getName().toString());
+            UserSetting userSetting = userSettingMapper.createUserSettingMapper(user);
+            userSettingStore.save(userSetting);
+            log.info("Create default setting for user: {}", user.toString());
+            user.setUserSetting(userSetting);
+
             pushKafkaMessageService.pushCreateUserMessage(user);
             log.info("Push message to kafka successfully");
             return genericResponse.matchingResponseMessage(new GenericResponse<>(user, ResponseEnum.msg200));
