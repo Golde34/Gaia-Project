@@ -1,11 +1,8 @@
-import React, { lazy, Suspense } from 'react';
 import { Navigate, useRoutes } from 'react-router-dom';
 
 import Dashboard from '../../views/Dashboard';
 import SchedulingTable from '../../views/schedule_plan/SchedulingTable';
 import TaskDashboard from '../../views/task_manager/TaskDashboard';
-import SignIn from '../../screens/authScreen/Signin';
-import GaiaAutoSignin from '../../screens/authScreen/GaiaAutoSignin';
 import Microservices from '../../views/microservices_gui/Microservices';
 import UserProfile from '../../views/user_gui/UserProfile';
 import AuthManagerDashboard from '../../views/auth_service/UserManagerDashboard';
@@ -23,6 +20,10 @@ import GitHubCallback from '../context/GithubCallback';
 import ProjectDetail from '../../views/task_manager/ProjectDetail';
 import Test from "../../views/test/Test";
 import Chat from '../../views/chat_hub/Chat';
+import GaiaAutoSignin from '../../views/signin/GaiaAutoSignin';
+import Signin from '../../views/signin/Signin';
+import Signup from '../../screens/onboardingScreen/Signup';
+import Onboarding from '../../views/onboarding/Onboarding';
 
 // Guest is public
 // User is protected, only logged in when the Role higher than User
@@ -48,12 +49,17 @@ const routeList = [
     {
         path: '/signin',
         key: 'signin',
-        element: <SignIn />,
+        element: <Signin />,
     },
     {
-        path: '/signup',
+        path: '/onboarding',
+        key: 'onboarding',
+        element: <Onboarding />,
+    },
+    {
+        path: '/onboarding/signup',
         key: 'signup',
-        // element: <SignUp />,
+        element: <Signup />,
     },
     {
         path: '/dashboard',

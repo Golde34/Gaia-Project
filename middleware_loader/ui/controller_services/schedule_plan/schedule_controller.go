@@ -15,7 +15,7 @@ import (
 
 func GetScheduleTaskListByUserId(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
 	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
-	scheduleTaskList, err := services.NewScheduleTaskService().GetScheduleTaskListByUserId(userId)
+	scheduleTaskList, err := scheduleTaskService.GetScheduleTaskListByUserId(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -34,7 +34,7 @@ func GetScheduleTaskListByUserId(w http.ResponseWriter, r *http.Request, schedul
 
 func GetTaskBatchListByUserId(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
 	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
-	taskBatchList, err := services.NewScheduleTaskService().GetTaskBatchListByUserId(userId)
+	taskBatchList, err := scheduleTaskService.GetTaskBatchListByUserId(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -59,7 +59,7 @@ func ChooseTaskBatch(w http.ResponseWriter, r *http.Request, scheduleTaskService
 	userIdStr := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	userId, batchNumber := mapper.ChooseTaskBatch(body, userIdStr)
 		
-	scheduleTaskBatch, err := services.NewScheduleTaskService().ChooseTaskBatch(userId, batchNumber)
+	scheduleTaskBatch, err := scheduleTaskService.ChooseTaskBatch(userId, batchNumber)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -73,7 +73,7 @@ func ChooseTaskBatch(w http.ResponseWriter, r *http.Request, scheduleTaskService
 	}
 }
 
-func CreateScheduleGroup(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
+func CreateScheduleGroup(w http.ResponseWriter, r *http.Request, scheduleGroupService *services.ScheduleGroupService) {
 	var body map[string]interface{}
 	body, err := controller_utils.MappingBody(w, r)
 	if err != nil {
@@ -84,7 +84,7 @@ func CreateScheduleGroup(w http.ResponseWriter, r *http.Request, scheduleTaskSer
 	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	scheduleTaskDto := mapper.CreateScheduleGroupRequestDTOMapper(body, userId)	
 	
-	scheduleGroup, err := services.NewScheduleGroupService().CreateScheduleGroup(scheduleTaskDto)
+	scheduleGroup, err := scheduleGroupService.CreateScheduleGroup(scheduleTaskDto)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -98,9 +98,9 @@ func CreateScheduleGroup(w http.ResponseWriter, r *http.Request, scheduleTaskSer
 	}
 }
 
-func ListScheduleGroupByUserId(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
+func ListScheduleGroupByUserId(w http.ResponseWriter, r *http.Request, scheduleGroupService *services.ScheduleGroupService) {
 	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
-	scheduleList, err := services.NewScheduleGroupService().ListScheduleGroupByUserId(userId)
+	scheduleList, err := scheduleGroupService.ListScheduleGroupByUserId(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -118,9 +118,9 @@ func ListScheduleGroupByUserId(w http.ResponseWriter, r *http.Request, scheduleT
 	}
 }
 
-func DeleteScheduleGroup(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
+func DeleteScheduleGroup(w http.ResponseWriter, r *http.Request, scheduleGroupService *services.ScheduleGroupService) {
 	scheduleGroupId := chi.URLParam(r, "scheduleGroupId")
-	scheduleGroup, err  := services.NewScheduleGroupService().DeleteScheduleGroup(scheduleGroupId)
+	scheduleGroup, err  := scheduleGroupService.DeleteScheduleGroup(scheduleGroupId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -136,7 +136,7 @@ func DeleteScheduleGroup(w http.ResponseWriter, r *http.Request, scheduleTaskSer
 
 func GetActiveTaskBatch(w http.ResponseWriter, r *http.Request, scheduleTaskService *services.ScheduleTaskService) {
 	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
-	scheduleTaskBatch, err := services.NewScheduleTaskService().GetActiveTaskBatch(userId)
+	scheduleTaskBatch, err := scheduleTaskService.GetActiveTaskBatch(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

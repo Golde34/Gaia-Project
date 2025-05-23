@@ -36,7 +36,6 @@ func checkBool(value interface{}) bool {
 
 func ReturnUserObjectMapper(body map[string]interface{}) *response_dtos.UserDetailDTO {
 	var input response_dtos.UserDetailDTO
-	input.ID = body["id"].(float64)
 	input.Name = body["name"].(string)
 	input.Username = body["username"].(string)
 	input.Email = body["email"].(string)

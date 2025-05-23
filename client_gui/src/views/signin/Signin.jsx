@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Card, Col, Flex, Grid, Metric, Title } from "@tremor/react";
+import { Button, Card, Col, Flex, Grid, Metric, Title } from "@tremor/react";
 import "../../assets/husky.scss";
 import CheckBoxIcon from "../../components/icons/CheckboxIcon";
 import { signin } from "../../api/store/actions/auth_service/auth.actions";
@@ -32,7 +32,7 @@ const Signin = () => {
     }, [navigate, userInfo]);
 
     const navigateToSignupScreen = () => {
-        navigate('/signup');
+        navigate('/onboarding');
     }
 
     return (
@@ -157,7 +157,7 @@ const Signin = () => {
                                     <button
                                         type="button"
                                         className="mr-2 inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                                        onChange={() => navigateToSignupScreen()}
+                                        onClick={() => navigateToSignupScreen()}
                                     >
                                         Signup
                                     </button>

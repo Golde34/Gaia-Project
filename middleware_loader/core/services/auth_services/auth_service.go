@@ -28,6 +28,14 @@ func NewAuthService() *AuthService {
 var authValidator = validator.NewAuthDTOValidator()
 var signinResponesDTO = response_dtos.NewSigninResponseDTO()
 
+func (s *AuthService) Signup(ctx context.Context, input request_dtos.SignupDTO) (response_dtos.UserDetailDTO, error) {
+	signupResponse, err := client.IAuthAdapter(&adapter.AuthAdapter{}).Signup(input)
+	if err != nil {
+		return response_dtos.UserDetailDTO{}, err
+	}
+	return signupResponse, nil
+}
+
 func (s *AuthService) Signin(ctx context.Context, input model.SigninInput) (model.AuthTokenResponse, response_dtos.AuthTokenResponseDTO, error) {
 	err := authValidator.AuthValidate(input)
 	if err != nil {
@@ -38,10 +46,9 @@ func (s *AuthService) Signin(ctx context.Context, input model.SigninInput) (mode
 	authTokenResponse, err := client.IAuthAdapter(&adapter.AuthAdapter{}).Signin(input)
 	if err != nil {
 		return model.AuthTokenResponse{}, response_dtos.AuthTokenResponseDTO{}, err
-	} else {
-		modelSigninResponse := signinResponesDTO.MapperToGraphQLModel(authTokenResponse)
-		return modelSigninResponse, authTokenResponse, nil
 	}
+	modelSigninResponse := signinResponesDTO.MapperToGraphQLModel(authTokenResponse)
+	return modelSigninResponse, authTokenResponse, nil
 }
 
 func (s *AuthService) GaiaAutoSignin(ctx context.Context, input model.SigninInput) (model.AuthTokenResponse, error) {

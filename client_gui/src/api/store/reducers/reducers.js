@@ -4,6 +4,7 @@ import {
     gaiaSigninReducer,
     bossSigninReducer,
     getChatHubJwtReducer,
+    userSignupReducer,
 } from './auth_service/auth.reducer'
 
 import {
@@ -43,9 +44,11 @@ import { getProjectAndRepoRequestReducer } from "./contribution_tracker/project-
 import { compareCommitsReducer, getProjectContributionReducer, getUserContributionsReducer } from "./contribution_tracker/contribution.reducer";
 import { createScheduleGroupReducer, scheduleGroupListReducer } from "./schedule_plan/schedule-group.reducers";
 import { getNotificationJwt } from "../actions/auth_service/auth.actions";
+import { getDailyCalendarReducer } from "./schedule_plan/schedule-calendar.reducers";
 
 export const reducer = combineReducers({
     // auth service
+    userSignup: userSignupReducer,
     gaiaSignin: gaiaSigninReducer,
     bossSignin: bossSigninReducer,
     userSignin: userSigninReducer,
@@ -108,6 +111,7 @@ export const reducer = combineReducers({
     createScheduleGroup: createScheduleGroupReducer,
     scheduleGroupList: scheduleGroupListReducer,
     activeTaskBatch: activeTaskBatchReducer,
+    getDailyCalendar: getDailyCalendarReducer,
     // middleware loader
     microserviceList: microserviceListReducer,
     screenList: screenListReducer,

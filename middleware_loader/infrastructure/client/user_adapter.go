@@ -66,7 +66,7 @@ func (adapter *UserAdapter) UpdateUser(input model.UpdateUserInput) (response_dt
 func (adapter *UserAdapter) GetUserDetail(input model.IDInput) (response_dtos.UserDetailDTO, error) {
 	getUserDetailURL := base.AuthServiceURL + "/user/get-user-by-id?id=" + input.ID
 	var user response_dtos.UserDetailDTO
-	headers := utils.BuildAuthorizationHeaders(enums.AS, "1")
+	headers := utils.BuildAuthorizationHeaders(enums.AS, input.ID)
 	bodyResult, err := utils.BaseAPIV2(getUserDetailURL, "GET", input, user, headers)
 	if err != nil {
 		return response_dtos.UserDetailDTO{}, err

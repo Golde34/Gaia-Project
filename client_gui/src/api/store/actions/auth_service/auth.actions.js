@@ -2,11 +2,12 @@ import { HttpMethods, serverRequest } from '../../../baseAPI';
 import {
     GAIA_SIGNIN_FAIL, GAIA_SIGNIN_REQUEST, GAIA_SIGNIN_SUCCESS,
     GET_CHAT_HUB_JWT_FAIL, GET_CHAT_HUB_JWT_REQUEST, GET_CHAT_HUB_JWT_SUCCESS,
-    GET_NOTIFICATION_JWT_FAIL,
-    GET_NOTIFICATION_JWT_REQUEST,
-    GET_NOTIFICATION_JWT_SUCCESS,
+    GET_NOTIFICATION_JWT_FAIL, GET_NOTIFICATION_JWT_REQUEST, GET_NOTIFICATION_JWT_SUCCESS,
     USER_SIGNIN_FAIL, USER_SIGNIN_REQUEST, USER_SIGNIN_SUCCESS,
-    USER_SIGNOUT
+    USER_SIGNOUT,
+    USER_SIGNUP_FAIL,
+    USER_SIGNUP_REQUEST,
+    USER_SIGNUP_SUCCESS
 } from '../../constants/auth_service/auth.constants';
 
 const portName = {
@@ -54,6 +55,21 @@ export const signin = (username, password) => async (dispatch) => {
         });
     }
 };
+
+export const signup = (email, name, username, password, matchingPassword) => async (dispatch) => {
+    dispatch({ type: USER_SIGNUP_REQUEST, payload: { username } });
+    try {
+        const response = await serverRequest('/auth/sign-up', HttpMethods.POST, portName.middleware, { email, name, username, password, matchingPassword });
+        dispatch({ type: USER_SIGNUP_SUCCESS, payload: response.data });
+    } catch (error) {
+        dispatch({
+            type: USER_SIGNUP_FAIL,
+            payload: error.response && error.response.data.message
+                ? error.response.data.message
+                : error.message,
+        });
+    }
+}
 
 export const signout = () => (dispatch) => {
     localStorage.removeItem('gaiaInfo');
