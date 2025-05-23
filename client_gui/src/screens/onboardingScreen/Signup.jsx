@@ -1,4 +1,4 @@
-import { Card, Col, Flex, Grid, Metric, Title } from "@tremor/react";
+import { Button, Card, Col, Flex, Grid, Metric, Title } from "@tremor/react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom";
@@ -10,7 +10,7 @@ const Signup = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const userSignup= useSelector(state => state.userSignup);
+    const userSignup = useSelector(state => state.userSignup);
     const { userInfo, loading, error } = userSignup;
 
     const [errorMessage, setErrorMessage] = useState('');
@@ -35,7 +35,7 @@ const Signup = () => {
         <>
             <Grid numItems={12} className="w-full">
                 <Col numColSpan={12}>
-                        <Metric level={3} className="text-center mb-5">Sign up</Metric>
+                    <Metric level={3} className="text-center mb-5">Sign up</Metric>
                     <Flex justifyContent="end">
                         <Card className="max-w-lg mx-auto">
                             <form onSubmit={submitHandler}>
@@ -117,27 +117,27 @@ const Signup = () => {
                                         <MessageBox message={errorMessage} />
                                     </div>
                                 }
-
-                                <div className="mt-4 flex justify-center">
-                                    <button
-                                        type="submit"
-                                        className="ml-2 inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-red-900 hover:bg-red-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
-                                        disabled={loading}
-                                    >
-                                        {loading ? 'Signing up...' : 'Sign up'}
-                                    </button>
-                                </div>
-                                {userInfo && (
-                                    <div className="mt-4 flex justify-center">
+                                <div className="mt-4 relative">
+                                    {userInfo && (
                                         <button
                                             type="button"
-                                            className="ml-2 inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                                            className="absolute right-0 top-0 z-10 inline-flex rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                             onClick={() => navigate('/onboarding/task-register')}
                                         >
                                             Continue
                                         </button>
+                                    )}
+                                    <div className="flex justify-center">
+                                        <button
+                                            type="submit"
+                                            className="inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-red-900 hover:bg-red-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+                                            disabled={loading}
+                                        >
+                                            {loading ? 'Signing up...' : 'Sign up'}
+                                        </button>
                                     </div>
-                                )}
+                                </div>
+
                             </form>
                         </Card>
                     </Flex>
