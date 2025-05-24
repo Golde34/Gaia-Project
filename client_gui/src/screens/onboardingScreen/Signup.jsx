@@ -122,7 +122,7 @@ const Signup = () => {
                                         <button
                                             type="button"
                                             className="absolute right-0 top-0 z-10 inline-flex rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                                            onClick={() => navigate('/onboarding/task-register')}
+                                            onClick={() => navigate('/onboarding/user-information')}
                                         >
                                             Continue
                                         </button>

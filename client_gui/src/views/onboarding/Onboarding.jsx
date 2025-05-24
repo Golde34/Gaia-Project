@@ -14,7 +14,7 @@ const steps = [
 
 const stepComponents = {
   "client-gui/onboarding/signup": <Signup />,
-  "client-gui/onboardinf/user-information": <OnboardingUserInfo />,
+  "client-gui/onboarding/user-information": <OnboardingUserInfo />,
   "client-gui/user-task-connector": <TaskRegistration />,
 };
 
