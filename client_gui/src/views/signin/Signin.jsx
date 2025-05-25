@@ -32,68 +32,17 @@ const Signin = () => {
     }, [navigate, userInfo]);
 
     const navigateToSignupScreen = () => {
-        navigate('/onboarding');
+        navigate('/signup');
     }
 
     return (
         <>
             <Grid numItems={12} className="w-full mt-20">
-                <Col numColSpan={12} className="mb-10">
-                    <Metric>Welcome, I'm Golde. And youre in my AI System.</Metric>
-                </Col>
-                <Col numColSpan={1}></Col>
-                <Col numColSpan={4} className="me-7">
-                    <div className="husky">
-                        <div className="mane">
-                            <div className="coat"></div>
-                        </div>
-                        <div className="body">
-                            <div className="head">
-                                <div className="ear"></div>
-                                <div className="ear"></div>
-                                <div className="face">
-                                    <div className="eye"></div>
-                                    <div className="eye"></div>
-                                    <div className="nose"></div>
-                                    <div className="mouth">
-                                        <div className="lips"></div>
-                                        <div className="tongue"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="torso"></div>
-                        </div>
-                        <div className="legs">
-                            <div className="front-legs">
-                                <div className="leg"></div>
-                                <div className="leg"></div>
-                            </div>
-                            <div className="hind-leg">
-                            </div>
-                        </div>
-                        <div className="tail">
-                            <div className="tail">
-                                <div className="tail">
-                                    <div className="tail">
-                                        <div className="tail">
-                                            <div className="tail">
-                                                <div className="tail"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="mt-12">
-                        <Title>This is Gaia. My Virtual Dog. I will train him step by step.</Title>
-                    </div>
-                </Col>
-                <Col numColSpan={7}>
+                <Col numColSpan={12}>
+                    <Metric level={3} className="text-center mb-5">Sign in</Metric>
                     <Flex justifyContent="end">
                         <Card className="max-w-lg mx-auto">
                             <form onSubmit={submitHandler}>
-                                <Metric level={3} className="text-center">Sign In</Metric>
                                 {loading && <div>Loading...</div>}
                                 {error &&
                                     <div>

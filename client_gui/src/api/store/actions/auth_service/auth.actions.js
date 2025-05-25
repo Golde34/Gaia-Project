@@ -5,6 +5,8 @@ import {
     GET_NOTIFICATION_JWT_FAIL, GET_NOTIFICATION_JWT_REQUEST, GET_NOTIFICATION_JWT_SUCCESS,
     USER_SIGNIN_FAIL, USER_SIGNIN_REQUEST, USER_SIGNIN_SUCCESS,
     USER_SIGNOUT,
+    USER_SIGNOUT_FAIL,
+    USER_SIGNOUT_REQUEST,
     USER_SIGNUP_FAIL,
     USER_SIGNUP_REQUEST,
     USER_SIGNUP_SUCCESS
@@ -79,7 +81,18 @@ export const signout = () => (dispatch) => {
     localStorage.removeItem('chatHubJwt');
     localStorage.removeItem('gaiaScreens');
     // remove coookies
-    dispatch({ type: USER_SIGNOUT });
+    dispatch({ type: USER_SIGNOUT_REQUEST });
+    try {
+        const response = serverRequest('/auth/sign-out', HttpMethods.DELETE, portName.middleware, null);
+        dispatch({ type: USER_SIGNOUT, payload: response.data });
+    } catch (error) {
+        dispatch({
+            type: USER_SIGNOUT_FAIL,
+            payload: error.response && error.response.data.message
+                ? error.response.data.message
+                : error.message,
+        });
+    }
 };
 
 export const getUserChatHubJwt = () => async (dispatch) => {
