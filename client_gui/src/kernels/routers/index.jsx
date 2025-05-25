@@ -23,7 +23,6 @@ import Chat from '../../views/chat_hub/Chat';
 import GaiaAutoSignin from '../../views/signin/GaiaAutoSignin';
 import Signin from '../../views/signin/Signin';
 import Signup from '../../views/signin/Signup';
-import Onboarding from '../../views/onboarding/Onboarding';
 
 // Guest is public
 // User is protected, only logged in when the Role higher than User
