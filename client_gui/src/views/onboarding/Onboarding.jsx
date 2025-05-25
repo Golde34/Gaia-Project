@@ -3,9 +3,8 @@ import { cx } from "../../kernels/utils/cx";
 import useScroll from "../../kernels/utils/userScroll";
 import { LoginIcon } from "@heroicons/react/outline";
 import { Button } from "@tremor/react";
-import Signup from "../../screens/onboardingScreen/Signup";
 import TaskRegistration from "../task_manager/TaskRegistration";
-import OnboardingUserInfo from "../../screens/onboardingScreen/OnboardingUserInfo";
+import Signup from "../signin/Signup";
 
 const steps = [
   { name: "Sign Up", href: "client-gui/onboarding/signup" },
@@ -14,7 +13,6 @@ const steps = [
 
 const stepComponents = {
   "client-gui/onboarding/signup": <Signup />,
-  "client-gui/onboarding/user-information": <OnboardingUserInfo />,
   "client-gui/user-task-connector": <TaskRegistration />,
 };
 
