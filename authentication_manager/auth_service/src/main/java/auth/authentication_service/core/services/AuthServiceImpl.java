@@ -6,15 +6,12 @@ import auth.authentication_service.core.domain.dto.request.ServiceJwtRequest;
 import auth.authentication_service.core.domain.dto.request.ValidateJwtRequest;
 import auth.authentication_service.core.domain.dto.response.CheckTokenDtoResponse;
 import auth.authentication_service.core.domain.dto.response.SignInDtoResponse;
-import auth.authentication_service.core.domain.entities.AuthToken;
 import auth.authentication_service.core.domain.entities.Privilege;
 import auth.authentication_service.core.domain.entities.Role;
 import auth.authentication_service.core.domain.entities.User;
 import auth.authentication_service.core.domain.enums.BossType;
 import auth.authentication_service.core.domain.enums.ResponseEnum;
-import auth.authentication_service.core.domain.enums.TokenType;
 import auth.authentication_service.core.port.mapper.UserMapper;
-import auth.authentication_service.core.port.store.TokenStore;
 import auth.authentication_service.core.port.store.UserCRUDStore;
 import auth.authentication_service.core.services.interfaces.AuthService;
 import auth.authentication_service.core.services.interfaces.RoleService;
@@ -51,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
     private final RoleService roleService;
     private final UserDetailsServices userDetailService;
     private final UserCRUDStore userStore;
-    private final TokenStore tokenStore;
+    // private final TokenStore tokenStore;
     private final UserMapper userMapper;
     private final UserServiceValidation userServiceValidation;
 
@@ -114,24 +111,24 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private String _generateAccessToken(User user, UserDetails userDetails) {
-        AuthToken accessToken = new AuthToken();
-        accessToken.setUser(user);
-        accessToken.setTokenType(TokenType.ACCESS_TOKEN);
+        // AuthToken accessToken = new AuthToken();
+        // accessToken.setUser(user);
+        // accessToken.setTokenType(TokenType.ACCESS_TOKEN);
         String generatedToken = tokenService.generateAccessToken(userDetails);
-        accessToken.setToken(generatedToken);
-        accessToken.setExpiryDate(tokenService.getExpirationDateFromToken(generatedToken));
-        tokenStore.save(accessToken);
+        // accessToken.setToken(generatedToken);
+        // accessToken.setExpiryDate(tokenService.getExpirationDateFromToken(generatedToken));
+        // tokenStore.save(accessToken);
         return generatedToken;
     }
 
     private String _generateRefreshToken(User user, UserDetails userDetails) {
-        AuthToken refreshToken = new AuthToken();
-        refreshToken.setUser(user);
-        refreshToken.setTokenType(TokenType.REFRESH_TOKEN);
+        // AuthToken refreshToken = new AuthToken();
+        // refreshToken.setUser(user);
+        // refreshToken.setTokenType(TokenType.REFRESH_TOKEN);
         String generatedToken = tokenService.generateRefreshToken(userDetails);
-        refreshToken.setToken(generatedToken);
-        refreshToken.setExpiryDate(tokenService.getExpirationDateFromToken(generatedToken));
-        tokenStore.save(refreshToken);
+        // refreshToken.setToken(generatedToken);
+        // refreshToken.setExpiryDate(tokenService.getExpirationDateFromToken(generatedToken));
+        // tokenStore.save(refreshToken);
         user.setLastLogin(new Date());
         userStore.save(user);
         return generatedToken;
