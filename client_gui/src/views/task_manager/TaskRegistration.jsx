@@ -8,6 +8,47 @@ import ProjectList from "./ProjectList";
 import SchedulingTable from "../schedule_plan/SchedulingTable";
 import { isNullOrUndefined } from "../../kernels/utils/cn";
 
+const TaskRegistration = (props) => {
+    const redirectPage = props.redirectPage;
+    const dispatch = useDispatch();
+
+    const taskRegistration = useSelector((state) => state.queryTaskConfig);
+    const { loading, error, taskRegistry } = taskRegistration;
+
+    const taskConfig = useCallback(() => {
+        dispatch(queryTaskConfig());
+    }, [dispatch]);
+
+    const debounceRef = useRef();
+
+    useEffect(() => {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            taskConfig();
+        }, 50);
+    }, []);
+
+    return (
+        <>
+            {loading ? (
+                <div>Loading...</div>
+            ) : error ? (
+                <div>Error: {error}</div>
+            ) : taskRegistry && redirectToScreen(taskRegistry, redirectPage) === "TM" ? (
+                <ProjectList />
+            ) : taskRegistry && redirectToScreen(taskRegistry, redirectPage) === "SP" ? (
+                <SchedulingTable />
+            ) : taskRegistry && redirectToScreen(taskRegistry, redirectPage) === null ? (
+                <Template>
+                    <ContentArea redirectPage={redirectPage} />
+                </Template>
+            ) : (
+                <></>
+            )}
+        </>
+    )
+}
+
 function ContentArea(props) {
     const dispatch = useDispatch();
     const redirectPage = props.redirectPage;
@@ -262,46 +303,6 @@ function ContentArea(props) {
     )
 }
 
-const TaskRegistration = (props) => {
-    const redirectPage = props.redirectPage;
-    const dispatch = useDispatch();
-
-    const taskRegistration = useSelector((state) => state.queryTaskConfig);
-    const { loading, error, taskRegistry } = taskRegistration;
-
-    const taskConfig = useCallback(() => {
-        dispatch(queryTaskConfig());
-    }, [dispatch]);
-
-    const debounceRef = useRef();
-
-    useEffect(() => {
-        clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            taskConfig();
-        }, 50);
-    }, []);
-
-    return (
-        <>
-            {loading ? (
-                <div>Loading...</div>
-            ) : error ? (
-                <div>Error: {error}</div>
-            ) : taskRegistry && redirectToScreen(taskRegistry, redirectPage) === "TM" ? (
-                <ProjectList />
-            ) : taskRegistry && redirectToScreen(taskRegistry, redirectPage) === "SP" ? (
-                <SchedulingTable />
-            ) : taskRegistry && redirectToScreen(taskRegistry, redirectPage) === null ? (
-                <Template>
-                    <ContentArea redirectPage={redirectPage} />
-                </Template>
-            ) : (
-                <></>
-            )}
-        </>
-    )
-}
 
 function redirectToScreen(taskRegistry, redirectPage) {
     if (taskRegistry.queryTaskConfig.isTaskConfigExist) {
