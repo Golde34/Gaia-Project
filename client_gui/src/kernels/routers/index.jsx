@@ -69,15 +69,47 @@ const routeList = [
     {
         path: '/project',
         key: 'project',
-        element: <TaskRegistration redirectPage="Task Manager"/>,
+        element: <TaskRegistration redirectPage="Task Manager" />,
         // element: <Project />,
+    },
+    {
+        path: '/schedule',
+        key: 'schedule',
+        // element: <SchedulingTable />,
+        element: <TaskRegistration redirectPage="Schedule Plan" />,
+    },
+    {
+        path: '/calendar',
+        key: 'calendar',
+        // element: <DailyRoutine redirecrPage="Schedule Plan" />
+        element: <Calendar />,
     },
     {
         path: '/project/:id',
         key: 'project-id',
         element: <ProjectDetail />,
-        // element: <TaskDashboard />,
     },
+    {
+        path: '/task/detail/:id',
+        key: 'task-detail',
+        element: <TaskDetail />,
+    },
+    {
+        path: '/note-dashboard',
+        key: 'note-dashboard',
+        element: <NoteDashboard />,
+    },
+    {
+        path: '/note-detail/:id',
+        key: 'note-detail',
+        element: <NoteDetail />,
+    },
+    {
+        path: '/chat',
+        key: 'chat',
+        element: <Chat />,
+    },
+
     {
         path: '/microservices',
         key: 'microservices',
@@ -106,43 +138,12 @@ const routeList = [
     {
         path: '/privilege-url-settings',
         key: 'privilege-url-settings',
-        element: <PrivilegeUrlSettings />,  
-    },
-    {
-        path: '/schedule',
-        key: 'schedule',
-        // element: <SchedulingTable />,
-        element: <TaskRegistration redirectPage="Schedule Plan" />,
-    },
-    {
-        path: '/calendar',
-        key: 'calendar',
-        element: <Calendar />,
+        element: <PrivilegeUrlSettings />,
     },
     {
         path: '/gaia-health',
         key: 'gaia-health',
         element: <GaiaHealth />,
-    },
-    {
-        path: '/note-dashboard',
-        key: 'note-dashboard',
-        element: <NoteDashboard />,
-    },
-    {
-        path: '/note-detail/:id',
-        key: 'note-detail',
-        element: <NoteDetail />,
-    },
-    {
-        path: '/chat',
-        key: 'chat',
-        element: <Chat />,
-    },
-    {
-        path: '/task/detail/:id',
-        key: 'task-detail',
-        element: <TaskDetail />,
     },
     {
         path: '/github-callback',
