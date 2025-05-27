@@ -5,6 +5,7 @@ import {
     bossSigninReducer,
     getChatHubJwtReducer,
     userSignupReducer,
+    userSignoutReducer,
 } from './auth_service/auth.reducer'
 
 import {
@@ -52,6 +53,7 @@ export const reducer = combineReducers({
     gaiaSignin: gaiaSigninReducer,
     bossSignin: bossSigninReducer,
     userSignin: userSigninReducer,
+    userSignout: userSignoutReducer,
     userList: userListReducer,
     userUpdate: userUpdateReducer,
     userDetail: userDetailReducer,

@@ -173,3 +173,45 @@ func Signup(w http.ResponseWriter, r *http.Request, authService *services.AuthSe
 		return
 	}
 }
+
+func Signout(w http.ResponseWriter, r *http.Request, authService *services.AuthService) {
+	cookie, err := r.Cookie("accessToken")
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+	accessToken := cookie.Value
+	if accessToken == "" {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	// Clear cookies
+	http.SetCookie(w, &http.Cookie{
+		Name:     "accessToken",
+		Value:    "",
+		Path:    "/",
+		HttpOnly: true,
+		// Secure:   true, // Must be HTTPS if using Secure
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1, // Delete cookie
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refreshToken",
+		Value:    "",
+		Path:    "/",
+		HttpOnly: true,
+		// Secure:   true, // Must be HTTPS if using Secure
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1, // Delete cookie
+	})
+	w.Header().Set("Content-Type", "application/json")
+	response := map[string]interface{}{
+		"message": "Signout successfully",
+	}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}	

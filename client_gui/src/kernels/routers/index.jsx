@@ -22,9 +22,7 @@ import Test from "../../views/test/Test";
 import Chat from '../../views/chat_hub/Chat';
 import GaiaAutoSignin from '../../views/signin/GaiaAutoSignin';
 import Signin from '../../views/signin/Signin';
-import Signup from '../../screens/onboardingScreen/Signup';
-import Onboarding from '../../views/onboarding/Onboarding';
-import OnboardingUserInfo from '../../screens/onboardingScreen/OnboardingUserInfo';
+import Signup from '../../views/signin/Signup';
 
 // Guest is public
 // User is protected, only logged in when the Role higher than User
@@ -53,19 +51,9 @@ const routeList = [
         element: <Signin />,
     },
     {
-        path: '/onboarding',
-        key: 'onboarding',
-        element: <Onboarding />,
-    },
-    {
-        path: '/onboarding/signup',
+        path: '/signup',
         key: 'signup',
         element: <Signup />,
-    },
-    {
-        path: '/onboarding/user-information',
-        key: 'ob-user-information',
-        element: <OnboardingUserInfo />
     },
     {
         path: '/dashboard',

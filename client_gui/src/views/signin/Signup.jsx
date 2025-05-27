@@ -1,4 +1,4 @@
-import { Button, Card, Col, Flex, Grid, Metric, Title } from "@tremor/react";
+import { Card, Col, Flex, Grid, Metric, Title } from "@tremor/react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom";
@@ -33,7 +33,7 @@ const Signup = () => {
 
     return (
         <>
-            <Grid numItems={12} className="w-full">
+            <Grid numItems={12} className="w-full mt-20">
                 <Col numColSpan={12}>
                     <Metric level={3} className="text-center mb-5">Sign up</Metric>
                     <Flex justifyContent="end">
@@ -122,9 +122,9 @@ const Signup = () => {
                                         <button
                                             type="button"
                                             className="absolute right-0 top-0 z-10 inline-flex rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                                            onClick={() => navigate('/onboarding/user-information')}
+                                            onClick={() => navigate('/signin')}
                                         >
-                                            Continue
+                                            Continue Signin 
                                         </button>
                                     )}
                                     <div className="flex justify-center">
