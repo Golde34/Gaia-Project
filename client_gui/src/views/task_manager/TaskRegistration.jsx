@@ -70,7 +70,7 @@ function ContentArea(props) {
     return (
         <>
             <Metric style={{ marginBottom: '30px', marginTop: '30px' }}
-                className="text-2xl font-bold text-gray-800">Task Registration
+                className="text-2xl font-bold text-gray-800">Register Your Daily Schedule
             </Metric>
             <Grid numItems={12} className="gap-2">
                 <Col numColSpan={12}>

@@ -1,16 +1,9 @@
-from core.domain.request.query_request import QueryRequest
+from core.domain.request.query_request import QueryRequest, SystemRequest
 from core.domain.response.base_response import return_success_response
-from core.service.task_service import create_task, task_result, chitchat
+from core.dictionary.service_function import HANDLERS
 
 
-HANDLERS = {
-    'create_task': create_task,
-    'task_result': task_result,
-    'chitchat': chitchat
-}
-
-
-def handle_service(query: QueryRequest, response: any) -> str:
+def handle_service(query: QueryRequest | SystemRequest, classify: any) -> str:
     """
     Handle the service request based on the query type dynamically.
     Args:
@@ -21,7 +14,7 @@ def handle_service(query: QueryRequest, response: any) -> str:
     """
     try:
         matched_type = next(
-            (key for key in HANDLERS if key in response), 'chitchat')
+            (key for key in HANDLERS if key in classify), 'chitchat')
         handler = HANDLERS[matched_type]
 
         if matched_type == 'chitchat':
