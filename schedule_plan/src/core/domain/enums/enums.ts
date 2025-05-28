@@ -56,3 +56,11 @@ export enum RepeatLevel {
     MONTHLY = "MONTHLY",
     YEARLY = "YEARLY",
 }
+
+export enum Tag {
+    WORK = "WORK",
+    EAT = "EAT",
+    SLEEP = "SLEEP",
+    TRAVEL = "TRAVEL",
+    RELAX = "RELAX",
+}

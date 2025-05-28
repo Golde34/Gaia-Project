@@ -2,7 +2,6 @@ import { Navigate, useRoutes } from 'react-router-dom';
 
 import Dashboard from '../../views/Dashboard';
 import SchedulingTable from '../../views/schedule_plan/SchedulingTable';
-import TaskDashboard from '../../views/task_manager/TaskDashboard';
 import Microservices from '../../views/microservices_gui/Microservices';
 import UserProfile from '../../views/user_gui/UserProfile';
 import AuthManagerDashboard from '../../views/auth_service/UserManagerDashboard';
@@ -13,8 +12,6 @@ import GaiaManagerDashboard from '../../views/gaia_management/GaiaManagerDashboa
 import GaiaHealth from '../../views/microservices_gui/GaiaHealth';
 import NoteDashboard from '../../views/task_manager/NoteDashboard';
 import NoteDetail from '../../screens/noteScreen/NoteDetail';
-import TaskIntroduction from '../../views/introduction/TaskIntroduction';
-import TaskRegistration from '../../views/task_manager/TaskRegistration';
 import TaskDetail from '../../views/task_manager/TaskDetail';
 import GitHubCallback from '../context/GithubCallback';
 import ProjectDetail from '../../views/task_manager/ProjectDetail';
@@ -23,6 +20,7 @@ import Chat from '../../views/chat_hub/Chat';
 import GaiaAutoSignin from '../../views/signin/GaiaAutoSignin';
 import Signin from '../../views/signin/Signin';
 import Signup from '../../views/signin/Signup';
+import TaskRegistration from '../../views/onboarding/TaskRegistration';
 
 // Guest is public
 // User is protected, only logged in when the Role higher than User
