@@ -1,10 +1,9 @@
-import { all } from "axios";
-import { Column, DataType, Table } from "sequelize-typescript";
+import { Column, DataType, Model, Table } from "sequelize-typescript";
 
 @Table({
     tableName: "schedule_groups",
 })
-export default class ScheduleGroupEntity {
+export default class ScheduleGroupEntity extends Model {
     @Column({
         type: DataType.UUID,
         primaryKey: true,

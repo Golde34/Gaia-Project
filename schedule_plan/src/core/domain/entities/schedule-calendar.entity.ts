@@ -1,9 +1,9 @@
-import { Column, DataType, Table } from "sequelize-typescript";
+import { Column, DataType, Model, Table } from "sequelize-typescript";
 
 @Table({
     tableName: "schedule_plans",
 })
-export default class ScheduleCalendarEntity {
+export default class ScheduleCalendarEntity extends Model {
     @Column({
         type: DataType.UUID,
         primaryKey: true,

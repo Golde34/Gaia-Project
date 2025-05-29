@@ -1,9 +1,9 @@
-import { Column, DataType, Table } from "sequelize-typescript";
+import { Column, DataType, Model, Table } from "sequelize-typescript";
 
 @Table({
     tableName: "schedule_calendar_histories",
 })
-export default class ScheduleCalendarHistoryEntity {
+export default class ScheduleCalendarHistoryEntity extends Model {
     @Column({
         type: DataType.UUID,
         primaryKey: true,
@@ -23,7 +23,7 @@ export default class ScheduleCalendarHistoryEntity {
         field: "schedule_calendar_id",
     })
     scheduleCalendarId!: string;
-    
+
     @Column({
         type: DataType.DATE,
         allowNull: false,
