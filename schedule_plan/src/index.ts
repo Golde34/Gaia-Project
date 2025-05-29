@@ -13,21 +13,26 @@ import { kafkaController } from "./infrastructure/kafka/kafka-controller";
 import { scheduleTaskRouter } from "./ui/routers/schedule-task.router";
 import { scheduleGroupRouter } from "./ui/routers/schedule-group.router";
 import { scheduleCalendarRouter } from "./ui/routers/schedule-calendar.router";
+import { validateDBEnvironmentVars } from "./kernel/config/database.configuration";
+import PostgresDatabase from "./infrastructure/database/postgresql.db";
 
 async function main(): Promise<void> {
     validateEnvironmentVars();
+    validateDBEnvironmentVars();
     const kafkaHandler = new KafkaHandler();
     const applicationContext = "/schedule-plan";
+    const db = new PostgresDatabase();
+    console.log("PostgressDB: ", db.sequelize?.options.database)
 
-    const mongoHelper = new MongoHelper(
-        config.database.host,
-        config.database.port,
-        config.database.name,
-        config.database.username,
-        config.database.password,
-    )
-    await mongoHelper.connect();
-    console.log("Connected to MongoDB");
+    // const mongoHelper = new MongoHelper(
+    //     config.database.host,
+    //     config.database.port,
+    //     config.database.name,
+    //     config.database.username,
+    //     config.database.password,
+    // )
+    // await mongoHelper.connect();
+    // console.log("Connected to MongoDB");
 
     const app: Application = express();
     const port = config.server.listenPort;
