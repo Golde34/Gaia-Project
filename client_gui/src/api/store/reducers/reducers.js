@@ -33,12 +33,12 @@ import { microserviceListReducer, screenListReducer } from "./middleware_loader/
 import { getAllLLMModelsReducer, updateUserModelReducer, userDetailReducer, userListReducer, userSettingUpdateReducer, userUpdateReducer } from "./auth_service/user.reducer";
 import { roleCreateReducer, roleListReducer } from "./auth_service/role.reducer";
 import { privilegeListReducer } from "./auth_service/privilege.reducer";
-import { queryTaskConfigReducer, registerTaskConfigReducer } from "./work_optimization/task-registration.reducers";
+import { queryTaskConfigReducer, registerTaskConfigReducer } from "./onboarding/task-registration.reducers";
 import {
     noteCreateReducer, noteDeleteReducer, noteDetailReducer,
     noteListReducer, noteLockReducer, noteUnlockReducer, noteUpdateReducer
 } from "./task_manager/note.reducers";
-import { optimizeTaskByUserReducer } from "./work_optimization/optimize-task.reducers";
+import { optimizeTaskByUserReducer } from "./onboarding/optimize-task.reducers";
 import { activeTaskBatchReducer, chooseTaskBatchReducer, scheduleTaskListReducer, taskBatchListReducer } from "./schedule_plan/schedule-task.reducers";
 import { getUserGithubInfoReducer } from "./contribution_tracker/user-commit.reducer";
 import { getProjectAndRepoRequestReducer } from "./contribution_tracker/project-commit.reducer";

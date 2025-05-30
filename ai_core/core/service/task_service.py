@@ -6,15 +6,6 @@ from kernel.utils.parse_json import parse_json_string
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import CreateTaskResultSchema, CreateTaskSchema
 
-def _optimize_datetime(datetime_object: dict, model_name: str) -> dict:
-    try:
-        prompt = PARSING_DATE_PROMPT.format(input=datetime_object)
-
-        response = llm_models.get_model_generate_content(model_name)(
-            prompt=prompt, model_name=model_name)
-        return parse_json_string(response)
-    except Exception as e:
-        raise e
 
 def create_task(query: QueryRequest) -> dict:
     """
@@ -28,13 +19,11 @@ def create_task(query: QueryRequest) -> dict:
         datetime_parse_col = ['startDate', 'deadline']
         prompt = CREATE_TASK_PROMPT.format(query=query.query)
 
-        # Gọi mô hình và parse response
         response = llm_models.get_model_generate_content(query.model_name)(
             prompt=prompt, model_name=query.model_name, dto=CreateTaskSchema
         )
         task_data = json.loads(response)
 
-        # Xử lí cho parsing datetime
         datetime_values = {
             key: value for key, value in task_data.items()
             if key in datetime_parse_col and value 
@@ -59,7 +48,14 @@ def create_task(query: QueryRequest) -> dict:
     except Exception as e:
         raise e
 
-
+def _optimize_datetime(datetime_object: dict, model_name: str) -> dict:
+    try:
+        prompt = PARSING_DATE_PROMPT.format(input=datetime_object)
+        response = llm_models.get_model_generate_content(model_name)(
+            prompt=prompt, model_name=model_name)
+        return parse_json_string(response)
+    except Exception as e:
+        raise e
 
 def chitchat(query: QueryRequest) -> str:
     """

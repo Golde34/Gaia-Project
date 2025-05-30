@@ -29,6 +29,11 @@ var authValidator = validator.NewAuthDTOValidator()
 var signinResponesDTO = response_dtos.NewSigninResponseDTO()
 
 func (s *AuthService) Signup(ctx context.Context, input request_dtos.SignupDTO) (response_dtos.UserDetailDTO, error) {
+	err := authValidator.ValidateSignup(input)
+	if err != nil {
+		return response_dtos.UserDetailDTO{}, err
+	}
+	log.Println("Validation passed!")
 	signupResponse, err := client.IAuthAdapter(&adapter.AuthAdapter{}).Signup(input)
 	if err != nil {
 		return response_dtos.UserDetailDTO{}, err

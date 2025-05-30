@@ -1,6 +1,6 @@
 import { convertDateToString } from "../../../../kernels/utils/date-picker";
 import { HttpMethods, serverRequest } from "../../../baseAPI";
-import { OPTIMZE_TASK_BY_USER_FAILURE, OPTIMZE_TASK_BY_USER_REQUEST, OPTIMZE_TASK_BY_USER_SUCCESS } from "../../constants/work_optimization/optimize-task.constants";
+import { OPTIMZE_TASK_BY_USER_FAILURE, OPTIMZE_TASK_BY_USER_REQUEST, OPTIMZE_TASK_BY_USER_SUCCESS } from "../../constants/onboarding/optimize-task.constants";
 
 const portName = {
     middlewarePort: 'middlewarePort'

@@ -1,6 +1,6 @@
 import { QUERY_TASK_CONFIG_FAIL, QUERY_TASK_CONFIG_REQUEST, QUERY_TASK_CONFIG_SUCCESS, 
     REGISTER_TASK_CONFIG_FAIL, REGISTER_TASK_CONFIG_REQUEST, REGISTER_TASK_CONFIG_SUCCESS }
-from "../../constants/work_optimization/task-registration.constants";
+from "../../constants/onboarding/task-registration.constants";
 
 export const queryTaskConfigReducer = (
     state = { }, action) => {

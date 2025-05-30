@@ -22,11 +22,11 @@ def handle_user_prompt(query: QueryRequest) -> str:
         prompt = CLASSIFY_PROMPT.format(
             query=query.query, tools=tools_string)
 
-        response = llm_models.get_model_generate_content(
+        classify_response = llm_models.get_model_generate_content(
             query.model_name)(prompt=prompt, model_name=query.model_name)
 
-        print("Response:", response)
-        return service_handler.handle_service(query=query, response=response) 
+        print("Classify Response:", classify_response)
+        return service_handler.handle_service(query=query, classify=classify_response) 
         
     except Exception as e:
         raise e

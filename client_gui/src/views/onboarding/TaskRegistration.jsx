@@ -3,8 +3,8 @@ import { useDispatch, useSelector } from "react-redux"
 import Template from "../../components/template/Template";
 import { Button, Card, CategoryBar, Col, Flex, Grid, Legend, Metric, NumberInput, Subtitle, Text, TextInput, Title } from "@tremor/react";
 import { formatHourNumber } from "../../kernels/utils/date-picker";
-import { queryTaskConfig, registerTaskConfig } from "../../api/store/actions/work_optimization/task-registration.actions";
-import ProjectList from "./ProjectList";
+import { queryTaskConfig, registerTaskConfig } from "../../api/store/actions/onboarding/task-registration.actions";
+import ProjectList from "../task_manager/ProjectList";
 import SchedulingTable from "../schedule_plan/SchedulingTable";
 import { isNullOrUndefined } from "../../kernels/utils/cn";
 
@@ -111,7 +111,7 @@ function ContentArea(props) {
     return (
         <>
             <Metric style={{ marginBottom: '30px', marginTop: '30px' }}
-                className="text-2xl font-bold text-gray-800">Task Registration
+                className="text-2xl font-bold text-gray-800">Register Your Daily Schedule
             </Metric>
             <Grid numItems={12} className="gap-2">
                 <Col numColSpan={12}>
