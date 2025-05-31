@@ -23,7 +23,7 @@ func (adapter *ScheduleCalendarAdapter) GetUserDailyTasks(userId string) (respon
 
 	bodyResultMap, ok := bodyResult.(map[string]interface{})
 	if !ok {
-		return *&response_dtos.DailyTasksResponseDTO{}, nil
+		return response_dtos.DailyTasksResponseDTO{}, nil
 	}
 	if bodyResultMap["tasks"] == nil || len(bodyResultMap["tasks"].([]interface{})) == 0 {
 		return response_dtos.DailyTasksResponseDTO{
