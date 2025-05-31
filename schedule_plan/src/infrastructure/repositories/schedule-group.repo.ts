@@ -3,7 +3,7 @@ import { Op } from "sequelize";
 import { ActiveStatus } from "../../core/domain/enums/enums";
 
 class ScheduleGroupRepository {
-    constructor() {}
+    constructor() { }
 
     async createScheduleGroup(scheduleGroup: any): Promise<ScheduleGroupEntity | undefined> {
         try {
@@ -23,13 +23,17 @@ class ScheduleGroupRepository {
         }
     }
 
-    async updateScheduleGroup(scheduleGroup: any): Promise<ScheduleGroupEntity | null> {
+    async updateScheduleGroupUpdatedDate(scheduleGroup: any, today: Date): Promise<ScheduleGroupEntity | null> {
         try {
-            const [affectedCount, affectedRows] = await ScheduleGroupEntity.update(scheduleGroup, {
-                where: { id: scheduleGroup.id },
-                returning: true,
-            });
-            return affectedCount > 0 ? affectedRows[0] : null;
+            console.log("Today's date for update:", today);
+            scheduleGroup.set({
+                updatedAt: today,
+            })
+            await scheduleGroup.save();
+
+            const existedGroup = await ScheduleGroupEntity.findByPk(scheduleGroup.id);
+            console.log("Existed schedule group:", existedGroup);
+            return existedGroup; 
         } catch (error) {
             console.error("Error updating schedule group:", error);
             throw new Error("Failed to update schedule group");
@@ -50,16 +54,17 @@ class ScheduleGroupRepository {
         try {
             const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
             const weekDay = date.getDay().toString();
-            return await ScheduleGroupEntity.findAll({
+            const scheduleGroups = await ScheduleGroupEntity.findAll({
                 where: {
                     activeStatus: ActiveStatus.active,
-                    updateDate: { [Op.lt]: startOfDay },
-                    repeat: weekDay,
-                    isFailed: { [Op.or]: [null, false] },
+                    updatedAt: { [Op.lt]: startOfDay },
+                    repeat: { [Op.contains]: [String(weekDay)] },
+                    isFailed: { [Op.in]: [null, false] }
                 },
                 limit: limit,
                 order: [['schedulePlanId', 'ASC']],
             });
+            return scheduleGroups;
         } catch (error) {
             console.error("Error finding schedule groups to create task:", error);
             throw new Error("Failed to find schedule groups to create task");
@@ -76,6 +81,15 @@ class ScheduleGroupRepository {
         } catch (error) {
             console.error("Error marking schedule group as failed:", error);
             throw new Error("Failed to mark schedule group as failed");
+        }
+    }
+
+    async findById(scheduleGroupId: string): Promise<ScheduleGroupEntity | null> {
+        try {
+            return await ScheduleGroupEntity.findByPk(scheduleGroupId);
+        } catch (error) {
+            console.error("Error finding schedule group by ID:", error);
+            throw new Error("Failed to find schedule group by ID");
         }
     }
 }

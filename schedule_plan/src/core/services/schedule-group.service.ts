@@ -40,14 +40,16 @@ class ScheduleGroupService {
             throw new Error(error.message.toString());
         }
     }
-    
-    async updateScheduleGroup(scheduleGroup: ScheduleGroupEntity): Promise<void> {
+
+    async updateScheduleGroupUpdatedDate(scheduleGroup: ScheduleGroupEntity, today: Date): Promise<void> {
         try {
-            const updatedScheduleGroup = await scheduleGroupRepository.updateScheduleGroup(scheduleGroup);
+            const updatedScheduleGroup = await scheduleGroupRepository.updateScheduleGroupUpdatedDate(scheduleGroup, today);
             if (updatedScheduleGroup) {
                 this.clearScheduleGroupCache(scheduleGroup.schedulePlanId);
+                console.log("Schedule group updated successfully: ", updatedScheduleGroup);
+                return;
             }
-            console.log("Schedule group updated successfully: ", scheduleGroup);
+            throw new Error("Failed to update schedule group");
         } catch (error: any) {
             throw new Error(error.message.toString());
         }
@@ -80,7 +82,15 @@ class ScheduleGroupService {
             return await scheduleGroupRepository.markAsFail(scheduleGroupId);
         } catch (error: any) {
             throw new Error(error.message.toString());
-        } 
+        }
+    }
+
+    async findById(scheduleGroupId: string): Promise<ScheduleGroupEntity | null> {
+        try {
+            return await scheduleGroupRepository.findById(scheduleGroupId);
+        } catch (error: any) {
+            throw new Error(error.message.toString());
+        }
     }
 }
 

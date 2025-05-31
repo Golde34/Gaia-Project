@@ -8,13 +8,11 @@ export default class ScheduleCalendarEntity extends Model {
         type: DataType.UUID,
         primaryKey: true,
         field: "id",
-        allowNull: false,
     })
     id!: string;
 
     @Column({
         type: DataType.INTEGER,
-        allowNull: false,
         field: "user_id",
     })
     userId!: number;
@@ -23,20 +21,32 @@ export default class ScheduleCalendarEntity extends Model {
         type: DataType.BOOLEAN,
         field: "repeatable",
         defaultValue: false,
-    }) 
+    })
     repeatable!: boolean;
 
     @Column({
         type: DataType.ARRAY(DataType.INTEGER),
         field: "repeatable_days",
-        allowNull: true,
     })
-    repeatableDays!: number[] | null;
+    repeatableDays?: number[] | null;
 
     @Column({
         type: DataType.DATE,
         field: "urgent_date",
-        allowNull: true,
     })
-    urgentDate!: Date | null;
+    urgentDate?: Date | null;
+
+    @Column({
+        type: DataType.DATE,
+        field: "created_at",
+        defaultValue: DataType.NOW,
+    })
+    createdAt?: Date;
+
+    @Column({
+        type: DataType.DATE,
+        field: "updated_at",
+        defaultValue: DataType.NOW,
+    })
+    updatedAt?: Date;
 }

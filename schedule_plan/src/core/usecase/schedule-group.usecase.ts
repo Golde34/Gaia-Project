@@ -12,7 +12,6 @@ class ScheduleGroupUsecase {
 
     async createScheduleGroup(scheduleGroup: any, userId: number): Promise<IResponse | undefined> {
         try {
-            console.log('Create schedule group: ', scheduleGroup);
             const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
             if (!schedulePlan) {
                 console.error(`Cannot find schedule plan by user id: ${userId}`);

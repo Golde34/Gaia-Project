@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import SchedulePlanEntity from "../../core/domain/entities/schedule-plan.entity";
 
 class SchedulePlanRepository {
@@ -5,7 +6,11 @@ class SchedulePlanRepository {
 
     async createSchedulePlan(schedulePlan: any): Promise<SchedulePlanEntity> {
         try {
-            return await SchedulePlanEntity.create(schedulePlan);
+            const newSchedulePlan = {
+                ...schedulePlan,
+                id: randomUUID(), 
+            }
+            return await SchedulePlanEntity.create(newSchedulePlan);
         } catch (error) {
             console.error("Error creating schedule plan:", error);
             throw new Error("Failed to create schedule plan");

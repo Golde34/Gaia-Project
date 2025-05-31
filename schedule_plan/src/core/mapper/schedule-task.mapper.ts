@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { convertPriority } from "../../kernel/utils/convert-fields";
 import ScheduleGroupEntity from "../domain/entities/schedule-group.entity";
 import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
@@ -6,8 +7,9 @@ import { KafkaCreateTaskMessage, KafkaOptimizeTaskMessage, SyncScheduleTaskReque
 
 export const scheduleTaskMapper = {
 
-    kafkaCreateTaskMapper(data: any, schedulePlanId: string): ScheduleTaskEntity {
-        return new ScheduleTaskEntity({
+    kafkaCreateTaskMapper(data: any, schedulePlanId: string): any {
+        return {
+            id: randomUUID(),
             taskId: data.task.id,
             title: data.task.title,
             priority: data.task.priority,
@@ -20,7 +22,7 @@ export const scheduleTaskMapper = {
             schedulePlanId: schedulePlanId,
             repeat: RepeatLevel.NONE,
             isNotify: false,
-        });
+        };
     },
 
     buildKafkaCreateTaskMapper(taskId: string, scheduleTaskId: string, scheduleTaskName: string) {
@@ -62,23 +64,26 @@ export const scheduleTaskMapper = {
         return scheduleTask
     },
 
-    buildTaskFromScheduleGroup(scheduleGroup: ScheduleGroupEntity): ScheduleTaskEntity {
+    buildTaskFromScheduleGroup(scheduleGroup: ScheduleGroupEntity): any {
         console.log('Schedule group: ', scheduleGroup)
         // startDate = today but have schedule.startHour and schedule.startMinute
         const startDate = new Date(new Date().setHours(Number(scheduleGroup.startHour), Number(scheduleGroup.startMinute), 0, 0));
         const deadline = new Date(new Date().setHours(Number(scheduleGroup.endHour), Number(scheduleGroup.endMinute), 0, 0));
-        return new ScheduleTaskEntity({
-            title: scheduleGroup.title,
-            priority: scheduleGroup.priority,
-            status: scheduleGroup.status,
+        return {
+            id: randomUUID(),
+            title: scheduleGroup.title === undefined ? "" : scheduleGroup.title,
+            priority: scheduleGroup.priority === undefined ? [] : scheduleGroup.priority,
+            status: scheduleGroup.status === undefined ? "TODO" : scheduleGroup.status,
             startDate: startDate,
             deadline: deadline,
-            duration: scheduleGroup.duration,
+            duration: scheduleGroup.duration === undefined ? 0 : scheduleGroup.duration,
             activeStatus: ActiveStatus.active,
             preferenceLevel: convertPriority(scheduleGroup.priority),
             schedulePlanId: scheduleGroup.schedulePlanId,
-            isNotify: scheduleGroup.isNotify,
+            isNotify: scheduleGroup.isNotify === undefined ? false : scheduleGroup.isNotify,
             scheduleGroupId: scheduleGroup.id,
-        });
+            repeat: RepeatLevel.WEEKLY,
+            isSynchronizedWithWO: false
+        };
     }
 }

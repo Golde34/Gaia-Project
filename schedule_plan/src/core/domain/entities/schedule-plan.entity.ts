@@ -14,31 +14,28 @@ export default class SchedulePlanEntity extends Model {
 
     @Column({
         type: DataType.INTEGER,
-        allowNull: false,
         field: "user_id",
     })
     userId!: number;
 
     @Column({
         type: DataType.DATE,
-        allowNull: false,
         field: "start_date",
     })
     startDate!: Date;
 
     @Column({
         type: DataType.DATE,
-        allowNull: true,
         field: "end_date",
     })
-    endDate!: Date;
+    endDate?: Date;
 
     @Column({
         type: DataType.STRING,
         field: "active_status",
         defaultValue: ActiveStatus.active,
     })
-    activeStatus!: ActiveStatus; 
+    activeStatus?: ActiveStatus;
 
     @Column({
         type: DataType.INTEGER,
@@ -56,5 +53,19 @@ export default class SchedulePlanEntity extends Model {
         type: DataType.STRING,
         field: "user_tag_time",
     })
-    userTagTime!: string;
+    userTagTime?: string;
+
+    @Column({
+        type: DataType.DATE,
+        field: "created_at",
+        defaultValue: DataType.NOW,
+    })
+    createdAt?: Date;
+
+    @Column({
+        type: DataType.DATE,
+        field: "updated_at",
+        defaultValue: DataType.NOW,
+    })
+    updatedAt?: Date;
 }

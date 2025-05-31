@@ -20,7 +20,7 @@ class ScheduleTaskService {
 
     async createScheduleTask(scheduleTask: any): Promise<IResponse> {
         try {
-            scheduleTask.createDate = new Date();
+            scheduleTask.createdAt = new Date();
             const createScheduleTask = await scheduleTaskRepository.createScheduleTask(scheduleTask);
             return msg200({
                 message: (createScheduleTask as any)

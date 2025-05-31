@@ -17,12 +17,12 @@ class SchedulePlanService {
         if (existedSchedulePlan !== null) {
             return existedSchedulePlan;
         }
-        const schedulePlan = {
+        const schedulePlan: any = {
             userId: userId,
             startDate: new Date(),
             activeStatus: ActiveStatus.active,
             activeTaskBatch: 0,
-            isTashBatchActive: false
+            isTaskBatchActive: false
         }
         return await schedulePlanRepository.createSchedulePlan(schedulePlan);
     }
