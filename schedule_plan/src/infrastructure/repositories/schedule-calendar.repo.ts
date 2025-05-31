@@ -1,15 +1,10 @@
-import { ulid } from "ulid";
 import ScheduleCalendarEntity from "../../core/domain/entities/schedule-calendar.entity";
 import { Op } from "sequelize";
 
 class ScheduleCalendarRepository {
     async createScheduleCalendar(scheduleCalendar: any): Promise<ScheduleCalendarEntity | undefined> {
         try {
-            const newCalendar = {
-                ...scheduleCalendar,
-                id: ulid(),
-            };
-            return await ScheduleCalendarEntity.create(newCalendar);
+            return await ScheduleCalendarEntity.create(scheduleCalendar);
         } catch (error) {
             console.error("Error creating schedule calendar:", error);
             throw new Error("Failed to create schedule calendar");

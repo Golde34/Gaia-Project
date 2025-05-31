@@ -1,7 +1,7 @@
 import { Column, DataType, Model, Table } from "sequelize-typescript";
 
 @Table({
-    tableName: "schedule_plans",
+    tableName: "schedule_calendars",
 })
 export default class ScheduleCalendarEntity extends Model {
     @Column({

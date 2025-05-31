@@ -1,16 +1,19 @@
 import CacheSingleton from "../../infrastructure/cache/internal-cache/cache-singleton";
-import { IScheduleGroupEntity } from "../../infrastructure/entities/schedule-group.entity";
-import { scheduleGroupRepository } from "../../infrastructure/repository/schedule-group.repository";
+import { scheduleGroupRepository } from "../../infrastructure/repositories/schedule-group.repo";
 import { InternalCacheConstants } from "../domain/constants/constants";
+import ScheduleGroupEntity from "../domain/entities/schedule-group.entity";
 
 class ScheduleGroupService {
     constructor(
         public scheduleGroupCache = CacheSingleton.getInstance().getCache(),
     ) { }
 
-    async createScheduleGroup(scheduleGroup: any): Promise<IScheduleGroupEntity> {
+    async createScheduleGroup(scheduleGroup: any): Promise<ScheduleGroupEntity> {
         try {
             const createdScheduleGroup = await scheduleGroupRepository.createScheduleGroup(scheduleGroup);
+            if (!createdScheduleGroup) {
+                throw new Error("Failed to create schedule group");
+            }
             console.log("Schedule group created successfully: ", scheduleGroup);
             this.clearScheduleGroupCache(scheduleGroup.schedulePlanId);
             return createdScheduleGroup;
@@ -23,7 +26,7 @@ class ScheduleGroupService {
         this.scheduleGroupCache.clear(InternalCacheConstants.SCHEDULE_GROUP_LIST + schedulePlanId);
     }
 
-    async listScheduleGroup(schedulePlanId: string): Promise<IScheduleGroupEntity[]> {
+    async listScheduleGroup(schedulePlanId: string): Promise<ScheduleGroupEntity[]> {
         try {
             const groupListCache = this.scheduleGroupCache.get(InternalCacheConstants.SCHEDULE_GROUP_LIST + schedulePlanId);
             if (!groupListCache) {
@@ -38,7 +41,7 @@ class ScheduleGroupService {
         }
     }
     
-    async updateScheduleGroup(scheduleGroup: IScheduleGroupEntity): Promise<void> {
+    async updateScheduleGroup(scheduleGroup: ScheduleGroupEntity): Promise<void> {
         try {
             const updatedScheduleGroup = await scheduleGroupRepository.updateScheduleGroup(scheduleGroup);
             if (updatedScheduleGroup) {
@@ -50,7 +53,7 @@ class ScheduleGroupService {
         }
     }
 
-    async deleteScheduleGroup(scheduleGroupId: string): Promise<IScheduleGroupEntity> {
+    async deleteScheduleGroup(scheduleGroupId: string): Promise<ScheduleGroupEntity | null> {
         try {
             const deletedScheduleGroup = await scheduleGroupRepository.deleteScheduleGroup(scheduleGroupId);
             if (deletedScheduleGroup) {
@@ -65,7 +68,7 @@ class ScheduleGroupService {
     async findAllScheduleGroupsToCreateTask(limit: number, date: Date): Promise<any> {
         try {
             const scheduleGroups = await scheduleGroupRepository.findAllScheduleGroupsToCreateTask(limit, date);
-            console.log(scheduleGroups.length >= 1 ? scheduleGroups.map((group: IScheduleGroupEntity) => group.title) : "No schedule groups found");
+            console.log(scheduleGroups.length >= 1 ? scheduleGroups.map((group: ScheduleGroupEntity) => group.title) : "No schedule groups found");
             return scheduleGroups;
         } catch (error: any) {
             throw new Error(error.message.toString());

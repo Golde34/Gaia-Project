@@ -1,16 +1,16 @@
-import { ISchedulePlanEntity } from "../../infrastructure/entities/schedule-plan.entity";
 import { IResponse, msg200, msg400 } from "../common/response";
 import { scheduleCalendarService } from "../services/schedule-calendar.service";
 import { scheduleTaskService } from "../services/schedule-task.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
+import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
 
 class ScheduleCalendarUsecase {
     constructor() { }
 
-    async updateScheduleTasksWithSchedulePlan(userId: number, schedulePlan: ISchedulePlanEntity): Promise<any> {
-        const scheduleTasks = await scheduleTaskService.findByTaskBatch(schedulePlan._id, schedulePlan.activeTaskBatch);
+    async updateScheduleTasksWithSchedulePlan(userId: number, schedulePlan: SchedulePlanEntity): Promise<any> {
+        const scheduleTasks = await scheduleTaskService.findByTaskBatch(schedulePlan.id, schedulePlan.activeTaskBatch);
         if (!scheduleTasks) {
-            console.error(`Cannot find schedule tasks by schedule plan: ${schedulePlan._id}`);
+            console.error(`Cannot find schedule tasks by schedule plan: ${schedulePlan.id}`);
             return;
         }
         const scheduleCalendar = await scheduleCalendarService.findScheduleCalendarByUserId(userId);
@@ -46,7 +46,7 @@ class ScheduleCalendarUsecase {
                 return msg400("Cannot find schedule plan for user!");
             }
 
-            const userDailyTasks = await scheduleTaskService.findUserDailyTasks(schedulePlan._id, schedulePlan.activeTaskBatch, new Date())
+            const userDailyTasks = await scheduleTaskService.findUserDailyTasks(schedulePlan.id, schedulePlan.activeTaskBatch, new Date())
             if (userDailyTasks == null || userDailyTasks.length === 0) {
                 console.log(`User ${body.userId}  has no tasks, no need to schedule calendar.`);
                 return msg200({
@@ -60,7 +60,7 @@ class ScheduleCalendarUsecase {
             const scheduleCalendar = {
                 userId: Number(body.userId),
                 startDate: new Date(),
-                tasks: userDailyTasks.map((task) => task._id) 
+                tasks: userDailyTasks.map((task) => task.id) 
             }
 
             await scheduleCalendarService.updateScheduleCalendar(Number(body.userId), scheduleCalendar);

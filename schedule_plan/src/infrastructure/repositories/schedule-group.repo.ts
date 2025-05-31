@@ -1,4 +1,3 @@
-import { ulid } from "ulid";
 import ScheduleGroupEntity from "../../core/domain/entities/schedule-group.entity";
 import { Op } from "sequelize";
 import { ActiveStatus } from "../../core/domain/enums/enums";
@@ -8,11 +7,7 @@ class ScheduleGroupRepository {
 
     async createScheduleGroup(scheduleGroup: any): Promise<ScheduleGroupEntity | undefined> {
         try {
-            const newGroup = {
-                ...scheduleGroup,
-                id: ulid(),
-            };
-            return await ScheduleGroupEntity.create(newGroup);
+            return await ScheduleGroupEntity.create(scheduleGroup);
         } catch (error) {
             console.error("Error creating schedule group:", error);
             throw new Error("Failed to create schedule group");

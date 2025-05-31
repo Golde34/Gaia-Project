@@ -1,12 +1,12 @@
-import { IScheduleGroupEntity } from "../../infrastructure/entities/schedule-group.entity";
-import { IScheduleTaskEntity, ScheduleTaskEntity } from "../../infrastructure/entities/schedule-task.entity"
 import { convertPriority } from "../../kernel/utils/convert-fields";
+import ScheduleGroupEntity from "../domain/entities/schedule-group.entity";
+import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
 import { ActiveStatus, RepeatLevel } from "../domain/enums/enums";
 import { KafkaCreateTaskMessage, KafkaOptimizeTaskMessage, SyncScheduleTaskRequest } from "../domain/request/task.dto";
 
 export const scheduleTaskMapper = {
 
-    kafkaCreateTaskMapper(data: any, schedulePlanId: string): IScheduleTaskEntity {
+    kafkaCreateTaskMapper(data: any, schedulePlanId: string): ScheduleTaskEntity {
         return new ScheduleTaskEntity({
             taskId: data.task.id,
             title: data.task.title,
@@ -40,7 +40,7 @@ export const scheduleTaskMapper = {
         return message
     },
 
-    buildOptimizeScheduleTaskMapper(optimizedTask: any, task: IScheduleTaskEntity): IScheduleTaskEntity {
+    buildOptimizeScheduleTaskMapper(optimizedTask: any, task: ScheduleTaskEntity): ScheduleTaskEntity {
         task.taskOrder = optimizedTask.taskOrder
         task.weight = optimizedTask.weight
         task.stopTime = optimizedTask.stopTime
@@ -48,7 +48,7 @@ export const scheduleTaskMapper = {
         return task;
     },
 
-    kafkaUpdateTaskMapper(data: any, scheduleTask: IScheduleTaskEntity): IScheduleTaskEntity {
+    kafkaUpdateTaskMapper(data: any, scheduleTask: ScheduleTaskEntity): ScheduleTaskEntity {
         scheduleTask.activeStatus = data.activeStatus
         scheduleTask.deadline = data.deadline
         scheduleTask.duration = data.duration
@@ -62,7 +62,7 @@ export const scheduleTaskMapper = {
         return scheduleTask
     },
 
-    buildTaskFromScheduleGroup(scheduleGroup: IScheduleGroupEntity): IScheduleTaskEntity {
+    buildTaskFromScheduleGroup(scheduleGroup: ScheduleGroupEntity): ScheduleTaskEntity {
         console.log('Schedule group: ', scheduleGroup)
         // startDate = today but have schedule.startHour and schedule.startMinute
         const startDate = new Date(new Date().setHours(Number(scheduleGroup.startHour), Number(scheduleGroup.startMinute), 0, 0));
@@ -78,7 +78,7 @@ export const scheduleTaskMapper = {
             preferenceLevel: convertPriority(scheduleGroup.priority),
             schedulePlanId: scheduleGroup.schedulePlanId,
             isNotify: scheduleGroup.isNotify,
-            scheduleGroupId: scheduleGroup._id,
+            scheduleGroupId: scheduleGroup.id,
         });
     }
 }
