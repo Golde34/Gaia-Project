@@ -7,7 +7,9 @@ CREATE TABLE public.time_bubbles (
     start_minute INTEGER NULL,
     end_hour    INTEGER NULL,
     end_minute  INTEGER NULL,
-    tag         VARCHAR(255) NULL
+    tag         VARCHAR(255) NULL,
+    created_at  TIMESTAMP WITHOUT TIME ZONE NULL,
+    updated_at  TIMESTAMP WITHOUT TIME ZONE NULL,
 );
 
 CREATE INDEX idx_time_bubbles_schedule_calendar_id

@@ -6,8 +6,8 @@ CREATE TABLE public.schedule_tasks (
     title   VARCHAR(255)        NOT NULL,
     priority VARCHAR(255)[]     NOT NULL,
     status  VARCHAR(255)        NOT NULL,
-    start_date DATE             NOT NULL,
-    deadline   DATE             NOT NULL,
+    start_date TIMESTAMP WITHOUT TIME ZONE             NOT NULL,
+    deadline   TIMESTAMP WITHOUT TIME ZONE             NOT NULL,
     duration   INTEGER          NOT NULL,
     active_status VARCHAR(255)  NOT NULL,
     preference_level INTEGER     NOT NULL,
@@ -18,8 +18,9 @@ CREATE TABLE public.schedule_tasks (
     task_batch   INTEGER         NULL,
     schedule_plan_id VARCHAR(255) NOT NULL,
     is_notify       BOOLEAN       NOT NULL,
-    create_date     DATE          NOT NULL,
-    schedule_group_id VARCHAR(255) NOT NULL
+    schedule_group_id VARCHAR(255) NOT NULL,
+    created_at  TIMESTAMP WITHOUT TIME ZONE NULL,
+    updated_at  TIMESTAMP WITHOUT TIME ZONE NULL,
 );
 
 CREATE INDEX idx_schedule_tasks_schedule_plan_id

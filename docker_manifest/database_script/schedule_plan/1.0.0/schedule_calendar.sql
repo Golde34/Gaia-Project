@@ -5,7 +5,9 @@ CREATE TABLE public.schedule_calendars(
     user_id INTEGER NOT NULL,
     repeatable BOOLEAN NOT NULL DEFAULT FALSE,
     repeatable_days INTEGER[] NULL,
-    urgent_date DATE NULL
+    urgent_date DATE NULL,
+    created_at  TIMESTAMP WITHOUT TIME ZONE NULL,
+    updated_at  TIMESTAMP WITHOUT TIME ZONE NULL,
 );
 
 CREATE INDEX idx_schedule_calendars_user_id 

@@ -16,8 +16,8 @@ CREATE TABLE public.schedule_groups (
     is_notify        BOOLEAN        NOT NULL,
     active_status    VARCHAR(255)   NOT NULL,
     is_failed        BOOLEAN        NOT NULL,
-    create_date      DATE           NOT NULL,
-    update_date      DATE           NULL
+    created_at  TIMESTAMP WITHOUT TIME ZONE NULL,
+    updated_at  TIMESTAMP WITHOUT TIME ZONE NULL,
 );
 
 CREATE INDEX idx_schedule_groups_schedule_plan_id
