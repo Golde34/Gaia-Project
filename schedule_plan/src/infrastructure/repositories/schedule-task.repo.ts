@@ -1,5 +1,6 @@
 import { Op, Sequelize } from "sequelize";
 import ScheduleTaskEntity from "../../core/domain/entities/schedule-task.entity";
+import { ActiveStatus, TaskStatus } from "../../core/domain/enums/enums";
 
 class ScheduleTaskRepository {
     constructor() { }
@@ -17,8 +18,9 @@ class ScheduleTaskRepository {
     }
 
     async deleteScheduleTask(scheduleTaskId: string): Promise<ScheduleTaskEntity | null> {
+        const deletedTask = await ScheduleTaskEntity.findByPk(scheduleTaskId);
         const deletedCount = await ScheduleTaskEntity.destroy({ where: { id: scheduleTaskId } });
-        return deletedCount > 0 ? await ScheduleTaskEntity.findByPk(scheduleTaskId) : null;
+        return deletedCount > 0 ? deletedTask : null;
     }
 
     async findScheduleTaskById(scheduleTaskId: string): Promise<ScheduleTaskEntity | null> {
@@ -51,8 +53,8 @@ class ScheduleTaskRepository {
         return await ScheduleTaskEntity.findAll({
             where: {
                 schedulePlanId: schedulePlanId,
-                status: { [Op.ne]: 'DONE' },
-                activeStatus: 'active'
+                status: { [Op.ne]: TaskStatus.DONE },
+                activeStatus: ActiveStatus.active 
             },
             order: [['createdAt', 'DESC']],
             limit: 10
@@ -64,8 +66,8 @@ class ScheduleTaskRepository {
             where: {
                 schedulePlanId: schedulePlanId,
                 taskBatch: taskBatch,
-                status: { [Op.ne]: 'DONE' },
-                activeStatus: 'active'
+                status: { [Op.ne]: TaskStatus.DONE },
+                activeStatus: ActiveStatus.active 
             },
             order: [['taskOrder', 'ASC']]
         });
@@ -77,8 +79,8 @@ class ScheduleTaskRepository {
 
     async findDistinctTaskBatch(schedulePlanId: string): Promise<number[]> {
         return await ScheduleTaskEntity.findAll({
-            attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('taskBatch')), 'taskBatch']],
-            where: { schedulePlanId: schedulePlanId, status: { [Op.ne]: 'DONE' } },
+            attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('task_batch')), 'taskBatch']],
+            where: { schedulePlanId: schedulePlanId, status: { [Op.ne]: TaskStatus.DONE } },
             raw: true
         }).then(results => results.map(result => result.taskBatch));
     }
@@ -98,8 +100,8 @@ class ScheduleTaskRepository {
                 schedulePlanId: schedulePlanId,
                 taskBatch: taskBatch,
                 createdAt: { [Op.between]: [startOfDay, endOfDay] },
-                status: { [Op.ne]: 'DONE' },
-                activeStatus: 'active'
+                status: { [Op.ne]: TaskStatus.DONE },
+                activeStatus: ActiveStatus.active 
             }
         });
     }

@@ -7,7 +7,7 @@ import (
 
 func ReturnScheduleObjectMapper(body map[string]interface{}) *response_dtos.ScheduleGroupResponseDTO{
 	var input response_dtos.ScheduleGroupResponseDTO
-	input.ID = body["_id"].(string)
+	input.ID = body["id"].(string)
 	input.Title = body["title"].(string)
 	input.Priority = utils.ConvertStringToStringArray(body["priority"].([]interface{}))
 	input.Status = body["status"].(string)

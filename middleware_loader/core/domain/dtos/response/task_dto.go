@@ -135,7 +135,7 @@ func (in *TaskDetailResponseDTO) MapperTaskDetail(response interface{}) TaskDeta
 	out.StartDate = task["startDate"].(string)
 	out.Deadline = task["deadline"].(string)
 
-	out.ScheduleTaskId = scheduleTask["_id"].(string)
+	out.ScheduleTaskId = scheduleTask["id"].(string)
 	if scheduleTask["taskBatch"] != nil {
 		out.TaskBatch = int64(scheduleTask["taskBatch"].(float64))
 	}

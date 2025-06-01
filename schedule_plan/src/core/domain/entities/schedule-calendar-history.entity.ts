@@ -19,22 +19,33 @@ export default class ScheduleCalendarHistoryEntity extends Model {
 
     @Column({
         type: DataType.STRING,
-        allowNull: false,
         field: "schedule_calendar_id",
     })
     scheduleCalendarId!: string;
 
     @Column({
         type: DataType.DATE,
-        allowNull: false,
         field: "start_date",
     })
-    startDate!: Date;
+    startDate?: Date;
 
     @Column({
         type: DataType.DATE,
-        allowNull: true,
         field: "end_date",
     })
-    endDate!: Date | null;
+    endDate?: Date | null;
+
+    @Column({
+        type: DataType.DATE,
+        field: "created_at",
+        defaultValue: DataType.NOW,
+    })
+    createdAt?: Date;
+
+    @Column({
+        type: DataType.DATE,
+        field: "updated_at",
+        defaultValue: DataType.NOW,
+    })
+    updatedAt?: Date;
 }

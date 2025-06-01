@@ -1,15 +1,15 @@
-import { ulid } from "ulid";
+import { randomUUID } from "crypto";
 import ScheduleCalendarEntity from "../../core/domain/entities/schedule-calendar.entity";
 import { Op } from "sequelize";
 
 class ScheduleCalendarRepository {
     async createScheduleCalendar(scheduleCalendar: any): Promise<ScheduleCalendarEntity | undefined> {
         try {
-            const newCalendar = {
+            const newScheduleCalendar = {
                 ...scheduleCalendar,
-                id: ulid(),
+                id: randomUUID() 
             };
-            return await ScheduleCalendarEntity.create(newCalendar);
+            return await ScheduleCalendarEntity.create(newScheduleCalendar);
         } catch (error) {
             console.error("Error creating schedule calendar:", error);
             throw new Error("Failed to create schedule calendar");
@@ -60,4 +60,4 @@ class ScheduleCalendarRepository {
     }
 }
 
-export const scheduelCalendarRepository = new ScheduleCalendarRepository();
+export const scheduleCalendarRepository = new ScheduleCalendarRepository();

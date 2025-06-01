@@ -1,6 +1,9 @@
 import { ErrorStatus } from "../../core/domain/enums/enums";
 
-export const convertPriority = (priorities: string[]): number => {
+export const convertPriority = (priorities: string[] | undefined): number => {
+    if (!priorities || priorities.length === 0) {
+        return 0; 
+    }
     const priority = priorities[0];
     switch (priority) {
         case "Low":

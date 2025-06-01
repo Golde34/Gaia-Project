@@ -1,6 +1,6 @@
-import { IScheduleGroupEntity } from "../../infrastructure/entities/schedule-group.entity";
-import { IScheduleTaskEntity } from "../../infrastructure/entities/schedule-task.entity";
 import { IResponse, msg200, msg400 } from "../common/response";
+import ScheduleGroupEntity from "../domain/entities/schedule-group.entity";
+import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
 import { OptimizeScheduleTaskMessage, SyncScheduleTaskRequest } from "../domain/request/task.dto";
 import { scheduleTaskMapper } from "../mapper/schedule-task.mapper";
 import { notificationService } from "../services/notifi-agent.service";
@@ -24,7 +24,7 @@ class ScheduleTaskUsecase {
                 throw new Error("Failed to create schedule calendar");
             }
 
-            const task = scheduleTaskMapper.kafkaCreateTaskMapper(scheduleTask, schedulePlan._id);
+            const task = scheduleTaskMapper.kafkaCreateTaskMapper(scheduleTask, schedulePlan.id);
             const result = await scheduleTaskService.createScheduleTask(task);
             console.log('Result: ', result);
 
@@ -70,7 +70,7 @@ class ScheduleTaskUsecase {
             const scheduleTask = await scheduleTaskService.findScheduleTaskByTaskId(task.taskId);
             const updateScheduletask = scheduleTaskMapper.kafkaUpdateTaskMapper(task, scheduleTask);
             console.log('Update schedule task: ', updateScheduletask);
-            scheduleTaskService.updateScheduleTask(updateScheduletask._id, updateScheduletask);
+            scheduleTaskService.updateScheduleTask(updateScheduletask.id, updateScheduletask);
         } catch (error) {
             console.error("Error on updateScheduleTask: ", error);
         }
@@ -79,7 +79,7 @@ class ScheduleTaskUsecase {
     async deleteScheduleTaskByKafka(taskId: any): Promise<void> {
         try {
             const scheduleTask = await scheduleTaskService.findScheduleTaskByTaskId(taskId);
-            const result = await scheduleTaskService.deleteScheduleTask(scheduleTask._id);
+            const result = await scheduleTaskService.deleteScheduleTask(scheduleTask.id);
             console.log('Result: ', result);
         } catch (error) {
             console.error("Error on deleteScheduleTask: ", error);
@@ -89,14 +89,14 @@ class ScheduleTaskUsecase {
     async deleteTask(taskId: any): Promise<IResponse> {
         try {
             const scheduleTask = await scheduleTaskService.findScheduleTaskByTaskId(taskId);
-            return await scheduleTaskService.deleteScheduleTask(scheduleTask._id);
+            return await scheduleTaskService.deleteScheduleTask(scheduleTask.id);
         } catch (error) {
             console.error("Error on deleteScheduleTask: ", error);
             return msg400("Cannot delete schedule task!");
         }
     }
 
-    async getListTaskByUserId(userId: number): Promise<IScheduleTaskEntity[] | undefined> {
+    async getListTaskByUserId(userId: number): Promise<ScheduleTaskEntity[] | undefined> {
         try {
             const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
             if (!schedulePlan) {
@@ -104,8 +104,8 @@ class ScheduleTaskUsecase {
                 throw new Error(`Cannot find schedule plan by user id: ${userId}`);
             }
 
-            console.log('Get List schedule task by schedule plan: ', schedulePlan._id);
-            const { _id: schedulePlanId, activeTaskBatch, isTaskBatchActive } = schedulePlan;
+            console.log('Get List schedule task by schedule plan: ', schedulePlan.id);
+            const { id: schedulePlanId, activeTaskBatch, isTaskBatchActive } = schedulePlan;
 
             if (isTaskBatchActive && activeTaskBatch > 0) {
                 const scheduleTaskList = await scheduleTaskService.findByTaskBatch(schedulePlanId, activeTaskBatch);
@@ -141,7 +141,7 @@ class ScheduleTaskUsecase {
                 throw new Error(`Cannot find schedule plan by user id: ${userId}`);
             }
 
-            return await scheduleTaskService.getScheduleBatchTask(schedulePlan._id);
+            return await scheduleTaskService.getScheduleBatchTask(schedulePlan.id);
         } catch (error) {
             console.error("Error on getScheduleBatchTask: ", error);
             return undefined;
@@ -156,10 +156,10 @@ class ScheduleTaskUsecase {
                 throw new Error(`Cannot find schedule plan by user id: ${userId}`);
             }
             schedulePlan.activeTaskBatch = batchNumber;
-            await schedulePlanService.updateSchedulePlan(schedulePlan._id, schedulePlan);
+            await schedulePlanService.updateSchedulePlan(schedulePlan.id, schedulePlan);
             await scheduleCalendarUsecase.updateScheduleTasksWithSchedulePlan(userId, schedulePlan)
 
-            const taskBatch = await scheduleTaskService.getScheduleTaskByBatchNumber(schedulePlan._id, batchNumber);
+            const taskBatch = await scheduleTaskService.getScheduleTaskByBatchNumber(schedulePlan.id, batchNumber);
             return msg200({
                 scheduleTaskBatch: taskBatch
             })
@@ -184,7 +184,7 @@ class ScheduleTaskUsecase {
             }
             if (scheduleTaskId !== undefined && taskId !== undefined) {
                 const scheduleTask = await scheduleTaskService.findScheduleTaskByTaskId(taskId);
-                if (scheduleTask._id !== scheduleTaskId) {
+                if (scheduleTask.id !== scheduleTaskId) {
                     return msg400("Task id and schedule task id are not matched!");
                 }
                 return msg200({ scheduleTask });
@@ -205,7 +205,7 @@ class ScheduleTaskUsecase {
             let hasMore = true;
 
             while (hasMore) {
-                const scheduleGroups: IScheduleGroupEntity[] = await scheduleGroupService.findAllScheduleGroupsToCreateTask(limit, today);
+                const scheduleGroups: ScheduleGroupEntity[] = await scheduleGroupService.findAllScheduleGroupsToCreateTask(limit, today);
 
                 if (scheduleGroups.length === 0) {
                     hasMore = false;
@@ -217,7 +217,7 @@ class ScheduleTaskUsecase {
                     try {
                         await this.createScheduleTask(scheduleGroup, createdTask, today, failedScheduleMap);
                     } catch (err) {
-                        await this.rollbackCreateScheduleTask(scheduleGroup._id, createdTask, maxRetry, err, failedScheduleMap);
+                        await this.rollbackCreateScheduleTask(scheduleGroup.id, createdTask, maxRetry, err, failedScheduleMap);
                     }
                 }
             }
@@ -227,10 +227,10 @@ class ScheduleTaskUsecase {
         }
     }
 
-    private async createScheduleTask(scheduleGroup: IScheduleGroupEntity, createdTask: any, today: Date, failedScheduleMap: Record<string, number>): Promise<any> {
+    private async createScheduleTask(scheduleGroup: ScheduleGroupEntity, createdTask: any, today: Date, failedScheduleMap: Record<string, number>): Promise<any> {
         const schedulePlan = await schedulePlanService.getSchedulePlanById(scheduleGroup.schedulePlanId);
         if (schedulePlan == null) {
-            console.error("Task creation failed because of schedule plan not existed, scheduleGroupId: ", scheduleGroup._id)
+            console.error("Task creation failed because of schedule plan not existed, scheduleGroupId: ", scheduleGroup.id)
             throw new Error("Task creation fail because schedule plan not found");
         }
 
@@ -240,9 +240,8 @@ class ScheduleTaskUsecase {
             throw new Error("Task creation failed");
         }
 
-        scheduleGroup.updateDate = today;
-        await scheduleGroupService.updateScheduleGroup(scheduleGroup);
-        delete failedScheduleMap[scheduleGroup._id]
+        await scheduleGroupService.updateRotationDay(scheduleGroup, today); 
+        delete failedScheduleMap[scheduleGroup.id]
     }
 
     private async rollbackCreateScheduleTask(scheduleGroupId: string, createdTask: any, maxRetry: number,
@@ -254,7 +253,7 @@ class ScheduleTaskUsecase {
         if (createdTask !== null) {
             console.log(`Deleting task : ${createdTask}`);
             await scheduleTaskService.deleteCommandToTMService(createdTask.taskId);
-            await scheduleTaskService.deleteScheduleTask(createdTask._id);
+            await scheduleTaskService.deleteScheduleTask(createdTask.id);
         }
 
         if (failedScheduleMap[scheduleGroupId] >= maxRetry) {
@@ -272,7 +271,7 @@ class ScheduleTaskUsecase {
                 throw new Error(`Cannot find schedule plan by user id: ${userId}`);
             }
 
-            const scheduleTasks = await scheduleTaskService.getScheduleTaskByBatchNumber(schedulePlan._id, schedulePlan.activeTaskBatch);
+            const scheduleTasks = await scheduleTaskService.getScheduleTaskByBatchNumber(schedulePlan.id, schedulePlan.activeTaskBatch);
             return msg200({
                 activeTaskBatch: scheduleTasks
             })

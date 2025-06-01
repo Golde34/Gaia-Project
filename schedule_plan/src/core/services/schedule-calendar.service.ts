@@ -1,4 +1,4 @@
-import { scheduleCalendarRepository } from "../../infrastructure/repository/schedule-calendar.repository";
+import { scheduleCalendarRepository } from "../../infrastructure/repositories/schedule-calendar.repo";
 
 class ScheduleCalendarService {
     constructor() {}

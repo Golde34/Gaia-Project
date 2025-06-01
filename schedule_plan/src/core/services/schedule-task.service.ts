@@ -1,12 +1,12 @@
 import { taskManagerAdapter } from "../../infrastructure/client/task-manager.adapter";
-import { IScheduleGroupEntity } from "../../infrastructure/entities/schedule-group.entity";
-import { IScheduleTaskEntity } from "../../infrastructure/entities/schedule-task.entity";
 import { createMessage } from "../../infrastructure/kafka/create-message";
 import { KafkaHandler } from "../../infrastructure/kafka/kafka-handler";
-import { scheduleTaskRepository } from "../../infrastructure/repository/schedule-task.repository";
+import { scheduleTaskRepository } from "../../infrastructure/repositories/schedule-task.repo";
 import { convertErrorCodeToBoolean } from "../../kernel/utils/convert-fields";
 import { isStringEmpty } from "../../kernel/utils/string-utils";
 import { IResponse, msg200, msg400, msg500 } from "../common/response";
+import ScheduleGroupEntity from "../domain/entities/schedule-group.entity";
+import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
 import { ErrorStatus } from "../domain/enums/enums";
 import { KafkaCommand, KafkaTopic } from "../domain/enums/kafka.enum";
 import { SyncScheduleTaskRequest } from "../domain/request/task.dto";
@@ -20,7 +20,7 @@ class ScheduleTaskService {
 
     async createScheduleTask(scheduleTask: any): Promise<IResponse> {
         try {
-            scheduleTask.createDate = new Date();
+            scheduleTask.createdAt = new Date();
             const createScheduleTask = await scheduleTaskRepository.createScheduleTask(scheduleTask);
             return msg200({
                 message: (createScheduleTask as any)
@@ -127,7 +127,7 @@ class ScheduleTaskService {
         }
     }
 
-    async findScheduleTaskByTaskId(taskId: string): Promise<IScheduleTaskEntity> {
+    async findScheduleTaskByTaskId(taskId: string): Promise<ScheduleTaskEntity> {
         const scheduleTask = await scheduleTaskRepository.findScheduleTaskByTaskId(taskId);
         if (scheduleTask === null) {
             throw new Error("Task not found");
@@ -135,15 +135,15 @@ class ScheduleTaskService {
         return scheduleTask;
     }
 
-    async findTop10NewestTask(schedulePlanId: string): Promise<IScheduleTaskEntity[]> {
+    async findTop10NewestTask(schedulePlanId: string): Promise<ScheduleTaskEntity[]> {
         return await scheduleTaskRepository.findTop10NewestTask(schedulePlanId);
     }
 
-    async findByTaskBatch(schedulePlanId: string, taskBatch: number): Promise<IScheduleTaskEntity[]> {
+    async findByTaskBatch(schedulePlanId: string, taskBatch: number): Promise<ScheduleTaskEntity[]> {
         return await scheduleTaskRepository.findByTaskBatch(schedulePlanId, taskBatch);
     }
 
-    async findAllBySchedulePlanId(schedulePlanId: string): Promise<IScheduleTaskEntity[]> {
+    async findAllBySchedulePlanId(schedulePlanId: string): Promise<ScheduleTaskEntity[]> {
         try {
             const scheduleTaskList = await scheduleTaskRepository.findAll(schedulePlanId);
             return scheduleTaskList;
@@ -158,7 +158,7 @@ class ScheduleTaskService {
             const taskBatchList = (await scheduleTaskRepository.findDistinctTaskBatch(schedulePlanId))
                 .filter((taskBatch: number) => taskBatch > 0);
             console.log("Task Batch List: ", taskBatchList);
-            const result: { [key: string]: IScheduleTaskEntity[] } = {};
+            const result: { [key: string]: ScheduleTaskEntity[] } = {};
             await Promise.all(taskBatchList.map(async (taskBatch: number) => {
                 const taskList = await scheduleTaskRepository.findByTaskBatch(schedulePlanId, taskBatch);
                 console.log("Task List: ", taskList);
@@ -171,7 +171,7 @@ class ScheduleTaskService {
         }
     }
 
-    async getScheduleTaskByBatchNumber(schedulePlanId: string, batchNumber: number): Promise<IScheduleTaskEntity[]> {
+    async getScheduleTaskByBatchNumber(schedulePlanId: string, batchNumber: number): Promise<ScheduleTaskEntity[]> {
         try {
             return await scheduleTaskRepository.findByTaskBatch(schedulePlanId, batchNumber);
         } catch (error) {
@@ -180,7 +180,7 @@ class ScheduleTaskService {
         }
     }
 
-    async createTaskFromScheduleGroup(scheduleGroup: IScheduleGroupEntity, userId: number): Promise<IScheduleTaskEntity | null> {
+    async createTaskFromScheduleGroup(scheduleGroup: ScheduleGroupEntity, userId: number): Promise<ScheduleTaskEntity | null> {
         try {
             const scheduleTask = scheduleTaskMapper.buildTaskFromScheduleGroup(scheduleGroup);
             const response = await this.taskManagerAdapterImpl.createTask(scheduleTask, scheduleGroup, userId);
@@ -194,14 +194,19 @@ class ScheduleTaskService {
                 scheduleGroup.groupTaskId = response.groupTaskId;
             }
             scheduleTask.taskId = response.task.id;
-            return await scheduleTaskRepository.createScheduleTask(scheduleTask);
+            const createdScheduleTask = await scheduleTaskRepository.createScheduleTask(scheduleTask);
+            if (!createdScheduleTask) {
+                console.error("Failed to create schedule task from schedule group");
+                return null;
+            }
+            return createdScheduleTask;
         } catch (error) {
             console.error("Error on createTaskFromScheduleGroup: ", error);
             return null;
         }
     }
 
-    async findScheduleTaskByScheduleGroup(scheduleGroupId: string): Promise<IScheduleTaskEntity[]> {
+    async findScheduleTaskByScheduleGroup(scheduleGroupId: string): Promise<ScheduleTaskEntity[]> {
         try {
             const scheduleTask = await scheduleTaskRepository.findByScheduleGroup(scheduleGroupId);
             return scheduleTask;
@@ -222,7 +227,7 @@ class ScheduleTaskService {
         }
     }
 
-    async findUserDailyTasks(schedulePlanId: string, taskBatch: number, date: Date): Promise<IScheduleTaskEntity[] | null> {
+    async findUserDailyTasks(schedulePlanId: string, taskBatch: number, date: Date): Promise<ScheduleTaskEntity[] | null> {
         try {
             return await scheduleTaskRepository.findUserDailyTasks(schedulePlanId, taskBatch, date);
         } catch (error: any) {
@@ -231,7 +236,7 @@ class ScheduleTaskService {
         }
     }
 
-    async optimizeDailyTasks(dailyTasks: IScheduleTaskEntity[]): Promise<IScheduleTaskEntity[]> {
+    async optimizeDailyTasks(dailyTasks: ScheduleTaskEntity[]): Promise<ScheduleTaskEntity[]> {
         try {
             const scheduleGroupTasks = dailyTasks.filter((task) => task.scheduleGroupId !== null);
             const scheduleTasks = dailyTasks.filter((task) => task.scheduleGroupId === null);

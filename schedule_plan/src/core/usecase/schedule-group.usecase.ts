@@ -12,13 +12,12 @@ class ScheduleGroupUsecase {
 
     async createScheduleGroup(scheduleGroup: any, userId: number): Promise<IResponse | undefined> {
         try {
-            console.log('Create schedule group: ', scheduleGroup);
             const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
             if (!schedulePlan) {
                 console.error(`Cannot find schedule plan by user id: ${userId}`);
                 return msg400(`Cannot find schedule plan by user id: ${userId}`);
             }
-            const group = scheduleGroupMapper.createGroupMapper(scheduleGroup, schedulePlan._id);
+            const group = scheduleGroupMapper.createGroupMapper(scheduleGroup, schedulePlan.id);
             const createScheduleGroup = await scheduleGroupService.createScheduleGroup(group);
             console.log('Created schedule group: ', group);
             return msg200(createScheduleGroup);
@@ -35,8 +34,8 @@ class ScheduleGroupUsecase {
                 console.error(`Cannot find schedule plan by user id: ${userId}`);
                 throw new Error(`Cannot find schedule plan by user id: ${userId}`);
             }
-            console.log('Get schedule task list by schedule plan: ', schedulePlan._id);
-            const scheduleGroups = await scheduleGroupService.listScheduleGroup(schedulePlan._id);
+            console.log('Get schedule task list by schedule plan: ', schedulePlan.id);
+            const scheduleGroups = await scheduleGroupService.listScheduleGroup(schedulePlan.id);
             if (scheduleGroupService) {
                 return msg200({
                     scheduleGroups
@@ -55,7 +54,7 @@ class ScheduleGroupUsecase {
             if (scheduleGroup) {
                 const deletedTasks = await scheduleTaskService.findScheduleTaskByScheduleGroup(scheduleGroupId);
                 Promise.all(deletedTasks.map(async (task) =>{
-                    await scheduleTaskService.deleteScheduleTask(task._id);
+                    await scheduleTaskService.deleteScheduleTask(task.id);
                 }))
                 return msg200(scheduleGroup);
             }

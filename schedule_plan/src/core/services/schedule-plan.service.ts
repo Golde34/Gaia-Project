@@ -1,11 +1,10 @@
 import CacheSingleton from "../../infrastructure/cache/internal-cache/cache-singleton";
 import { authServiceAdapter } from "../../infrastructure/client/auth-service.adapter";
-import { ISchedulePlanEntity } from "../../infrastructure/entities/schedule-plan.entity";
-import { schedulePlanRepository } from "../../infrastructure/repository/schedule-plan.repository";
-import { scheduleTaskRepository } from "../../infrastructure/repository/schedule-task.repository";
+import { schedulePlanRepository } from "../../infrastructure/repositories/schedule-plan.repo";
 import { returnInternalServiceErrorResponse } from "../../kernel/utils/return-result";
 import { IResponse, msg200, msg400 } from "../common/response";
 import { InternalCacheConstants } from "../domain/constants/constants";
+import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
 import { ActiveStatus } from "../domain/enums/enums";
 
 class SchedulePlanService {
@@ -18,12 +17,12 @@ class SchedulePlanService {
         if (existedSchedulePlan !== null) {
             return existedSchedulePlan;
         }
-        const schedulePlan = {
+        const schedulePlan: any = {
             userId: userId,
             startDate: new Date(),
             activeStatus: ActiveStatus.active,
             activeTaskBatch: 0,
-            isTashBatchActive: false
+            isTaskBatchActive: false
         }
         return await schedulePlanRepository.createSchedulePlan(schedulePlan);
     }
@@ -73,6 +72,7 @@ class SchedulePlanService {
             if (schedulePlan === null) {
                 isScheduleExist = false;
             }
+            console.log("Schedule plan: ", schedulePlan);
             return msg200({
                 isScheduleExist
             });
@@ -81,15 +81,17 @@ class SchedulePlanService {
         }
     }
 
-    async findSchedulePlanByUserId(userId: number): Promise<ISchedulePlanEntity | null> {
+    async findSchedulePlanByUserId(userId: number): Promise<SchedulePlanEntity | null> {
         try {
             const existedUser = await authServiceAdapter.checkExistedUser(userId);
             if (typeof existedUser === 'number') {
                 return null;
             }
+            console.log("Existed user: ", existedUser);
             const schedulePlanCache = this.schedulePlanCache.get(InternalCacheConstants.SCHEDULE_PLAN + userId);
             if (!schedulePlanCache) {
                 const schedulePlan = await schedulePlanRepository.findSchedulePlanByUserId(userId);
+                console.log("Schedule plan from db: ", schedulePlan);
                 if (!schedulePlan) {
                     console.error(`Cannot find schedule plan by user id: ${userId}`);
                     return null;
@@ -106,17 +108,17 @@ class SchedulePlanService {
         }
     }
 
-    async updateTaskBatch(schedulePlan: ISchedulePlanEntity, activeBatch: number, isBatchActive: boolean): Promise<void> {
+    async updateTaskBatch(schedulePlan: SchedulePlanEntity, activeBatch: number, isBatchActive: boolean): Promise<void> {
         try {
             schedulePlan.activeTaskBatch = activeBatch;
             schedulePlan.isTaskBatchActive = isBatchActive;
-            await schedulePlanRepository.updateSchedulePlan(schedulePlan._id, schedulePlan);
+            await schedulePlanRepository.updateSchedulePlan(schedulePlan.id, schedulePlan);
         } catch (error: any) {
             console.error("Error on updateTaskBatch: ", error);
         }
     }
 
-    async getSchedulePlanById(schedulePlanId: string): Promise<ISchedulePlanEntity | null> {
+    async getSchedulePlanById(schedulePlanId: string): Promise<SchedulePlanEntity | null> {
         try {
             return await schedulePlanRepository.findSchedulePlanById(schedulePlanId);
         } catch (error: any) {
