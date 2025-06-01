@@ -18,8 +18,9 @@ class ScheduleTaskRepository {
     }
 
     async deleteScheduleTask(scheduleTaskId: string): Promise<ScheduleTaskEntity | null> {
+        const deletedTask = await ScheduleTaskEntity.findByPk(scheduleTaskId);
         const deletedCount = await ScheduleTaskEntity.destroy({ where: { id: scheduleTaskId } });
-        return deletedCount > 0 ? await ScheduleTaskEntity.findByPk(scheduleTaskId) : null;
+        return deletedCount > 0 ? deletedTask : null;
     }
 
     async findScheduleTaskById(scheduleTaskId: string): Promise<ScheduleTaskEntity | null> {

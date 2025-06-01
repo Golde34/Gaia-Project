@@ -33,7 +33,7 @@ class ScheduleGroupRepository {
 
             const existedGroup = await ScheduleGroupEntity.findByPk(scheduleGroup.id);
             console.log("Existed schedule group:", existedGroup);
-            return existedGroup; 
+            return existedGroup;
         } catch (error) {
             console.error("Error updating schedule group:", error);
             throw new Error("Failed to update schedule group");
@@ -42,8 +42,9 @@ class ScheduleGroupRepository {
 
     async deleteScheduleGroup(scheduleGroupId: string): Promise<ScheduleGroupEntity | null> {
         try {
+            const scheduleGroup = await ScheduleGroupEntity.findByPk(scheduleGroupId);
             const deletedGroup = await ScheduleGroupEntity.destroy({ where: { id: scheduleGroupId } });
-            return deletedGroup ? await ScheduleGroupEntity.findByPk(scheduleGroupId) : null;
+            return deletedGroup > 0 ? scheduleGroup : null;
         } catch (error) {
             console.error("Error deleting schedule group:", error);
             throw new Error("Failed to delete schedule group");

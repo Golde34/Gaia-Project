@@ -58,8 +58,11 @@ class ScheduleGroupService {
     async deleteScheduleGroup(scheduleGroupId: string): Promise<ScheduleGroupEntity | null> {
         try {
             const deletedScheduleGroup = await scheduleGroupRepository.deleteScheduleGroup(scheduleGroupId);
+            console.log("Deleted schedule group: ", deletedScheduleGroup);
             if (deletedScheduleGroup) {
+                console.log("Schedule group deleted successfully: ", deletedScheduleGroup);
                 this.clearScheduleGroupCache(deletedScheduleGroup.schedulePlanId);
+                console.log("Cache cleared for schedule plan ID: ", deletedScheduleGroup.schedulePlanId);
             }
             return deletedScheduleGroup;
         } catch (error: any) {
