@@ -240,8 +240,7 @@ class ScheduleTaskUsecase {
             throw new Error("Task creation failed");
         }
 
-        scheduleGroup.updatedAt = today;
-        await scheduleGroup.save();
+        await scheduleGroupService.updateRotationDay(scheduleGroup, today); 
         delete failedScheduleMap[scheduleGroup.id]
     }
 

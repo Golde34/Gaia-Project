@@ -41,10 +41,10 @@ class ScheduleGroupService {
         }
     }
 
-    async updateScheduleGroupUpdatedDate(scheduleGroup: ScheduleGroupEntity, today: Date): Promise<void> {
+    async updateRotationDay(scheduleGroup: ScheduleGroupEntity, today: Date): Promise<void> {
         try {
-            const updatedScheduleGroup = await scheduleGroupRepository.updateScheduleGroupUpdatedDate(scheduleGroup, today);
-            if (updatedScheduleGroup) {
+            const updatedScheduleGroup = await scheduleGroupRepository.updateRotationDay(scheduleGroup, today);
+            if (updatedScheduleGroup === true) {
                 this.clearScheduleGroupCache(scheduleGroup.schedulePlanId);
                 console.log("Schedule group updated successfully: ", updatedScheduleGroup);
                 return;

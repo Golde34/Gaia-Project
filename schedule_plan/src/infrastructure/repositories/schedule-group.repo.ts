@@ -23,20 +23,18 @@ class ScheduleGroupRepository {
         }
     }
 
-    async updateScheduleGroupUpdatedDate(scheduleGroup: any, today: Date): Promise<ScheduleGroupEntity | null> {
+    async updateRotationDay(scheduleGroup: any, today: Date): Promise<boolean> {
         try {
-            console.log("Today's date for update:", today);
-            scheduleGroup.set({
-                updatedAt: today,
-            })
-            await scheduleGroup.save();
-
-            const existedGroup = await ScheduleGroupEntity.findByPk(scheduleGroup.id);
-            console.log("Existed schedule group:", existedGroup);
-            return existedGroup;
+            const affectedRows = await ScheduleGroupEntity.update(
+                { projectId: scheduleGroup.projectId, groupTaskId: scheduleGroup.groupTaskId, rotationDay: today },
+                { where: { id: scheduleGroup.id }, returning: true }
+            )
+            console.log(`Updated schedule group with ID ${scheduleGroup.id} to new date: `, today);
+            console.log("Affected rows: ", affectedRows);
+            return affectedRows[0] > 0;
         } catch (error) {
             console.error("Error updating schedule group:", error);
-            throw new Error("Failed to update schedule group");
+            return false;
         }
     }
 
@@ -58,7 +56,7 @@ class ScheduleGroupRepository {
             const scheduleGroups = await ScheduleGroupEntity.findAll({
                 where: {
                     activeStatus: ActiveStatus.active,
-                    updatedAt: { [Op.lt]: startOfDay },
+                    rotationDay: { [Op.lt]: startOfDay },
                     repeat: { [Op.contains]: [String(weekDay)] },
                     isFailed: { [Op.in]: [null, false] }
                 },

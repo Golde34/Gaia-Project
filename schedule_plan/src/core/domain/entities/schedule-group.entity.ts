@@ -122,4 +122,10 @@ export default class ScheduleGroupEntity extends Model {
         defaultValue: DataType.NOW,
     })
     updatedAt?: Date;
+
+    @Column({
+        type: DataType.DATE,
+        field: "rotation_day",
+    })
+    rotationDay?: Date;
 }
