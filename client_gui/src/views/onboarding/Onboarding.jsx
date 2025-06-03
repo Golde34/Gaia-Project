@@ -18,9 +18,7 @@ const StepContent = ({ stepIndex, onNext, onSkip }) => {
   switch (stepIndex) {
     case 1:
       return (
-        <Card className="p-4">
-          <GaiaIntroduction onNext={onNext} onSkip={onSkip} />
-        </Card>
+        <GaiaIntroduction onNext={onNext} onSkip={onSkip} />
       )
     case 2:
       return (
