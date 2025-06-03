@@ -1,6 +1,7 @@
 // components/onboarding/Onboarding.jsx
 import React, { useState } from "react"
 import StepProgress from "../../components/template/StepProgress"
+import GaiaIntroduction from "./GaiaIntroduction"
 
 const steps = [
   { id: 1, screenLabel: "Gaia Introduction" },
@@ -12,15 +13,10 @@ const StepContent = ({ stepIndex, onNext, onSkip }) => {
   switch (stepIndex) {
     case 1:
       return (
-        <div>
-          <h2>Gaia Introduction</h2>
-          <p>Welcome to Gaia onboarding intro screen...</p>
-          <div className="mt-4 flex gap-2">
-            <Button onClick={onSkip} variant="secondary">Skip</Button>
-            <Button onClick={onNext}>Continue</Button>
-          </div>
-        </div>
-      )
+        <>
+          <GaiaIntroduction onNext={onNext} onSkip={onSkip} />
+        </>
+      ) 
     case 2:
       return (
         <div>
