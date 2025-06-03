@@ -25,7 +25,15 @@ var upgrader = websocket.Upgrader{
 
 var userConnections sync.Map
 
-func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
+func (s *WebSocketService) HandleChatmessage(w http.ResponseWriter, r *http.Request) {
+	s.handleWebSocket(w, r, "chat")
+}
+
+func (s *WebSocketService) HandleOnboarding(w http.ResponseWriter, r *http.Request) {
+	s.handleWebSocket(w, r, "onboarding")
+}
+
+func (s *WebSocketService) handleWebSocket(w http.ResponseWriter, r *http.Request, wsType string) {
 	ctx := r.Context()
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -74,7 +82,7 @@ func (s *WebSocketService) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 		}
 		// response := "Bot answered user prompt: " + messageMap["text"].(string)
 		// SendToUser(userId, []byte(response))
-		s.handleService(messageMap, userId)
+		s.handleService(messageMap, userId, wsType)
 	}
 }
 
@@ -88,7 +96,20 @@ func (s *WebSocketService) validateUserJwt(ctx context.Context, jwt string) stri
 	return userId
 }
 
-func (s *WebSocketService) handleService(messageMap map[string]interface{}, userId string) {
+func (s *WebSocketService) handleService(messageMap map[string]interface{}, userId, wsType string) {
+	log.Println("Handling service for userId:", userId, "with wsType:", wsType)
+
+	switch wsType {
+	case "chat":
+		s.handleChatService(messageMap, userId)
+	case "onboarding":
+		s.handleChatService(messageMap, userId) 
+	default:
+		log.Println("Unknown WebSocket type:", wsType)
+	}
+}
+
+func (s *WebSocketService) handleChatService(messageMap map[string]interface{}, userId string) {
 	switch messageMap["type"] {
 	case "chat_message":
 		log.Println("Handling task optimized for user:", userId)

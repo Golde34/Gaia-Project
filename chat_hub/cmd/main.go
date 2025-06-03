@@ -43,7 +43,8 @@ func main() {
 	r.Use(middleware.Timeout(time.Second * 60))
 
 	// Register WebSocket handler
-	http.HandleFunc("/ws", services.NewWebSocketService().HandleWebSocket)
+	http.HandleFunc("/ws", services.NewWebSocketService().HandleChatmessage)
+	http.HandleFunc("/ws/onboarding", services.NewWebSocketService().HandleOnboarding)
 
 	// Rest Router
 	
