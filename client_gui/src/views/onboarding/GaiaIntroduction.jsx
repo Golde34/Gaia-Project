@@ -57,7 +57,7 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
         setChatHistory(prev => [...prev, { from: 'user', text: chatInput }]);
 
         console.log("Chathub JWT: ", localStorage.getItem('chatHubJwt'));
-        sendMessage('chat', JSON.stringify({
+        sendMessage('onboarding', JSON.stringify({
             type: 'chat_message',
             localStorage: localStorage.getItem('chatHubJwt'),
             text: chatInput
