@@ -1,5 +1,5 @@
 import ScheduleGroupEntity from "../../core/domain/entities/schedule-group.entity";
-import { Op } from "sequelize";
+import { col, fn, Op, where } from "sequelize";
 import { ActiveStatus } from "../../core/domain/enums/enums";
 
 class ScheduleGroupRepository {
@@ -53,10 +53,13 @@ class ScheduleGroupRepository {
         try {
             const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
             const weekDay = date.getDay().toString();
+            console.log("Finding schedule groups to create task for date:", startOfDay, "Weekday:", weekDay);
             const scheduleGroups = await ScheduleGroupEntity.findAll({
                 where: {
                     activeStatus: ActiveStatus.active,
-                    rotationDay: { [Op.lt]: startOfDay },
+                    [Op.and]: [
+                        where(fn('DATE', col('rotation_day')), '<', startOfDay.toLocaleString().slice(0, 10))
+                    ],
                     repeat: { [Op.contains]: [String(weekDay)] },
                     isFailed: { [Op.in]: [null, false] }
                 },
