@@ -2,6 +2,11 @@
 import React, { useState } from "react"
 import StepProgress from "../../components/template/StepProgress"
 import GaiaIntroduction from "./GaiaIntroduction"
+import { Button, Card } from "@tremor/react"
+import { LoginIcon } from "@heroicons/react/outline"
+import { cx } from "../../kernels/utils/cx"
+import useScroll from "../../kernels/utils/userScroll"
+import LogoIcon from "../../components/icons/LogoIcon"
 
 const steps = [
   { id: 1, screenLabel: "Gaia Introduction" },
@@ -13,10 +18,10 @@ const StepContent = ({ stepIndex, onNext, onSkip }) => {
   switch (stepIndex) {
     case 1:
       return (
-        <>
+        <Card className="p-4">
           <GaiaIntroduction onNext={onNext} onSkip={onSkip} />
-        </>
-      ) 
+        </Card>
+      )
     case 2:
       return (
         <div>
@@ -45,6 +50,7 @@ const StepContent = ({ stepIndex, onNext, onSkip }) => {
 }
 
 const Onboarding = () => {
+  const scrolled = useScroll(13)
   const [stepIndex, setStepIndex] = useState(1)
 
   const handleNext = () => {
@@ -57,10 +63,36 @@ const Onboarding = () => {
   }
 
   return (
-    <div className="max-w-lg mx-auto p-4">
-      <StepProgress currentStepIndex={stepIndex - 1} /> 
-      <StepContent stepIndex={stepIndex} onNext={handleNext} onSkip={handleSkip} />
-    </div>
+    <>
+      <header
+        className={cx(
+          "fixed inset-x-0 top-0 isolate z-50 flex items-center justify-between border-b border-gray-200 px-4 transition-all md:grid md:grid-cols-[200px_auto_200px] md:px-6 dark:border-gray-900 dark:bg-gray-925",
+          scrolled ? "h-12" : "h-20",
+        )}
+      >
+        <div
+          className="hidden flex-nowrap items-center gap-0.5 md:flex"
+          aria-hidden="true"
+        >
+          <LogoIcon
+            className="w-7 p-px text-blue-500 dark:text-blue-500"
+            aria-hidden="true"
+          />
+          <span className="mt-0.5 text-lg font-semibold text-gray-900 dark:text-gray-50">
+            Gaia Onboarding
+          </span>
+        </div>
+        <StepProgress currentStepIndex={stepIndex - 1} />
+        <Button
+          variant="secondary"
+          className="hidden md:inline-flex"
+        > Skip to Dashboard
+        </Button>
+      </header>
+      <div className="mx-auto mb-20 mt-28 max-w-5xl px-4 md:mt-32 md:px-6">
+        <StepContent stepIndex={stepIndex} onNext={handleNext} onSkip={handleSkip} />
+      </div>
+    </>
   )
 }
 

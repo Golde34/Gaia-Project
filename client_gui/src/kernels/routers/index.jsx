@@ -21,6 +21,7 @@ import GaiaAutoSignin from '../../views/signin/GaiaAutoSignin';
 import Signin from '../../views/signin/Signin';
 import Signup from '../../views/signin/Signup';
 import TaskRegistration from '../../views/onboarding/TaskRegistration';
+import Onboarding from '../../views/onboarding/Onboarding';
 
 // Guest is public
 // User is protected, only logged in when the Role higher than User
@@ -52,6 +53,11 @@ const routeList = [
         path: '/signup',
         key: 'signup',
         element: <Signup />,
+    },
+    {
+        path: '/onboarding',
+        key: 'onboarding',
+        element: <Onboarding />,
     },
     {
         path: '/dashboard',
