@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react"
 import { useMultiWS } from "../../kernels/context/MultiWSContext"
 
 const GaiaIntroduction = ({ onNext, onSkip }) => {
-
     const { messages, isConnected, sendMessage } = useMultiWS()
 
     const [showChat, setShowChat] = useState(false)
