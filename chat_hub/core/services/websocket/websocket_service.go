@@ -25,7 +25,6 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// Connection info structure
 type ConnectionInfo struct {
 	Conn     *websocket.Conn
 	UserId   string
@@ -33,7 +32,6 @@ type ConnectionInfo struct {
 	LastPing time.Time
 }
 
-// Map to store all active connections
 var activeConnections sync.Map
 
 func (s *WebSocketService) HandleChatmessage(w http.ResponseWriter, r *http.Request) {
@@ -74,11 +72,9 @@ func (s *WebSocketService) handleWebSocket(w http.ResponseWriter, r *http.Reques
 		LastPing: time.Now(),
 	}
 
-	// Store the connection with its session ID
 	activeConnections.Store(sessionId, connInfo)
 	defer activeConnections.Delete(sessionId)
 
-	// Set up ping handler
 	conn.SetPingHandler(func(appData string) error {
 		if info, ok := activeConnections.Load(sessionId); ok {
 			info.(*ConnectionInfo).LastPing = time.Now()
@@ -86,7 +82,6 @@ func (s *WebSocketService) handleWebSocket(w http.ResponseWriter, r *http.Reques
 		return conn.WriteMessage(websocket.PongMessage, nil)
 	})
 
-	// Start connection monitoring
 	go s.monitorConnection(sessionId)
 
 	for {
