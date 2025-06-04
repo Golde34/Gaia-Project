@@ -7,7 +7,9 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -23,7 +25,16 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-var userConnections sync.Map
+// Connection info structure
+type ConnectionInfo struct {
+	Conn     *websocket.Conn
+	UserId   string
+	WsType   string
+	LastPing time.Time
+}
+
+// Map to store all active connections
+var activeConnections sync.Map
 
 func (s *WebSocketService) HandleChatmessage(w http.ResponseWriter, r *http.Request) {
 	s.handleWebSocket(w, r, "chat")
@@ -50,39 +61,68 @@ func (s *WebSocketService) handleWebSocket(w http.ResponseWriter, r *http.Reques
 
 	log.Println("Client connected, jwt:", jwt)
 	userId := s.validateUserJwt(ctx, jwt)
-
-	if existingConn, ok := userConnections.Load(userId); ok {
-		log.Println("Closing existing connection for user:", userId)
-		existingConn.(*websocket.Conn).Close()
+	if userId == "" {
+		return
 	}
-	userConnections.Store(userId, conn)
 
+	// Generate unique session ID for this connection
+	sessionId := uuid.New().String()
+	connInfo := &ConnectionInfo{
+		Conn:     conn,
+		UserId:   userId,
+		WsType:   wsType,
+		LastPing: time.Now(),
+	}
+
+	// Store the connection with its session ID
+	activeConnections.Store(sessionId, connInfo)
+	defer activeConnections.Delete(sessionId)
+
+	// Set up ping handler
 	conn.SetPingHandler(func(appData string) error {
-		log.Println("Received ping from user:", userId)
-		err := conn.WriteMessage(websocket.PongMessage, nil)
-		if err != nil {
-			log.Println("Error sending pong:", err)
+		if info, ok := activeConnections.Load(sessionId); ok {
+			info.(*ConnectionInfo).LastPing = time.Now()
 		}
-		return err
+		return conn.WriteMessage(websocket.PongMessage, nil)
 	})
+
+	// Start connection monitoring
+	go s.monitorConnection(sessionId)
 
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
-			log.Println("Connection closed for userId:", userId)
-			userConnections.Delete(userId)
+			log.Println("Connection closed for session:", sessionId)
 			break
 		}
-		log.Printf("Message received from userId %s: %s", userId, message)
+
+		log.Printf("Message received from session %s: %s", sessionId, message)
 		messageMap := make(map[string]interface{})
 		err = json.Unmarshal(message, &messageMap)
 		if err != nil {
 			log.Println("Error unmarshaling message:", err)
 			continue
 		}
-		// response := "Bot answered user prompt: " + messageMap["text"].(string)
-		// SendToUser(userId, []byte(response))
-		s.handleService(messageMap, userId, wsType)
+		s.handleService(messageMap, userId, wsType, sessionId)
+	}
+}
+
+func (s *WebSocketService) monitorConnection(sessionId string) {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		if info, ok := activeConnections.Load(sessionId); ok {
+			connInfo := info.(*ConnectionInfo)
+			if time.Since(connInfo.LastPing) > 60*time.Second {
+				log.Println("Connection timeout for session:", sessionId)
+				connInfo.Conn.Close()
+				activeConnections.Delete(sessionId)
+				return
+			}
+		} else {
+			return
+		}
 	}
 }
 
@@ -96,20 +136,20 @@ func (s *WebSocketService) validateUserJwt(ctx context.Context, jwt string) stri
 	return userId
 }
 
-func (s *WebSocketService) handleService(messageMap map[string]interface{}, userId, wsType string) {
+func (s *WebSocketService) handleService(messageMap map[string]interface{}, userId, wsType, sessionId string) {
 	log.Println("Handling service for userId:", userId, "with wsType:", wsType)
 
 	switch wsType {
 	case "chat":
-		s.handleChatService(messageMap, userId)
+		s.handleChatService(messageMap, userId, sessionId)
 	case "onboarding":
-		s.handleChatService(messageMap, userId) 
+		s.handleChatService(messageMap, userId, sessionId)
 	default:
 		log.Println("Unknown WebSocket type:", wsType)
 	}
 }
 
-func (s *WebSocketService) handleChatService(messageMap map[string]interface{}, userId string) {
+func (s *WebSocketService) handleChatService(messageMap map[string]interface{}, userId, sessionId string) {
 	switch messageMap["type"] {
 	case "chat_message":
 		log.Println("Handling task optimized for user:", userId)
@@ -118,37 +158,40 @@ func (s *WebSocketService) handleChatService(messageMap map[string]interface{}, 
 			log.Println("Error handling chat message:", err)
 			return
 		}
-		s.SendToUser(userId, []byte(result))
+		s.SendToUser(userId, []byte(result), sessionId)
 		return
 	default:
 		log.Println("Unknown message type:", messageMap["type"])
 	}
 }
 
-func (s *WebSocketService) SendToUser(userId string, message []byte) {
+func (s *WebSocketService) SendToUser(userId string, message []byte, excludeSessionId string) {
 	log.Println("Attempting to send message to user:", userId)
 	log.Println("Message content:", string(message))
 
-	if conn, ok := userConnections.Load(userId); ok {
-		wsConn := conn.(*websocket.Conn)
-
-		err := wsConn.WriteMessage(websocket.TextMessage, message)
-		if err != nil {
-			log.Println("Error sending message to user:", userId, "Error:", err)
-			wsConn.Close()
-			userConnections.Delete(userId)
-		} else {
-			log.Println("Message sent successfully to user:", userId)
+	// Send to all connections of this user except the excluded session
+	activeConnections.Range(func(key, value interface{}) bool {
+		connInfo := value.(*ConnectionInfo)
+		if connInfo.UserId == userId && key.(string) != excludeSessionId {
+			err := connInfo.Conn.WriteMessage(websocket.TextMessage, message)
+			if err != nil {
+				log.Println("Error sending message to session:", key.(string))
+				connInfo.Conn.Close()
+				activeConnections.Delete(key)
+			} else {
+				log.Println("Message sent successfully to session:", key.(string))
+			}
 		}
-	} else {
-		log.Println("No active connection found for user:", userId)
-	}
+		return true
+	})
 }
 
 func LogActiveConnections() {
 	log.Println("Active connections:")
-	userConnections.Range(func(key, value interface{}) bool {
-		log.Println("- UserId:", key.(string))
+	activeConnections.Range(func(key, value interface{}) bool {
+		connInfo := value.(*ConnectionInfo)
+		log.Printf("- Session: %s, User: %s, Type: %s, Last Ping: %v",
+			key.(string), connInfo.UserId, connInfo.WsType, connInfo.LastPing)
 		return true
 	})
 }
