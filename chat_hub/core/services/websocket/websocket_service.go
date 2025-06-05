@@ -35,14 +35,6 @@ type ConnectionInfo struct {
 var activeConnections sync.Map
 
 func (s *WebSocketService) HandleChatmessage(w http.ResponseWriter, r *http.Request) {
-	s.handleWebSocket(w, r, "chat")
-}
-
-func (s *WebSocketService) HandleOnboarding(w http.ResponseWriter, r *http.Request) {
-	s.handleWebSocket(w, r, "onboarding")
-}
-
-func (s *WebSocketService) handleWebSocket(w http.ResponseWriter, r *http.Request, wsType string) {
 	ctx := r.Context()
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -68,7 +60,6 @@ func (s *WebSocketService) handleWebSocket(w http.ResponseWriter, r *http.Reques
 	connInfo := &ConnectionInfo{
 		Conn:     conn,
 		UserId:   userId,
-		WsType:   wsType,
 		LastPing: time.Now(),
 	}
 
@@ -98,7 +89,8 @@ func (s *WebSocketService) handleWebSocket(w http.ResponseWriter, r *http.Reques
 			log.Println("Error unmarshaling message:", err)
 			continue
 		}
-		s.handleService(messageMap, userId, wsType, sessionId)
+
+		s.handleService(messageMap, userId, sessionId)
 	}
 }
 
@@ -131,26 +123,23 @@ func (s *WebSocketService) validateUserJwt(ctx context.Context, jwt string) stri
 	return userId
 }
 
-func (s *WebSocketService) handleService(messageMap map[string]interface{}, userId, wsType, sessionId string) {
-	log.Println("Handling service for userId:", userId, "with wsType:", wsType)
-
-	switch wsType {
-	case "chat":
-		s.handleChatService(messageMap, userId, sessionId)
-	case "onboarding":
-		s.handleChatService(messageMap, userId, sessionId)
-	default:
-		log.Println("Unknown WebSocket type:", wsType)
-	}
-}
-
-func (s *WebSocketService) handleChatService(messageMap map[string]interface{}, userId, sessionId string) {
+func (s *WebSocketService) handleService(messageMap map[string]interface{}, userId, sessionId string) {
 	switch messageMap["type"] {
 	case "chat_message":
 		log.Println("Handling task optimized for user:", userId)
 		result, err := services.NewChatService().HandleChatMessage(userId, messageMap["text"].(string))
 		if err != nil {
 			log.Println("Error handling chat message:", err)
+			return
+		}
+		s.SendToUser(userId, []byte(result), sessionId)
+		return
+	case "gaia_introduction":
+		log.Println("Handling onboarding step for user:", userId)
+		result, err := services.NewChatService().HandleGaiaIntroductionMessage(
+			userId, messageMap["text"].(string), messageMap["type"].(string))
+		if err != nil {
+			log.Println("Error handling onboarding step:", err)
 			return
 		}
 		s.SendToUser(userId, []byte(result), sessionId)
@@ -164,10 +153,9 @@ func (s *WebSocketService) SendToUser(userId string, message []byte, excludeSess
 	log.Println("Attempting to send message to user:", userId)
 	log.Println("Message content:", string(message))
 
-	// Send to all connections of this user except the excluded session
 	activeConnections.Range(func(key, value interface{}) bool {
 		connInfo := value.(*ConnectionInfo)
-		if connInfo.UserId == userId && key.(string) != excludeSessionId {
+		if connInfo.UserId == userId && key.(string) == excludeSessionId {
 			err := connInfo.Conn.WriteMessage(websocket.TextMessage, message)
 			if err != nil {
 				log.Println("Error sending message to session:", key.(string))
