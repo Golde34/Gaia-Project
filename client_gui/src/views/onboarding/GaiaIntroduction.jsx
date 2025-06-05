@@ -9,7 +9,7 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
     const [showChat, setShowChat] = useState(false)
     const [chatInput, setChatInput] = useState("")
     const [chatHistory, setChatHistory] = useState([])
-    const [lastBotIndex, setLastBotIndex] = useState(0); 
+    const [lastBotIndex, setLastBotIndex] = useState(0);
     const endRef = useRef(null)
 
     const suggestions = [
@@ -24,21 +24,14 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
         if (botMsgs.length > lastBotIndex) {
             const newOnes = botMsgs.slice(lastBotIndex).map(raw => {
                 let text = '';
-                let taskResult = null;
-
                 try {
                     const parsedRaw = typeof raw === 'string' ? JSON.parse(raw) : raw;
-                    if (parsedRaw && parsedRaw.type === 'taskResult') {
-                        text = parsedRaw.response || '';
-                        taskResult = parsedRaw.taskResult || null;
-                    } else {
-                        text = parsedRaw.text || raw;
-                    }
+                    text = parsedRaw.text || raw;
                 } catch (error) {
                     text = raw;
                 }
 
-                return { from: 'bot', text, taskResult };
+                return { from: 'bot', text };
             });
             console.log("New bot message: ", newOnes);
             setChatHistory(prev => [...prev, ...newOnes]);
@@ -56,8 +49,8 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
         setChatHistory(prev => [...prev, { from: 'user', text: chatInput }]);
 
         console.log("Chathub JWT: ", localStorage.getItem('chatHubJwt'));
-        sendMessage('onboarding', JSON.stringify({
-            type: 'chat_message',
+        sendMessage('chat', JSON.stringify({
+            type: 'gaia_introduction',
             localStorage: localStorage.getItem('chatHubJwt'),
             text: chatInput
         }));
@@ -105,7 +98,7 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
                                     <Grid numItems={1}>
                                         <Col numColSpan={1}>
                                             <div className="max-w-xs px-4 py-2 rounded-2xl break-words bg-gray-200 text-gray-800">
-                                                Hello! I'm Gaia, your AI assistant. How can I help you today?
+                                                Hello! I'm Gaia, your AI assistant. I am very excited because you choose me to be you partner in this journey! 
                                             </div>
                                         </Col>
                                     </Grid>

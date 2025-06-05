@@ -1,7 +1,7 @@
 import { Button, Card, Col, Grid, Metric, Title } from "@tremor/react";
 import ChatComponent from "../chat_hub/ChatComponent";
 
-const CalendarRegistration = ({ onNext, onSkip }) => {
+const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     return (
         <>
             <Grid numItems={9}>
@@ -19,6 +19,9 @@ const CalendarRegistration = ({ onNext, onSkip }) => {
                             </Title>
                         </div>
                         <div className="mt-4 flex justify-end gap-2">
+                            <Button variant="secondary" onClick={onPrevious}>
+                                Back
+                            </Button>
                             <Button variant="light" onClick={onSkip}>
                                 Skip
                             </Button>

@@ -1,4 +1,3 @@
-// components/onboarding/Onboarding.jsx
 import { useState } from "react"
 import StepProgress from "../../components/template/StepProgress"
 import GaiaIntroduction from "./GaiaIntroduction"
@@ -14,7 +13,7 @@ const steps = [
   { id: 3, screenLabel: "Gaia Task Registration" },
 ]
 
-const StepContent = ({ stepIndex, onNext, onSkip }) => {
+const StepContent = ({ stepIndex, onPrevious, onNext, onSkip }) => {
   switch (stepIndex) {
     case 1:
       return (
@@ -25,7 +24,7 @@ const StepContent = ({ stepIndex, onNext, onSkip }) => {
     case 2:
       return (
         <div className="mx-auto mb-20 mt-28 max-w-8xl px-4 md:mt-32 md:px-6">
-          <CalendarRegistration onNext={onNext} onSkip={onSkip} />
+          <CalendarRegistration onNext={onNext} onSkip={onSkip} onPrevious={onPrevious}/>
         </div >
       )
     case 3:
@@ -57,6 +56,10 @@ const Onboarding = () => {
     window.location.href = "/dashboard"
   }
 
+  const handlePrevious = () => {
+    if (stepIndex > 1) setStepIndex(stepIndex - 1)
+  }
+
   return (
     <>
       <header
@@ -84,7 +87,7 @@ const Onboarding = () => {
         > Skip to Dashboard
         </Button>
       </header>
-      <StepContent stepIndex={stepIndex} onNext={handleNext} onSkip={handleSkip} />
+      <StepContent stepIndex={stepIndex} onNext={handleNext} onSkip={handleSkip} onPrevious={handlePrevious} />
     </>
   )
 }
