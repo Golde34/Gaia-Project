@@ -1,12 +1,11 @@
-// components/onboarding/Onboarding.jsx
-import React, { useState } from "react"
+import { useState } from "react"
 import StepProgress from "../../components/template/StepProgress"
 import GaiaIntroduction from "./GaiaIntroduction"
-import { Button, Card } from "@tremor/react"
-import { LoginIcon } from "@heroicons/react/outline"
+import { Button } from "@tremor/react"
 import { cx } from "../../kernels/utils/cx"
 import useScroll from "../../kernels/utils/userScroll"
 import LogoIcon from "../../components/icons/LogoIcon"
+import CalendarRegistration from "./CalendarRegisgtration"
 
 const steps = [
   { id: 1, screenLabel: "Gaia Introduction" },
@@ -14,22 +13,19 @@ const steps = [
   { id: 3, screenLabel: "Gaia Task Registration" },
 ]
 
-const StepContent = ({ stepIndex, onNext, onSkip }) => {
+const StepContent = ({ stepIndex, onPrevious, onNext, onSkip }) => {
   switch (stepIndex) {
     case 1:
       return (
-        <GaiaIntroduction onNext={onNext} onSkip={onSkip} />
+        <div className="mx-auto mb-20 mt-28 max-w-5xl px-4 md:mt-32 md:px-6">
+          <GaiaIntroduction onNext={onNext} onSkip={onSkip} />
+        </div>
       )
     case 2:
       return (
-        <div>
-          <h2>Gaia Calendar Setup</h2>
-          <p>Here you setup your calendar integration...</p>
-          <div className="mt-4 flex gap-2">
-            <Button onClick={onSkip} variant="secondary">Skip</Button>
-            <Button onClick={onNext}>Continue</Button>
-          </div>
-        </div>
+        <div className="mx-auto mb-20 mt-28 max-w-8xl px-4 md:mt-32 md:px-6">
+          <CalendarRegistration onNext={onNext} onSkip={onSkip} onPrevious={onPrevious}/>
+        </div >
       )
     case 3:
       return (
@@ -60,6 +56,10 @@ const Onboarding = () => {
     window.location.href = "/dashboard"
   }
 
+  const handlePrevious = () => {
+    if (stepIndex > 1) setStepIndex(stepIndex - 1)
+  }
+
   return (
     <>
       <header
@@ -87,9 +87,7 @@ const Onboarding = () => {
         > Skip to Dashboard
         </Button>
       </header>
-      <div className="mx-auto mb-20 mt-28 max-w-5xl px-4 md:mt-32 md:px-6">
-        <StepContent stepIndex={stepIndex} onNext={handleNext} onSkip={handleSkip} />
-      </div>
+      <StepContent stepIndex={stepIndex} onNext={handleNext} onSkip={handleSkip} onPrevious={handlePrevious} />
     </>
   )
 }

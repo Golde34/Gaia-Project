@@ -12,7 +12,6 @@ export const MultiWSProvider = ({
   const jwtKey = {
     notification: "notificationJwt",
     chat: "chatHubJwt",
-    onboarding: "chatHubJwt", 
   }
 
   const [messages, setMessages] = useState(

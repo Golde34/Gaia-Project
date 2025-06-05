@@ -14,7 +14,7 @@ func NewLLMCoreAdapter() *LLMCoreAdapter {
 	return &LLMCoreAdapter{}
 }
 
-func (adapter *LLMCoreAdapter) UserPrompt(input request_dtos.LLMQueryRequestDTO) (map[string]interface{}, error) {
+func (adapter *LLMCoreAdapter) ChatForTask(input request_dtos.LLMQueryRequestDTO) (map[string]interface{}, error) {
 	userPrompURL := base.LLMCoreServiceURL + "/chat"
 	headers := utils.BuildDefaultHeaders()
 	bodyResult, err := utils.BaseAPI(userPrompURL, enums.POST, input, headers)
@@ -32,6 +32,27 @@ func (adapter *LLMCoreAdapter) UserPrompt(input request_dtos.LLMQueryRequestDTO)
 
 	log.Println("Response map from LLMCoreAdapter: ", bodyResultMap)
 	
+
+	return bodyResultMap, nil
+}
+
+func (adapter *LLMCoreAdapter) ChatForOnboarding(input request_dtos.LLMSystemQueryRequestDTO) (map[string]interface{}, error) {
+	userPrompURL := base.LLMCoreServiceURL + "/onboarding"
+	headers := utils.BuildDefaultHeaders()
+	bodyResult, err := utils.BaseAPI(userPrompURL, enums.POST, input, headers)
+	if err != nil {
+		log.Println("Cannot connect with Gaia Bot, try later: ", err)
+		return nil, err
+	}
+
+	log.Println("Response from LLMCoreAdapter: ", bodyResult)
+	bodyResultMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		log.Println("Error converting response to map: ", bodyResult)
+		return nil, err
+	}
+
+	log.Println("Response map from LLMCoreAdapter: ", bodyResultMap)
 
 	return bodyResultMap, nil
 }

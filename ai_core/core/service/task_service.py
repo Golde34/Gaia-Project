@@ -3,7 +3,7 @@ import json
 from core.prompts.task_prompt import CHITCHAT_PROMPT, CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT
 from kernel.config import llm_models
 from kernel.utils.parse_json import parse_json_string
-from core.domain.request.query_request import QueryRequest
+from core.domain.request.query_request import QueryRequest, SystemRequest
 from core.domain.response.model_output_schema import CreateTaskResultSchema, CreateTaskSchema
 
 
@@ -68,7 +68,8 @@ def chitchat(query: QueryRequest) -> str:
 
     try:
         prompt = CHITCHAT_PROMPT.format(query=query.query)
-
+        if not query.model_name:
+            query.model_name = "gemini-2.0-flash"
         response = llm_models.get_model_generate_content(
             query.model_name)(prompt=prompt, model_name=query.model_name)
         print("Response:", response)

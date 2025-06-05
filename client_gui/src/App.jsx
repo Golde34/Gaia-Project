@@ -16,7 +16,6 @@ function App() {
   const endpoints = {
     notification: `ws://${config.notifyAgentWSHost}/ws`,
     chat: `ws://${config.chatHubWSHost}/ws`,
-    onboarding : `ws://${config.chatHubWSHost}/ws/onboarding`,
   }
 
   return (

@@ -44,7 +44,6 @@ func main() {
 
 	// Register WebSocket handler
 	http.HandleFunc("/ws", services.NewWebSocketService().HandleChatmessage)
-	http.HandleFunc("/ws/onboarding", services.NewWebSocketService().HandleOnboarding)
 
 	// Rest Router
 	
