@@ -12,6 +12,6 @@ def handle_onboarding(query: SystemRequest) -> str:
         str: A predefined response for onboarding queries.
     """
     try:
-        return service_handler.handle_service(query=query, classify="onboarding")
+        return service_handler.handle_service(query=query, classify=query.type)
     except Exception as e:
         raise e

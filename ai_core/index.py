@@ -24,7 +24,7 @@ async def chat(request: query_request.QueryRequest):
         print("ERROR:", stack_trace)
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/task-config-register")
+@app.post("/onboarding")
 async def task_register(request: query_request.SystemRequest):
     try:
         print("Received task config register request:", request)

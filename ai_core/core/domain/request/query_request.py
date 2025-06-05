@@ -8,3 +8,4 @@ class QueryRequest(BaseModel):
 
 class SystemRequest(BaseModel):
     query: str
+    type: str = "chitchat"
