@@ -1,5 +1,4 @@
 import os
-import json
 from google import genai
 from fastapi import HTTPException
 from dotenv import load_dotenv

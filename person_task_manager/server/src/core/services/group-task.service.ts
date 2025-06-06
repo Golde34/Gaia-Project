@@ -24,7 +24,7 @@ class GroupTaskService {
         public groupTaskCache = CacheSingleton.getInstance().getCache()
     ) { }
 
-    async createGroupTaskToProject(groupTask: any, projectId: string): Promise<IResponse> {
+    async createGroupTaskToProject(groupTask: any, projectId: string): Promise<IGroupTaskEntity | string > {
         try {
             // groupTask = await this.checkDefaultGroupTask(groupTask);
             groupTask.projectId = projectId;
@@ -34,15 +34,14 @@ class GroupTaskService {
 
             if (await groupTaskValidationImpl.checkExistedGroupTaskInProject(groupTaskId, projectId) === false) { // not exist
                 projectServiceImpl.updateProject(projectId, { $push: { groupTasks: groupTaskId } });
-                return msg200({
-                    message: (createGroupTask as any)
-                });
+                return createGroupTask; 
             } else {
                 await groupTaskStore.deleteGroupTask(groupTaskId);
-                return msg400(CREATE_GROUP_TASK_FAILED);
+                return CREATE_GROUP_TASK_FAILED;
             }
         } catch (error: any) {
-            return msg400(error.message.toString());
+            console.error(error.message.toString());
+            return "Error creating group task: " + error.message.toString();
         }
     }
 

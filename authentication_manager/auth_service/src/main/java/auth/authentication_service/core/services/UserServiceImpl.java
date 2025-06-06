@@ -71,10 +71,10 @@ public class UserServiceImpl implements UserService {
             user.setLlmModels(llmModel);
             userStore.save(user);
             log.info("User created: {}", user.getName().toString());
-
             UserSetting userSetting = userSettingMapper.createUserSettingMapper(user);
             userSettingStore.save(userSetting);
-            log.info("Create default setting for user: {}", user.getId().toString());
+            log.info("Create default setting for user: {}", user.toString());
+            user.setUserSetting(userSetting);
 
             pushKafkaMessageService.pushCreateUserMessage(user);
             log.info("Push message to kafka successfully");

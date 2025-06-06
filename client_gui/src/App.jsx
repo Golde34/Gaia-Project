@@ -15,18 +15,16 @@ function App() {
   // WebSocket connection
   const endpoints = {
     notification: `ws://${config.notifyAgentWSHost}/ws`,
-    chat: `ws://${config.chatHubWSHost}/ws`
+    chat: `ws://${config.chatHubWSHost}/ws`,
   }
 
   return (
     <>
-        <main className='flex'>
-          <MultiWSProvider endpoints={endpoints}>
-            <BrowserRouter basename='/client-gui'>
-              <RenderRouter />
-            </BrowserRouter>
-          </MultiWSProvider >
-        </main>
+      <MultiWSProvider endpoints={endpoints}>
+        <BrowserRouter basename='/client-gui'>
+          <RenderRouter />
+        </BrowserRouter>
+      </MultiWSProvider >
     </>
   )
 }

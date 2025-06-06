@@ -1,13 +1,15 @@
-import { IScheduleGroupEntity } from "../../infrastructure/entities/schedule-group.entity";
-import { IScheduleTaskEntity, ScheduleTaskEntity } from "../../infrastructure/entities/schedule-task.entity"
+import { randomUUID } from "crypto";
 import { convertPriority } from "../../kernel/utils/convert-fields";
+import ScheduleGroupEntity from "../domain/entities/schedule-group.entity";
+import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
 import { ActiveStatus, RepeatLevel } from "../domain/enums/enums";
 import { KafkaCreateTaskMessage, KafkaOptimizeTaskMessage, SyncScheduleTaskRequest } from "../domain/request/task.dto";
 
 export const scheduleTaskMapper = {
 
-    kafkaCreateTaskMapper(data: any, schedulePlanId: string): IScheduleTaskEntity {
-        return new ScheduleTaskEntity({
+    kafkaCreateTaskMapper(data: any, schedulePlanId: string): any {
+        return {
+            id: randomUUID(),
             taskId: data.task.id,
             title: data.task.title,
             priority: data.task.priority,
@@ -20,7 +22,7 @@ export const scheduleTaskMapper = {
             schedulePlanId: schedulePlanId,
             repeat: RepeatLevel.NONE,
             isNotify: false,
-        });
+        };
     },
 
     buildKafkaCreateTaskMapper(taskId: string, scheduleTaskId: string, scheduleTaskName: string) {
@@ -40,7 +42,7 @@ export const scheduleTaskMapper = {
         return message
     },
 
-    buildOptimizeScheduleTaskMapper(optimizedTask: any, task: IScheduleTaskEntity): IScheduleTaskEntity {
+    buildOptimizeScheduleTaskMapper(optimizedTask: any, task: ScheduleTaskEntity): ScheduleTaskEntity {
         task.taskOrder = optimizedTask.taskOrder
         task.weight = optimizedTask.weight
         task.stopTime = optimizedTask.stopTime
@@ -48,7 +50,7 @@ export const scheduleTaskMapper = {
         return task;
     },
 
-    kafkaUpdateTaskMapper(data: any, scheduleTask: IScheduleTaskEntity): IScheduleTaskEntity {
+    kafkaUpdateTaskMapper(data: any, scheduleTask: ScheduleTaskEntity): ScheduleTaskEntity {
         scheduleTask.activeStatus = data.activeStatus
         scheduleTask.deadline = data.deadline
         scheduleTask.duration = data.duration
@@ -62,23 +64,26 @@ export const scheduleTaskMapper = {
         return scheduleTask
     },
 
-    buildTaskFromScheduleGroup(scheduleGroup: IScheduleGroupEntity): IScheduleTaskEntity {
+    buildTaskFromScheduleGroup(scheduleGroup: ScheduleGroupEntity): any {
         console.log('Schedule group: ', scheduleGroup)
         // startDate = today but have schedule.startHour and schedule.startMinute
         const startDate = new Date(new Date().setHours(Number(scheduleGroup.startHour), Number(scheduleGroup.startMinute), 0, 0));
         const deadline = new Date(new Date().setHours(Number(scheduleGroup.endHour), Number(scheduleGroup.endMinute), 0, 0));
-        return new ScheduleTaskEntity({
-            title: scheduleGroup.title,
-            priority: scheduleGroup.priority,
-            status: scheduleGroup.status,
+        return {
+            id: randomUUID(),
+            title: scheduleGroup.title === undefined ? "" : scheduleGroup.title,
+            priority: scheduleGroup.priority === undefined ? [] : scheduleGroup.priority,
+            status: scheduleGroup.status === undefined ? "TODO" : scheduleGroup.status,
             startDate: startDate,
             deadline: deadline,
-            duration: scheduleGroup.duration,
+            duration: scheduleGroup.duration === undefined ? 0 : scheduleGroup.duration,
             activeStatus: ActiveStatus.active,
             preferenceLevel: convertPriority(scheduleGroup.priority),
             schedulePlanId: scheduleGroup.schedulePlanId,
-            isNotify: scheduleGroup.isNotify,
-            scheduleGroupId: scheduleGroup._id,
-        });
+            isNotify: scheduleGroup.isNotify === undefined ? false : scheduleGroup.isNotify,
+            scheduleGroupId: scheduleGroup.id,
+            repeat: RepeatLevel.WEEKLY,
+            isSynchronizedWithWO: false
+        };
     }
 }

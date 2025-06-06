@@ -1,17 +1,19 @@
-import { IScheduleGroupEntity, ScheduleGroupEntity } from "../../infrastructure/entities/schedule-group.entity"
+import { randomUUID } from "crypto"
 import { convertPriority, convertWeekday } from "../../kernel/utils/convert-fields"
+import { TaskStatus } from "../domain/enums/enums"
 
 export const scheduleGroupMapper = {
-    createGroupMapper(scheduleGroup: any, schedulePlanId: string): IScheduleGroupEntity{
+    createGroupMapper(scheduleGroup: any, schedulePlanId: string): any {
         const [startHour, startMinute] = scheduleGroup.startHour.split(':').map(Number)
         const [endHour, endMinute] = scheduleGroup.endHour.split(':').map(Number)
-        return  new ScheduleGroupEntity({
+        return {
+            id: randomUUID(),
             schedulePlanId: schedulePlanId,
             projectId: scheduleGroup.projectId,
             groupTaskId: scheduleGroup.groupTaskId,
             title: scheduleGroup.title,
             priority: scheduleGroup.priority,
-            status: scheduleGroup.status,
+            status: scheduleGroup.status == undefined ? TaskStatus.TODO : scheduleGroup.status,
             startHour: startHour,
             startMinute: startMinute,
             endHour: endHour,
@@ -20,11 +22,11 @@ export const scheduleGroupMapper = {
             preferenceLevel: convertPriority(scheduleGroup.priority),
             repeat: convertWeekday(scheduleGroup.repeat),
             isNotify: scheduleGroup.isNotify,
-            acitveStatus: scheduleGroup.acitveStatus,
-            createDate: new Date(),
-            updateDate: new Date(),
+            activeStatus: scheduleGroup.activeStatus,
+            createdAt: new Date(),
+            updatedAt: new Date(),
             isFailed: false,
-        })
+        }
     },
 
     createDateByHour(now: Date, hour: string, minute: string): Date {

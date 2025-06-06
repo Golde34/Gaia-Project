@@ -28,7 +28,7 @@ class GroupTaskController {
 
             const createGroupTaskObjectDto = plainToInstance(GroupTaskRequestDto, bodyJson);
             const projectId = bodyJson.projectId;
-            const groupTaskResult = await groupTaskService.createGroupTaskToProject(createGroupTaskObjectDto, projectId);
+            const groupTaskResult = await groupTaskUsecase.createGroupTaskToProject(createGroupTaskObjectDto, projectId);
            
             return groupTaskResult;
         } catch (err) {

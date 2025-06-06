@@ -4,7 +4,7 @@ import { createProject } from '../../api/store/actions/task_manager/project.acti
 import { createTask, generateTaskFromScratch, updateTask } from '../../api/store/actions/task_manager/task.actions';
 import { updateUser, updateUserModel, updateUserSetting } from '../../api/store/actions/auth_service/user.actions';
 import { createRole } from '../../api/store/actions/auth_service/role.actions';
-import { registerTaskConfig } from '../../api/store/actions/work_optimization/task-registration.actions';
+import { registerTaskConfig } from '../../api/store/actions/onboarding/task-registration.actions';
 import { createNote } from '../../api/store/actions/task_manager/note.actions';
 import { chooseTaskBatch } from '../../api/store/actions/schedule_plan/schedule-task.action';
 import { createScheduleGroupAction } from '../../api/store/actions/schedule_plan/schedule-group.action';

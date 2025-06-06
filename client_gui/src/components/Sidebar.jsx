@@ -1,17 +1,17 @@
-import React from "react";
+import { HomeIcon } from "@heroicons/react/solid";
 import {
 	ArrowUpIcon,
 	BellIcon,
 	BookmarkIcon,
 	CalendarIcon,
 	ClipboardCheckIcon,
+	CreditCardIcon,
 	ExternalLinkIcon,
-	HomeIcon,
 	MailIcon,
 	PencilAltIcon,
 	ShieldCheckIcon,
 	UserIcon,
-} from "@heroicons/react/solid";
+} from "@heroicons/react/outline";
 import { Button, Col, Grid } from "@tremor/react";
 import styled from "styled-components";
 
@@ -48,40 +48,31 @@ const Sidebar = () => {
 							<Description>Dashboard</Description>
 						</LinkWrapper>
 					</Col>
-					{/* <Col numColSpan={1}>
-						<LinkWrapper href="/client-gui/user-task-connector">
-							<Button variant="primary" color="indigo"
-								className="p-2 rounded-lg mb-4">
-								<TemplateIcon width={20} />
-							</Button>
-							<Description>Task Registration</Description>
-						</LinkWrapper>
-					</Col> */}
-					<Col numColSpan={1}>
-						<LinkWrapper href="/client-gui/profile">
-							<Button variant="primary" color="indigo"
-								className="p-2 rounded-lg mb-4">
-								<UserIcon width={20} />
-							</Button>
-							<Description>User Profile</Description>
-						</LinkWrapper>
-					</Col>
 					<Col numColSpan={1}>
 						<LinkWrapper href="/client-gui/project">
 							<Button variant="primary" color="indigo"
 								className="p-2 rounded-lg mb-4">
 								<ClipboardCheckIcon width={20} />
 							</Button>
-							<Description>Project</Description>
+							<Description>Project Management</Description>
 						</LinkWrapper>
 					</Col>
 					<Col numColSpan={1}>
 						<LinkWrapper href="/client-gui/schedule">
 							<Button variant="primary" color="indigo"
 								className="p-2 rounded-lg mb-4">
+								<CreditCardIcon width={20} />
+							</Button>
+							<Description>Optimize Your Tasks</Description>
+						</LinkWrapper>
+					</Col>
+					<Col numColSpan={1}>
+						<LinkWrapper href="/client-gui/calendar">
+							<Button variant="primary" color="indigo"
+								className="p-2 rounded-lg mb-4">
 								<CalendarIcon width={20} />
 							</Button>
-							<Description>Schedule Calendar</Description>
+							<Description>Daily Calendar</Description>
 						</LinkWrapper>
 					</Col>
 					<Col numColSpan={1}>
@@ -102,8 +93,17 @@ const Sidebar = () => {
 							<Description>Chat Bot</Description>
 						</LinkWrapper>
 					</Col>
+					<Col numColSpan={1}>
+						<LinkWrapper href="/client-gui/profile">
+							<Button variant="primary" color="indigo"
+								className="p-2 rounded-lg mb-4">
+								<UserIcon width={20} />
+							</Button>
+							<Description>User Profile</Description>
+						</LinkWrapper>
+					</Col>
 				</Grid>
-				
+
 				{/*<ChartBarIcon
 					width={40}
 					className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
@@ -115,18 +115,18 @@ const Sidebar = () => {
 				<MailIcon
 					width={40}
 					className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
-				/>
+				/> */}
 				<a href="/client-gui/scheduling-table">
 					<CreditCardIcon
 						width={40}
 						className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
 					/>
-				</a> */}
+				</a> 
 				<BellIcon
 					width={40}
 					className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
 				/>
-				<Col numColSpan={1}>
+				{/* <Col numColSpan={1}>
 					<LinkWrapper href="/client-gui/manager">
 						<Button variant="primary" color="yellow"
 							className="p-2 rounded-lg mb-4">
@@ -134,7 +134,7 @@ const Sidebar = () => {
 						</Button>
 						<Description>Manager</Description>
 					</LinkWrapper>
-				</Col>
+				</Col> */}
 			</div>
 			<div className="fixed bottom-4 left-3 sm:left-6">
 				<a href="#top">

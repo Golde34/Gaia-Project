@@ -10,9 +10,15 @@ import (
 
 type ScheduleTaskRouter struct {
 	ScheduleTaskService *services.ScheduleTaskService
+	ScheduleGroupService *services.ScheduleGroupService
+	ScheduleCalendarService *services.ScheduleCalendarService
 }
 
-func NewScheduleTaskRouter(scheduleTaskService *services.ScheduleTaskService, r *chi.Mux) *ScheduleTaskRouter {
+func NewScheduleTaskRouter(r *chi.Mux) *ScheduleTaskRouter {
+	scheduleTaskService := services.NewScheduleTaskService()
+	scheduleGroupService := services.NewScheduleGroupService()
+	scheduleCalendarService := services.NewScheduleCalendarService()
+
 	r.Route("/schedule-task", func(r chi.Router) {
 		r.Get("/list", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.GetScheduleTaskListByUserId(w, r, scheduleTaskService)
@@ -29,16 +35,23 @@ func NewScheduleTaskRouter(scheduleTaskService *services.ScheduleTaskService, r 
 	})
 	r.Route("/schedule-group", func(r chi.Router) {
 		r.Post("/create", func(w http.ResponseWriter, r *http.Request) {
-			controller_services.CreateScheduleGroup(w, r, scheduleTaskService)
+			controller_services.CreateScheduleGroup(w, r, scheduleGroupService)
 		})
 		r.Get("/list", func(w http.ResponseWriter, r *http.Request) {
-			controller_services.ListScheduleGroupByUserId(w, r, scheduleTaskService)
+			controller_services.ListScheduleGroupByUserId(w, r, scheduleGroupService)
 		})
 		r.Delete("/delete/{scheduleGroupId}", func(w http.ResponseWriter, r *http.Request) {
-			controller_services.DeleteScheduleGroup(w, r, scheduleTaskService)
+			controller_services.DeleteScheduleGroup(w, r, scheduleGroupService)
+		})
+	})
+	r.Route("/schedule-calendar", func(r chi.Router) {
+		r.Get("/daily-tasks", func(w http.ResponseWriter, r *http.Request) {
+			controller_services.GetUserDailyTasks(w, r, scheduleCalendarService)
 		})
 	})
 	return &ScheduleTaskRouter{
 		ScheduleTaskService: scheduleTaskService,
+		ScheduleGroupService: scheduleGroupService,
+		ScheduleCalendarService: scheduleCalendarService,
 	}
 }

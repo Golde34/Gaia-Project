@@ -10,8 +10,6 @@ class SchedulePlanUsecase {
         try {
             const schedulePlan = await schedulePlanService.createSchedulePlan(userId);
             console.log('Schedule Plan: ', schedulePlan );
-            const scheduleCalendar = await scheduleCalendarService.createScheduleCalendar(userId);
-            console.log('Schedule Calendar: ', scheduleCalendar );
             isScheduleExist = true;
             return msg200({
                 isScheduleExist
@@ -23,17 +21,6 @@ class SchedulePlanUsecase {
             });
         }
     }
-
-    // async createSchedulePlan(userId: number): Promise<ISchedulePlanEntity | null> {
-    //     try {
-    //         const result = await schedulePlanService.createSchedulePlan(userId);
-    //         console.log('Result: ', result);
-    //         return result;
-    //     } catch (error) {
-    //         console.error("Error on create Schedule plan: ", error);
-    //         return null;
-    //     }
-    // }
 }
 
 export const schedulePlanUsecase = new SchedulePlanUsecase;

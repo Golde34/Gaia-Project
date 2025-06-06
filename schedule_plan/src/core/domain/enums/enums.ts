@@ -1,3 +1,9 @@
+export enum TaskStatus {
+    DONE = "DONE",
+    TODO = "TODO",
+    IN_PROGRESS = "IN_PROGRESS",
+}
+
 export enum ActiveStatus {
     active = "ACTIVE",
     inactive = "INACTIVE",
@@ -55,4 +61,12 @@ export enum RepeatLevel {
     WEEKLY = "WEEKLY",
     MONTHLY = "MONTHLY",
     YEARLY = "YEARLY",
+}
+
+export enum Tag {
+    WORK = "WORK",
+    EAT = "EAT",
+    SLEEP = "SLEEP",
+    TRAVEL = "TRAVEL",
+    RELAX = "RELAX",
 }

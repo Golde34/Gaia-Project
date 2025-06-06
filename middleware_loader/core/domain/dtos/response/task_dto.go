@@ -135,7 +135,7 @@ func (in *TaskDetailResponseDTO) MapperTaskDetail(response interface{}) TaskDeta
 	out.StartDate = task["startDate"].(string)
 	out.Deadline = task["deadline"].(string)
 
-	out.ScheduleTaskId = scheduleTask["_id"].(string)
+	out.ScheduleTaskId = scheduleTask["id"].(string)
 	if scheduleTask["taskBatch"] != nil {
 		out.TaskBatch = int64(scheduleTask["taskBatch"].(float64))
 	}
@@ -171,4 +171,22 @@ type CountDoneTaskListDTO struct {
 
 func NewCountDoneTaskListDTO() *CountDoneTaskListDTO {
 	return &CountDoneTaskListDTO{}
+}
+
+type TopTaskResponse struct {
+	ID           string   `json:"id"`
+	Title        string   `json:"title"`
+	Description  string   `json:"description"`
+	Priority     []string `json:"priority"`
+	Status       string   `json:"status"`
+	StartDate    string   `json:"startDate"`
+	Deadline     string   `json:"deadline"`
+	Duration     float64  `json:"duration"`
+	ActiveStatus string   `json:"activeStatus"`
+
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+
+	GroupTaskId string   `json:"groupTaskId"`
+	ProjectId string   `json:"projectId"`
 }

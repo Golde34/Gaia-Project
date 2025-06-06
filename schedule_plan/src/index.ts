@@ -12,21 +12,27 @@ import { KafkaHandler } from "./infrastructure/kafka/kafka-handler";
 import { kafkaController } from "./infrastructure/kafka/kafka-controller";
 import { scheduleTaskRouter } from "./ui/routers/schedule-task.router";
 import { scheduleGroupRouter } from "./ui/routers/schedule-group.router";
+import { scheduleCalendarRouter } from "./ui/routers/schedule-calendar.router";
+import { validateDBEnvironmentVars } from "./kernel/config/database.configuration";
+import PostgresDatabase from "./infrastructure/database/postgresql.db";
 
 async function main(): Promise<void> {
     validateEnvironmentVars();
+    validateDBEnvironmentVars();
     const kafkaHandler = new KafkaHandler();
     const applicationContext = "/schedule-plan";
+    const db = new PostgresDatabase();
+    console.log("PostgressDB: ", db.sequelize?.options.database)
 
-    const mongoHelper = new MongoHelper(
-        config.database.host,
-        config.database.port,
-        config.database.name,
-        config.database.username,
-        config.database.password,
-    )
-    await mongoHelper.connect();
-    console.log("Connected to MongoDB");
+    // const mongoHelper = new MongoHelper(
+    //     config.database.host,
+    //     config.database.port,
+    //     config.database.name,
+    //     config.database.username,
+    //     config.database.password,
+    // )
+    // await mongoHelper.connect();
+    // console.log("Connected to MongoDB");
 
     const app: Application = express();
     const port = config.server.listenPort;
@@ -50,6 +56,7 @@ async function main(): Promise<void> {
     app.use(applicationContext + "/dashboard", dashboardRouter);
     app.use(applicationContext + "/schedule", scheduleTaskRouter);
     app.use(applicationContext + "/schedule-group", scheduleGroupRouter);
+    app.use(applicationContext + "/schedule-calendar", scheduleCalendarRouter);
 
     app.use((req: Request, res: Response, next: NextFunction) => {
         sendResponse(msg404(MSG404), res, next);

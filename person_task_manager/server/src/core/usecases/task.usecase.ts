@@ -182,6 +182,10 @@ class TaskUsecase {
         if (isStringEmpty(scheduleGroup.groupTaskId)) {
             const mappedGrouPTask = scheduleTaskMapper.mapGroupTask(scheduleGroup, projectId)
             groupTask = await groupTaskService.createGroupTaskToProject(mappedGrouPTask, projectId);
+            if (typeof groupTask === 'string') {
+                console.log("Error when create group task: ", groupTask);
+                throw new Error(groupTask);
+            }
         } else {
             groupTask = await groupTaskService.getGroupTask(scheduleGroup.groupTaskId);
         }

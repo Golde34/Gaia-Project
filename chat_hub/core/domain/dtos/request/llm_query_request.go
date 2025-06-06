@@ -9,3 +9,12 @@ type LLMQueryRequestDTO struct {
 func NewLLMQueryRequestDTO() *LLMQueryRequestDTO {
 	return &LLMQueryRequestDTO{}
 }
+
+type LLMSystemQueryRequestDTO struct {
+	Query string `json:"query"`
+	Type string `json:"type"`
+}
+
+func NewLLMSystemQueryRequestDTO() *LLMSystemQueryRequestDTO {
+	return &LLMSystemQueryRequestDTO{}
+}

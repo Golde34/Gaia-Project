@@ -1,19 +1,16 @@
-import { create } from "domain";
-import { ISchedulePlanEntity } from "../../infrastructure/entities/schedule-plan.entity";
 import { IResponse, msg200, msg400 } from "../common/response";
 import { scheduleCalendarService } from "../services/schedule-calendar.service";
 import { scheduleTaskService } from "../services/schedule-task.service";
-import { IScheduleCalendarEntity } from "../../infrastructure/entities/schedule-calendar.entity";
 import { schedulePlanService } from "../services/schedule-plan.service";
-import { scheduleGroupService } from "../services/schedule-group.service";
+import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
 
 class ScheduleCalendarUsecase {
     constructor() { }
 
-    async updateScheduleTasksWithSchedulePlan(userId: number, schedulePlan: ISchedulePlanEntity): Promise<any> {
-        const scheduleTasks = await scheduleTaskService.findByTaskBatch(schedulePlan._id, schedulePlan.activeTaskBatch);
+    async updateScheduleTasksWithSchedulePlan(userId: number, schedulePlan: SchedulePlanEntity): Promise<any> {
+        const scheduleTasks = await scheduleTaskService.findByTaskBatch(schedulePlan.id, schedulePlan.activeTaskBatch);
         if (!scheduleTasks) {
-            console.error(`Cannot find schedule tasks by schedule plan: ${schedulePlan._id}`);
+            console.error(`Cannot find schedule tasks by schedule plan: ${schedulePlan.id}`);
             return;
         }
         const scheduleCalendar = await scheduleCalendarService.findScheduleCalendarByUserId(userId);
@@ -44,52 +41,50 @@ class ScheduleCalendarUsecase {
 
     async createDailyCalendar(body: any): Promise<IResponse> {
         try {
-            let dailyScheduleCalendar: any = null;
-            const scheduleCalendar = await scheduleCalendarService.findScheduleCalendarByUserId(Number(body.userId));
-            if (!scheduleCalendar) {
-                console.error(`Why the user ${body.userId} has no schedule calendar?`);
-                const createdScheduleCalendar = await scheduleCalendarService.createScheduleCalendar(Number(body.userId));
-                dailyScheduleCalendar = createdScheduleCalendar;
+            const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(Number(body.userId));
+            if (!schedulePlan) {
+                return msg400("Cannot find schedule plan for user!");
             }
-            // clear all tasks in schedule calendar
-            dailyScheduleCalendar.tasks = [];
-            // get all schedule tasks user has to do today
-            dailyScheduleCalendar.tasks = await this.getUserDailyTasks(Number(body.userId));
+
+            const userDailyTasks = await scheduleTaskService.findUserDailyTasks(schedulePlan.id, schedulePlan.activeTaskBatch, new Date())
+            if (userDailyTasks == null || userDailyTasks.length === 0) {
+                console.log(`User ${body.userId}  has no tasks, no need to schedule calendar.`);
+                return msg200({
+                    message: "User has no tasks, no need to schedule calendar.",
+                    tasks: []
+                })
+            }
+
+            const optimizedUserDailyTasks = scheduleTaskService.optimizeDailyTasks(userDailyTasks);
+
+            const scheduleCalendar = {
+                userId: Number(body.userId),
+                startDate: new Date(),
+                tasks: userDailyTasks.map((task) => task.id) 
+            }
+
+            await scheduleCalendarService.updateScheduleCalendar(Number(body.userId), scheduleCalendar);
+
             return msg200({
                 message: "Create daily schedule calendar successfully.",
-                scheduleCalendar: dailyScheduleCalendar
-            })
+                scheduleCalendar
+            });
         } catch (error: any) {
             console.error("Error on createDailyCalendar: ", error);
             return msg400("Cannot create schedule calendar!");
         }
     }
 
-    private async getUserDailyTasks(userId: number): Promise<any> {
-        let tasks = [];
-        const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
-        if (!schedulePlan) {
-            console.error(`Cannot find schedule plan by user id: ${userId}`);
-            throw new Error(`Cannot find schedule plan by user id: ${userId}`);
-        }
-        const scheduleTasks = await scheduleTaskService.getScheduleTaskByBatchNumber(schedulePlan._id, schedulePlan.activeTaskBatch);
-        tasks = scheduleTasks.map((task) => task._id);
-        const groupScheduleTasks = await scheduleGroupService.getTasksInAllScheduleGroups(schedulePlan._id, new Date()); 
-        tasks = tasks.concat(groupScheduleTasks.map((task: { _id: any; }) => task._id));
-        return tasks; 
-    }
-
     async startDailyCalendar(userId: number): Promise<IResponse> {
         try {
             const scheduleCalendar = await scheduleCalendarService.findScheduleCalendarByDate(userId, new Date());
-            if (!scheduleCalendar) {
-                console.error(`User ${userId} has no schedule calendar for today.`);
-                return await this.createDailyCalendar({userId: userId});
+            if (scheduleCalendar) {
+                return msg200({
+                    message: "User has already started schedule calendar.",
+                    tasks: scheduleCalendar.tasks
+                })
             }
-            return msg200({
-                message: "Get schedule calendar successfully.",
-                tasks: scheduleCalendar.tasks
-            })  
+            return this.createDailyCalendar({userId: userId});
         } catch (error: any) {
             console.error("Error on startScheduleCalendar: ", error);
             return msg400("Cannot start schedule calendar!");

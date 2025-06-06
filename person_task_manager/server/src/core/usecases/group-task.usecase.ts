@@ -10,11 +10,11 @@ class GroupTaskUsecase {
         public groupTaskServiceImpl = groupTaskService,
     ) { }
 
-    async calculateCompletedTasks(groupTaskId: string): Promise<IResponse> { 
+    async calculateCompletedTasks(groupTaskId: string): Promise<IResponse> {
         try {
             if (!await this.groupTaskValidationImpl.checkExistedGroupTaskById(groupTaskId)) {
                 return msg400(GROUP_TASK_NOT_FOUND);
-            } 
+            }
             const groupTask = await this.groupTaskServiceImpl.getGroupTask(groupTaskId);
             if (groupTask === null) {
                 return msg400(GROUP_TASK_NOT_FOUND);
@@ -30,6 +30,20 @@ class GroupTaskUsecase {
         return msg200({
             groupTask,
         });
+    }
+
+    async createGroupTaskToProject(groupTask: any, projectId: string): Promise<IResponse> {
+        try {
+            const createdGroupTask = await this.groupTaskServiceImpl.createGroupTaskToProject(groupTask, projectId);
+            if (typeof createdGroupTask === "string") {
+                return msg400(createdGroupTask);
+            }
+            return msg200({
+                message: (createdGroupTask as any)
+            });
+        } catch (error: any) {
+            return msg400(error.message.toString());
+        }
     }
 }
 

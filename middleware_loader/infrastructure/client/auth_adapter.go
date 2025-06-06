@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"log"
 
+	request_dtos "middleware_loader/core/domain/dtos/request"
 	response_dtos "middleware_loader/core/domain/dtos/response"
+	mapper_response "middleware_loader/core/port/mapper/response"
 	"middleware_loader/core/domain/enums"
 	"middleware_loader/infrastructure/client/base"
 	"middleware_loader/infrastructure/graph/model"
@@ -184,3 +186,22 @@ func (adapter *AuthAdapter) GetServiceJWT(serviceName, userId string) (string, e
 
 	return jwtResponse, nil
 }
+
+func (adapter *AuthAdapter) Signup(input request_dtos.SignupDTO) (response_dtos.UserDetailDTO, error) {
+	authServiceURL := base.AuthServiceURL + "/auth/sign-up"
+	headers := utils.BuildDefaultHeaders()
+	bodyResult, err := utils.BaseAPI(authServiceURL, "POST", input, headers)
+	if err != nil {
+		return response_dtos.UserDetailDTO{}, err
+	}
+
+	bodyResultMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return *response_dtos.NewUserDetailDTO(), nil
+	}
+	userResponse := mapper_response.ReturnUserObjectMapper(bodyResultMap["message"].(map[string]interface{}))
+	log.Println("userResponse", userResponse)
+	return *userResponse, nil
+}
+
+	

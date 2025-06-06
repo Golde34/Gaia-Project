@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useMultiWS } from "../../kernels/context/MultiWSContext";
-import { optimizeTaskByUserId } from "../../api/store/actions/work_optimization/optimize-task.actions";
+import { optimizeTaskByUserId } from "../../api/store/actions/onboarding/optimize-task.actions";
 import { Text } from "@tremor/react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/solid";
 import { generateDate, months } from "../../kernels/utils/calendar";

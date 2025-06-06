@@ -46,3 +46,12 @@ type ScheduleResponseDTO struct {
 func NewScheduleResponseDTO() *ScheduleResponseDTO {
 	return &ScheduleResponseDTO{}
 }
+
+type DailyTasksResponseDTO struct {
+	Message string `json:"message"`
+	Tasks   []ScheduleTaskResponseDTO `json:"tasks"`
+}
+
+func NewDailyTasksResponseDTO() *DailyTasksResponseDTO {
+	return &DailyTasksResponseDTO{}
+}

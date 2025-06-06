@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+
+	"github.com/google/uuid"
 )
 
 type TaskResultHandler struct {}
@@ -62,6 +64,6 @@ func handleService(messageMap map[string]interface{}, userId string) (string, er
 		return "", err
 	}
 
-	websocket_service.NewWebSocketService().SendToUser(userId, []byte(resultBytes)) 
+	websocket_service.NewWebSocketService().SendToUser(userId, []byte(resultBytes), uuid.NewString()) 
 	return result.Response, nil;
 }

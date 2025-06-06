@@ -7,7 +7,7 @@ import (
 
 func ReturnScheduleTaskObjectMapper(body map[string]interface{}) *response_dtos.ScheduleTaskResponseDTO {
 	var input response_dtos.ScheduleTaskResponseDTO
-	input.ID = body["_id"].(string)
+	input.ID = body["id"].(string)
 	input.Title = body["title"].(string)
 	input.Priority = utils.ConvertStringToStringArray(body["priority"].([]interface{}))
 	input.Status = body["status"].(string)

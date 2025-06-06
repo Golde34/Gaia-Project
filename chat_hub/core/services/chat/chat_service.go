@@ -32,7 +32,7 @@ func (s *ChatService) HandleChatMessage(userId string, message string) (string, 
 	input.UserId = userId
 	input.ModelName = userModel.ModelName
 	input.Query = message
-	chatResponse, err := client.NewLLMCoreAdapter().UserPrompt(input)
+	chatResponse, err := client.NewLLMCoreAdapter().ChatForTask(input)
 	if err != nil {
 		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
 		return "", err
@@ -78,8 +78,8 @@ func (s *ChatService) ResponseTaskResultToUser(taskResult map[string]interface{}
 	var input request_dtos.LLMQueryRequestDTO
 	input.UserId = userId
 	input.ModelName = userModel.ModelName
-	input.Query = fmt.Sprintf("Task result: %v of userId: %s", taskResult, userId) 
-	chatResponse, err := client.NewLLMCoreAdapter().UserPrompt(input)
+	input.Query = fmt.Sprintf("Task result: %v of userId: %s", taskResult, userId)
+	chatResponse, err := client.NewLLMCoreAdapter().ChatForTask(input)
 	if err != nil {
 		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
 		return response_dtos.TaskResultMessageDTO{}, err
@@ -88,7 +88,35 @@ func (s *ChatService) ResponseTaskResultToUser(taskResult map[string]interface{}
 	var data response_dtos.TaskResultMessageDTO
 	data.Type = "taskResult"
 	data.Response = chatResponse["response"].(string)
-	data.TaskResult = chatResponse["task"].(map[string]interface{})	
+	data.TaskResult = chatResponse["task"].(map[string]interface{})
 
 	return data, nil
+}
+
+func (s *ChatService) HandleGaiaIntroductionMessage(userId, message, msgType string) (string, error) {
+	log.Println("Message received from user " + userId + ": " + message)
+	var input request_dtos.LLMSystemQueryRequestDTO
+	input.Query = message
+	input.Type = msgType 
+	chatResponse, err := client.NewLLMCoreAdapter().ChatForOnboarding(input)
+	if err != nil {
+		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
+		return "", err
+	}
+
+	go handleGaiaIntroductionResponse(chatResponse, userId)
+
+	data, exists := chatResponse["response"].(string)
+	if !exists || data == "" {
+		return "Internal System Error", err
+	}
+
+	return data, nil
+}
+
+func handleGaiaIntroductionResponse(chatResponse map[string]interface{}, userId string) {
+	log.Println("Handling chat response for user " + userId)
+	if chatResponse["type"] == "chitchat" {
+		log.Println("Chitchat response for user " + userId)
+	}
 }

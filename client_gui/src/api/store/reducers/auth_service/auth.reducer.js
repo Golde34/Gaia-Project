@@ -8,6 +8,11 @@ import {
     GET_NOTIFICATION_JWT_REQUEST,
     GET_NOTIFICATION_JWT_SUCCESS,
     GET_NOTIFICATION_JWT_FAIL,
+    USER_SIGNUP_REQUEST,
+    USER_SIGNUP_SUCCESS,
+    USER_SIGNUP_FAIL,
+    USER_SIGNOUT_REQUEST,
+    USER_SIGNOUT_FAIL,
 } from '../../constants/auth_service/auth.constants';
 
 export const gaiaSigninReducer = (state = {}, action) => {
@@ -76,6 +81,32 @@ export const getNotificationJwtReducer = (state = {}, action) => {
             return { notiLoading: false, notificationJwt: action.payload };
         case GET_NOTIFICATION_JWT_FAIL:
             return { notiLoading: false, notiError: action.payload };
+        default:
+            return state;
+    }
+}
+
+export const userSignupReducer = (state = {}, action) => {
+    switch (action.type) {
+        case USER_SIGNUP_REQUEST:
+            return { loading: true };
+        case USER_SIGNUP_SUCCESS:
+            return { loading: false, userInfo: action.payload };
+        case USER_SIGNUP_FAIL:
+            return { loading: false, error: action.payload };
+        default:
+            return state;
+    }
+}
+
+export const userSignoutReducer = (state = {}, action) => {
+    switch (action.type) {
+        case USER_SIGNOUT:
+            return { loading: false, userInfo: null };
+        case USER_SIGNOUT_REQUEST:
+            return { loading: true };
+        case USER_SIGNOUT_FAIL:
+            return { loading: false, error: action.payload };
         default:
             return state;
     }
