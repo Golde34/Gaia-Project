@@ -4,7 +4,7 @@ export const convertTimestampToDate = (timestamp) => {
 };
 
 export const formatHourNumber = (value) => {
-    if (value <= 0) {
+    if (value < 0) {
         return true;
     }
     if (value > 24) {

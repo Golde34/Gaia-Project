@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux"
-import Template from "../../components/template/Template";
 import { Button, Card, CategoryBar, Col, Flex, Grid, Legend, Metric, NumberInput, Subtitle, Text, TextInput, Title } from "@tremor/react";
 import { formatHourNumber } from "../../kernels/utils/date-picker";
 import { queryTaskConfig, registerTaskConfig } from "../../api/store/actions/onboarding/task-registration.actions";
@@ -39,9 +38,9 @@ const TaskRegistration = (props) => {
             ) : taskRegistry && redirectToScreen(taskRegistry, redirectPage) === "SP" ? (
                 <SchedulingTable />
             ) : taskRegistry && redirectToScreen(taskRegistry, redirectPage) === null ? (
-                <Template>
+                <Card className="mt-4">
                     <ContentArea redirectPage={redirectPage} />
-                </Template>
+                </Card >
             ) : (
                 <></>
             )}
@@ -53,10 +52,10 @@ function ContentArea(props) {
     const dispatch = useDispatch();
     const redirectPage = props.redirectPage;
 
-    const [ validateErrors, setValidateErrors ] = useState({});
+    const [validateErrors, setValidateErrors] = useState({});
     const [sleepTime, setSleepTime] = useState(0);
-    const [startSleepTime, setStartSleepTime] = useState("");
-    const [endSleepTime, setEndSleepTime] = useState("");
+    const [startSleepTime, setStartSleepTime] = useState("00:00");
+    const [endSleepTime, setEndSleepTime] = useState("00:00");
     const [relaxTime, setRelaxTime] = useState(0);
     const [travelTime, setTravelTime] = useState(0);
     const [eatTime, setEatTime] = useState(0);
@@ -110,16 +109,13 @@ function ContentArea(props) {
 
     return (
         <>
-            <Metric style={{ marginBottom: '30px', marginTop: '30px' }}
-                className="text-2xl font-bold text-gray-800">Register Your Daily Schedule
-            </Metric>
             <Grid numItems={12} className="gap-2">
-                <Col numColSpan={12}>
+                {/* <Col numColSpan={12}>
                     <Card className="mt-5" style={{ textAlign: "start" }}>
                         <Title className="text-xl">Introduce</Title>
                         <Text>First you need to calculate your work time by your self. Base on your estimate we will optimize your tasks durings your work day.</Text>
                     </Card>
-                </Col>
+                </Col> */}
                 <Col numColSpan={6}>
                     <Card className="mt-4">
                         <Grid numItems={6}>
@@ -282,14 +278,6 @@ function ContentArea(props) {
 
             </Grid>
             <Flex justifyContent="end">
-                <Button className="mt-4 me-4"
-                    variant="primary" color="red"
-                    onClick={() => {
-                        console.log("Skip");
-                    }
-                    }>
-                    Skip
-                </Button>
                 <Button className="mt-4"
                     variant="primary" color="indigo"
                     onClick={() => {

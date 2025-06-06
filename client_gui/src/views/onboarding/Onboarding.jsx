@@ -24,7 +24,7 @@ const StepContent = ({ stepIndex, onPrevious, onNext, onSkip }) => {
     case 2:
       return (
         <div className="mx-auto mb-20 mt-28 max-w-8xl px-4 md:mt-32 md:px-6">
-          <CalendarRegistration onNext={onNext} onSkip={onSkip} onPrevious={onPrevious}/>
+          <CalendarRegistration onNext={onNext} onSkip={onSkip} onPrevious={onPrevious} />
         </div >
       )
     case 3:
@@ -87,7 +87,9 @@ const Onboarding = () => {
         > Skip to Dashboard
         </Button>
       </header>
-      <StepContent stepIndex={stepIndex} onNext={handleNext} onSkip={handleSkip} onPrevious={handlePrevious} />
+      <main className={cx(scrolled && "pt-12")}>
+        <StepContent stepIndex={stepIndex} onNext={handleNext} onSkip={handleSkip} onPrevious={handlePrevious} />
+      </main >
     </>
   )
 }
