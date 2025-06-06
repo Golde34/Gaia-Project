@@ -54,8 +54,8 @@ function ContentArea(props) {
 
     const [validateErrors, setValidateErrors] = useState({});
     const [sleepTime, setSleepTime] = useState(0);
-    const [startSleepTime, setStartSleepTime] = useState("");
-    const [endSleepTime, setEndSleepTime] = useState("");
+    const [startSleepTime, setStartSleepTime] = useState("00:00");
+    const [endSleepTime, setEndSleepTime] = useState("00:00");
     const [relaxTime, setRelaxTime] = useState(0);
     const [travelTime, setTravelTime] = useState(0);
     const [eatTime, setEatTime] = useState(0);
