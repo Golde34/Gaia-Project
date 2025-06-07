@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from fastapi import UploadFile
 
 
 class QueryRequest(BaseModel):
@@ -9,3 +10,7 @@ class QueryRequest(BaseModel):
 class SystemRequest(BaseModel):
     query: str
     type: str = "chitchat"
+
+class RAGRequest(BaseModel):
+    file: UploadFile
+    
