@@ -4,7 +4,7 @@ from core.dictionary.tree_function import FUNCTIONS
 from kernel.config import llm_models
 import core.domain.request.query_request as QueryRequest
 from core.prompts.classify_prompt import CLASSIFY_PROMPT
-from core.service.base import service_handler
+from core.service.base.service_handler import handle_service 
 
 
 def handle_user_prompt(query: QueryRequest) -> str:
@@ -26,7 +26,7 @@ def handle_user_prompt(query: QueryRequest) -> str:
             query.model_name)(prompt=prompt, model_name=query.model_name)
 
         print("Classify Response:", classify_response)
-        return service_handler.handle_service(query=query, classify=classify_response) 
+        return handle_service(query=query, classify=classify_response) 
         
     except Exception as e:
         raise e
