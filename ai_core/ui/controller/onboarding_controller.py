@@ -17,5 +17,5 @@ def gaia_introduction(query: SystemRequest):
 
     if guided_route == GAIA_INTRODUCTION_ROUTE_NAME:
         query_embedding = embedding_model.get_embeddings(query.query)
-        return query_embedding
-    pass 
+
+        source_information = 
