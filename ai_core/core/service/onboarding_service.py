@@ -2,10 +2,11 @@ import json
 import re
 
 from core.prompts.classify_prompt import ONBOARDING_PROMPT
-from core.prompts.task_prompt import CHITCHAT_PROMPT
 from core.domain.request.query_request import SystemRequest
 from core.domain.response.model_output_schema import DailyRoutineSchema
-from kernel.config import llm_models
+from infrastructure.semantic_router.router import SemanticRouter 
+from infrastructure.semantic_router.samples import chitchat_sample, gaia_introduction_sample
+from kernel.config import llm_models, config
 
 
 default_model = "gemini-2.0-flash"
@@ -53,14 +54,8 @@ def gaia_introduction(query: SystemRequest) -> dict:
         user_daily_entries (dict):  
     """
     try:
-        prompt = CHITCHAT_PROMPT.format(query=query.query)
-        print("Onboarding Prompt:", prompt)
-        response = llm_models.get_model_generate_content(
-            default_model)(prompt=prompt,
-                                model_name=default_model,
-                                )
-        return {
-            "response": response 
-        }
+        semantic_router = SemanticRouter(routes=[gaia_introduction_sample, chitchat_sample], model_name=config.EMBEDDING_MODEL) 
+        guided_route = semantic_router.guide(query.query)
+        print(f"Semantic route: {guided_route}")
     except Exception as e:
         raise e
