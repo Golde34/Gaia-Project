@@ -1,4 +1,4 @@
-from  infrastucture.llm import gemini_generate_content 
+from  infrastructure.llm import gemini_generate_content 
 
 
 MODELS_INTERFACE = {
