@@ -2,10 +2,13 @@ import json
 import re
 
 from core.prompts.classify_prompt import ONBOARDING_PROMPT
-from core.prompts.task_prompt import CHITCHAT_PROMPT
-from core.domain.request.query_request import SystemRequest
+from core.domain.request.query_request import SystemRequest, QueryRequest
 from core.domain.response.model_output_schema import DailyRoutineSchema
-from kernel.config import llm_models
+from core.service.task_service import chitchat
+from kernel.config import llm_models, config
+from infrastructure.embedding.base_embedding import BaseEmbedding
+from infrastructure.semantic_router import route, samples, router
+from kernel.config.config import EMBEDDING_MODEL
 
 
 default_model = "gemini-2.0-flash"
@@ -42,6 +45,13 @@ def clean_json_string(raw_str: str) -> str:
                     raw_str, flags=re.MULTILINE).strip()
     return cleaned
 
+GAIA_INTRODUCTION_ROUTE_NAME='introduction'
+CHITCHAT_ROUTE_NAME='chitchat'
+introduction_route = route.Route(name=GAIA_INTRODUCTION_ROUTE_NAME, samples=samples.gaia_introduction_sample) 
+chitchat_route = route.ROute(name=CHITCHAT_ROUTE_NAME,samples=samples.chitchat_sample)
+semantic_router=router.SemanticRouter(routes=[introduction_route, chitchat_route], model_name=EMBEDDING_MODEL)
+embedding_model = BaseEmbedding()
+
 def gaia_introduction(query: SystemRequest) -> dict:
     """
     Register task via an user's daily life summary
@@ -53,14 +63,15 @@ def gaia_introduction(query: SystemRequest) -> dict:
         user_daily_entries (dict):  
     """
     try:
-        prompt = CHITCHAT_PROMPT.format(query=query.query)
-        print("Onboarding Prompt:", prompt)
-        response = llm_models.get_model_generate_content(
-            default_model)(prompt=prompt,
-                                model_name=default_model,
-                                )
-        return {
-            "response": response 
-        }
+        guided_route = semantic_router.guide(query.query)
+        print(f"Semantic router: {guided_route}")
+        if guided_route is None:
+            raise ValueError("No suitable route found for the query.")
+        if guided_route == GAIA_INTRODUCTION_ROUTE_NAME:
+            query_embedding = embedding_model.get_embeddings(query.query)
+        if guided_route == CHITCHAT_ROUTE_NAME:
+            query= QueryRequest(query=query.query, model_name=default_model)
+            chitchat(query=query)    
+        
     except Exception as e:
         raise e

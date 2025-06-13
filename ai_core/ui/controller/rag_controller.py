@@ -1,5 +1,5 @@
 from core.domain.request import query_request
-from infrastucture.embedding.base_embedding import BaseEmbedding
+from infrastructure.embedding.base_embedding import BaseEmbedding
 
 async def insert_rag_data(request: query_request.RAGRequest):
     """
