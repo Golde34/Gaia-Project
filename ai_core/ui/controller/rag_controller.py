@@ -15,8 +15,10 @@ async def insert_rag_data(request: query_request.RAGRequest):
         content = await request.file.read()
         context_str = content.decode('utf-8')
         
-        embbeder = BaseEmbedding()
-        # embeddings = await embedder.get_embeddings 
+        embedder = BaseEmbedding()
+        embeddings = await embedder.get_embeddings(context_str) 
+
+        
         
         return None
     except Exception as e:

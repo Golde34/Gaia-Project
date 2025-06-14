@@ -8,6 +8,7 @@ from core.service.task_service import chitchat
 from kernel.config import llm_models, config
 from infrastructure.embedding.base_embedding import BaseEmbedding
 from infrastructure.semantic_router import route, samples, router
+from infrastructure.vector_db.milvus import MilvusDB
 from kernel.config.config import EMBEDDING_MODEL
 
 
@@ -68,7 +69,26 @@ def gaia_introduction(query: SystemRequest) -> dict:
         if guided_route is None:
             raise ValueError("No suitable route found for the query.")
         if guided_route == GAIA_INTRODUCTION_ROUTE_NAME:
-            query_embedding = embedding_model.get_embeddings(query.query)
+            query_embedding = embedding_model.get_embeddings(texts=[query.query])
+            milvusDb = MilvusDB()
+            search_result = milvusDb.search_top_n(
+                query_embeddings=query_embedding,
+                top_k=5,
+                partition_name="context"
+                )
+
+            results = []
+            for hits in search_result:
+                for hit in hits:
+                    results.append({
+                        "content": hit["content"],
+                        "score": hit["distance"],
+                        "metadata": hit["metadata"]
+                    })
+            print("Search results:", results)
+            return {
+                "response": results
+            }
         if guided_route == CHITCHAT_ROUTE_NAME:
             query= QueryRequest(query=query.query, model_name=default_model)
             chitchat(query=query)    

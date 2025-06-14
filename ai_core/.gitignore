@@ -1,5 +1,6 @@
 # === Python ===
 __pycache__/
+huggingface/
 *.py[cod]
 *$py.class
 *.so

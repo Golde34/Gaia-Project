@@ -11,9 +11,4 @@ EMBEDDING_MODEL = os.getenv('EMBEDDING_MODEL', 'default_embedding_config')
 RERANKING_MODEL = os.getenv('RERANKING_MODEL', 'default_reranking_config')
 
 EMBEDDING_API = os.getenv('EMBEDDING_API', 'https://api.embedding.com/v1/embeddings')
-EMBEDDING_MODEL_API = os.getenv('EMBEDDING_MODEL_API', 'https://api.embedding.com/v1/models')
-USE_EMBEDDING_API = os.getenv('USE_EMBEDDING_API', False)
-
 RERANKING_API = os.getenv('RERANKING_API', 'https://api.reranking.com/v1/rerank')
-RERANKING_MODEL_API = os.getenv('RERANKING_MODEL_API', 'https://api.reranking.com/v1/models')
-USE_RERANKING_API = os.getenv('USE_RERANKING_API', False)
