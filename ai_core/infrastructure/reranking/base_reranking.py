@@ -9,13 +9,12 @@ import reranking_config
 
 class BaseReranking:
     def __init__(self, config: reranking_config.RerankingConfig):
-        self.base_url = config.url.rstrip('/')
-        self.api_model_name = config.api_model_name
-        self.use_model_api = config.use_model_api
+        self.base_url = config.url
         self.model_name = config.model_name
 
         self.endpoint = f"http://{self.base_url}/rerank"
         self.session_queue = Queue(maxsize=20)
+        self.model_mode = True
 
     async def rerank(self, query: str, documents: List[Dict[str, Any]], top_n: int, logger=None) -> Dict[str, Any]:
         """
@@ -29,7 +28,7 @@ class BaseReranking:
         Returns:
             Dict[str, Any]: Dictionary containing the reranked documents.
         """
-        if self.use_model_api:
+        if self.model_mode:
             return await self._rerank_from_api(query, documents, top_n, logger)
         return await self._rerank_from_model(query, documents, top_n, logger)
 

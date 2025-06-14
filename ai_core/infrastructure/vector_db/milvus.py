@@ -7,11 +7,8 @@ from milvus_config import MilvusConfig
 
 
 class MilvusDB:
-    def __init__(
-        self,
-        config: MilvusConfig 
-    ):
-        self.config = config
+    def __init__(self, config):
+        self.config = MilvusConfig() 
         self.dim = config.index_config.index_params.nlist
         self.index_params = {
             "index_type": config.index_config.index_type,
@@ -262,3 +259,5 @@ class MilvusDB:
             print(f"Error closing connection: {e}")
             traceback.print_exc()
             raise e
+
+milvus_db = MilvusDB()
