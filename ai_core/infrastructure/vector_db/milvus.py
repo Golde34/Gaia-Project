@@ -250,6 +250,24 @@ class MilvusDB:
                 print(f"Error in delete_by_ids: {e}")
                 traceback.print_exc()
                 raise e
+
+    def get_all_contexts(self, partition_name: str = "default_context") -> List[dict]:
+        try:
+            if not self.client.has_partition(self.config.root_memory_collection, partition_name=partition_name):
+                return []
+
+            query_results = self.client.query(
+                collection_name=self.config.root_memory_collection,
+                partition_names=[partition_name],
+                output_fields=["content", "metadata"],
+                limit=1000
+            )
+
+            return query_results
+        except Exception as e:
+            print(f"Error in get_all_contexts: {e}")
+            traceback.print_exc()
+            raise e
             
     def close(self):
         try:

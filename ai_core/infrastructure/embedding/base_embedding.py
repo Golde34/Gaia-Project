@@ -15,14 +15,15 @@ class BaseEmbedding:
         self.model_name = self.config.model_name
 
         self.endpoint = f"http://{self.base_url}/embed"
-        self.model_mode = False
+        self.model_mode = self.config.model_mode 
 
     async def get_embeddings(self, texts: List[str], logger = None) -> Dict[str, Any]:
-        if self.model_mode == ModelMode.VLLM:
+        print(f"Getting embeddings for texts: {texts} using model mode: {self.model_mode}")
+        if self.model_mode == ModelMode.LOCAL.value:
             return await self._get_embedding_from_model(texts[0], logger)
-        elif self.model_mode == ModelMode.LOCAL:
+        elif self.model_mode == ModelMode.VLLM.value:
             return await self._get_embedding_api(texts, logger)
-        elif self.model_mode == ModelMode.CLOUD:
+        elif self.model_mode == ModelMode.CLOUD.value:
             return await self._get_embedding_from_cloud(texts, logger)
 
     async def _get_embedding_api(self, texts: List[str], logger = None) -> Dict[str, Any]:
@@ -57,10 +58,12 @@ class BaseEmbedding:
     async def _get_embedding_from_model(self, text: str, logger: None):
         from sentence_transformers import SentenceTransformer
         model = SentenceTransformer(self.model_name)
+        print(f"Using model: {self.model_name} for embedding")
         try:
             if logger:
                 logger.add_log(f"Start embedding text: {text} at {time.perf_counter()}")
             embedding = model.encode(text, convert_to_tensor=True)
+            print(f"Generated embedding of shape: {embedding.shape} for text: {text}")
             if logger:
                 logger.add_log(f"Finished embedding text: {text} at {time.perf_counter()}")
             return embedding 

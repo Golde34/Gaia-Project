@@ -8,11 +8,11 @@ from core.service.task_service import chitchat
 from kernel.config import llm_models, config
 from infrastructure.embedding.base_embedding import BaseEmbedding
 from infrastructure.semantic_router import route, samples, router
-from infrastructure.vector_db.milvus import MilvusDB
+from infrastructure.vector_db.milvus import milvus_db 
 from kernel.config import config 
 
 
-default_model = "gemini-2.0-flash"
+default_model = config.LLM_DEFAULT_MODEL 
 
 def register_task(query: SystemRequest) -> dict:
     """
@@ -70,8 +70,7 @@ def gaia_introduction(query: SystemRequest) -> dict:
             raise ValueError("No suitable route found for the query.")
         if guided_route == GAIA_INTRODUCTION_ROUTE_NAME:
             query_embedding = embedding_model.get_embeddings(texts=[query.query])
-            milvusDb = MilvusDB()
-            search_result = milvusDb.search_top_n(
+            search_result = milvus_db.search_top_n(
                 query_embeddings=query_embedding,
                 top_k=5,
                 partition_name="context"

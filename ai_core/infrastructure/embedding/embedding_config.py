@@ -6,6 +6,7 @@ from kernel.config import config
 class EmbeddingConfig:
     url: str = config.EMBEDDING_API 
     model_name = config.EMBEDDING_MODEL
+    model_mode = config.MODEL_MODE
 
 @dataclass
 class EmbeddingConfigTest:

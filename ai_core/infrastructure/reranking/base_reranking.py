@@ -13,7 +13,7 @@ class BaseReranking:
 
         self.endpoint = f"http://{self.base_url}/rerank"
         self.session_queue = Queue(maxsize=20)
-        self.model_mode = True
+        self.model_mode = config.model_mode 
 
     async def rerank(self, query: str, documents: List[Dict[str, Any]], top_n: int, logger=None) -> Dict[str, Any]:
         """
@@ -27,11 +27,11 @@ class BaseReranking:
         Returns:
             Dict[str, Any]: Dictionary containing the reranked documents.
         """
-        if self.model_mode == ModelMode.VLLM:
+        if self.model_mode == ModelMode.VLLM.value:
             return await self._rerank_from_api(query, documents, top_n, logger)
-        elif self.model_mode == ModelMode.LOCAL:
+        elif self.model_mode == ModelMode.LOCAL.value:
             return await self._rerank_from_model(query, documents, top_n, logger)
-        elif self.model_mode == ModelMode.CLOUD:
+        elif self.model_mode == ModelMode.CLOUD.value:
             return await self._rerank_from_cloud(query, documents, top_n, logger)
 
 
