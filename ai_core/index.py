@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from dotenv import load_dotenv
 import uvicorn
 
-from ui.router import chat_router, onboarding_router
+from ui import chat_router, onboarding_router
 
 # Load environment variables
 load_dotenv()
