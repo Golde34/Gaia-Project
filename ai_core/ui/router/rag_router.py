@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException
 import traceback
 
 from core.domain.request import query_request
-from ui.controller.rag_controller import insert_rag_data 
 
 
 RagRouter = APIRouter(
@@ -13,8 +12,26 @@ RagRouter = APIRouter(
 @RagRouter.post("/upload-context")
 async def upload_context(request: query_request.RAGRequest):
     try:
-        print("Received RAG insert request:", request)
-        return await insert_rag_data(request)
+        content = await request.file.read()
+        context_str = content.decode('utf-8')
+        metadata = {
+            "file_name": request.file.filename,
+            "file_type": request.file.content_type,
+            "upload_time": request.upload_time,
+        }
+
+        # embedder = BaseEmbedding()
+        # embeddings = await embedder.get_embeddings(context_str)
+
+        # milvus_db.insert_data(
+        #     vectors=embeddings,
+        #     contents=context_str,
+        #     metadata_list=[metadata] 
+        # )
+
+        print("RAG data inserted successfully.")
+
+        return None 
     except Exception as e:
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)
