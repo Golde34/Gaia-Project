@@ -188,7 +188,7 @@ PORTS = {
 
 
 PORT_COMPONENTS = [
-    "gaia_connector",
+    # "gaia_connector",
     "authentication_service",
     "task_manager",
     "client_gui",
