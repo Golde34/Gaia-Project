@@ -9,7 +9,7 @@ from kernel.config import llm_models, config
 from infrastructure.embedding.base_embedding import BaseEmbedding
 from infrastructure.semantic_router import route, samples, router
 from infrastructure.vector_db.milvus import MilvusDB
-from kernel.config.config import EMBEDDING_MODEL
+from kernel.config import config 
 
 
 default_model = "gemini-2.0-flash"
@@ -49,8 +49,8 @@ def clean_json_string(raw_str: str) -> str:
 GAIA_INTRODUCTION_ROUTE_NAME='introduction'
 CHITCHAT_ROUTE_NAME='chitchat'
 introduction_route = route.Route(name=GAIA_INTRODUCTION_ROUTE_NAME, samples=samples.gaia_introduction_sample) 
-chitchat_route = route.ROute(name=CHITCHAT_ROUTE_NAME,samples=samples.chitchat_sample)
-semantic_router=router.SemanticRouter(routes=[introduction_route, chitchat_route], model_name=EMBEDDING_MODEL)
+chitchat_route = route.Route(name=CHITCHAT_ROUTE_NAME,samples=samples.chitchat_sample)
+semantic_router=router.SemanticRouter(routes=[introduction_route, chitchat_route], model_name=config.EMBEDDING_MODEL)
 embedding_model = BaseEmbedding()
 
 def gaia_introduction(query: SystemRequest) -> dict:

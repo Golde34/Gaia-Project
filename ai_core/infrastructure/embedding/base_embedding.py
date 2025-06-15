@@ -10,7 +10,7 @@ from infrastructure.embedding import embedding_config
 
 class BaseEmbedding:
     def __init__(self):
-        self.config = embedding_config.EmbeddingConfigTest()
+        self.config = embedding_config.EmbeddingConfig()
         self.base_url = self.config.url
         self.model_name = self.config.model_name
 

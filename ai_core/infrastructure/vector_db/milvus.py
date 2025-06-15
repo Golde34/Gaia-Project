@@ -6,14 +6,14 @@ from infrastructure.vector_db.milvus_config import MilvusConfig
 
 
 class MilvusDB:
-    def __init__(self, config):
+    def __init__(self):
         self.config = MilvusConfig() 
-        self.dim = config.index_config.index_params.nlist
+        self.dim = self.config.index_config.index_params.nlist
         self.index_params = {
-            "index_type": config.index_config.index_type,
-            "metric_type": config.index_config.metric_type,
+            "index_type": self.config.index_config.index_type,
+            "metric_type": self.config.index_config.metric_type,
             "params": {
-                "nlist": config.index_config.index_params.nlist
+                "nlist": self.config.index_config.index_params.nlist
             }
         }
 
@@ -26,6 +26,7 @@ class MilvusDB:
         
     def _connect(self) -> MilvusClient:
         try:
+            print(f"Connecting to Milvus at {self.config.host}:{self.config.port} with user {self.config.user}")
             # First connect to default database
             client = MilvusClient(
                 uri=f'http://{self.config.host}:{self.config.port}',

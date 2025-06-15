@@ -1,11 +1,11 @@
 from dataclasses import dataclass
-# from kernel.config import config
+from kernel.config import config
 
 
-# @dataclass
-# class EmbeddingConfig:
-#     url: str = config.EMBEDDING_API 
-#     model_name = config.EMBEDDING_MODEL
+@dataclass
+class EmbeddingConfig:
+    url: str = config.EMBEDDING_API 
+    model_name = config.EMBEDDING_MODEL
 
 @dataclass
 class EmbeddingConfigTest:

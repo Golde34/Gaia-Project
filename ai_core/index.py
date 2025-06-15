@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 import uvicorn
 
 from ui.router import chat_router, onboarding_router
-from infrastructure.vector_db.milvus import MilvusDB
 
 # Load environment variables
 load_dotenv()
