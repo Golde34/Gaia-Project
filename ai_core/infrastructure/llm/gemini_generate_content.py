@@ -1,10 +1,8 @@
 from google import genai
 from fastapi import HTTPException
-from dotenv import load_dotenv
 from kernel.config import config
 
 
-load_dotenv()
 client = genai.Client(api_key=config.GEMINI_API_KEY)
 
 def generate_content(prompt: str, model_name: str, dto: any = None) -> str:

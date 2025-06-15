@@ -1,21 +1,19 @@
-import asyncio
 from asyncio import Queue
-import aiohttp
 from typing import List, Dict, Any
 import traceback
 
+from ai_core.core.domain.enum.enum import ModelMode
 import reranking_config
 
 
 class BaseReranking:
     def __init__(self, config: reranking_config.RerankingConfig):
-        self.base_url = config.url.rstrip('/')
-        self.api_model_name = config.api_model_name
-        self.use_model_api = config.use_model_api
+        self.base_url = config.url
         self.model_name = config.model_name
 
         self.endpoint = f"http://{self.base_url}/rerank"
         self.session_queue = Queue(maxsize=20)
+        self.model_mode = config.model_mode 
 
     async def rerank(self, query: str, documents: List[Dict[str, Any]], top_n: int, logger=None) -> Dict[str, Any]:
         """
@@ -29,9 +27,13 @@ class BaseReranking:
         Returns:
             Dict[str, Any]: Dictionary containing the reranked documents.
         """
-        if self.use_model_api:
+        if self.model_mode == ModelMode.VLLM.value:
             return await self._rerank_from_api(query, documents, top_n, logger)
-        return await self._rerank_from_model(query, documents, top_n, logger)
+        elif self.model_mode == ModelMode.LOCAL.value:
+            return await self._rerank_from_model(query, documents, top_n, logger)
+        elif self.model_mode == ModelMode.CLOUD.value:
+            return await self._rerank_from_cloud(query, documents, top_n, logger)
+
 
     async def _rerank_from_model(self, query: str, documents: List[Dict[str, Any]], top_n: int, logger=None):
         try:
@@ -84,3 +86,9 @@ class BaseReranking:
                 print(f"Error in _rerank_from_api: {e}")
             traceback.print_exc()
             return {"error": str(e)}
+
+    async def _rerank_from_cloud(self, query: str, documents: List[Dict[str, Any]], top_n: int, logger=None):
+        """
+        Placeholder for cloud reranking logic
+        """
+        raise NotImplementedError("Cloud reranking logic not implemented yet")

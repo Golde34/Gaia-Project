@@ -8,10 +8,11 @@ from core.service.task_service import chitchat
 from kernel.config import llm_models, config
 from infrastructure.embedding.base_embedding import BaseEmbedding
 from infrastructure.semantic_router import route, samples, router
-from kernel.config.config import EMBEDDING_MODEL
+from infrastructure.vector_db.milvus import milvus_db 
+from kernel.config import config 
 
 
-default_model = "gemini-2.0-flash"
+default_model = config.LLM_DEFAULT_MODEL 
 
 def register_task(query: SystemRequest) -> dict:
     """
@@ -48,8 +49,8 @@ def clean_json_string(raw_str: str) -> str:
 GAIA_INTRODUCTION_ROUTE_NAME='introduction'
 CHITCHAT_ROUTE_NAME='chitchat'
 introduction_route = route.Route(name=GAIA_INTRODUCTION_ROUTE_NAME, samples=samples.gaia_introduction_sample) 
-chitchat_route = route.ROute(name=CHITCHAT_ROUTE_NAME,samples=samples.chitchat_sample)
-semantic_router=router.SemanticRouter(routes=[introduction_route, chitchat_route], model_name=EMBEDDING_MODEL)
+chitchat_route = route.Route(name=CHITCHAT_ROUTE_NAME,samples=samples.chitchat_sample)
+semantic_router=router.SemanticRouter(routes=[introduction_route, chitchat_route], model_name=config.EMBEDDING_MODEL)
 embedding_model = BaseEmbedding()
 
 def gaia_introduction(query: SystemRequest) -> dict:
@@ -68,7 +69,25 @@ def gaia_introduction(query: SystemRequest) -> dict:
         if guided_route is None:
             raise ValueError("No suitable route found for the query.")
         if guided_route == GAIA_INTRODUCTION_ROUTE_NAME:
-            query_embedding = embedding_model.get_embeddings(query.query)
+            query_embedding = embedding_model.get_embeddings(texts=[query.query])
+            search_result = milvus_db.search_top_n(
+                query_embeddings=query_embedding,
+                top_k=5,
+                partition_name="context"
+                )
+
+            results = []
+            for hits in search_result:
+                for hit in hits:
+                    results.append({
+                        "content": hit["content"],
+                        "score": hit["distance"],
+                        "metadata": hit["metadata"]
+                    })
+            print("Search results:", results)
+            return {
+                "response": results
+            }
         if guided_route == CHITCHAT_ROUTE_NAME:
             query= QueryRequest(query=query.query, model_name=default_model)
             chitchat(query=query)    

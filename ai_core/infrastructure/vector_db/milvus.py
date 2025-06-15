@@ -1,23 +1,19 @@
 from pymilvus import MilvusClient, DataType
-import numpy as np
 from typing import List
 import traceback
 
-from milvus_config import MilvusConfig
+from infrastructure.vector_db.milvus_config import MilvusConfig
 
 
 class MilvusDB:
-    def __init__(
-        self,
-        config: MilvusConfig 
-    ):
-        self.config = config
-        self.dim = config.index_config.index_params.nlist
+    def __init__(self):
+        self.config = MilvusConfig() 
+        self.dim = self.config.index_config.index_params.nlist
         self.index_params = {
-            "index_type": config.index_config.index_type,
-            "metric_type": config.index_config.metric_type,
+            "index_type": self.config.index_config.index_type,
+            "metric_type": self.config.index_config.metric_type,
             "params": {
-                "nlist": config.index_config.index_params.nlist
+                "nlist": self.config.index_config.index_params.nlist
             }
         }
 
@@ -30,6 +26,7 @@ class MilvusDB:
         
     def _connect(self) -> MilvusClient:
         try:
+            print(f"Connecting to Milvus at {self.config.host}:{self.config.port} with user {self.config.user}")
             # First connect to default database
             client = MilvusClient(
                 uri=f'http://{self.config.host}:{self.config.port}',
@@ -253,6 +250,24 @@ class MilvusDB:
                 print(f"Error in delete_by_ids: {e}")
                 traceback.print_exc()
                 raise e
+
+    def get_all_contexts(self, partition_name: str = "default_context") -> List[dict]:
+        try:
+            if not self.client.has_partition(self.config.root_memory_collection, partition_name=partition_name):
+                return []
+
+            query_results = self.client.query(
+                collection_name=self.config.root_memory_collection,
+                partition_names=[partition_name],
+                output_fields=["content", "metadata"],
+                limit=1000
+            )
+
+            return query_results
+        except Exception as e:
+            print(f"Error in get_all_contexts: {e}")
+            traceback.print_exc()
+            raise e
             
     def close(self):
         try:
@@ -262,3 +277,5 @@ class MilvusDB:
             print(f"Error closing connection: {e}")
             traceback.print_exc()
             raise e
+
+milvus_db = MilvusDB()

@@ -68,10 +68,11 @@ async def _start_satellite_services():
         
 
 async def _authentication_process(console_manager, auth_service_status):
+    token = ""
     token, username, auth_status = await user_authentication.AuthenticationCommand(console_manager, auth_service_status).process()
     if auth_status is False or token is None:
         print(f"Authentication failed, process user {username} to guess mode.")
-        _process_guess_mode()
+        token = _process_guess_mode()
 
     console_manager.authentication(username, token, info_log="Authentication success.")        
     return token
@@ -83,6 +84,7 @@ def _process_guess_mode():
     # Crons job to delete temporary profile after 30 days
     # Delete all actions like tasks, schedules, etc.
     # Crons job check, if last access - created_at > 90 days, suggest user to create new account, or delete all data
+    return "token"
     pass
 
 

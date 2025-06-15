@@ -5,9 +5,8 @@ from kernel.config import config
 @dataclass
 class RerankingConfig:
     url: str = config.RERANKING_API
-    use_model_api: bool = config.USE_RERANKING_API
-    api_model_name: str = config.RERANKING_MODEL_API
     model_name: str = config.RERANKING_MODEL
+    model_mode: str = config.MODEL_MODE
 
     # todo
     # max_results: int = config.RERANKING_MAX_RESULTS
