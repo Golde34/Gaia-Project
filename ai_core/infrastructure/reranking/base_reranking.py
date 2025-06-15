@@ -1,9 +1,8 @@
-import asyncio
 from asyncio import Queue
-import aiohttp
 from typing import List, Dict, Any
 import traceback
 
+from ai_core.core.domain.enum.enum import ModelMode
 import reranking_config
 
 
@@ -28,9 +27,13 @@ class BaseReranking:
         Returns:
             Dict[str, Any]: Dictionary containing the reranked documents.
         """
-        if self.model_mode:
+        if self.model_mode == ModelMode.VLLM:
             return await self._rerank_from_api(query, documents, top_n, logger)
-        return await self._rerank_from_model(query, documents, top_n, logger)
+        elif self.model_mode == ModelMode.LOCAL:
+            return await self._rerank_from_model(query, documents, top_n, logger)
+        elif self.model_mode == ModelMode.CLOUD:
+            return await self._rerank_from_cloud(query, documents, top_n, logger)
+
 
     async def _rerank_from_model(self, query: str, documents: List[Dict[str, Any]], top_n: int, logger=None):
         try:
@@ -83,3 +86,9 @@ class BaseReranking:
                 print(f"Error in _rerank_from_api: {e}")
             traceback.print_exc()
             return {"error": str(e)}
+
+    async def _rerank_from_cloud(self, query: str, documents: List[Dict[str, Any]], top_n: int, logger=None):
+        """
+        Placeholder for cloud reranking logic
+        """
+        raise NotImplementedError("Cloud reranking logic not implemented yet")

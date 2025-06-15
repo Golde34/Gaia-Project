@@ -4,7 +4,9 @@ from typing import List, Dict, Any
 import traceback
 import time
 
-import embedding_config
+from core.domain.enum.enum import ModelMode
+from infrastructure.embedding import embedding_config
+
 
 class BaseEmbedding:
     def __init__(self):
@@ -16,12 +18,14 @@ class BaseEmbedding:
         self.model_mode = False
 
     async def get_embeddings(self, texts: List[str], logger = None) -> Dict[str, Any]:
-        if self.model_mode:
-            return await self.get_embedding_from_model(texts[0], logger)
-        else:
-            return await self.get_embedding_api(texts, logger)
+        if self.model_mode == ModelMode.VLLM:
+            return await self._get_embedding_from_model(texts[0], logger)
+        elif self.model_mode == ModelMode.LOCAL:
+            return await self._get_embedding_api(texts, logger)
+        elif self.model_mode == ModelMode.CLOUD:
+            return await self._get_embedding_from_cloud(texts, logger)
 
-    async def get_embedding_api(self, texts: List[str], logger = None) -> Dict[str, Any]:
+    async def _get_embedding_api(self, texts: List[str], logger = None) -> Dict[str, Any]:
         payload = {
             "inputs": texts
         }
@@ -50,7 +54,7 @@ class BaseEmbedding:
                 logger.add_log(f"Error getting embeddings: {stack_trace}", "ERROR")
             raise
 
-    async def get_embedding_from_model(self, text: str, logger: None):
+    async def _get_embedding_from_model(self, text: str, logger: None):
         from sentence_transformers import SentenceTransformer
         model = SentenceTransformer(self.model_name)
         try:
@@ -65,6 +69,12 @@ class BaseEmbedding:
             if logger:
                 logger.add_log(f"Error embedding text: {text} - {stack_trace}", "ERROR")
             raise
+
+    async def _get_embedding_from_cloud(self, text: str, logger: None):
+        """
+        Placeholder for cloud embedding logic
+        """
+        raise NotImplementedError("Cloud embedding logic not implemented yet")
 
 import asyncio
 import time

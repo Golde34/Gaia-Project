@@ -1,9 +1,8 @@
 from pymilvus import MilvusClient, DataType
-import numpy as np
 from typing import List
 import traceback
 
-from milvus_config import MilvusConfig
+from infrastructure.vector_db.milvus_config import MilvusConfig
 
 
 class MilvusDB:
