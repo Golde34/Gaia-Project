@@ -40,3 +40,4 @@ application.conf
 *\middleware_loader\resources
 *\data_lake
 *\chroma_db
+*\volumes
