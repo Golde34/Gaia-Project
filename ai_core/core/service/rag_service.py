@@ -10,7 +10,8 @@ async def upload_context_to_vectordb(context: str, metadata: dict) -> None:
         context (str): The context string to be uploaded.
         metadata (dict): Metadata associated with the context.
     """
-    context_list = [line.strip() for line in context.splitlines() if line.strip()]
+    context_list = [line.strip()
+                               for line in context.splitlines() if line.strip()]
     metadata_list = [
         {
             "file_name": metadata.get("file_name", "unknown"),
@@ -31,7 +32,8 @@ async def upload_context_to_vectordb(context: str, metadata: dict) -> None:
         elif isinstance(embeddings_tensor, list):
             embeddings = embeddings_tensor
         else:
-            raise ValueError("Unexpected type for embeddings_tensor: {}".format(type(embeddings_tensor)))
+            raise ValueError("Unexpected type for embeddings_tensor: {}".format(
+                type(embeddings_tensor)))
 
         print("Embeddings generated successfully:", len(embeddings), "vectors")
         print("Context to be uploaded:", len(context_list), "characters")
@@ -42,7 +44,7 @@ async def upload_context_to_vectordb(context: str, metadata: dict) -> None:
             vectors=embeddings,
             contents=context_list,
             metadata_list=metadata_list,
-            partition_name="default_context"  
+            partition_name="default_context"
         )
 
         return {
@@ -52,4 +54,45 @@ async def upload_context_to_vectordb(context: str, metadata: dict) -> None:
         }
     except Exception as e:
         print("Error uploading context to vector database:", e)
+        raise e
+
+
+async def query_context(query: str, top_k: int = 5, partition_name: str = "default_context") -> dict:
+    """
+    Query the vector database for similar contexts.
+
+    Args:
+        query (str): The input text to find similar context.
+        top_k (int): Number of similar contexts to return.
+        partition_name (str): Partition name to search in.
+
+    Returns:
+        dict: A dictionary containing the search results.
+    """
+    try:
+        embedder = BaseEmbedding()
+        embedding = await embedder.get_embeddings(texts=[query])
+
+        if hasattr(embedding, "tolist"):
+            embedding = embedding.tolist()
+        elif isinstance(embedding, list) and hasattr(embedding[0], "tolist"):
+            embedding = [emb.tolist() for emb in embedding]
+
+        if isinstance(embedding, list) and isinstance(embedding[0], float):
+            query_embeddings = [embedding]
+        else:
+            query_embeddings = embedding
+
+        results = milvus_db.search_top_n(
+            query_embeddings=query_embeddings,
+            top_k=top_k,
+            partition_name=partition_name
+        )
+
+        return {
+            "status": "success",
+            "results": results
+        }
+    except Exception as e:
+        print("Error querying context from vector database:", e)
         raise e
