@@ -3,7 +3,7 @@ import os
        
 class IndexParams:
     def __init__(self):
-        self.nlist = int(os.getenv('VECTOR_DB_NLIST', 100))
+        self.nlist = int(os.getenv('VECTOR_DB_NLIST', 1024))
         
 class IndexConfig:
     def __init__(self):

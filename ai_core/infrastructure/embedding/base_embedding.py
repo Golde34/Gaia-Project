@@ -20,7 +20,7 @@ class BaseEmbedding:
     async def get_embeddings(self, texts: List[str], logger = None) -> Dict[str, Any]:
         print(f"Getting embeddings for texts: {texts} using model mode: {self.model_mode}")
         if self.model_mode == ModelMode.LOCAL.value:
-            return await self._get_embedding_from_model(texts[0], logger)
+            return await self._get_embedding_from_model(texts, logger)
         elif self.model_mode == ModelMode.VLLM.value:
             return await self._get_embedding_api(texts, logger)
         elif self.model_mode == ModelMode.CLOUD.value:
@@ -55,23 +55,26 @@ class BaseEmbedding:
                 logger.add_log(f"Error getting embeddings: {stack_trace}", "ERROR")
             raise
 
-    async def _get_embedding_from_model(self, text: str, logger: None):
+    async def _get_embedding_from_model(self, texts: List[str], logger: None):
         from sentence_transformers import SentenceTransformer
         model = SentenceTransformer(self.model_name)
         print(f"Using model: {self.model_name} for embedding")
-        try:
-            if logger:
-                logger.add_log(f"Start embedding text: {text} at {time.perf_counter()}")
-            embedding = model.encode(text, convert_to_tensor=True)
-            print(f"Generated embedding of shape: {embedding.shape} for text: {text}")
-            if logger:
-                logger.add_log(f"Finished embedding text: {text} at {time.perf_counter()}")
-            return embedding 
-        except Exception as e:
-            stack_trace = traceback.format_exc()
-            if logger:
-                logger.add_log(f"Error embedding text: {text} - {stack_trace}", "ERROR")
-            raise
+        embeding_list = []
+        for text in texts:
+            try:
+                if logger:
+                    logger.add_log(f"Start embedding text: {text} at {time.perf_counter()}")
+                embedding = model.encode(text, convert_to_tensor=True)
+                print(f"Generated embedding of shape: {embedding.shape} for text: {text}")
+                if logger:
+                    logger.add_log(f"Finished embedding text: {text} at {time.perf_counter()}")
+                embeding_list.append(embedding)
+            except Exception as e:
+                stack_trace = traceback.format_exc()
+                if logger:
+                    logger.add_log(f"Error embedding text: {text} - {stack_trace}", "ERROR")
+                raise
+        return embeding_list
 
     async def _get_embedding_from_cloud(self, text: str, logger: None):
         """

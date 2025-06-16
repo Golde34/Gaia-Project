@@ -128,7 +128,7 @@ class MilvusDB:
                 data=data,
                 partition_name=partition_name
             )
-            print(f"Inserted {len(result.primary_keys)} records into collection {self.config.root_memory_collection}.")
+            print(f"Inserted result: {result} into collection {self.config.root_memory_collection}.")
 
             if partition_name:
                 print(f"Inserted into partition {partition_name}.")
