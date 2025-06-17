@@ -8,11 +8,12 @@ from core.service.task_service import chitchat
 from kernel.config import llm_models, config
 from infrastructure.embedding.base_embedding import BaseEmbedding
 from infrastructure.semantic_router import route, samples, router
-from infrastructure.vector_db.milvus import milvus_db 
+from infrastructure.vector_db.milvus import MilvusDB 
 from kernel.config import config 
 
 
 default_model = config.LLM_DEFAULT_MODEL 
+milvus_db = MilvusDB()
 
 def register_task(query: SystemRequest) -> dict:
     """

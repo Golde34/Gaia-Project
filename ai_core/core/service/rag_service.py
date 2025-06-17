@@ -1,6 +1,8 @@
 from infrastructure.embedding.base_embedding import BaseEmbedding
-from infrastructure.vector_db.milvus import milvus_db
+from infrastructure.vector_db.milvus import MilvusDB 
 
+
+milvus_db = MilvusDB()
 
 async def upload_context_to_vectordb(context: str, metadata: dict) -> None:
     """
