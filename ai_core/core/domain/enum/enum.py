@@ -6,3 +6,6 @@ class ModelMode(Enum):
     VLLM = "vllm"
     CLOUD = "cloud"
 
+class SemanticRoute(Enum):
+    GAIA_INTRODUCTION = "gaia_introduction"
+    CHITCHAT = "chitchat"
