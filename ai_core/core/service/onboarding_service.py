@@ -1,20 +1,26 @@
 import json
 import re
 
-from core.prompts.classify_prompt import ONBOARDING_PROMPT
 from core.domain.enum.enum import SemanticRoute
-from core.domain.request.query_request import SystemRequest, QueryRequest
+from core.domain.request.query_request import SystemRequest
 from core.domain.response.model_output_schema import DailyRoutineSchema
-from core.prompts.onboarding_prompt import GAIA_INTRODUCTION_PROMPT, CHITCHAT_PROMPT
+from core.prompts import onboarding_prompt, classify_prompt
+from infrastructure.embedding.base_embedding import embedding_model
+from infrastructure.semantic_router import route, samples, router, router_registry
+from infrastructure.vector_db.milvus import milvus_db
 from kernel.config import llm_models, config
-from infrastructure.embedding.base_embedding import BaseEmbedding
-from infrastructure.semantic_router.router_registry import gaia_introduction_route
-from infrastructure.vector_db.milvus import MilvusDB
-from kernel.config import config
 
 
 default_model = config.LLM_DEFAULT_MODEL
-milvus_db = MilvusDB()
+
+GAIA_INTRODUCTION_ROUTE_NAME = 'introduction'
+CHITCHAT_ROUTE_NAME = 'chitchat'
+introduction_route = route.Route(
+    name=GAIA_INTRODUCTION_ROUTE_NAME, samples=samples.gaia_introduction_sample)
+chitchat_route = route.Route(
+    name=CHITCHAT_ROUTE_NAME, samples=samples.chitchat_sample)
+semantic_router = router.SemanticRouter(
+    routes=[introduction_route, chitchat_route], model_name=config.EMBEDDING_MODEL)
 
 
 def register_task(query: SystemRequest) -> dict:
@@ -28,7 +34,8 @@ def register_task(query: SystemRequest) -> dict:
         user_daily_entries (dict):  
     """
     try:
-        prompt = ONBOARDING_PROMPT.format(query=query.query)
+        prompt = classify_prompt.REGISTER_SCHEDULE_CALENDAR.format(
+            query=query.query)
         print("Onboarding Prompt:", prompt)
         response = llm_models.get_model_generate_content(
             default_model)(prompt=prompt,
@@ -62,8 +69,7 @@ def gaia_introduction(query: SystemRequest) -> dict:
         user_daily_entries (dict):  
     """
     try:
-        embedding_model = BaseEmbedding()
-        guided_route = gaia_introduction_route(query.query)
+        guided_route = router_registry.gaia_introduction_route(query.query)
         if guided_route == SemanticRoute.GAIA_INTRODUCTION:
             query_embedding = embedding_model.get_embeddings(
                 texts=[query.query])
@@ -73,7 +79,7 @@ def gaia_introduction(query: SystemRequest) -> dict:
                 partition_name="context"
             )
 
-            prompt = GAIA_INTRODUCTION_PROMPT.format(
+            prompt = onboarding_prompt.GAIA_INTRODUCTION_PROMPT.format(
                 system_info=search_result,
                 query=query.query
             )
@@ -84,7 +90,8 @@ def gaia_introduction(query: SystemRequest) -> dict:
             print("Response:", response)
             return response
         if guided_route == SemanticRoute.CHITCHAT:
-            prompt = CHITCHAT_PROMPT.format(query=query.query)
+            prompt = onboarding_prompt.CHITCHAT_PROMPT.format(
+                query=query.query)
 
             response = llm_models.get_model_generate_content(
                 default_model)(prompt=prompt,

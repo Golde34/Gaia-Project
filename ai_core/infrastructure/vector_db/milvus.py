@@ -289,3 +289,6 @@ class MilvusDB:
             print(f"Error closing connection: {e}")
             traceback.print_exc()
             raise e
+
+# Global instance for easy access across modules
+milvus_db = MilvusDB()

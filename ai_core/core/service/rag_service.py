@@ -1,9 +1,7 @@
 from typing import List
 
-from infrastructure.embedding.base_embedding import BaseEmbedding
-from infrastructure.vector_db.milvus import MilvusDB
-
-milvus_db = MilvusDB()
+from infrastructure.embedding.base_embedding import embedding_model 
+from infrastructure.vector_db.milvus import milvus_db 
 
 
 async def upload_context_to_vectordb(context_list: List[str], metadata: dict) -> None:
@@ -26,8 +24,7 @@ async def upload_context_to_vectordb(context_list: List[str], metadata: dict) ->
     ]
 
     try:
-        embedder = BaseEmbedding()
-        embeddings_tensor = await embedder.get_embeddings(texts=context_list)
+        embeddings_tensor = await embedding_model.get_embeddings(texts=context_list)
 
         if hasattr(embeddings_tensor, "tolist"):
             embeddings = embeddings_tensor.tolist()
@@ -72,8 +69,7 @@ async def query_context(query: str, top_k: int = 5, partition_name: str = "defau
         dict: A dictionary containing the search results.
     """
     try:
-        embedder = BaseEmbedding()
-        embedding = await embedder.get_embeddings(texts=[query])
+        embedding = await embedding_model.get_embeddings(texts=[query])
 
         if hasattr(embedding, "tolist"):
             embedding = embedding.tolist()

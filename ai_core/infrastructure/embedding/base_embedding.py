@@ -9,13 +9,26 @@ from infrastructure.embedding import embedding_config
 
 
 class BaseEmbedding:
+    _instance = None
+    _model = None  # Cache for SentenceTransformer model
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(BaseEmbedding, cls).__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
     def __init__(self):
+        if self._initialized:
+            return
+            
         self.config = embedding_config.EmbeddingConfig()
         self.base_url = self.config.url
         self.model_name = self.config.model_name
 
         self.endpoint = f"http://{self.base_url}/embed"
         self.model_mode = self.config.model_mode 
+        self._initialized = True
 
     async def get_embeddings(self, texts: List[str], logger = None) -> Dict[str, Any]:
         print(f"Getting embeddings for texts: {texts} using model mode: {self.model_mode}")
@@ -56,15 +69,19 @@ class BaseEmbedding:
             raise
 
     async def _get_embedding_from_model(self, texts: List[str], logger: None):
-        from sentence_transformers import SentenceTransformer
-        model = SentenceTransformer(self.model_name)
-        print(f"Using model: {self.model_name} for embedding")
+        # Use cached model if available
+        if BaseEmbedding._model is None:
+            from sentence_transformers import SentenceTransformer
+            BaseEmbedding._model = SentenceTransformer(self.model_name)
+            print(f"Loaded model: {self.model_name} for embedding")
+        
+        print(f"Using cached model: {self.model_name} for embedding")
         embeding_list = []
         for text in texts:
             try:
                 if logger:
                     logger.add_log(f"Start embedding text: {text} at {time.perf_counter()}")
-                embedding = model.encode(text, convert_to_tensor=True)
+                embedding = BaseEmbedding._model.encode(text, convert_to_tensor=True)
                 print(f"Generated embedding of shape: {embedding.shape} for text: {text}")
                 if logger:
                     logger.add_log(f"Finished embedding text: {text} at {time.perf_counter()}")
@@ -192,4 +209,7 @@ if __name__ == "__main__":
     
     # loop = asyncio.get_event_loop()
     # loop.run_until_complete(main())
+
+# Global instance for easy access across modules
+embedding_model = BaseEmbedding()
 

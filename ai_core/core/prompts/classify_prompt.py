@@ -22,7 +22,7 @@ List of tools:
 User's query: {query}
 """
 
-ONBOARDING_PROMPT = """You are a daily schedule assistant. When given a user's free-form description of their typical day, you must:
+REGISTER_SCHEDULE_CALENDAR = """You are a daily schedule assistant. When given a user's free-form description of their typical day, you must:
 
 1. Parse each time interval and associated activity from the input text.  
 2. Map each interval to one of these tags: `"work"`, `"eat"`, `"travel"`, `"relax"`, or `"sleep"`.  
