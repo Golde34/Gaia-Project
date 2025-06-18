@@ -1,12 +1,13 @@
 import numpy as np
-from sentence_transformers import SentenceTransformer
+
+from infrastructure.embedding.base_embedding import embedding_model
 
 
 class SemanticRouter:
     def __init__(self, routes, model_name):
         self.routes = routes
         self.model_name = model_name
-        self.embedding_model = SentenceTransformer(model_name)
+        self.embedding_model = embedding_model 
         self.routes_embedding = {}
         self.routes_embedding_cal = {}
         
@@ -20,7 +21,7 @@ class SemanticRouter:
         return self.routes
     
     def guide(self, query):
-        query_embedding = self.embedding_model.encode([query])
+        query_embedding = self.embedding_model.get_embeddings([query])
         query_embedding = query_embedding / np.linalg.norm(query_embedding, axis=1, keepdims=True)
         scores = []
         
