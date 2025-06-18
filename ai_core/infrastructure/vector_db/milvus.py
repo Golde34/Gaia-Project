@@ -6,7 +6,18 @@ from infrastructure.vector_db.milvus_config import MilvusConfig
 
 
 class MilvusDB:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(MilvusDB, cls).__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
     def __init__(self):
+        if self._initialized:
+            return
+            
         self.config = MilvusConfig() 
         self.dim = self.config.index_config.index_params.nlist
         self.index_params = {
@@ -23,7 +34,8 @@ class MilvusDB:
         self._create_collection()
         
         self.client.load_collection(collection_name=self.config.root_memory_collection)
-        
+        self._initialized = True
+
     def _connect(self) -> MilvusClient:
         try:
             print(f"Connecting to Milvus at {self.config.host}:{self.config.port} with user {self.config.user}")
@@ -278,4 +290,5 @@ class MilvusDB:
             traceback.print_exc()
             raise e
 
+# Global instance for easy access across modules
 milvus_db = MilvusDB()
