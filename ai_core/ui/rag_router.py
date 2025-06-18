@@ -3,7 +3,7 @@ from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 import traceback
 import pandas as pd
 
-from core.service.rag_service import upload_context_to_vectordb, query_context, upload_csv_context_to_vectordb
+from core.service.rag_service import upload_context_to_vectordb, query_context
 
 
 RagRouter = APIRouter(
@@ -15,14 +15,15 @@ RagRouter = APIRouter(
 async def upload_context(file: UploadFile = File(...)):
     try:
         content = await file.read()
-        context_str = content.decode('utf-8')
         metadata = {
             "file_name": file.filename,
             "file_type": file.content_type,
             "upload_time": datetime.datetime.now().isoformat(), 
         }
 
-        return await upload_context_to_vectordb(context_str, metadata)
+        context_list = [line.strip()
+                    for line in content.decode('utf-8').splitlines() if line.strip()]
+        return await upload_context_to_vectordb(context_list, metadata)
     except Exception as e:
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)
@@ -55,7 +56,7 @@ async def upload_context(file: UploadFile = File(...)):
             "upload_time": datetime.datetime.now().isoformat(),
         }
 
-        return await upload_csv_context_to_vectordb(context_list, metadata)
+        return await upload_context_to_vectordb(context_list, metadata)
     except Exception as e:
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)
