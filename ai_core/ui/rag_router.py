@@ -15,15 +15,16 @@ RagRouter = APIRouter(
 async def upload_context(file: UploadFile = File(...)):
     try:
         content = await file.read()
+        context_string = content.decode('utf-8')
         metadata = {
             "file_name": file.filename,
             "file_type": file.content_type,
             "upload_time": datetime.datetime.now().isoformat(), 
         }
 
-        context_list = [line.strip()
-                    for line in content.decode('utf-8').splitlines() if line.strip()]
-        return await upload_context_to_vectordb(context_list, metadata)
+        # context_list = [line.strip()
+        #             for line in content.decode('utf-8').splitlines() if line.strip()]
+        return await upload_context_to_vectordb([context_string], metadata)
     except Exception as e:
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)

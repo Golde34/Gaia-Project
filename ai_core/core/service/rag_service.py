@@ -1,5 +1,7 @@
+import json
 from typing import List
 
+from core.validation import milvus_validation
 from infrastructure.embedding.base_embedding import embedding_model 
 from infrastructure.vector_db.milvus import milvus_db 
 
@@ -24,33 +26,21 @@ async def upload_context_to_vectordb(context_list: List[str], metadata: dict) ->
     ]
 
     try:
-        embeddings_tensor = await embedding_model.get_embeddings(texts=context_list)
+        embedding = await embedding_model.get_embeddings(texts=context_list)
+        query_embeddings = milvus_validation.validate_milvus_insert(embedding) 
 
-        if hasattr(embeddings_tensor, "tolist"):
-            embeddings = embeddings_tensor.tolist()
-        elif isinstance(embeddings_tensor, list):
-            embeddings = embeddings_tensor
-        else:
-            raise ValueError("Unexpected type for embeddings_tensor: {}".format(
-                type(embeddings_tensor)))
-
-        print("Embeddings generated successfully:", len(embeddings), "vectors")
+        print("Embeddings generated successfully:", len(query_embeddings), "vectors")
         print("Context to be uploaded:", len(context_list), "characters")
         print("Metadata for context:", len(metadata_list), "fields")
 
-        # Insert data into the vector database
         result = milvus_db.insert_data(
-            vectors=embeddings,
+            vectors=query_embeddings,
             contents=context_list,
             metadata_list=metadata_list,
             partition_name="default_context"
         )
 
-        return {
-            "status": "success",
-            "message": "Context uploaded successfully",
-            "result": result
-        }
+        return result.__str__()
     except Exception as e:
         print("Error uploading context to vector database:", e)
         raise e
@@ -70,16 +60,7 @@ async def query_context(query: str, top_k: int = 5, partition_name: str = "defau
     """
     try:
         embedding = await embedding_model.get_embeddings(texts=[query])
-
-        if hasattr(embedding, "tolist"):
-            embedding = embedding.tolist()
-        elif isinstance(embedding, list) and hasattr(embedding[0], "tolist"):
-            embedding = [emb.tolist() for emb in embedding]
-
-        if isinstance(embedding, list) and isinstance(embedding[0], float):
-            query_embeddings = [embedding]
-        else:
-            query_embeddings = embedding
+        query_embeddings = milvus_validation.validate_milvus_search_top_n(embedding)
 
         results = milvus_db.search_top_n(
             query_embeddings=query_embeddings,
