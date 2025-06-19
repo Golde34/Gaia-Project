@@ -1,21 +1,29 @@
 package main
 
 import (
-	"log"
-	"net/http"
 	services "chat_hub/core/services/websocket"
 	"chat_hub/infrastructure/kafka"
 	"chat_hub/kernel/configs"
+	database_postgresql "chat_hub/kernel/database/postgresql"
 	consumer "chat_hub/ui/kafka"
+	"log"
+	"net/http"
 	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
 
-
-
 func main() {
+	// Database
+	databaseConfig := configs.DatabaseConfig{}
+	dbCfg, _ := databaseConfig.LoadEnv()
+	err := database_postgresql.ConnectDB(dbCfg.Host, dbCfg.Port, dbCfg.Username, dbCfg.Password, dbCfg.Database)	
+	if err != nil {
+		log.Fatalf("Failed to connect to PostgreSQL database: %v", err)
+	}
+	log.Println("Database connected")
+
 	// Kafka Initialization
 	kafkaConfig := configs.KafkaConfig{}
 	kafkaCfg, _ := kafkaConfig.LoadEnv()
