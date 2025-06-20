@@ -6,14 +6,19 @@ import (
 	response_dtos "chat_hub/core/domain/dtos/response"
 	"chat_hub/infrastructure/client"
 	"chat_hub/infrastructure/kafka"
+	"database/sql"
 	"fmt"
 	"log"
 )
 
-type ChatService struct{}
+type ChatService struct {
+	db *sql.DB
+}
 
-func NewChatService() *ChatService {
-	return &ChatService{}
+func NewChatService(db *sql.DB) *ChatService {
+	return &ChatService{
+		db: db,
+	}
 }
 
 func (s *ChatService) HandleChatMessage(userId string, message string) (string, error) {
@@ -97,7 +102,7 @@ func (s *ChatService) HandleGaiaIntroductionMessage(userId, message, msgType str
 	log.Println("Message received from user " + userId + ": " + message)
 	var input request_dtos.LLMSystemQueryRequestDTO
 	input.Query = message
-	input.Type = msgType 
+	input.Type = msgType
 	chatResponse, err := client.NewLLMCoreAdapter().ChatForOnboarding(input)
 	if err != nil {
 		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())

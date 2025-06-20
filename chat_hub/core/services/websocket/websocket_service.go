@@ -3,6 +3,7 @@ package services
 import (
 	services "chat_hub/core/services/chat"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -13,10 +14,19 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type WebSocketService struct{}
+type WebSocketService struct {
+	db *sql.DB
 
-func NewWebSocketService() *WebSocketService {
-	return &WebSocketService{}
+	chatService *services.ChatService
+	authService *services.AuthService
+}
+
+func NewWebSocketService(db *sql.DB) *WebSocketService {
+	return &WebSocketService{
+		db: db,
+		chatService: services.NewChatService(db),
+		authService: services.NewAuthService(),
+	}
 }
 
 var upgrader = websocket.Upgrader{
@@ -114,7 +124,7 @@ func (s *WebSocketService) monitorConnection(sessionId string) {
 }
 
 func (s *WebSocketService) validateUserJwt(ctx context.Context, jwt string) string {
-	userId, err := services.NewAuthService().ValidateJwt(ctx, jwt)
+	userId, err := s.authService.ValidateJwt(ctx, jwt)
 	if err != nil {
 		log.Println("JWT validation error, it should never happen:", err)
 		return ""
@@ -127,7 +137,7 @@ func (s *WebSocketService) handleService(messageMap map[string]interface{}, user
 	switch messageMap["type"] {
 	case "chat_message":
 		log.Println("Handling task optimized for user:", userId)
-		result, err := services.NewChatService().HandleChatMessage(userId, messageMap["text"].(string))
+		result, err := s.chatService.HandleChatMessage(userId, messageMap["text"].(string))
 		if err != nil {
 			log.Println("Error handling chat message:", err)
 			return
@@ -136,7 +146,7 @@ func (s *WebSocketService) handleService(messageMap map[string]interface{}, user
 		return
 	case "gaia_introduction":
 		log.Println("Handling onboarding step for user:", userId)
-		result, err := services.NewChatService().HandleGaiaIntroductionMessage(
+		result, err := s.chatService.HandleGaiaIntroductionMessage(
 			userId, messageMap["text"].(string), messageMap["type"].(string))
 		if err != nil {
 			log.Println("Error handling onboarding step:", err)

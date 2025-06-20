@@ -18,7 +18,7 @@ func main() {
 	// Database
 	databaseConfig := configs.DatabaseConfig{}
 	dbCfg, _ := databaseConfig.LoadEnv()
-	err := database_postgresql.ConnectDB(dbCfg.Host, dbCfg.Port, dbCfg.Username, dbCfg.Password, dbCfg.Database)	
+	dbConnection, err := database_postgresql.ConnectDB(dbCfg.Host, dbCfg.Port, dbCfg.Username, dbCfg.Password, dbCfg.Database)	
 	if err != nil {
 		log.Fatalf("Failed to connect to PostgreSQL database: %v", err)
 	}
@@ -30,7 +30,7 @@ func main() {
 	log.Println("Kafka Config: ", kafkaCfg.GroupId)
 
 	handlers := map[string] kafka.MessageHandler {
-		"task-manager.chat-hub-result.topic": &consumer.TaskResultHandler{},
+		"task-manager.chat-hub-result.topic": consumer.NewTaskResultHandler(dbConnection),
 	}
 
 	consumerGroupHandler := kafka.NewConsumerGroupHandler(kafkaCfg.Name, handlers)
@@ -51,7 +51,7 @@ func main() {
 	r.Use(middleware.Timeout(time.Second * 60))
 
 	// Register WebSocket handler
-	http.HandleFunc("/ws", services.NewWebSocketService().HandleChatmessage)
+	http.HandleFunc("/ws", services.NewWebSocketService(dbConnection).HandleChatmessage)
 
 	// Rest Router
 	
