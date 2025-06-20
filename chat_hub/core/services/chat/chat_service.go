@@ -13,44 +13,70 @@ import (
 
 type ChatService struct {
 	db *sql.DB
+
+	authClient *client.AuthAdapter
+	aiCoreClient *client.LLMCoreAdapter
 }
 
 func NewChatService(db *sql.DB) *ChatService {
 	return &ChatService{
 		db: db,
+
+		authClient: client.NewAuthAdapter(),
+		aiCoreClient: client.NewLLMCoreAdapter(),
 	}
 }
 
-func (s *ChatService) HandleChatMessage(userId string, message string) (string, error) {
+func (s *ChatService) HandleChatMessage(userId, message string) (string, error) {
 	log.Println("Message received from user " + userId + ": " + message)
-	userModel, err := client.NewAuthAdapter().GetUserLLMModelConfig(userId)
-	log.Println("User model config: ", userModel)
+	// validate in user
+	// if dialog is null or empty, create a new dialog, find dialog by userId and dialog type
+	// store user message in db note: many bot messages to 1 user message
+	userModel := s.validateUserModel(userId)
+	botMessage, err := s.getBotMessage(userId, message, userModel)
 	if err != nil {
-		log.Println("Error getting user model config: " + err.Error())
-		return "", err
-	}
-	if userModel.ModelName == "" {
-		log.Println("User model name is empty, using default model")
-		userModel.ModelName = "gemini-2.0-flash"
-	}
-	var input request_dtos.LLMQueryRequestDTO
-	input.UserId = userId
-	input.ModelName = userModel.ModelName
-	input.Query = message
-	chatResponse, err := client.NewLLMCoreAdapter().ChatForTask(input)
-	if err != nil {
-		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
-		return "", err
+		log.Println("Error getting bot message: " + err.Error())
+		return "Gaia cannot answer this time, system error, just wait.", err
 	}
 
-	go handleChatResponse(chatResponse, userId)
+	// save bot message in db
 
-	data, exists := chatResponse["response"].(string)
+	go handleChatResponse(botMessage, userId)
+	data, exists := botMessage["response"].(string)
 	if !exists || data == "" {
 		return "Internal System Error", err
 	}
 
 	return data, nil
+}
+
+func (s *ChatService) validateUserModel(userId string) (string) {
+	log.Println("Validating user model for user " + userId)
+	userModel, err := s.authClient.GetUserLLMModelConfig(userId)
+	defaultModel := "gemini-2.0-flash"
+	if err != nil {
+		log.Println("Error getting user model config: " + err.Error())
+		return defaultModel
+	}
+	if userModel.ModelName == "" {
+		log.Println("User model name is empty, using default model")
+		return defaultModel
+	}
+	return userModel.ModelName
+}
+
+func (s *ChatService) getBotMessage(userId, message, model string) (map[string]interface{}, error) {
+	var input request_dtos.LLMQueryRequestDTO
+	input.UserId = userId
+	input.ModelName = model 
+	input.Query = message
+	chatResponse, err := s.aiCoreClient.ChatForTask(input)
+	if err != nil {
+		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
+		return nil, err
+	}
+
+	return chatResponse, nil
 }
 
 func handleChatResponse(chatResponse map[string]interface{}, userId string) {
@@ -70,30 +96,17 @@ func handleChatResponse(chatResponse map[string]interface{}, userId string) {
 
 func (s *ChatService) ResponseTaskResultToUser(taskResult map[string]interface{}, userId string) (response_dtos.TaskResultMessageDTO, error) {
 	log.Printf("Message received from user %s: %v", userId, taskResult)
-	userModel, err := client.NewAuthAdapter().GetUserLLMModelConfig(userId)
-	log.Println("User model config: ", userModel)
+	userModel := s.validateUserModel(userId)	
+	botMessage, err := s.getBotMessage(userId, fmt.Sprintf("Task result: %v of userId: %s", taskResult, userId), userModel)
 	if err != nil {
-		log.Println("Error getting user model config: " + err.Error())
+		log.Println("Error getting bot message: " + err.Error())
 		return response_dtos.TaskResultMessageDTO{}, err
-	}
-	if userModel.ModelName == "" {
-		log.Println("User model name is empty, using default model")
-		userModel.ModelName = "gemini-2.0-flash"
-	}
-	var input request_dtos.LLMQueryRequestDTO
-	input.UserId = userId
-	input.ModelName = userModel.ModelName
-	input.Query = fmt.Sprintf("Task result: %v of userId: %s", taskResult, userId)
-	chatResponse, err := client.NewLLMCoreAdapter().ChatForTask(input)
-	if err != nil {
-		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
-		return response_dtos.TaskResultMessageDTO{}, err
-	}
+	}	
 
 	var data response_dtos.TaskResultMessageDTO
 	data.Type = "taskResult"
-	data.Response = chatResponse["response"].(string)
-	data.TaskResult = chatResponse["task"].(map[string]interface{})
+	data.Response = botMessage["response"].(string)
+	data.TaskResult = botMessage["task"].(map[string]interface{})
 
 	return data, nil
 }
