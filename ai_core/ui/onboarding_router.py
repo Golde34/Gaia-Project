@@ -14,7 +14,7 @@ OnboardingRouter = APIRouter(
 async def gaia_introduction(request: query_request.SystemRequest):
     try:
         print("Received GAIA introduction request")
-        return gaia_introduction(request)
+        return await gaia_introduction(request)
     except Exception as e:
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)

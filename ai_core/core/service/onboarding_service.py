@@ -22,7 +22,7 @@ chitchat_route = route.Route(
 semantic_router = router.SemanticRouter(
     routes=[introduction_route, chitchat_route], model_name=config.EMBEDDING_MODEL)
 
-def gaia_introduction(query: SystemRequest) -> dict:
+async def gaia_introduction(query: SystemRequest) -> dict:
     """
     Register task via an user's daily life summary
 
@@ -33,7 +33,7 @@ def gaia_introduction(query: SystemRequest) -> dict:
         user_daily_entries (dict):  
     """
     try:
-        guided_route = router_registry.gaia_introduction_route(query.query)
+        guided_route = await router_registry.gaia_introduction_route(query.query)
         if guided_route == SemanticRoute.GAIA_INTRODUCTION:
             query_embedding = embedding_model.get_embeddings(
                 texts=[query.query])
