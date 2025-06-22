@@ -19,11 +19,15 @@ func NewBotMessageRepository(db *sql.DB) *BotMessageRepository {
 	}
 }
 
+var (
+	BotMessageTable = `bot_messages`
+)
+
 func (r *BotMessageRepository) CreateBotMessage(request request_dtos.MessageRequestDTO) (string, error) {
 	var entity entity.BotMessageEntity
 	base_repo.ConvertStruct(request, &entity)	
 	columns, values := base_repo.StructToColumnsAndValues(entity)
-	id, err := r.base.InsertDB("bot_messages", columns, values)
+	id, err := r.base.InsertDB(BotMessageTable, columns, values)
 	if err != nil {
 		return "", err
 	}

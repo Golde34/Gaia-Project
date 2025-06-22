@@ -7,32 +7,40 @@ import (
 	"chat_hub/infrastructure/repository"
 	"database/sql"
 	"fmt"
+	"strconv"
+	"time"
 )
 
 type MessageService struct {
 	db *sql.DB
 
 	userRepository *repository.UserMessageRepository
-	botRepository *repository.BotMessageRepository
+	botRepository  *repository.BotMessageRepository
 }
 
 func NewMessageService(db *sql.DB) *MessageService {
 	return &MessageService{
-		db: db,
+		db:             db,
 		userRepository: repository.NewUserMessageRepository(db),
-		botRepository: repository.NewBotMessageRepository(db),
+		botRepository:  repository.NewBotMessageRepository(db),
 	}
 }
 
-func (s *MessageService) BuildMessage(dialogue entity.UserDialogueEntity, userId, message, userMessageId string, senderType, messageType string) (request_dtos.MessageRequestDTO) {
-	request := request_dtos.MessageRequestDTO {
-		UserId:        userId,
+func (s *MessageService) BuildMessage(dialogue entity.UserDialogueEntity, userId, message, userMessageId string, senderType, messageType string) request_dtos.MessageRequestDTO {
+	userIdF, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		return request_dtos.MessageRequestDTO{} 
+	}
+	request := request_dtos.MessageRequestDTO{
+		UserId:        userIdF,
 		DialogueId:    dialogue.ID,
-		UserMessageId: userMessageId, 
+		UserMessageId: userMessageId,
 		MessageType:   messageType,
 		Content:       message,
 		Metadata:      "",
 		EnumType:      senderType,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
 	}
 	return request
 }

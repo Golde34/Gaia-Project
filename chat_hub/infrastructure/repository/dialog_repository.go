@@ -20,11 +20,14 @@ func NewDialogueRepository(db *sql.DB) *DialogueRepository {
     }
 }
 
+var (
+	UserDialogueTable = `user_dialogues`
+)
+
 func (r *DialogueRepository) CreateDialogue(dialogue entity.UserDialogueEntity) (entity.UserDialogueEntity, error) {
-	log.Println("Creating dialogue for user:", dialogue.UserID, "with dialog type:", dialogue.DialogueType)
-	columns := []string{"id", "user_id", "dialogue_name", "dialogue_type", "dialogue_status", "metadata"}
-    values := []interface{}{dialogue.ID, dialogue.UserID, dialogue.DialogueName, dialogue.DialogueType, dialogue.DialogueStatus, dialogue.Metadata}
-    id, err := r.base.InsertDB("user_dialogues", columns, values)
+    columns, values := base_repo.StructToColumnsAndValues(dialogue)
+    log.Println("Inserting dialogue into database with columns:", columns, "and values:", values)
+    id, err := r.base.InsertDB(UserDialogueTable, columns, values)
     if err != nil {
         return entity.UserDialogueEntity{}, err
     }
@@ -33,13 +36,11 @@ func (r *DialogueRepository) CreateDialogue(dialogue entity.UserDialogueEntity) 
 }
 
 func (r *DialogueRepository) GetDialogueByUserIdAndType(userId, dialogueType string) (entity.UserDialogueEntity, error) {
-    log.Println("Retrieving dialogue for user:", userId, "with dialog type:", dialogueType)
-    columns := []string{"id", "user_id", "dialogue_name", "dialogue_type", "dialogue_status", "metadata"}
     where := map[string]interface{}{
         "user_id": userId,
         "dialogue_type": dialogueType,
     }
-    rows, err := r.base.SelectDB(r.db, "user_dialogues", columns, where)
+    rows, err := r.base.SelectDB(r.db, UserDialogueTable, []string{}, where)
     if err != nil {
         return entity.UserDialogueEntity{}, err
     }
@@ -47,9 +48,10 @@ func (r *DialogueRepository) GetDialogueByUserIdAndType(userId, dialogueType str
         return entity.UserDialogueEntity{}, sql.ErrNoRows
     }
     row := rows[0]
+    log.Println("Retrieved dialogue from database:", row)
     dialogue := entity.UserDialogueEntity{
-        ID:             row["id"].(string),
-        UserID:         row["user_id"].(float64),
+        ID:             base_repo.ToStringUUID(row["id"]),
+        UserID:         row["user_id"].(int64),
         DialogueName:   row["dialogue_name"].(string),
         DialogueType:   row["dialogue_type"].(string),
         DialogueStatus: row["dialogue_status"].(bool),

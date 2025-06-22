@@ -1,16 +1,15 @@
 package entity
 
-var (
-	UserChatMessageTable = `user_messages`
-)
+import "time"
 
 type UserChatMessageEntity struct {
-	ID          string  `db:"id"`
-	UserID      float64 `db:"user_id"`
-	DialogueID  string  `db:"dialogue_id"`
-	MessageType string  `db:"message_type"`
-	Content     string  `db:"content"`
-	Metadata    string  `db:"metadata"`
-	CreatedAt   string  `db:"created_at"`
-	UpdatedAt   string  `db:"updated_at"`
+	ID          string    `db:"id"`
+	UserId      int64     `db:"user_id"`
+	DialogueId  string    `db:"dialogue_id"`
+	MessageType string    `db:"message_type"`
+	OrderNumber int64     `db:"order_number"`
+	Content     string    `db:"content"`
+	Metadata    string    `db:"metadata"`
+	CreatedAt   time.Time `db:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at"`
 }

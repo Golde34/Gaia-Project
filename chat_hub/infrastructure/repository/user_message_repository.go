@@ -5,6 +5,9 @@ import (
 	entity "chat_hub/core/domain/entities"
 	base_repo "chat_hub/infrastructure/repository/base"
 	"database/sql"
+	"log"
+
+	"github.com/google/uuid"
 )
 
 type UserMessageRepository struct {
@@ -19,11 +22,17 @@ func NewUserMessageRepository(db *sql.DB) *UserMessageRepository {
 	}
 }
 
+var (
+	UserChatMessageTable = `user_messages`
+)
+
 func (r *UserMessageRepository) CreateUserMessage(request request_dtos.MessageRequestDTO) (string, error) {
+	log.Println("Creating user message with request:", request)
 	var entity entity.UserChatMessageEntity
-	base_repo.ConvertStruct(request, &entity)	
+	base_repo.ConvertStruct(request, &entity)
+	entity.ID = uuid.New().String()
 	columns, values := base_repo.StructToColumnsAndValues(entity)
-	id, err := r.base.InsertDB("user_chat_messages", columns, values)
+	id, err := r.base.InsertDB(UserChatMessageTable, columns, values)
 	if err != nil {
 		return "", err
 	}

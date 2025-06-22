@@ -5,9 +5,9 @@ CREATE TABLE public.user_messages (
     user_id BIGINT NOT NULL,
     dialogue_id UUID NOT NULL,
     message_type VARCHAR(50) NOT NULL,
-    order_number INTEGER NOT NULL,
+    order_number INTEGER NULL,
     content TEXT NOT NULL,
-    metadata TEXT NOT NULL,
+    metadata TEXT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE NULL,
     updated_at TIMESTAMP WITHOUT TIME ZONE NULL, 
     PRIMARY KEY (id, created_at)

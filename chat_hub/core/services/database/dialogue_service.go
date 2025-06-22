@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -14,13 +15,13 @@ import (
 type DialogueService struct {
 	db *sql.DB
 
-	repository *repository.DialogueRepository
+	dialogueRepo *repository.DialogueRepository
 }
 
 func NewDialogueService(db *sql.DB) *DialogueService {
 	return &DialogueService{
-		db: db,
-		repository: repository.NewDialogueRepository(db),
+		db:           db,
+		dialogueRepo: repository.NewDialogueRepository(db),
 	}
 }
 
@@ -42,9 +43,7 @@ func (s *DialogueService) CreateDialogueIfNotExists(userId, dialogueType string)
 }
 
 func (s *DialogueService) CreateDialogue(userId, dialogueType string) (entity.UserDialogueEntity, error) {
-	log.Println("Creating dialogue for user:", userId, "with dialog type:", dialogueType)
-
-	userIdF, err := strconv.ParseFloat(userId, 64)
+	userIdF, err := strconv.ParseInt(userId, 10, 64)
 	if err != nil {
 		log.Println("Error parsing user ID:", err)
 		return entity.UserDialogueEntity{}, err
@@ -54,12 +53,14 @@ func (s *DialogueService) CreateDialogue(userId, dialogueType string) (entity.Us
 		ID:             uuid.New().String(),
 		UserID:         userIdF,
 		DialogueName:   enums.GaiaIntroductionDialogue,
-		DialogueType:   enums.GaiaIntroductionDialogueType,
+		DialogueType:   dialogueType,
 		DialogueStatus: enums.ACTIVE,
 		Metadata:       "{}",
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 
-	createdDialogue, err := s.repository.CreateDialogue(dialogue)
+	createdDialogue, err := s.dialogueRepo.CreateDialogue(dialogue)
 	if err != nil {
 		log.Println("Error creating dialogue in repository:", err)
 		return entity.UserDialogueEntity{}, err
@@ -72,13 +73,13 @@ func (s *DialogueService) CreateDialogue(userId, dialogueType string) (entity.Us
 func (s *DialogueService) GetDialogueByUserIdAndType(userId, dialogueType string) (entity.UserDialogueEntity, error) {
 	log.Println("Retrieving dialogue for user:", userId, "with dialog type:", dialogueType)
 
-	dialogue, err := s.repository.GetDialogueByUserIdAndType(userId, dialogueType)
-	if err != nil {
+	dialogue, err := s.dialogueRepo.GetDialogueByUserIdAndType(userId, dialogueType)
+	if err != nil && err != sql.ErrNoRows {
 		log.Println("Error retrieving dialogue from repository:", err)
 		return entity.UserDialogueEntity{}, err
 	}
 
-	if dialogue.ID == "" {
+	if err == sql.ErrNoRows {
 		log.Println("No dialogue found for user:", userId, "with dialog type:", dialogueType)
 		return entity.UserDialogueEntity{}, nil
 	}

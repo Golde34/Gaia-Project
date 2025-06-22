@@ -23,7 +23,7 @@ func main() {
 		defer dbConnection.Close()
 		log.Fatalf("Failed to connect to PostgreSQL database: %v", err)
 	}
-	log.Println("Database connected")
+	log.Println("Database connected, database name: ", dbCfg.Database)
 
 	// Kafka Initialization
 	kafkaConfig := configs.KafkaConfig{}

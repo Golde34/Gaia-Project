@@ -5,10 +5,10 @@ CREATE TABLE public.bot_messages (
     user_id BIGINT NOT NULL,
     dialogue_id UUID NOT NULL,
     user_messages_id UUID NOT NULL,
-    order_number INTEGER NOT NULL,
+    order_number INTEGER NULL,
     message_type VARCHAR(50) NOT NULL,
     content TEXT NOT NULL,
-    metadata TEXT NOT NULL,
+    metadata TEXT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE NULL,
     updated_at TIMESTAMP WITHOUT TIME ZONE NULL,
     PRIMARY KEY (id, created_at)

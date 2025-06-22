@@ -30,12 +30,19 @@ func NewChatService(db *sql.DB) *ChatService {
 
 		authClient: client.NewAuthAdapter(),
 		aiCoreClient: client.NewLLMCoreAdapter(),
+
+		dialogueService: services.NewDialogueService(db),
+		messageService: services.NewMessageService(db),
 	}
 }
 
 func (s *ChatService) HandleChatMessage(userId, message string) (string, error) {
 	log.Println("Message received from user " + userId + ": " + message)
 	dialogue, err := s.dialogueService.CreateDialogueIfNotExists(userId, enums.ChatDialogueType) 
+	if err != nil {
+		log.Println("Error creating dialogue: " + err.Error())
+		return "Gaia cannot answer this time, system error, just wait.", err
+	}
 	userMessageId, err := s.createMessage(dialogue, userId, message, "", enums.UserMessage, enums.ChatDialogueType)
 	if err != nil {
 		log.Println("Error creating user message: " + err.Error())
@@ -54,7 +61,6 @@ func (s *ChatService) HandleChatMessage(userId, message string) (string, error) 
 		return "Internal System Error", err
 	}
 
-	// save bot message in db
 	botMessageId, err := s.createMessage(dialogue, userId, data, userMessageId, enums.BotMessage, enums.ChatDialogueType)
 	if err != nil {
 		log.Println("Error creating bot message: " + err.Error())

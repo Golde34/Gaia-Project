@@ -6,7 +6,7 @@ CREATE TABLE public.user_dialogues (
     dialogue_name VARCHAR(500) NOT NULL,
     dialogue_type VARCHAR(50) NOT NULL,
     dialogue_status BOOLEAN NOT NULL,
-    metadata TEXT NOT NULL,
+    metadata TEXT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE NULL,
     updated_at TIMESTAMP WITHOUT TIME ZONE NULL,
     PRIMARY KEY (id, created_at)

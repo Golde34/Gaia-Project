@@ -1,4 +1,4 @@
-package base_repo 
+package base_repo
 
 import (
 	"database/sql"
@@ -32,6 +32,9 @@ func (s *DB) InsertDB(tableName string, columns []string, values []interface{}) 
 }
 
 func (s *DB) SelectDB(db *sql.DB, tableName string, columns []string, where map[string]interface{}) ([]map[string]interface{}, error) {
+    if len(columns) == 0 {
+        columns = []string{"*"} 
+    }
     wheres := []string{}
     args := []interface{}{}
     i := 1
