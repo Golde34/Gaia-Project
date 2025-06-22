@@ -2,6 +2,7 @@ package services
 
 import (
 	services "chat_hub/core/services/chat"
+	usecases "chat_hub/core/usecase"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -17,14 +18,14 @@ import (
 type WebSocketService struct {
 	db *sql.DB
 
-	chatService *services.ChatService
+	chatService *usecases.ChatUsecase
 	authService *services.AuthService
 }
 
 func NewWebSocketService(db *sql.DB) *WebSocketService {
 	return &WebSocketService{
 		db: db,
-		chatService: services.NewChatService(db),
+		chatService: usecases.NewChatUsecase(db),
 		authService: services.NewAuthService(),
 	}
 }

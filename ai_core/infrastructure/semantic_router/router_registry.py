@@ -11,14 +11,15 @@ chitchat_route = route.Route(name=enum.SemanticRoute.CHITCHAT, samples=samples
 semantic_router = router.SemanticRouter(routes=[introduction_route, chitchat_route],
                                          model_name=config.EMBEDDING_MODEL)
 
-def gaia_introduction_route(query: str) -> route.Route:
+async def gaia_introduction_route(query: str) -> route.Route:
     """
     Get the GAIA introduction route.
 
     Returns:
         route.Route: The GAIA introduction route.
     """
-    guided_route = semantic_router.guide(query)
+    await semantic_router.initialize()
+    guided_route = await semantic_router.guide(query)
     print(f"Semnatic router: {guided_route}")
     if guided_route is None:
         raise ValueError("No route found for the query.")

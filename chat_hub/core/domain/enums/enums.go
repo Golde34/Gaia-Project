@@ -33,3 +33,8 @@ var (
 	ACTIVE = true 
 	INACTIVE = false 
 )
+
+var (
+	UserMessage = "user_message"
+	BotMessage = "bot_message"
+)
