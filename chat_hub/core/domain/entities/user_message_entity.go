@@ -5,12 +5,12 @@ var (
 )
 
 type UserChatMessageEntity struct {
-	ID          string  `json:"id"`
-	UserID      float64 `json:"user_id"`
-	DialogueID  string  `json:"dialogue_id"`
-	MessageType string  `json:"message_type"`
-	Content     string  `json:"content"`
-	Metadata    string  `json:"metadata"`
-	CreatedAt   string  `json:"created_at"`
-	UpdatedAt   string  `json:"updated_at"`
+	ID          string  `db:"id"`
+	UserID      float64 `db:"user_id"`
+	DialogueID  string  `db:"dialogue_id"`
+	MessageType string  `db:"message_type"`
+	Content     string  `db:"content"`
+	Metadata    string  `db:"metadata"`
+	CreatedAt   string  `db:"created_at"`
+	UpdatedAt   string  `db:"updated_at"`
 }

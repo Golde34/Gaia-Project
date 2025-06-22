@@ -31,3 +31,29 @@ func (r *DialogueRepository) CreateDialogue(dialogue entity.UserDialogueEntity) 
     dialogue.ID = id
     return dialogue, nil
 }
+
+func (r *DialogueRepository) GetDialogueByUserIdAndType(userId, dialogueType string) (entity.UserDialogueEntity, error) {
+    log.Println("Retrieving dialogue for user:", userId, "with dialog type:", dialogueType)
+    columns := []string{"id", "user_id", "dialogue_name", "dialogue_type", "dialogue_status", "metadata"}
+    where := map[string]interface{}{
+        "user_id": userId,
+        "dialogue_type": dialogueType,
+    }
+    rows, err := r.base.SelectDB(r.db, "user_dialogues", columns, where)
+    if err != nil {
+        return entity.UserDialogueEntity{}, err
+    }
+    if len(rows) == 0 {
+        return entity.UserDialogueEntity{}, sql.ErrNoRows
+    }
+    row := rows[0]
+    dialogue := entity.UserDialogueEntity{
+        ID:             row["id"].(string),
+        UserID:         row["user_id"].(float64),
+        DialogueName:   row["dialogue_name"].(string),
+        DialogueType:   row["dialogue_type"].(string),
+        DialogueStatus: row["dialogue_status"].(bool),
+        Metadata:       row["metadata"].(string),
+    }
+    return dialogue, nil
+}

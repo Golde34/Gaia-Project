@@ -4,6 +4,9 @@ import (
 	"chat_hub/core/domain/constants"
 	request_dtos "chat_hub/core/domain/dtos/request"
 	response_dtos "chat_hub/core/domain/dtos/response"
+	entity "chat_hub/core/domain/entities"
+	"chat_hub/core/domain/enums"
+	services "chat_hub/core/services/database"
 	"chat_hub/infrastructure/client"
 	"chat_hub/infrastructure/kafka"
 	"database/sql"
@@ -16,6 +19,9 @@ type ChatService struct {
 
 	authClient *client.AuthAdapter
 	aiCoreClient *client.LLMCoreAdapter
+
+	dialogueService *services.DialogueService
+	messageService *services.MessageService
 }
 
 func NewChatService(db *sql.DB) *ChatService {
@@ -29,9 +35,12 @@ func NewChatService(db *sql.DB) *ChatService {
 
 func (s *ChatService) HandleChatMessage(userId, message string) (string, error) {
 	log.Println("Message received from user " + userId + ": " + message)
-	// validate in user
-	// if dialog is null or empty, create a new dialog, find dialog by userId and dialog type
-	// store user message in db note: many bot messages to 1 user message
+	dialogue, err := s.dialogueService.CreateDialogueIfNotExists(userId, enums.ChatDialogueType) 
+	userMessageId, err := s.createMessage(dialogue, userId, message, "", enums.UserMessage, enums.ChatDialogueType)
+	if err != nil {
+		log.Println("Error creating user message: " + err.Error())
+		return "Gaia cannot answer this time, system error, just wait.", err
+	}	
 	userModel := s.validateUserModel(userId)
 	botMessage, err := s.getBotMessage(userId, message, userModel)
 	if err != nil {
@@ -39,15 +48,32 @@ func (s *ChatService) HandleChatMessage(userId, message string) (string, error) 
 		return "Gaia cannot answer this time, system error, just wait.", err
 	}
 
-	// save bot message in db
-
 	go handleChatResponse(botMessage, userId)
 	data, exists := botMessage["response"].(string)
 	if !exists || data == "" {
 		return "Internal System Error", err
 	}
 
+	// save bot message in db
+	botMessageId, err := s.createMessage(dialogue, userId, data, userMessageId, enums.BotMessage, enums.ChatDialogueType)
+	if err != nil {
+		log.Println("Error creating bot message: " + err.Error())
+		return "Gaia cannot answer this time, system error, just wait.", err
+	}
+	log.Println("Bot message created with ID: " + botMessageId)
+
 	return data, nil
+}
+
+func (s *ChatService) createMessage(dialogue entity.UserDialogueEntity, userId, message, userMessageId string, senderType, messageType string) (string, error) {
+	messageRequest := s.messageService.BuildMessage(dialogue, userId, message, userMessageId, senderType, messageType)
+	messageId, err := s.messageService.CreateMessage(messageRequest)
+	if err != nil {
+		log.Println("Error creating message: " + err.Error())
+		return "", err
+	}
+	log.Println("Message created with ID: " + messageId)
+	return messageId, nil
 }
 
 func (s *ChatService) validateUserModel(userId string) (string) {
@@ -113,6 +139,9 @@ func (s *ChatService) ResponseTaskResultToUser(taskResult map[string]interface{}
 
 func (s *ChatService) HandleGaiaIntroductionMessage(userId, message, msgType string) (string, error) {
 	log.Println("Message received from user " + userId + ": " + message)
+	
+	// dialogue, err := s.dialogueService.CreateDialogueIfNotExists(userId, msgType) 
+
 	var input request_dtos.LLMSystemQueryRequestDTO
 	input.Query = message
 	input.Type = msgType
