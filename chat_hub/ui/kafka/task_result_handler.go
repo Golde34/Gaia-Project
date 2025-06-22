@@ -3,8 +3,8 @@ package consumer
 import (
 	"chat_hub/core/domain/constants"
 	base_dtos "chat_hub/core/domain/dtos/base"
-	chat_service "chat_hub/core/services/chat"
 	websocket_service "chat_hub/core/services/websocket"
+	usecases "chat_hub/core/usecase"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -15,11 +15,15 @@ import (
 
 type TaskResultHandler struct {
 	db *sql.DB
+
+	chatUsecase *usecases.ChatUsecase
 }
 
 func NewTaskResultHandler(db *sql.DB) *TaskResultHandler {
 	return &TaskResultHandler{
 		db: db,
+
+		chatUsecase: usecases.NewChatUsecase(db),
 	}
 }
 
@@ -40,24 +44,24 @@ func (handler *TaskResultHandler) HandleMessage(topic string, key, value []byte)
 
 	switch message.Cmd {
 	case constants.TaskResultCmd:
-		TaskResultCmd(key, data, handler.db)
+		handler.TaskResultCmd(key, data, handler.db)
 	default:
 		log.Println("Message handled successfully, but the cmd does not match to consumer to process")
 	}
 }
 
-func TaskResultCmd(key []byte, data map[string]interface{}, db *sql.DB) {
+func (handler *TaskResultHandler) TaskResultCmd(key []byte, data map[string]interface{}, db *sql.DB) {
 	messageId := string(key)
 	log.Println("Processing task result for data:", data)
 	userId := data["userId"].(float64)
 	userIdStr := fmt.Sprintf("%.0f", userId)
-	go handleService(data, userIdStr, db)
+	go handler.handleService(data, userIdStr, db)
 
 	fmt.Printf("Task result handled successfully for message ID: %s\n", messageId)
 }
 
-func handleService(messageMap map[string]interface{}, userId string, db *sql.DB) (string, error) {
-	result, err := chat_service.NewChatService(db).ResponseTaskResultToUser(messageMap, userId)
+func (handler *TaskResultHandler) handleService(messageMap map[string]interface{}, userId string, db *sql.DB) (string, error) {
+	result, err := handler.chatUsecase.ResponseTaskResultToUser(messageMap, userId)
 	if err != nil {
 		log.Println("Error handling task result:", err)
 		return "", err
