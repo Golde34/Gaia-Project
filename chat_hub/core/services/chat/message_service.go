@@ -7,6 +7,7 @@ import (
 	"chat_hub/infrastructure/repository"
 	"database/sql"
 	"fmt"
+	"log"
 	"strconv"
 	"time"
 )
@@ -26,7 +27,18 @@ func NewMessageService(db *sql.DB) *MessageService {
 	}
 }
 
-func (s *MessageService) BuildMessage(dialogue entity.UserDialogueEntity, userId, message, userMessageId string, senderType, messageType string) request_dtos.MessageRequestDTO {
+func (s *MessageService) CreateMessage(dialogue entity.UserDialogueEntity, userId, message, userMessageId string, senderType, messageType string) (string, error) {
+	messageRequest := s.buildMessage(dialogue, userId, message, userMessageId, senderType, messageType)
+	messageId, err := s.createMessageToDB(messageRequest)
+	if err != nil {
+		log.Println("Error creating message: " + err.Error())
+		return "", err
+	}
+	log.Println("Message created with ID: " + messageId)
+	return messageId, nil
+}
+
+func (s *MessageService) buildMessage(dialogue entity.UserDialogueEntity, userId, message, userMessageId string, senderType, messageType string) request_dtos.MessageRequestDTO {
 	userIdF, err := strconv.ParseInt(userId, 10, 64)
 	if err != nil {
 		return request_dtos.MessageRequestDTO{} 
@@ -45,7 +57,7 @@ func (s *MessageService) BuildMessage(dialogue entity.UserDialogueEntity, userId
 	return request
 }
 
-func (s *MessageService) CreateMessage(message request_dtos.MessageRequestDTO) (string, error) {
+func (s *MessageService) createMessageToDB(message request_dtos.MessageRequestDTO) (string, error) {
 	if message.EnumType == enums.UserMessage {
 		return s.userRepository.CreateUserMessage(message)
 	}
