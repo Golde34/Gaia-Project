@@ -5,6 +5,8 @@ import (
 	entity "chat_hub/core/domain/entities"
 	base_repo "chat_hub/infrastructure/repository/base"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 type BotMessageRepository struct {
@@ -26,6 +28,7 @@ var (
 func (r *BotMessageRepository) CreateBotMessage(request request_dtos.MessageRequestDTO) (string, error) {
 	var entity entity.BotMessageEntity
 	base_repo.ConvertStruct(request, &entity)	
+	entity.ID = uuid.New().String()
 	columns, values := base_repo.StructToColumnsAndValues(entity)
 	id, err := r.base.InsertDB(BotMessageTable, columns, values)
 	if err != nil {

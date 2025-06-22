@@ -2,7 +2,7 @@ from asyncio import Queue
 from typing import List, Dict, Any
 import traceback
 
-from ai_core.core.domain.enum.enum import ModelMode
+from core.domain.enum.enum import ModelMode
 import reranking_config
 
 

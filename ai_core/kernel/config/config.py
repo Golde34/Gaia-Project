@@ -15,5 +15,8 @@ EMBEDDING_MODEL = os.getenv('EMBEDDING_MODEL')
 RERANKING_MODEL = os.getenv('RERANKING_MODEL', 'default_reranking_config')
 MODEL_MODE = os.getenv('MODEL_MODE', 'vllm')
 
-EMBEDDING_API = os.getenv('EMBEDDING_API', 'https://api.embedding.com/v1/embeddings')
-RERANKING_API = os.getenv('RERANKING_API', 'https://api.reranking.com/v1/rerank')
+EMBEDDING_RERANKING_HOST = os.getenv('EMBEDDING_RERANKING_HOST', 'http://localhost:8000')
+EMBEDDING_RERANKING_PORT = int(os.getenv('EMBEDDING_RERANKING_PORT', 8000))
+
+EMBEDDING_API = EMBEDDING_RERANKING_HOST + f":{EMBEDDING_RERANKING_PORT}" 
+RERANKING_API = EMBEDDING_RERANKING_HOST + f":{EMBEDDING_RERANKING_PORT}" 
