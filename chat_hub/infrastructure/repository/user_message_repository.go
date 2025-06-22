@@ -5,7 +5,6 @@ import (
 	entity "chat_hub/core/domain/entities"
 	base_repo "chat_hub/infrastructure/repository/base"
 	"database/sql"
-	"log"
 
 	"github.com/google/uuid"
 )
@@ -27,7 +26,6 @@ var (
 )
 
 func (r *UserMessageRepository) CreateUserMessage(request request_dtos.MessageRequestDTO) (string, error) {
-	log.Println("Creating user message with request:", request)
 	var entity entity.UserChatMessageEntity
 	base_repo.ConvertStruct(request, &entity)
 	entity.ID = uuid.New().String()
