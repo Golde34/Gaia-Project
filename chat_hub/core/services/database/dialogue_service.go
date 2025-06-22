@@ -42,8 +42,12 @@ func (s *DialogueService) CreateDialogue(userId, dialogueType string) (entity.Us
 		Metadata:       "{}",
 	}
 
-	// store in repository
+	createdDialogue, err := s.repository.CreateDialogue(dialogue)
+	if err != nil {
+		log.Println("Error creating dialogue in repository:", err)
+		return entity.UserDialogueEntity{}, err
+	}
 	log.Println("Storing dialogue in repository:", dialogue)
 
-	return entity.UserDialogueEntity{}, nil
+	return createdDialogue, nil
 }
