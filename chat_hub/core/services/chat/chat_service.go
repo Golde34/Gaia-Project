@@ -40,31 +40,27 @@ func (s *ChatService) HandleChatMessage(userId, message string) (string, error) 
 	log.Println("Message received from user " + userId + ": " + message)
 	dialogue, err := s.dialogueService.CreateDialogueIfNotExists(userId, enums.ChatDialogueType) 
 	if err != nil {
-		log.Println("Error creating dialogue: " + err.Error())
-		return "Gaia cannot answer this time, system error, just wait.", err
+		return "Error creating dialogue: " + err.Error(), err
 	}
 	userMessageId, err := s.createMessage(dialogue, userId, message, "", enums.UserMessage, enums.ChatDialogueType)
 	if err != nil {
-		log.Println("Error creating user message: " + err.Error())
-		return "Gaia cannot answer this time, system error, just wait.", err
+		return "Error creating user message: " + err.Error(), err
 	}	
 	userModel := s.validateUserModel(userId)
 	botMessage, err := s.getBotMessage(userId, message, userModel)
 	if err != nil {
-		log.Println("Error getting bot message: " + err.Error())
-		return "Gaia cannot answer this time, system error, just wait.", err
+		return "Error getting bot message: " + err.Error(), err
 	}
 
 	go handleChatResponse(botMessage, userId)
 	data, exists := botMessage["response"].(string)
 	if !exists || data == "" {
-		return "Internal System Error", err
+		return "Gaia cannot answer this time, system error, just wait.", err
 	}
 
 	botMessageId, err := s.createMessage(dialogue, userId, data, userMessageId, enums.BotMessage, enums.ChatDialogueType)
 	if err != nil {
-		log.Println("Error creating bot message: " + err.Error())
-		return "Gaia cannot answer this time, system error, just wait.", err
+		return "Error crating bot message in DB: " + err.Error(), err
 	}
 	log.Println("Bot message created with ID: " + botMessageId)
 
@@ -151,7 +147,7 @@ func (s *ChatService) HandleGaiaIntroductionMessage(userId, message, msgType str
 	var input request_dtos.LLMSystemQueryRequestDTO
 	input.Query = message
 	input.Type = msgType
-	chatResponse, err := client.NewLLMCoreAdapter().ChatForOnboarding(input)
+	chatResponse, err := s.aiCoreClient.ChatForOnboarding(input)
 	if err != nil {
 		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
 		return "", err
