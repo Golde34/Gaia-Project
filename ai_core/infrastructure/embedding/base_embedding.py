@@ -26,7 +26,7 @@ class BaseEmbedding:
         self.base_url = self.config.url
         self.model_name = self.config.model_name
 
-        self.endpoint = f"http://{self.base_url}/embed"
+        self.endpoint = f"http://{self.base_url}/embeddings"
         self.model_mode = self.config.model_mode 
         self._initialized = True
 
@@ -41,7 +41,8 @@ class BaseEmbedding:
 
     async def _get_embedding_api(self, texts: List[str], logger = None) -> Dict[str, Any]:
         payload = {
-            "inputs": texts
+            "model": self.model_name,
+            "input": texts
         }
         try:
             if logger:
