@@ -3,12 +3,14 @@ package constants
 // Kafka Topic
 const (
 	AICreateTaskTopic = "chat-hub.create-task.topic"
+	AIRegisterCalendarTopic = "chat-hub.register-calendar.topic"
 )
 
 // Kafka Command
 const (
 	TaskResultCmd = "taskResult"
 	CreateTaskCmd = "gaiaCreateTask"
+	RegisterCalendarCmd = "gaiaRegisterCalendar"
 )
 
 const (

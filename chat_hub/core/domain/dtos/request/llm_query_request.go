@@ -1,9 +1,9 @@
 package request_dtos
 
 type LLMQueryRequestDTO struct {
-	Query string `json:"query"`
+	Query     string `json:"query"`
 	ModelName string `json:"model_name"`
-	UserId string `json:"user_id"`
+	UserId    string `json:"user_id"`
 }
 
 func NewLLMQueryRequestDTO() *LLMQueryRequestDTO {
@@ -11,8 +11,9 @@ func NewLLMQueryRequestDTO() *LLMQueryRequestDTO {
 }
 
 type LLMSystemQueryRequestDTO struct {
-	Query string `json:"query"`
-	Type string `json:"type"`
+	UserId string `json:"user_id"`
+	Query  string `json:"query"`
+	Type   string `json:"type"`
 }
 
 func NewLLMSystemQueryRequestDTO() *LLMSystemQueryRequestDTO {

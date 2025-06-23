@@ -80,14 +80,26 @@ func (s *ChatUsecase) GetBotMessage(userId, message, msgType, userModel string) 
 
 		return data, nil
 	case enums.GaiaIntroductionDialogueType:
-		chatResponse, err := s.aiCoreService.ChatForOnboarding(message, msgType)
+		chatResponse, err := s.aiCoreService.ChatForOnboarding(userId, message, msgType)
 		if err != nil {
 			log.Println("Error sending message in AIC: " + err.Error())
 			return "", err
 		}
 
-		go handleGaiaIntroductionResponse(chatResponse, userId)
+		data, exists := chatResponse["response"].(string)
+		if !exists || data == "" {
+			return "Internal System Error", err
+		}
 
+		return data, nil
+	case enums.RegisterCalendarDialogueType:
+		chatResponse, err := s.aiCoreService.ChatForRegisterCalendar(userId, message, msgType)
+		if err != nil {
+			log.Println("Error sending message in AIC: " + err.Error())
+			return "", err
+		}
+
+		go handleRegisterCalendarResponse(chatResponse, userId)
 		data, exists := chatResponse["response"].(string)
 		if !exists || data == "" {
 			return "Internal System Error", err
@@ -114,12 +126,18 @@ func handleChatResponse(chatResponse map[string]interface{}, userId string) {
 	}
 }
 
-func handleGaiaIntroductionResponse(chatResponse map[string]interface{}, userId string) {
+func handleRegisterCalendarResponse(chatResponse map[string]interface{}, userId string) {
 	log.Println("Handling chat response for user " + userId)
 	if chatResponse["type"] == "chitchat" {
 		log.Println("Chitchat response for user " + userId)
 	}
-}
+
+	if chatResponse["type"] == "register_calendar" {
+		log.Println("Register calendar response for user " + userId)
+		chatResponse["task"].(map[string]interface{})["userId"] = userId
+		// kafka.ProduceKafkaMessage(chatResponse["task"].(map[string]interface{}), constants.AIRegisterCalendarTopic, constants.RegisterCalendarCmd)
+	}
+} 
 
 func (s *ChatUsecase) ResponseTaskResultToUser(taskResult map[string]interface{}, userId string) (response_dtos.TaskResultMessageDTO, error) {
 	log.Printf("Message received from user %s: %v", userId, taskResult)
