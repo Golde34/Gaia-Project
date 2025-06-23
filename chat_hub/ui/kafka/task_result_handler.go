@@ -3,8 +3,8 @@ package consumer
 import (
 	"chat_hub/core/domain/constants"
 	base_dtos "chat_hub/core/domain/dtos/base"
-	websocket_service "chat_hub/core/services/websocket"
-	usecases "chat_hub/core/usecase"
+	chat_usecases "chat_hub/core/usecase/chat"
+	ws_usecases "chat_hub/core/usecase/websocket"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -16,14 +16,16 @@ import (
 type TaskResultHandler struct {
 	db *sql.DB
 
-	chatUsecase *usecases.ChatUsecase
+	chatUsecase      *chat_usecases.ChatUsecase
+	websocketUsecase *ws_usecases.WebSocketUsecase
 }
 
 func NewTaskResultHandler(db *sql.DB) *TaskResultHandler {
 	return &TaskResultHandler{
 		db: db,
 
-		chatUsecase: usecases.NewChatUsecase(db),
+		chatUsecase:      chat_usecases.NewChatUsecase(db),
+		websocketUsecase: ws_usecases.NewWebSocketUsecase(db),
 	}
 }
 
@@ -73,6 +75,6 @@ func (handler *TaskResultHandler) handleService(messageMap map[string]interface{
 		return "", err
 	}
 
-	websocket_service.NewWebSocketService(db).SendToUser(userId, []byte(resultBytes), uuid.NewString()) 
-	return result.Response, nil;
+	handler.websocketUsecase.SendToUser(userId, []byte(resultBytes), uuid.NewString())
+	return result.Response, nil
 }
