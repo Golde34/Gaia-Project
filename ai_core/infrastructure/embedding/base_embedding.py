@@ -5,6 +5,7 @@ import traceback
 import time
 
 from core.domain.enum.enum import ModelMode
+from core.domain.response.vllm_response import VllmEmbeddingResponse
 from infrastructure.embedding import embedding_config
 
 
@@ -39,34 +40,34 @@ class BaseEmbedding:
         elif self.model_mode == ModelMode.CLOUD.value:
             return await self._get_embedding_from_cloud(texts, logger)
 
-    async def _get_embedding_api(self, texts: List[str], logger = None) -> Dict[str, Any]:
+    async def _get_embedding_api(self, texts: List[str], logger = None):
         payload = {
             "model": self.model_name,
             "input": texts
         }
+
+        embedding_list = []
         try:
-            if logger:
-                logger.add_log(f"Start call embedding {time.perf_counter()}")
-            
             print(f"Calling embedding service at {self.endpoint} with payload: {payload}")
             async with aiohttp.ClientSession() as session:
                 async with session.post(self.endpoint, json=payload) as response:
-                    print(f"Received response with status {response} from {self.endpoint}")
+                    result = await response.json()
                     if response.status != 200:
                         error_message = await response.text()
-                        if logger:
-                            logger.add_log(f"Error from embedding service: {error_message}", "ERROR")
                         raise Exception(f"Embedding service returned error: {error_message}") 
-            try:
-                result = await response.json()
-            except:
-                result = response
-                
-            return result
+              
+                    try:
+                        embedding_response = VllmEmbeddingResponse(**result)  
+                    except Exception as e:
+                        print(f"Error parsing response JSON: {e}")
+                        raise
+
+            for embedding in embedding_response.data:
+                embedding_list.append(embedding.embedding)
+            return embedding_list
         except Exception as e:
             stack_trace = traceback.format_exc()
-            if logger:
-                logger.add_log(f"Error getting embeddings: {stack_trace}", "ERROR")
+            print(f"Error getting embeddings: {stack_trace}")
             raise
 
     async def _get_embedding_from_model(self, texts: List[str], logger: None):

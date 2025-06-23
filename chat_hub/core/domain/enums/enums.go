@@ -1,9 +1,5 @@
 package enums
 
-const (
-	ChatMessage = "chat_message"
-)
-
 var (
 	FullBody = "FULL_BODY"
 	OnlyData = "ONLY_DATA"
@@ -21,12 +17,12 @@ var (
 
 var (
 	GaiaIntroductionDialogue = "Gaia Introduction"
-	GaiaIntroductionDialogueType = "introduction"
+	GaiaIntroductionDialogueType = "gaia_introduction"
 
 	RegisterCalendarDialogue = "Task Register Calendar"
 	RegisterCalendarDialogueType = "register_calendar"
 
-	ChatDialogueType = "chat"
+	ChatDialogueType = "chitchat_message"
 )
 
 var (

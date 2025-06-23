@@ -1,7 +1,7 @@
 package main
 
 import (
-	services "chat_hub/core/services/websocket"
+	usecases "chat_hub/core/usecase/websocket"
 	"chat_hub/infrastructure/kafka"
 	"chat_hub/kernel/configs"
 	database_postgresql "chat_hub/kernel/database/postgresql"
@@ -52,7 +52,7 @@ func main() {
 	r.Use(middleware.Timeout(time.Second * 60))
 
 	// Register WebSocket handler
-	http.HandleFunc("/ws", services.NewWebSocketService(dbConnection).HandleChatmessage)
+	http.HandleFunc("/ws", usecases.NewWebSocketUsecase(dbConnection).HandleChatmessage)
 
 	// Rest Router
 	

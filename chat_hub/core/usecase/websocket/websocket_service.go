@@ -1,8 +1,8 @@
-package services
+package usecases
 
 import (
 	services "chat_hub/core/services/chat"
-	usecases "chat_hub/core/usecase"
+	usecases "chat_hub/core/usecase/chat"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -15,15 +15,15 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type WebSocketService struct {
+type WebSocketUsecase struct {
 	db *sql.DB
 
 	chatService *usecases.ChatUsecase
 	authService *services.AuthService
 }
 
-func NewWebSocketService(db *sql.DB) *WebSocketService {
-	return &WebSocketService{
+func NewWebSocketUsecase(db *sql.DB) *WebSocketUsecase {
+	return &WebSocketUsecase{
 		db: db,
 		chatService: usecases.NewChatUsecase(db),
 		authService: services.NewAuthService(),
@@ -45,7 +45,7 @@ type ConnectionInfo struct {
 
 var activeConnections sync.Map
 
-func (s *WebSocketService) HandleChatmessage(w http.ResponseWriter, r *http.Request) {
+func (s *WebSocketUsecase) HandleChatmessage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -105,7 +105,7 @@ func (s *WebSocketService) HandleChatmessage(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-func (s *WebSocketService) monitorConnection(sessionId string) {
+func (s *WebSocketUsecase) monitorConnection(sessionId string) {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
@@ -124,7 +124,7 @@ func (s *WebSocketService) monitorConnection(sessionId string) {
 	}
 }
 
-func (s *WebSocketService) validateUserJwt(ctx context.Context, jwt string) string {
+func (s *WebSocketUsecase) validateUserJwt(ctx context.Context, jwt string) string {
 	userId, err := s.authService.ValidateJwt(ctx, jwt)
 	if err != nil {
 		log.Println("JWT validation error, it should never happen:", err)
@@ -134,33 +134,18 @@ func (s *WebSocketService) validateUserJwt(ctx context.Context, jwt string) stri
 	return userId
 }
 
-func (s *WebSocketService) handleService(messageMap map[string]interface{}, userId, sessionId string) {
-	switch messageMap["type"] {
-	case "chat_message":
-		log.Println("Handling task optimized for user:", userId)
-		result, err := s.chatService.HandleChatMessage(userId, messageMap["text"].(string))
-		if err != nil {
-			log.Println("Error handling chat message:", err)
-			return
-		}
-		s.SendToUser(userId, []byte(result), sessionId)
+func (s *WebSocketUsecase) handleService(messageMap map[string]interface{}, userId, sessionId string) {
+	log.Println("Handling service for user:", userId)
+	result, err := s.chatService.HandleChatMessage(userId, messageMap["text"].(string), messageMap["type"].(string))
+	if err != nil {
+		log.Println("Error handling chat message:", err)
 		return
-	case "gaia_introduction":
-		log.Println("Handling onboarding step for user:", userId)
-		result, err := s.chatService.HandleGaiaIntroductionMessage(
-			userId, messageMap["text"].(string), messageMap["type"].(string))
-		if err != nil {
-			log.Println("Error handling onboarding step:", err)
-			return
-		}
-		s.SendToUser(userId, []byte(result), sessionId)
-		return
-	default:
-		log.Println("Unknown message type:", messageMap["type"])
 	}
+	s.SendToUser(userId, []byte(result), sessionId)
+	return
 }
 
-func (s *WebSocketService) SendToUser(userId string, message []byte, excludeSessionId string) {
+func (s *WebSocketUsecase) SendToUser(userId string, message []byte, excludeSessionId string) {
 	log.Println("Attempting to send message to user:", userId)
 	log.Println("Message content:", string(message))
 

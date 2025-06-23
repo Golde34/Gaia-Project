@@ -10,7 +10,7 @@ OnboardingRouter = APIRouter(
     tags=["Onboarding"],
 )
 
-@OnboardingRouter.get("/gaia-introduction")
+@OnboardingRouter.post("/introduce-gaia")
 async def gaia_introduction(request: query_request.SystemRequest):
     try:
         print("Received GAIA introduction request")
@@ -20,7 +20,7 @@ async def gaia_introduction(request: query_request.SystemRequest):
         print("ERROR:", stack_trace)
         raise HTTPException(status_code=500, detail=str(e))
 
-@OnboardingRouter.post("/task-register")
+@OnboardingRouter.post("/register-calendar")
 async def register_task_config(request: query_request.SystemRequest):
     try:
         print("Received task config register request:", request)

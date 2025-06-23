@@ -33,7 +33,25 @@ func (s *AICoreService) ValidateUserModel(userId string) string {
 	return userModel.ModelName
 }
 
-func (s *AICoreService) ChatForOnboarding(input request_dtos.LLMSystemQueryRequestDTO) (map[string]interface{}, error) {
+func (s *AICoreService) GetBotMessage(userId, message, model string) (map[string]interface{}, error) {
+	var input request_dtos.LLMQueryRequestDTO
+	input.UserId = userId
+	input.ModelName = model
+	input.Query = message
+	chatResponse, err := s.aiClient.ChatForTask(input)
+	if err != nil {
+		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
+		return nil, err
+	}
+
+	return chatResponse, nil
+}
+
+func (s *AICoreService) ChatForOnboarding(userId, message, msgType string) (map[string]interface{}, error) {
+	var input request_dtos.LLMSystemQueryRequestDTO
+	input.UserId = userId
+	input.Query = message
+	input.Type = msgType
 	chatResponse, err := s.aiClient.ChatForOnboarding(input)
 	if err != nil {
 		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
@@ -42,13 +60,12 @@ func (s *AICoreService) ChatForOnboarding(input request_dtos.LLMSystemQueryReque
 	return chatResponse, nil
 }
 
-
-func (s *AICoreService) GetBotMessage(userId, message, model string) (map[string]interface{}, error) {
-	var input request_dtos.LLMQueryRequestDTO
+func (s *AICoreService) ChatForRegisterCalendar(userId, message, msgType string) (map[string]interface{}, error) {
+	var input request_dtos.LLMSystemQueryRequestDTO
 	input.UserId = userId
-	input.ModelName = model
 	input.Query = message
-	chatResponse, err := s.aiClient.ChatForTask(input)
+	input.Type = msgType
+	chatResponse, err := s.aiClient.ChatForRegisterCalendar(input)
 	if err != nil {
 		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
 		return nil, err

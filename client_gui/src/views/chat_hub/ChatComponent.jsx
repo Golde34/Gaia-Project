@@ -52,7 +52,7 @@ function ContentArea(props) {
         setChatHistory(prev => [...prev, { from: 'user', text: chatInput }]);
         console.log("Chathub JWT: ", localStorage.getItem('chatHubJwt'));
         sendMessage(chatType, JSON.stringify({
-            type: 'chat_message',
+            type: 'chitchat_message',
             localStorage: localStorage.getItem('chatHubJwt'),
             text: chatInput
         }));
