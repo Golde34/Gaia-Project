@@ -135,29 +135,14 @@ func (s *WebSocketService) validateUserJwt(ctx context.Context, jwt string) stri
 }
 
 func (s *WebSocketService) handleService(messageMap map[string]interface{}, userId, sessionId string) {
-	switch messageMap["type"] {
-	case "chat_message":
-		log.Println("Handling task optimized for user:", userId)
-		result, err := s.chatService.HandleChatMessage(userId, messageMap["text"].(string))
-		if err != nil {
-			log.Println("Error handling chat message:", err)
-			return
-		}
-		s.SendToUser(userId, []byte(result), sessionId)
+	log.Println("Handling service for user:", userId)
+	result, err := s.chatService.HandleChatMessage(userId, messageMap["text"].(string), messageMap["type"].(string))
+	if err != nil {
+		log.Println("Error handling chat message:", err)
 		return
-	case "gaia_introduction":
-		log.Println("Handling onboarding step for user:", userId)
-		result, err := s.chatService.HandleGaiaIntroductionMessage(
-			userId, messageMap["text"].(string), messageMap["type"].(string))
-		if err != nil {
-			log.Println("Error handling onboarding step:", err)
-			return
-		}
-		s.SendToUser(userId, []byte(result), sessionId)
-		return
-	default:
-		log.Println("Unknown message type:", messageMap["type"])
 	}
+	s.SendToUser(userId, []byte(result), sessionId)
+	return
 }
 
 func (s *WebSocketService) SendToUser(userId string, message []byte, excludeSessionId string) {

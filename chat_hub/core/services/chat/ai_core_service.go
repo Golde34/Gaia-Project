@@ -33,7 +33,10 @@ func (s *AICoreService) ValidateUserModel(userId string) string {
 	return userModel.ModelName
 }
 
-func (s *AICoreService) ChatForOnboarding(input request_dtos.LLMSystemQueryRequestDTO) (map[string]interface{}, error) {
+func (s *AICoreService) ChatForOnboarding(message, msgType string) (map[string]interface{}, error) {
+	var input request_dtos.LLMSystemQueryRequestDTO
+	input.Query = message
+	input.Type = msgType
 	chatResponse, err := s.aiClient.ChatForOnboarding(input)
 	if err != nil {
 		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())

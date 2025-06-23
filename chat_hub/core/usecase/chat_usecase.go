@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"chat_hub/core/domain/constants"
-	request_dtos "chat_hub/core/domain/dtos/request"
 	response_dtos "chat_hub/core/domain/dtos/response"
 	"chat_hub/core/domain/enums"
 	services "chat_hub/core/services/chat"
@@ -35,35 +34,69 @@ func NewChatUsecase(db *sql.DB) *ChatUsecase {
 	}
 }
 
-func (s *ChatUsecase) HandleChatMessage(userId, message string) (string, error) {
+func (s *ChatUsecase) HandleChatMessage(userId, message, msgType string) (string, error) {
 	log.Println("Message received from user " + userId + ": " + message)
-	dialogue, err := s.dialogueService.CreateDialogueIfNotExists(userId, enums.ChatDialogueType)
+	dialogue, err := s.dialogueService.CreateDialogueIfNotExists(userId, msgType)
 	if err != nil {
 		return "Error creating dialogue: " + err.Error(), err
 	}
-	userMessageId, err := s.messageService.CreateMessage(dialogue, userId, message, "", enums.UserMessage, enums.ChatDialogueType)
+	userMessageId, err := s.messageService.CreateMessage(
+		dialogue, userId, message, "", enums.UserMessage, msgType)
 	if err != nil {
 		return "Error creating user message: " + err.Error(), err
 	}
 	userModel := s.aiCoreService.ValidateUserModel(userId)
-	botMessage, err := s.aiCoreService.GetBotMessage(userId, message, userModel)
+
+	data, err := s.GetBotMessage(userId, message, msgType, userModel)
 	if err != nil {
+		log.Println("Error getting bot message: " + err.Error())
 		return "Error getting bot message: " + err.Error(), err
 	}
 
-	go handleChatResponse(botMessage, userId)
-	data, exists := botMessage["response"].(string)
-	if !exists || data == "" {
-		return "Gaia cannot answer this time, system error, just wait.", err
-	}
-
-	botMessageId, err := s.messageService.CreateMessage(dialogue, userId, data, userMessageId, enums.BotMessage, enums.ChatDialogueType)
+	botMessageId, err := s.messageService.CreateMessage(
+		dialogue, userId, data, userMessageId, enums.BotMessage, msgType)
 	if err != nil {
 		return "Error crating bot message in DB: " + err.Error(), err
 	}
 	log.Println("Bot message created with ID: " + botMessageId)
 
 	return data, nil
+}
+
+func (s *ChatUsecase) GetBotMessage(userId, message, msgType, userModel string) (string, error) {
+	switch msgType {
+	case enums.ChatDialogueType:
+		log.Println("Handling task optimized for user:", userId)
+		botMessage, err := s.aiCoreService.GetBotMessage(userId, message, userModel)
+		if err != nil {
+			return "Error getting bot message: " + err.Error(), err
+		}
+
+		go handleChatResponse(botMessage, userId)
+		data, exists := botMessage["response"].(string)
+		if !exists || data == "" {
+			return "Gaia cannot answer this time, system error, just wait.", err
+		}
+
+		return data, nil
+	case enums.GaiaIntroductionDialogueType:
+		chatResponse, err := s.aiCoreService.ChatForOnboarding(message, msgType)
+		if err != nil {
+			log.Println("Error sending message in AIC: " + err.Error())
+			return "", err
+		}
+
+		go handleGaiaIntroductionResponse(chatResponse, userId)
+
+		data, exists := chatResponse["response"].(string)
+		if !exists || data == "" {
+			return "Internal System Error", err
+		}
+
+		return data, nil
+	default:
+		return "", fmt.Errorf("unknown message type: %s", msgType)
+	}
 }
 
 func handleChatResponse(chatResponse map[string]interface{}, userId string) {
@@ -78,6 +111,13 @@ func handleChatResponse(chatResponse map[string]interface{}, userId string) {
 		if chatResponse["task"].(map[string]interface{})["actionType"] == "create" {
 			kafka.ProduceKafkaMessage(chatResponse["task"].(map[string]interface{}), constants.AICreateTaskTopic, constants.CreateTaskCmd)
 		}
+	}
+}
+
+func handleGaiaIntroductionResponse(chatResponse map[string]interface{}, userId string) {
+	log.Println("Handling chat response for user " + userId)
+	if chatResponse["type"] == "chitchat" {
+		log.Println("Chitchat response for user " + userId)
 	}
 }
 
@@ -96,35 +136,4 @@ func (s *ChatUsecase) ResponseTaskResultToUser(taskResult map[string]interface{}
 	data.TaskResult = botMessage["task"].(map[string]interface{})
 
 	return data, nil
-}
-
-func (s *ChatUsecase) HandleGaiaIntroductionMessage(userId, message, msgType string) (string, error) {
-	log.Println("Message received from user " + userId + ": " + message)
-
-	// dialogue, err := s.dialogueService.CreateDialogueIfNotExists(userId, msgType)
-
-	var input request_dtos.LLMSystemQueryRequestDTO
-	input.Query = message
-	input.Type = msgType
-	chatResponse, err := s.aiCoreService.ChatForOnboarding(input)
-	if err != nil {
-		log.Println("Error sending message in AIC: " + err.Error())
-		return "", err
-	}
-
-	go handleGaiaIntroductionResponse(chatResponse, userId)
-
-	data, exists := chatResponse["response"].(string)
-	if !exists || data == "" {
-		return "Internal System Error", err
-	}
-
-	return data, nil
-}
-
-func handleGaiaIntroductionResponse(chatResponse map[string]interface{}, userId string) {
-	log.Println("Handling chat response for user " + userId)
-	if chatResponse["type"] == "chitchat" {
-		log.Println("Chitchat response for user " + userId)
-	}
 }
