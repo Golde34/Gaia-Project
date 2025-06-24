@@ -36,7 +36,7 @@ async def gaia_introduction(query: SystemRequest) -> dict:
     try:
         guided_route = await router_registry.gaia_introduction_route(query.query)
         if guided_route == SemanticRoute.GAIA_INTRODUCTION:
-            query_embedding = embedding_model.get_embeddings(
+            query_embedding = await embedding_model.get_embeddings(
                 texts=[query.query])
 
             query_embeddings = milvus_validation.validate_milvus_search_top_n(query_embedding)
@@ -46,16 +46,20 @@ async def gaia_introduction(query: SystemRequest) -> dict:
                 partition_name="context"
             )
 
-            # prompt = onboarding_prompt.GAIA_INTRODUCTION_PROMPT.format(
-            #     system_info=search_result,
-            #     query=query.query
-            # )
+            prompt = onboarding_prompt.GAIA_INTRODUCTION_PROMPT.format(
+                system_info=search_result,
+                query=query.query
+            )
 
-            # response = llm_models.get_model_generate_content(
-            #     default_model)(prompt=prompt,
-            #                    model_name=default_model)
-            # print("Response:", response)
-            # return response
+            response = llm_models.get_model_generate_content(
+                default_model)(prompt=prompt,
+                               model_name=default_model)
+            print("Response:", response)
+            data = {
+                'type': 'gaia_introduction',
+                'response': response 
+            }
+            return data 
         if guided_route == SemanticRoute.CHITCHAT:
             prompt = onboarding_prompt.CHITCHAT_PROMPT.format(
                 query=query.query)
@@ -64,7 +68,13 @@ async def gaia_introduction(query: SystemRequest) -> dict:
                 default_model)(prompt=prompt,
                                model_name=default_model)
             print("Response:", response)
-            return response
+            data = {
+                'type': 'chitchat',
+                'response': response
+            }
+            return data
+        else:
+            raise ValueError("No route found for the query.")
 
     except Exception as e:
         raise e
