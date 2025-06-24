@@ -1,6 +1,7 @@
 import json
 import re
 
+from core.validation import milvus_validation
 from core.domain.enum.enum import SemanticRoute
 from core.domain.request.query_request import SystemRequest
 from core.domain.response.model_output_schema import DailyRoutineSchema
@@ -37,22 +38,24 @@ async def gaia_introduction(query: SystemRequest) -> dict:
         if guided_route == SemanticRoute.GAIA_INTRODUCTION:
             query_embedding = embedding_model.get_embeddings(
                 texts=[query.query])
+
+            query_embeddings = milvus_validation.validate_milvus_search_top_n(query_embedding)
             search_result = milvus_db.search_top_n(
-                query_embeddings=query_embedding,
-                top_k=5,
+                query_embeddings=query_embeddings,
+                top_k=1,
                 partition_name="context"
             )
 
-            prompt = onboarding_prompt.GAIA_INTRODUCTION_PROMPT.format(
-                system_info=search_result,
-                query=query.query
-            )
+            # prompt = onboarding_prompt.GAIA_INTRODUCTION_PROMPT.format(
+            #     system_info=search_result,
+            #     query=query.query
+            # )
 
-            response = llm_models.get_model_generate_content(
-                default_model)(prompt=prompt,
-                               model_name=default_model)
-            print("Response:", response)
-            return response
+            # response = llm_models.get_model_generate_content(
+            #     default_model)(prompt=prompt,
+            #                    model_name=default_model)
+            # print("Response:", response)
+            # return response
         if guided_route == SemanticRoute.CHITCHAT:
             prompt = onboarding_prompt.CHITCHAT_PROMPT.format(
                 query=query.query)
