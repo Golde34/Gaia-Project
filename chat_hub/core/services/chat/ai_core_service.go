@@ -33,12 +33,8 @@ func (s *AICoreService) ValidateUserModel(userId string) string {
 	return userModel.ModelName
 }
 
-func (s *AICoreService) GetBotMessage(userId, message, model string) (map[string]interface{}, error) {
-	var input request_dtos.LLMQueryRequestDTO
-	input.UserId = userId
-	input.ModelName = model
-	input.Query = message
-	chatResponse, err := s.aiClient.ChatForTask(input)
+func (s *AICoreService) GetBotMessage(request request_dtos.BotMessageRequestDTO) (map[string]interface{}, error) {
+	chatResponse, err := s.aiClient.ChatForTask(request)
 	if err != nil {
 		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
 		return nil, err
@@ -47,12 +43,8 @@ func (s *AICoreService) GetBotMessage(userId, message, model string) (map[string
 	return chatResponse, nil
 }
 
-func (s *AICoreService) ChatForOnboarding(userId, message, msgType string) (map[string]interface{}, error) {
-	var input request_dtos.LLMSystemQueryRequestDTO
-	input.UserId = userId
-	input.Query = message
-	input.Type = msgType
-	chatResponse, err := s.aiClient.ChatForOnboarding(input)
+func (s *AICoreService) ChatForOnboarding(request request_dtos.BotMessageRequestDTO) (map[string]interface{}, error) {
+	chatResponse, err := s.aiClient.ChatForOnboarding(request)
 	if err != nil {
 		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
 		return nil, err
@@ -60,12 +52,8 @@ func (s *AICoreService) ChatForOnboarding(userId, message, msgType string) (map[
 	return chatResponse, nil
 }
 
-func (s *AICoreService) ChatForRegisterCalendar(userId, message, msgType string) (map[string]interface{}, error) {
-	var input request_dtos.LLMSystemQueryRequestDTO
-	input.UserId = userId
-	input.Query = message
-	input.Type = msgType
-	chatResponse, err := s.aiClient.ChatForRegisterCalendar(input)
+func (s *AICoreService) ChatForRegisterCalendar(request request_dtos.BotMessageRequestDTO) (map[string]interface{}, error) { 
+	chatResponse, err := s.aiClient.ChatForRegisterCalendar(request)
 	if err != nil {
 		log.Println("Error sending message to LLMCoreAdapter: " + err.Error())
 		return nil, err
