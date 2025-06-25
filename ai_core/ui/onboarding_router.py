@@ -14,7 +14,6 @@ OnboardingRouter = APIRouter(
 @OnboardingRouter.post("/introduce-gaia")
 async def introduc_gaia(request: query_request.SystemRequest):
     try:
-        print("Received GAIA introduction request")
         response = await gaia_introduction(request)
         return return_success_response(
             status_message=f"GAIA introduction response successfully",

@@ -23,6 +23,7 @@ chitchat_route = route.Route(
 semantic_router = router.SemanticRouter(
     routes=[introduction_route, chitchat_route], model_name=config.EMBEDDING_MODEL)
 
+
 async def gaia_introduction(query: SystemRequest) -> dict:
     """
     Register task via an user's daily life summary
@@ -36,48 +37,64 @@ async def gaia_introduction(query: SystemRequest) -> dict:
     try:
         guided_route = await router_registry.gaia_introduction_route(query.query)
         if guided_route == SemanticRoute.GAIA_INTRODUCTION:
-            query_embedding = await embedding_model.get_embeddings(
-                texts=[query.query])
-
-            query_embeddings = milvus_validation.validate_milvus_search_top_n(query_embedding)
-            search_result = milvus_db.search_top_n(
-                query_embeddings=query_embeddings,
-                top_k=1,
-                partition_name="context"
-            )
-
-            prompt = onboarding_prompt.GAIA_INTRODUCTION_PROMPT.format(
-                system_info=search_result,
-                query=query.query
-            )
-
-            response = llm_models.get_model_generate_content(
-                default_model)(prompt=prompt,
-                               model_name=default_model)
-            print("Response:", response)
-            data = {
-                'type': 'gaia_introduction',
-                'response': response 
-            }
-            return data 
-        if guided_route == SemanticRoute.CHITCHAT:
-            prompt = onboarding_prompt.CHITCHAT_PROMPT.format(
-                query=query.query)
-
-            response = llm_models.get_model_generate_content(
-                default_model)(prompt=prompt,
-                               model_name=default_model)
-            print("Response:", response)
-            data = {
-                'type': 'chitchat',
-                'response': response
-            }
-            return data
+            return _gaia_introduce(query)
+        elif guided_route == SemanticRoute.CHITCHAT:
+            return _chitchat(query) 
         else:
             raise ValueError("No route found for the query.")
-
     except Exception as e:
         raise e
+
+
+async def _gaia_introduce(query: SystemRequest):
+    query_embedding = await embedding_model.get_embeddings(
+        texts=[query.query])
+
+    query_embeddings = milvus_validation.validate_milvus_search_top_n(
+        query_embedding)
+    search_result = milvus_db.search_top_n(
+        query_embeddings=query_embeddings,
+        top_k=1,
+        partition_name="context"
+    )
+
+    prompt = onboarding_prompt.GAIA_INTRODUCTION_PROMPT.format(
+        system_info=search_result,
+        query=query.query
+    )
+
+    response = llm_models.get_model_generate_content(
+        default_model)(prompt=prompt,
+                       model_name=default_model)
+    print("Response:", response)
+    data = {
+        'type': SemanticRoute.GAIA_INTRODUCTION.value,
+        'response': response
+    }
+    return data
+
+
+async def _chitchat(query: SystemRequest):
+    """
+    Chitchat pipeline
+    Args:
+        query (str): The user's query containing task information.
+    Returns:
+        str: Short response to the request
+    """
+    prompt = onboarding_prompt.CHITCHAT_PROMPT.format(query=query.query)
+    if not query.model_name:
+        query.model_name = default_model
+    response = llm_models.get_model_generate_content(
+        query.model_name)(prompt=prompt, model_name=query.model_name)
+    print("Response:", response)
+    
+    data = {
+        'type': SemanticRoute.CHITCHAT.value,
+        'response': response
+    }
+    return data
+
 
 def register_task(query: SystemRequest) -> dict:
     """

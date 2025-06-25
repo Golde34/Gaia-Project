@@ -9,3 +9,7 @@ class ModelMode(Enum):
 class SemanticRoute(Enum):
     GAIA_INTRODUCTION = "gaia_introduction"
     CHITCHAT = "chitchat"
+
+class TaskServiceRoute(Enum):
+    CHITCHAT = "chitchat"
+    "CREATE_TASK" = "create_task"
