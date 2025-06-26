@@ -12,4 +12,4 @@ class SemanticRoute(Enum):
 
 class TaskServiceRoute(Enum):
     CHITCHAT = "chitchat"
-    "CREATE_TASK" = "create_task"
+    CREATE_TASK = "create_task"
