@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"chat_hub/core/domain/constants"
+	request_dtos "chat_hub/core/domain/dtos/request"
 	response_dtos "chat_hub/core/domain/dtos/response"
 	"chat_hub/core/domain/enums"
 	services "chat_hub/core/services/chat"
@@ -47,7 +48,8 @@ func (s *ChatUsecase) HandleChatMessage(userId, message, msgType string) (string
 	}
 	userModel := s.aiCoreService.ValidateUserModel(userId)
 
-	data, err := s.GetBotMessage(userId, message, msgType, userModel)
+	botMessageRequest := request_dtos.NewBotMessageRequestDTO(userId, dialogue.ID, message, msgType, userModel)
+	data, err := s.GetBotMessage(*botMessageRequest)
 	if err != nil {
 		log.Println("Error getting bot message: " + err.Error())
 		return "Error getting bot message: " + err.Error(), err
@@ -63,16 +65,16 @@ func (s *ChatUsecase) HandleChatMessage(userId, message, msgType string) (string
 	return data, nil
 }
 
-func (s *ChatUsecase) GetBotMessage(userId, message, msgType, userModel string) (string, error) {
-	switch msgType {
+func (s *ChatUsecase) GetBotMessage(request request_dtos.BotMessageRequestDTO) (string, error) {
+	switch request.MessageType {
 	case enums.ChatDialogueType:
-		log.Println("Handling task optimized for user:", userId)
-		botMessage, err := s.aiCoreService.GetBotMessage(userId, message, userModel)
+		log.Println("Handling task optimized for user:", request.UserId)
+		botMessage, err := s.aiCoreService.GetBotMessage(request)
 		if err != nil {
 			return "Error getting bot message: " + err.Error(), err
 		}
 
-		go handleChatResponse(botMessage, userId)
+		go handleChatResponse(botMessage, request.UserId)
 		data, exists := botMessage["response"].(string)
 		if !exists || data == "" {
 			return "Gaia cannot answer this time, system error, just wait.", err
@@ -80,7 +82,7 @@ func (s *ChatUsecase) GetBotMessage(userId, message, msgType, userModel string) 
 
 		return data, nil
 	case enums.GaiaIntroductionDialogueType:
-		chatResponse, err := s.aiCoreService.ChatForOnboarding(userId, message, msgType)
+		chatResponse, err := s.aiCoreService.ChatForOnboarding(request)
 		if err != nil {
 			log.Println("Error sending message in AIC: " + err.Error())
 			return "", err
@@ -93,13 +95,13 @@ func (s *ChatUsecase) GetBotMessage(userId, message, msgType, userModel string) 
 
 		return data, nil
 	case enums.RegisterCalendarDialogueType:
-		chatResponse, err := s.aiCoreService.ChatForRegisterCalendar(userId, message, msgType)
+		chatResponse, err := s.aiCoreService.ChatForRegisterCalendar(request)
 		if err != nil {
 			log.Println("Error sending message in AIC: " + err.Error())
 			return "", err
 		}
 
-		go handleRegisterCalendarResponse(chatResponse, userId)
+		go handleRegisterCalendarResponse(chatResponse, request.UserId)
 		data, exists := chatResponse["response"].(string)
 		if !exists || data == "" {
 			return "Internal System Error", err
@@ -107,7 +109,7 @@ func (s *ChatUsecase) GetBotMessage(userId, message, msgType, userModel string) 
 
 		return data, nil
 	default:
-		return "", fmt.Errorf("unknown message type: %s", msgType)
+		return "", fmt.Errorf("unknown message type: %s", request.MessageType)
 	}
 }
 
@@ -137,12 +139,14 @@ func handleRegisterCalendarResponse(chatResponse map[string]interface{}, userId 
 		chatResponse["task"].(map[string]interface{})["userId"] = userId
 		// kafka.ProduceKafkaMessage(chatResponse["task"].(map[string]interface{}), constants.AIRegisterCalendarTopic, constants.RegisterCalendarCmd)
 	}
-} 
+}
 
 func (s *ChatUsecase) ResponseTaskResultToUser(taskResult map[string]interface{}, userId string) (response_dtos.TaskResultMessageDTO, error) {
 	log.Printf("Message received from user %s: %v", userId, taskResult)
 	userModel := s.aiCoreService.ValidateUserModel(userId)
-	botMessage, err := s.aiCoreService.GetBotMessage(userId, fmt.Sprintf("Task result: %v of userId: %s", taskResult, userId), userModel)
+
+	botMessageRequest := request_dtos.NewBotMessageRequestDTO(userId, "", fmt.Sprintf("Task result: %v of userId: %s", taskResult, userId), "Task Result", userModel)
+	botMessage, err := s.aiCoreService.GetBotMessage(*botMessageRequest)
 	if err != nil {
 		log.Println("Error getting bot message: " + err.Error())
 		return response_dtos.TaskResultMessageDTO{}, err

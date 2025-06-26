@@ -14,7 +14,7 @@ func NewLLMCoreAdapter() *LLMCoreAdapter {
 	return &LLMCoreAdapter{}
 }
 
-func (adapter *LLMCoreAdapter) ChatForTask(input request_dtos.LLMQueryRequestDTO) (map[string]interface{}, error) {
+func (adapter *LLMCoreAdapter) ChatForTask(input request_dtos.BotMessageRequestDTO) (map[string]interface{}, error) {
 	userPrompURL := base.LLMCoreServiceURL + "/chat"
 	headers := utils.BuildDefaultHeaders()
 	bodyResult, err := utils.BaseAPI(userPrompURL, enums.POST, input, headers)
@@ -36,7 +36,7 @@ func (adapter *LLMCoreAdapter) ChatForTask(input request_dtos.LLMQueryRequestDTO
 	return bodyResultMap, nil
 }
 
-func (adapter *LLMCoreAdapter) ChatForOnboarding(input request_dtos.LLMSystemQueryRequestDTO) (map[string]interface{}, error) {
+func (adapter *LLMCoreAdapter) ChatForOnboarding(input request_dtos.BotMessageRequestDTO) (map[string]interface{}, error) {
 	userPrompURL := base.LLMCoreServiceURL + "/onboarding/introduce-gaia"
 	headers := utils.BuildDefaultHeaders()
 	bodyResult, err := utils.BaseAPI(userPrompURL, enums.POST, input, headers)
@@ -57,7 +57,7 @@ func (adapter *LLMCoreAdapter) ChatForOnboarding(input request_dtos.LLMSystemQue
 	return bodyResultMap, nil
 }
 
-func (adapter *LLMCoreAdapter) ChatForRegisterCalendar(input request_dtos.LLMSystemQueryRequestDTO) (map[string]interface{}, error) {
+func (adapter *LLMCoreAdapter) ChatForRegisterCalendar(input request_dtos.BotMessageRequestDTO) (map[string]interface{}, error) {
 	userPrompURL := base.LLMCoreServiceURL + "/onboarding/register-calendar"
 	headers := utils.BuildDefaultHeaders()
 	bodyResult, err := utils.BaseAPI(userPrompURL, enums.POST, input, headers)

@@ -1,21 +1,19 @@
 package request_dtos
 
-type LLMQueryRequestDTO struct {
-	Query     string `json:"query"`
-	ModelName string `json:"model_name"`
-	UserId    string `json:"user_id"`
+type BotMessageRequestDTO struct {
+	UserId      string `json:"user_id"`
+	DialogueId  string `json:"dialogue_id"`
+	Content     string `json:"query"`
+	MessageType string `json:"type"`
+	UserModel   string `json:"model_name"`
 }
 
-func NewLLMQueryRequestDTO() *LLMQueryRequestDTO {
-	return &LLMQueryRequestDTO{}
-}
-
-type LLMSystemQueryRequestDTO struct {
-	UserId string `json:"user_id"`
-	Query  string `json:"query"`
-	Type   string `json:"type"`
-}
-
-func NewLLMSystemQueryRequestDTO() *LLMSystemQueryRequestDTO {
-	return &LLMSystemQueryRequestDTO{}
+func NewBotMessageRequestDTO(userId, dialogueId, content, messageType, userModel string) *BotMessageRequestDTO {
+	return &BotMessageRequestDTO{
+		UserId:      userId,
+		DialogueId:  dialogueId,
+		Content:     content,
+		MessageType: messageType,
+		UserModel:   userModel,
+	}
 }
