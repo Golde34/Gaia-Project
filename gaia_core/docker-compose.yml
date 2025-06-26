@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  gaia-ai-core:
+    image: gaia-core 
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4002:4002" # Expose port to localhost
+    network_mode: host #Allow the container to access the host network
