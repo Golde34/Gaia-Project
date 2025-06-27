@@ -16,6 +16,8 @@ class SemanticRoute(Enum):
     CHITCHAT = "chitchat"
     REGISTER_SCHEDULE_CALENDAR = "register_schedule_calendar"
 
-class Abiliti(Enum):
+class GaiaAbility(Enum):
     CHITCHAT = "chitchat"
     CREATE_TASK = "create_task"
+    CREATE_TASK_RESULT = "create_task_result"
+

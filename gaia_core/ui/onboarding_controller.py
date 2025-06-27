@@ -1,7 +1,7 @@
 import traceback
 from fastapi import APIRouter, HTTPException
 
-from core.domain.enum import enum
+from core.domain.enums import enum
 from core.domain.request import query_request
 from core.usecase import chat
 
