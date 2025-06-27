@@ -1,27 +1,7 @@
 from core.domain.enums import enum
-from core.service.gaia_abilities_service import abilities_handler
-from core.service.onboarding_service import introduce, register_task
 
 
-ROUTERS = {
-    {
-        'label': enum.SemanticRoute.GAIA_INTRODUCTION,
-        'description': 'Introduce GAIA and its capabilities.',
-        'function': introduce 
-    },
-    {
-        'label': enum.SemanticRoute.REGISTER_SCHEDULE_CALENDAR,
-        'description': 'Register a calendar for task management.',
-        'function': register_task 
-    },
-    {
-        'label': enum.SemanticRoute.ABILITIES,
-        'description': 'Gaia\'s abilities.',
-        'function': abilities_handler 
-    }   
-}
-
-ABILITIES = {
+ABILITIES = [
     {
         'label': enum.GaiaAbilities.CREATE_TASK.value,
         'description': 'Create a new task/job to do in the future.',
@@ -34,5 +14,5 @@ ABILITIES = {
         'label': enum.GaiaAbilities.CREATE_TASK_RESULT.value,
         'description': 'Return task results (get task list, task created/updated/deleted, task schedule optimized, etc.).',
     },
-}
+]
 

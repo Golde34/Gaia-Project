@@ -1,2 +1,2 @@
 run:
-	python main.py
+	python index.py
