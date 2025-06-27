@@ -1,6 +1,7 @@
 import json
 
-from core.abilities.abilities import ABILITIES, FUNCTIONS
+from core.abilities.abilities import ABILITIES
+from core.abilities.function_handlers import FUNCTIONS
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.base_response import return_success_response

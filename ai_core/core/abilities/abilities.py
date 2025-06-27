@@ -1,7 +1,6 @@
 from core.domain.enums import enum
-from core.service.gaia_abilities_service import chitchat, abilities_handler
+from core.service.gaia_abilities_service import abilities_handler
 from core.service.onboarding_service import introduce, register_task
-from core.service.task_service import create_task, create_task_result
 
 
 ROUTERS = {
@@ -37,8 +36,3 @@ ABILITIES = {
     },
 }
 
-FUNCTIONS = {
-    enum.GaiaAbilities.CREATE_TASK.value: create_task,
-    enum.GaiaAbilities.CREATE_TASK_RESULT.value: create_task_result,
-    enum.GaiaAbilities.CHITCHAT.value: chitchat,
-}

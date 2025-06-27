@@ -2,7 +2,7 @@ import json
 import re
 
 from core.validation import milvus_validation
-from core.domain.enums.enum import SemanticRoute
+from core.domain.enum.enum import SemanticRoute
 from core.domain.request.query_request import SystemRequest
 from core.domain.response.model_output_schema import DailyRoutineSchema
 from core.prompts import onboarding_prompt, classify_prompt
@@ -24,7 +24,7 @@ semantic_router = router.SemanticRouter(
     routes=[introduction_route, chitchat_route], model_name=config.EMBEDDING_MODEL)
 
 
-async def introduce(query: SystemRequest) -> dict:
+async def gaia_introduction(query: SystemRequest) -> dict:
     """
     Register task via an user's daily life summary
 

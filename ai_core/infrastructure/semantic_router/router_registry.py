@@ -1,4 +1,4 @@
-from core.domain.enum import enum
+from core.domain.enums import enum
 from infrastructure.semantic_router import route, samples, router
 from kernel.config import config
 

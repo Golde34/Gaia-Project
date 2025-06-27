@@ -1,10 +1,10 @@
 import json
 
-from core.prompts.task_prompt import CHITCHAT_PROMPT, CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT
+from core.domain.request.query_request import QueryRequest
+from core.domain.response.model_output_schema import CreateTaskResultSchema, CreateTaskSchema
+from core.prompts.task_prompt import CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT
 from kernel.config import llm_models
 from kernel.utils.parse_json import parse_json_string
-from core.domain.request.query_request import QueryRequest, SystemRequest
-from core.domain.response.model_output_schema import CreateTaskResultSchema, CreateTaskSchema
 
 
 def create_task(query: QueryRequest) -> dict:
@@ -57,28 +57,7 @@ def _optimize_datetime(datetime_object: dict, model_name: str) -> dict:
     except Exception as e:
         raise e
 
-def chitchat(query: QueryRequest) -> str:
-    """
-    Chitchat pipeline
-    Args:
-        query (str): The user's query containing task information.
-    Returns:
-        str: Short response to the request
-    """
-
-    try:
-        prompt = CHITCHAT_PROMPT.format(query=query.query)
-        if not query.model_name:
-            query.model_name = "gemini-2.0-flash"
-        response = llm_models.get_model_generate_content(
-            query.model_name)(prompt=prompt, model_name=query.model_name)
-        print("Response:", response)
-        return response
-    except Exception as e:
-        raise e
-
-
-def task_result(query: QueryRequest) -> str:
+def create_task_result(query: QueryRequest) -> str:
     """
     Task result pipeline
     Args:

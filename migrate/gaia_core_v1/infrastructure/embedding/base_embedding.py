@@ -3,7 +3,7 @@ from typing import List, Dict, Any
 import traceback
 import time
 
-from core.domain.enums.enum import ModelMode
+from core.domain.enum.enum import ModelMode
 from core.domain.response.vllm_response import VllmEmbeddingResponse
 from infrastructure.embedding import embedding_config
 
