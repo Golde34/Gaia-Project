@@ -1,6 +1,7 @@
 from core.domain.enums import enum
-from core.service.gaia_abilities_service import chitchat, create_task, create_task_result
+from core.service.gaia_abilities_service import chitchat
 from core.service.onboarding_service import introduce, register_task
+from core.service.task_service import create_task, create_task_result
 
 
 ABILITIES = {

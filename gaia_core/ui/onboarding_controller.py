@@ -13,7 +13,7 @@ OnboardingRouter = APIRouter(
 )
 
 @OnboardingRouter.post("/introduce-gaia")
-async def introduc_gaia(request: query_request.SystemRequest):
+async def introduc_gaia(request: query_request.QueryRequest):
     try:
         return await chat(query=request, chat_type=enum.ChatType.ABILITIES.value)
     except Exception as e:
@@ -22,7 +22,7 @@ async def introduc_gaia(request: query_request.SystemRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @OnboardingRouter.post("/register-calendar")
-async def register_task_config(request: query_request.SystemRequest):
+async def register_task_config(request: query_request.QueryRequest):
     try:
         return await chat(query=request, chat_type=enum.ChatType.ABILITIES.value)
     except Exception as e:
