@@ -3,28 +3,20 @@ import re
 
 from core.validation import milvus_validation
 from core.domain.enums.enum import SemanticRoute
-from core.domain.request.query_request import SystemRequest
+from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import DailyRoutineSchema
-from core.prompts import onboarding_prompt, classify_prompt
+from core.domain.response.base_response import return_success_response
+from core.prompts import onboarding_prompt
+from core.semantic_router import router_registry
+from core.service.gaia_abilities_service import chitchat
 from infrastructure.embedding.base_embedding import embedding_model
-from infrastructure.semantic_router import route, samples, router, router_registry
 from infrastructure.vector_db.milvus import milvus_db
 from kernel.config import llm_models, config
 
 
 default_model = config.LLM_DEFAULT_MODEL
 
-GAIA_INTRODUCTION_ROUTE_NAME = 'introduction'
-CHITCHAT_ROUTE_NAME = 'chitchat'
-introduction_route = route.Route(
-    name=GAIA_INTRODUCTION_ROUTE_NAME, samples=samples.gaia_introduction_sample)
-chitchat_route = route.Route(
-    name=CHITCHAT_ROUTE_NAME, samples=samples.chitchat_sample)
-semantic_router = router.SemanticRouter(
-    routes=[introduction_route, chitchat_route], model_name=config.EMBEDDING_MODEL)
-
-
-async def introduce(query: SystemRequest) -> dict:
+async def introduce(query: QueryRequest) -> dict:
     """
     Register task via an user's daily life summary
 
@@ -37,16 +29,26 @@ async def introduce(query: SystemRequest) -> dict:
     try:
         guided_route = await router_registry.gaia_introduction_route(query.query)
         if guided_route == SemanticRoute.GAIA_INTRODUCTION:
-            return _gaia_introduce(query)
+            response = await _gaia_introduce(query)
         elif guided_route == SemanticRoute.CHITCHAT:
-            return _chitchat(query) 
+            response = chitchat(query)
         else:
             raise ValueError("No route found for the query.")
+
+        data = {
+            'type': guided_route,
+            'response': response
+        }
+
+        return return_success_response(
+            status_message="Onboarding response generated successfully",
+            data=data
+        )
     except Exception as e:
         raise e
 
 
-async def _gaia_introduce(query: SystemRequest):
+async def _gaia_introduce(query: QueryRequest):
     query_embedding = await embedding_model.get_embeddings(
         texts=[query.query])
 
@@ -67,36 +69,10 @@ async def _gaia_introduce(query: SystemRequest):
         default_model)(prompt=prompt,
                        model_name=default_model)
     print("Response:", response)
-    data = {
-        'type': SemanticRoute.GAIA_INTRODUCTION.value,
-        'response': response
-    }
-    return data
+    return response
 
 
-async def _chitchat(query: SystemRequest):
-    """
-    Chitchat pipeline
-    Args:
-        query (str): The user's query containing task information.
-    Returns:
-        str: Short response to the request
-    """
-    prompt = onboarding_prompt.CHITCHAT_PROMPT.format(query=query.query)
-    if not query.model_name:
-        query.model_name = default_model
-    response = llm_models.get_model_generate_content(
-        query.model_name)(prompt=prompt, model_name=query.model_name)
-    print("Response:", response)
-    
-    data = {
-        'type': SemanticRoute.CHITCHAT.value,
-        'response': response
-    }
-    return data
-
-
-def register_task(query: SystemRequest) -> dict:
+async def register_task(query: QueryRequest) -> dict:
     """
     Register task via an user's daily life summary
 
@@ -107,7 +83,7 @@ def register_task(query: SystemRequest) -> dict:
         user_daily_entries (dict):  
     """
     try:
-        prompt = classify_prompt.REGISTER_SCHEDULE_CALENDAR.format(
+        prompt = onboarding_prompt.REGISTER_SCHEDULE_CALENDAR.format(
             query=query.query)
         print("Onboarding Prompt:", prompt)
         response = llm_models.get_model_generate_content(
@@ -120,7 +96,10 @@ def register_task(query: SystemRequest) -> dict:
         result = {
             "response": schedule_dto
         }
-        return result
+        return return_success_response(
+            status_message="Task registration response generated successfully",
+            data=result
+        )
     except Exception as e:
         raise e
 

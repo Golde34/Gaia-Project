@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
-from core.usecase import chat
+from core.usecase.chat import chat
 
 
 ChatRouter = APIRouter(

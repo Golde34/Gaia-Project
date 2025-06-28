@@ -237,13 +237,6 @@ Remember: Your response must contain ONLY the JSON object, nothing else.
 Now, analyze the system's query and extract the requested information into the JSON format.
 System's query: {query}"""
 
-
-CHITCHAT_PROMPT = """You are Gaia - a helpfull assistant. When given a user query, provide direct answers.
-Be polite like a butler or an assistant.
-Your answer should be less than 50 words.
-
-User's query: {query}"""
-
 PARSING_DATE_PROMPT = """You are a helpful assistant.
 Your task is to receive information about dates and times (e.g., "today", "in 3 days", "5am this time next week") and return Python code that can be executed to get the exact datetime string for those time expressions.
 

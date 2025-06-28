@@ -14,8 +14,9 @@ class ModelMode(Enum):
 class SemanticRoute(Enum):
     GAIA_INTRODUCTION = "gaia_introduction"
     CHITCHAT = "chitchat"
-    REGISTER_SCHEDULE_CALENDAR = "register_schedule_calendar"
-    ABILITIES = "abilities"
+    RECENT_HISTORY = "recent_history"
+    RECURSIVE_SUMMARY = "recursive_summary"
+    LONG_TERM_MEMORY = "long_term_memory"
 
 class GaiaAbilities(Enum):
     CHITCHAT = "chitchat"
