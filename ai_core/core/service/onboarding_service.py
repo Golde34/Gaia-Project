@@ -6,7 +6,7 @@ from core.domain.enums.enum import SemanticRoute
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import DailyRoutineSchema
 from core.domain.response.base_response import return_success_response
-from core.prompts import onboarding_prompt, classify_prompt
+from core.prompts import onboarding_prompt
 from core.semantic_router import router_registry
 from core.service.gaia_abilities_service import chitchat
 from infrastructure.embedding.base_embedding import embedding_model
@@ -83,7 +83,7 @@ async def register_task(query: QueryRequest) -> dict:
         user_daily_entries (dict):  
     """
     try:
-        prompt = classify_prompt.REGISTER_SCHEDULE_CALENDAR.format(
+        prompt = onboarding_prompt.REGISTER_SCHEDULE_CALENDAR.format(
             query=query.query)
         print("Onboarding Prompt:", prompt)
         response = llm_models.get_model_generate_content(

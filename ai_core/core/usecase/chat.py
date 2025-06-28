@@ -1,13 +1,15 @@
 from core.abilities.abilitiy_routers import call_router_function 
 from core.domain.enums import redis_enum 
 from core.domain.request.query_request import QueryRequest
+from core.prompts.classify_prompt import CHAT_HISTORY_PROMPT 
 from core.semantic_router.router_registry import chat_history_route
 from infrastructure.redis.redis import get_key, set_key, increase_key, decrease_key 
 
 
 async def chat(query: QueryRequest, chat_type: str):
     recent_history, recursive_summary, long_term_memory = await _chat_history_semantic_router(query=query)
-    # new_prompt = _reflection(recent_history=recent_history, recursive_summary=recursive_summary, long_term_memory=long_term_memory, query=query.query)
+    new_prompt = _reflection(recent_history=recent_history, recursive_summary=recursive_summary, long_term_memory=long_term_memory, query=query.query)
+    query.query = new_prompt
     response = await call_router_function(label_value=chat_type, query=query)
     await _update_chat_history(query=query, response=response)
     return response 
@@ -28,6 +30,19 @@ async def _chat_history_semantic_router(query: QueryRequest):
         print('Call vector database to get long term memory')
         long_term_memory = ''
     return recent_history, recursive_summary, long_term_memory
+
+def _reflection(recent_history: str, recursive_summary: str, long_term_memory: str, query: str):
+    """
+    Generate a new prompt based on the recent history, recursive summary, long term memory, and the current query.
+    This function can be customized to reflect the conversation context.
+    """
+    new_prompt = CHAT_HISTORY_PROMPT.format(
+        recent_history=recent_history,
+        recursive_summary=recursive_summary,
+        long_term_memory=long_term_memory,
+        query=query
+    )
+    return new_prompt
 
 async def _update_chat_history(query: QueryRequest, response: str):
     """
