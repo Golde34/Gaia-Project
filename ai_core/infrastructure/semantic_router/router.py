@@ -83,6 +83,7 @@ class SemanticRouter:
 
         for route_name, route_embedding in self.routes_embedding_cal.items():
             similarity = np.dot(query_embedding, route_embedding.T).max()
+            print(f"Route: {route_name}, Similarity: {similarity:.4f}")
             if similarity >= threshold:
                 matching_routes.append((route_name, similarity))
 
