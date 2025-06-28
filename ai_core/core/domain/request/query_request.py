@@ -7,11 +7,7 @@ class QueryRequest(BaseModel):
     dialogue_id: str
     query: str
     model_name: str
-
-class SystemRequest(BaseModel):
-    query: str
-    type: str = "chitchat"
-    dialogue_id: str 
+    type: str
 
 class RAGRequest(BaseModel):
     file: UploadFile

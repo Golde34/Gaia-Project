@@ -1,6 +1,6 @@
 from core.domain.enums import enum
 from core.service.onboarding_service import introduce, register_task
-from core.service import abilities_handler
+from core.service.gaia_abilities_service import abilities_handler
 
 
 ROUTERS = [
@@ -20,3 +20,10 @@ ROUTERS = [
         'function': abilities_handler 
     }   
 ]
+
+ROUTER_MAP = {router['label']: router['function'] for router in ROUTERS}
+
+def call_router_function(label_value, *args, **kwargs):
+    if label_value not in ROUTER_MAP:
+        raise ValueError(f"No route found for label: {label_value}")
+    return ROUTER_MAP[label_value](*args, **kwargs)
