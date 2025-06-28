@@ -7,24 +7,14 @@ from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import DailyRoutineSchema
 from core.domain.response.base_response import return_success_response
 from core.prompts import onboarding_prompt, classify_prompt
+from core.semantic_router import router_registry
 from core.service.gaia_abilities_service import chitchat
 from infrastructure.embedding.base_embedding import embedding_model
-from infrastructure.semantic_router import route, samples, router, router_registry
 from infrastructure.vector_db.milvus import milvus_db
 from kernel.config import llm_models, config
 
 
 default_model = config.LLM_DEFAULT_MODEL
-
-GAIA_INTRODUCTION_ROUTE_NAME = 'introduction'
-CHITCHAT_ROUTE_NAME = 'chitchat'
-introduction_route = route.Route(
-    name=GAIA_INTRODUCTION_ROUTE_NAME, samples=samples.gaia_introduction_sample)
-chitchat_route = route.Route(
-    name=CHITCHAT_ROUTE_NAME, samples=samples.chitchat_sample)
-semantic_router = router.SemanticRouter(
-    routes=[introduction_route, chitchat_route], model_name=config.EMBEDDING_MODEL)
-
 
 async def introduce(query: QueryRequest) -> dict:
     """

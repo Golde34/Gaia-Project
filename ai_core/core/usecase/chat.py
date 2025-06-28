@@ -9,7 +9,6 @@ from infrastructure.redis.redis import get_key, set_key
 async def chat(query: QueryRequest, chat_type: str):
     # _check_redis() to get message queue length of recent his, recursive summary and long term memory 
     rs_queue_length, lt_queue_length = _check_redis(user_id=query.user_id, dialogue_id=query.dialogue_id)
-    print(f"Recursive Summary Queue Length: {rs_queue_length}, Long Term Memory Queue Length: {lt_queue_length}")
     # semantic router to determine to call recent history, recursive summary or long term memory
     # new_prompt = _reflection()
     response = await call_router_function(label_value=chat_type, query=query)
@@ -30,3 +29,4 @@ def _check_redis(user_id: str = None, dialogue_id: str = None):
 def __set_key_ttl(key: str):
     set_key(key, value=0, ttl=3600)
     return 0
+
