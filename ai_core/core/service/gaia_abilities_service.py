@@ -7,11 +7,10 @@ from core.domain.request.query_request import QueryRequest
 from core.domain.response.base_response import return_success_response
 from core.prompts.abilities_prompt import CHITCHAT_PROMPT
 from core.prompts.classify_prompt import CLASSIFY_PROMPT
-from core.service.gaia_abilities_service import handle_task_service_response
 from kernel.config import llm_models
 
 
-def abilities_handler(query: QueryRequest) -> str:
+async def abilities_handler(query: QueryRequest) -> str:
     """
     Handle the service request based on the query type dynamically.
     Args:
@@ -20,6 +19,7 @@ def abilities_handler(query: QueryRequest) -> str:
     Returns:
         str: The response from the appropriate service handler.
     """
+    print("Abilities Handler called with query:", query)
     try:
         tools_string = json.dumps(ABILITIES, indent=2)
 

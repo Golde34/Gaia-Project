@@ -5,6 +5,7 @@ from core.validation import milvus_validation
 from core.domain.enums.enum import SemanticRoute
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import DailyRoutineSchema
+from core.domain.response.base_response import return_success_response
 from core.prompts import onboarding_prompt, classify_prompt
 from core.service.gaia_abilities_service import chitchat
 from infrastructure.embedding.base_embedding import embedding_model
@@ -37,9 +38,9 @@ async def introduce(query: QueryRequest) -> dict:
     """
     try:
         guided_route = await router_registry.gaia_introduction_route(query.query)
-        if guided_route == SemanticRoute.GAIA_INTRODUCTION.value:
-            response = _gaia_introduce(query)
-        elif guided_route == SemanticRoute.CHITCHAT.value:
+        if guided_route == SemanticRoute.GAIA_INTRODUCTION:
+            response = await _gaia_introduce(query)
+        elif guided_route == SemanticRoute.CHITCHAT:
             response = chitchat(query)
         else:
             raise ValueError("No route found for the query.")
@@ -49,7 +50,10 @@ async def introduce(query: QueryRequest) -> dict:
             'response': response
         }
 
-        return data
+        return return_success_response(
+            status_message="Onboarding response generated successfully",
+            data=data
+        )
     except Exception as e:
         raise e
 
@@ -78,7 +82,7 @@ async def _gaia_introduce(query: QueryRequest):
     return response
 
 
-def register_task(query: QueryRequest) -> dict:
+async def register_task(query: QueryRequest) -> dict:
     """
     Register task via an user's daily life summary
 
@@ -102,7 +106,10 @@ def register_task(query: QueryRequest) -> dict:
         result = {
             "response": schedule_dto
         }
-        return result
+        return return_success_response(
+            status_message="Task registration response generated successfully",
+            data=result
+        )
     except Exception as e:
         raise e
 
