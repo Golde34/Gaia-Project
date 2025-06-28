@@ -1,6 +1,7 @@
 import numpy as np
 
 from infrastructure.embedding.base_embedding import embedding_model
+from kernel.config.config import CHAT_HIS_SEMANTIC_THRESHOLD
 
 
 class EmbeddingManager:
@@ -84,7 +85,7 @@ class SemanticRouter:
         for route_name, route_embedding in self.routes_embedding_cal.items():
             similarity = np.dot(query_embedding, route_embedding.T).max()
             print(f"Route: {route_name}, Similarity: {similarity:.4f}")
-            if similarity >= threshold:
+            if similarity >= CHAT_HIS_SEMANTIC_THRESHOLD:
                 matching_routes.append((route_name, similarity))
 
         return matching_routes if matching_routes else None
