@@ -40,8 +40,11 @@ Your task is to analyze and understand the conversation context based on the abo
 - **If necessary**, modify the **current query** to include all relevant information from the past conversation to clarify or complete the user's request.
 - **If no additional information is needed**, simply return the **current query** as is.
 
-**Note**:
-- If the user is requesting a task update, you will need to retrieve relevant information (such as task name, creation time, etc.) from the **recent history** or **long-term memory** in order to update the task accurately.
+**Important Considerations**:
+- If there is **no relevant information** in `Recent History`, `Recursive Summary`, or `Long-Term Memory` (i.e., all three are empty or missing), **return the current query without modification**.
+- **Detailed information from the history is crucial** in understanding exactly what the user wants to do. This includes identifying specific tasks, actions, or contexts that have been discussed. Without this information, the request may not be correctly understood or executed.
+- **Multiple potential areas of focus**: The user's query could relate to various domains (e.g., task management, medical inquiries, personal information, etc.). It is important to identify which area the current query falls under and analyze the relevant history (task-related or otherwise).
+- For example, if the user is asking to **add a task, view a task, or update a task**, or if they are asking about a **medical issue**, **personal data**, or any other area, you need to retrieve the correct context from the history and modify the query accordingly.
 
 ### Example:
 
@@ -59,5 +62,4 @@ Your task is to analyze and understand the conversation context based on the abo
 - To update **task A**, more information (such as task name, creation time, etc.) needs to be included in the **current query**.
 
 **Updated Query**: "Update task A with the due time set to 8 PM tonight, created at 5 PM."
-
 """

@@ -42,6 +42,7 @@ def _reflection(recent_history: str, recursive_summary: str, long_term_memory: s
         long_term_memory=long_term_memory,
         query=query
     )
+    print(f"New prompt generated: {new_prompt}")
     return new_prompt
 
 async def _update_chat_history(query: QueryRequest, response: str):
