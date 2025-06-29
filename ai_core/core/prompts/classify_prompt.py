@@ -42,7 +42,6 @@ Your task is to analyze and understand the conversation context based on the abo
 
 **Note**:
 - If the user is requesting a task update, you will need to retrieve relevant information (such as task name, creation time, etc.) from the **recent history** or **long-term memory** in order to update the task accurately.
-- If there are multiple possible actions the user could take (e.g., update task, add task, view tasks, etc.), you need to identify the correct action from the conversation history and include it in the **current query**.
 
 ### Example:
 
