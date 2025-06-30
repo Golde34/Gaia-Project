@@ -31,6 +31,6 @@ var (
 )
 
 var (
-	UserMessage = "user_message"
-	BotMessage = "bot_message"
+	UserMessage = "user"
+	BotMessage = "bot"
 )

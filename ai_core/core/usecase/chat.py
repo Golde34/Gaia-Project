@@ -1,8 +1,10 @@
 from core.abilities.abilitiy_routers import call_router_function 
 from core.domain.enums import redis_enum 
 from core.domain.request.query_request import QueryRequest
+from core.domain.request.chat_hub_request import RecentHistoryRequest
 from core.prompts.classify_prompt import CHAT_HISTORY_PROMPT 
 from core.semantic_router.router_registry import chat_history_route
+from infrastructure.client.chat_hub_service_client import chat_hub_service_client 
 from infrastructure.redis.redis import get_key, set_key, increase_key, decrease_key 
 
 
@@ -21,8 +23,12 @@ async def _chat_history_semantic_router(query: QueryRequest):
     """
     semantic_response = await chat_history_route(query=query.query) 
     if semantic_response['recent_history'] == True:
-        print('Call api to get recent history')
-        recent_history = ''
+        recent_history = chat_hub_service_client.get_recent_history(
+            RecentHistoryRequest(
+                user_id=query.user_id,
+                dialogue_id=query.dialogue_id,
+            )
+        ) 
     if semantic_response['recursive_summary'] == True:
         print('Call redis to get recursive summary')
         recursive_summary = ''
@@ -42,6 +48,7 @@ def _reflection(recent_history: str, recursive_summary: str, long_term_memory: s
         long_term_memory=long_term_memory,
         query=query
     )
+    print(f"New prompt generated: {new_prompt}")
     return new_prompt
 
 async def _update_chat_history(query: QueryRequest, response: str):

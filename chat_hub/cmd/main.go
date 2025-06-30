@@ -6,6 +6,7 @@ import (
 	"chat_hub/kernel/configs"
 	database_postgresql "chat_hub/kernel/database/postgresql"
 	consumer "chat_hub/ui/kafka"
+	"chat_hub/ui/router"
 	"log"
 	"net/http"
 	"time"
@@ -55,6 +56,9 @@ func main() {
 	http.HandleFunc("/ws", usecases.NewWebSocketUsecase(dbConnection).HandleChatmessage)
 
 	// Rest Router
+	r.Group(func(ro chi.Router) {
+		router.NewChatHistoryRouter(dbConnection, r)
+	})
 	
 	log.Printf("connect to http://localhost:%s/", cfg.Port)
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, nil))
