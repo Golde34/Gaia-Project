@@ -1,10 +1,8 @@
 package services
 
 import (
-	request_dtos "chat_hub/core/domain/dtos/request"
 	response_dtos "chat_hub/core/domain/dtos/response"
 	entity "chat_hub/core/domain/entities"
-	"chat_hub/core/domain/enums"
 	"chat_hub/infrastructure/repository"
 	"database/sql"
 	"fmt"
@@ -16,21 +14,23 @@ import (
 type MessageService struct {
 	db *sql.DB
 
-	userRepository *repository.UserMessageRepository
-	botRepository  *repository.BotMessageRepository
+	messageRepository *repository.MessageRepository
 }
 
 func NewMessageService(db *sql.DB) *MessageService {
 	return &MessageService{
-		db:             db,
-		userRepository: repository.NewUserMessageRepository(db),
-		botRepository:  repository.NewBotMessageRepository(db),
+		db:                db,
+		messageRepository: repository.NewMessageRepository(db),
 	}
 }
 
 func (s *MessageService) CreateMessage(dialogue entity.UserDialogueEntity, userId, message, userMessageId string, senderType, messageType string) (string, error) {
-	messageRequest := s.buildMessage(dialogue, userId, message, userMessageId, senderType, messageType)
-	messageId, err := s.createMessageToDB(messageRequest)
+	messageRequest, err := s.buildMessage(dialogue, userId, message, userMessageId, senderType, messageType)
+	if err != nil {
+		log.Println("Error building message: " + err.Error())
+		return "", err
+	}
+	messageId, err := s.messageRepository.CreateMessage(messageRequest)
 	if err != nil {
 		log.Println("Error creating message: " + err.Error())
 		return "", err
@@ -39,33 +39,23 @@ func (s *MessageService) CreateMessage(dialogue entity.UserDialogueEntity, userI
 	return messageId, nil
 }
 
-func (s *MessageService) buildMessage(dialogue entity.UserDialogueEntity, userId, message, userMessageId string, senderType, messageType string) request_dtos.MessageRequestDTO {
+func (s *MessageService) buildMessage(dialogue entity.UserDialogueEntity, userId, message, userMessageId string, senderType, messageType string) (entity.MessageEntity, error) {
 	userIdF, err := strconv.ParseInt(userId, 10, 64)
 	if err != nil {
-		return request_dtos.MessageRequestDTO{} 
+		return entity.MessageEntity{}, fmt.Errorf("invalid user ID: %v", err)
 	}
-	request := request_dtos.MessageRequestDTO{
+	entity := entity.MessageEntity{
 		UserId:        userIdF,
 		DialogueId:    dialogue.ID,
 		UserMessageId: userMessageId,
 		MessageType:   messageType,
 		Content:       message,
 		Metadata:      "",
-		EnumType:      senderType,
+		SenderType:    senderType,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
-	return request
-}
-
-func (s *MessageService) createMessageToDB(message request_dtos.MessageRequestDTO) (string, error) {
-	if message.EnumType == enums.UserMessage {
-		return s.userRepository.CreateUserMessage(message)
-	}
-	if message.EnumType == enums.BotMessage {
-		return s.botRepository.CreateBotMessage(message)
-	}
-	return "", fmt.Errorf("invalid message type: %s", message.EnumType)
+	return entity, nil
 }
 
 func (s *MessageService) GetMessageByDialogueId(dialogueId string, numberOfMessages int) (response_dtos.RecentChatHistory, error) {
