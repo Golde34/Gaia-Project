@@ -6,7 +6,6 @@ from core.domain.request import query_request
 from core.usecase.chat import chat 
 
 
-
 OnboardingRouter = APIRouter(
     prefix="/onboarding",
     tags=["Onboarding"],
