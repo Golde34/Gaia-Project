@@ -13,12 +13,13 @@ class ChatHubServiceClient:
         self.base_url = config.CHAT_HUB_SERVICE_URL
 
     async def get_recent_history(self, request: RecentHistoryRequest) -> str:
-        endpoint = f"{self.base_url}/chat_hub/recent_history/{request.user_id}/"
+        endpoint = f"{self.base_url}/chat-history/recent-history/"
         result = await aiohttp_utils.get(
             endpoint=endpoint,
             params={
-                "dialogue_id": request.dialogue_id,
-                "number_of_messages": request.number_of_messages
+                "userId": request.user_id,
+                "dialogueId": request.dialogue_id,
+                "numberOfMessages": request.number_of_messages
             })
         print(f"ChatHubServiceClient.get_recent_history: {result}")
         return result
