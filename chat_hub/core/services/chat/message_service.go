@@ -1,7 +1,6 @@
 package services
 
 import (
-	response_dtos "chat_hub/core/domain/dtos/response"
 	entity "chat_hub/core/domain/entities"
 	"chat_hub/infrastructure/repository"
 	"database/sql"
@@ -58,35 +57,23 @@ func (s *MessageService) buildMessage(dialogue entity.UserDialogueEntity, userId
 	return entity, nil
 }
 
-func (s *MessageService) GetMessageByDialogueId(dialogueId string, numberOfMessages int) (response_dtos.RecentChatHistory, error) {
-	// recentChatHistory := make([]response_dtos.RecentChatMessageDTO, 0)
+func (s *MessageService) GetMessageByDialogueId(dialogueId string, numberOfMessages int) ([]entity.MessageEntity, error) {
+	messageId, err := s.messageRepository.GetFarestUserMessageByDialogueId(dialogueId, numberOfMessages)
+	if err != nil {
+		log.Println("Error getting messages by dialogue ID: " + err.Error())
+		return nil, err
+	}
 
-	// if numberOfMessages <= 0 {
-	// 	return response_dtos.RecentChatHistory{}, fmt.Errorf("number of messages must be greater than 0")
-	// }
+	recentChatMessages, err := s.messageRepository.GetRecentChatMessagesByDialogueId(dialogueId, messageId)
+	if err != nil {
+		log.Println("Error getting recent chat messages: " + err.Error())
+		return nil, err
+	}
+	if len(recentChatMessages) == 0 {
+		log.Println("No messages found for dialogue ID: " + dialogueId)
+		return nil, nil
+	}
+	log.Println("Found " + strconv.Itoa(len(recentChatMessages)) + " messages for dialogueID: " + dialogueId)
 
-	// userMessages, err := s.userRepository.GetUserMessagesByDialogueId(dialogueId, numberOfMessages)
-	// if err != nil {
-	// 	log.Println("Error retrieving user messages:", err)
-	// 	return response_dtos.RecentChatHistory{}, err
-	// }
-
-	// for _, userMessage := range userMessages {
-	// 	botMessages, err := s.botRepository.GetBotMessagesByUserMessageId(userMessage.Id)
-	// 	if err != nil {
-	// 		log.Println("Error retrieving bot messages:", err)
-	// 		return response_dtos.RecentChatHistory{}, err
-	// 	}
-
-	// 	recentChatHistory = append(recentChatHistory, response_dtos.RecentChatMessageDTO{
-	// 		UserMessage: userMessage.Content,
-	// 		BotMessages: botMessages,
-	// 	})
-	// }
-
-	// return response_dtos.RecentChatHistory{
-	// 	Messages: recentChatHistory,
-	// }, nil
-
-	return response_dtos.RecentChatHistory{}, fmt.Errorf("GetMessageByDialogueId is not implemented yet")
+	return recentChatMessages, nil
 }
