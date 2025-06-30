@@ -30,3 +30,10 @@ CHAT_HIS_SEMANTIC_THRESHOLD = float(os.getenv('CHAT_HISTORY_SEMANTIC_ROUTER_THRE
 CHAT_HUB_SERVICE_HOST = os.getenv('CHAT_HUB_SERVICE_HOST', 'localhost')
 CHAT_HUB_SERVICE_PORT = int(os.getenv('CHAT_HUB_SERVICE_PORT', 4004))
 CHAT_HUB_SERVICE_URL = f"http://{CHAT_HUB_SERVICE_HOST}:{CHAT_HUB_SERVICE_PORT}"
+
+# PostgreSQL configuration for ai_core service
+POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
+POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', 5432))
+POSTGRES_USER = os.getenv('POSTGRES_USER', 'user')
+POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'password')
+POSTGRES_DB = os.getenv('POSTGRES_DB', 'gaia')
