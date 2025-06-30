@@ -86,3 +86,20 @@ func (s *DialogueService) GetDialogueByUserIdAndType(userId, dialogueType string
 
 	return dialogue, nil
 }
+
+func (s *DialogueService) GetDialogueById(userId, dialogueId string) (entity.UserDialogueEntity, error) {
+	log.Println("Retrieving dialogue by ID:", dialogueId)
+
+	dialogue, err := s.dialogueRepo.GetDialogueById(userId, dialogueId)
+	if err != nil && err != sql.ErrNoRows {
+		log.Println("Error retrieving dialogue from repository:", err)
+		return entity.UserDialogueEntity{}, err
+	}
+
+	if err == sql.ErrNoRows {
+		log.Println("No dialogue found with ID:", dialogueId)
+		return entity.UserDialogueEntity{}, nil
+	}
+
+	return dialogue, nil
+}

@@ -22,23 +22,18 @@ func NewChatHistoryUsecase(db *sql.DB) *ChatHistoryUsecase {
 }
 
 func (s *ChatHistoryUsecase) GetRecentHistory(userId, dialogueId string, numberOfMessages int) (map[string]interface{}, error) {
-	// dialogues, err := s.dialogueService.GetDialoguesByUserId(userId)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	dialogue, err := s.dialogueService.GetDialogueById(userId, dialogueId)
+	if err != nil {
+		return nil, err
+	}
 
-	// var dialoguesWithMessages []*services.DialogueWithMessages
-	// for _, dialogue := range dialogues {
-	// 	messages, err := s.messageService.GetMessagesByDialogueId(dialogue.ID)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	dialoguesWithMessages = append(dialoguesWithMessages, &services.DialogueWithMessages{
-	// 		Dialogue:  dialogue,
-	// 		Messages:  messages,
-	// 	})
-	// }
+	messages, err := s.messageService.GetMessageByDialogueId(dialogue.ID, numberOfMessages)
+	if err != nil {
+		return nil, err
+	}
 
-	// return dialoguesWithMessages, nil
-	return nil, nil
+	return map[string]interface{}{
+		"dialogue": dialogue,
+		"messages": messages,
+	}, nil
 }

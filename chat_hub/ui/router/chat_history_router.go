@@ -15,7 +15,7 @@ type ChatHistoryRouter struct {
 	ChatHistoryUsecase *usecases.ChatHistoryUsecase
 }
 
-func NewChatHistoryRouter(db *sql.DB, r * chi.Mux) *ChatHistoryRouter {
+func NewChatHistoryRouter(db *sql.DB, r *chi.Mux) *ChatHistoryRouter {
 	chatHistoryUsecase := usecases.NewChatHistoryUsecase(db)
 
 	r.Route("/chat-history", func(r chi.Router) {

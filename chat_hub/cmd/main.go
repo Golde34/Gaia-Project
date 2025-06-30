@@ -56,7 +56,7 @@ func main() {
 	http.HandleFunc("/ws", usecases.NewWebSocketUsecase(dbConnection).HandleChatmessage)
 
 	// Rest Router
-	r.Group(func(r chi.Router) {
+	r.Group(func(ro chi.Router) {
 		router.NewChatHistoryRouter(dbConnection, r)
 	})
 	

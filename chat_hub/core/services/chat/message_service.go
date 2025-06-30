@@ -2,6 +2,7 @@ package services
 
 import (
 	request_dtos "chat_hub/core/domain/dtos/request"
+	response_dtos "chat_hub/core/domain/dtos/response"
 	entity "chat_hub/core/domain/entities"
 	"chat_hub/core/domain/enums"
 	"chat_hub/infrastructure/repository"
@@ -65,4 +66,37 @@ func (s *MessageService) createMessageToDB(message request_dtos.MessageRequestDT
 		return s.botRepository.CreateBotMessage(message)
 	}
 	return "", fmt.Errorf("invalid message type: %s", message.EnumType)
+}
+
+func (s *MessageService) GetMessageByDialogueId(dialogueId string, numberOfMessages int) (response_dtos.RecentChatHistory, error) {
+	// recentChatHistory := make([]response_dtos.RecentChatMessageDTO, 0)
+
+	// if numberOfMessages <= 0 {
+	// 	return response_dtos.RecentChatHistory{}, fmt.Errorf("number of messages must be greater than 0")
+	// }
+
+	// userMessages, err := s.userRepository.GetUserMessagesByDialogueId(dialogueId, numberOfMessages)
+	// if err != nil {
+	// 	log.Println("Error retrieving user messages:", err)
+	// 	return response_dtos.RecentChatHistory{}, err
+	// }
+
+	// for _, userMessage := range userMessages {
+	// 	botMessages, err := s.botRepository.GetBotMessagesByUserMessageId(userMessage.Id)
+	// 	if err != nil {
+	// 		log.Println("Error retrieving bot messages:", err)
+	// 		return response_dtos.RecentChatHistory{}, err
+	// 	}
+
+	// 	recentChatHistory = append(recentChatHistory, response_dtos.RecentChatMessageDTO{
+	// 		UserMessage: userMessage.Content,
+	// 		BotMessages: botMessages,
+	// 	})
+	// }
+
+	// return response_dtos.RecentChatHistory{
+	// 	Messages: recentChatHistory,
+	// }, nil
+
+	return response_dtos.RecentChatHistory{}, fmt.Errorf("GetMessageByDialogueId is not implemented yet")
 }
