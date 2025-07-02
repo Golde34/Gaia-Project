@@ -6,5 +6,7 @@ class RedisEnum(str, Enum):
     RECURSIVE_SUMMARY = "ai_core:recursive_summary"
     LONG_TERM_MEMORY = "ai:long_term_memory"
 
+    RECURSIVE_SUMMARY_CONTENT = "ai_core:recursive_summary_content"
+
     USER_DIALOGUE = "ai_core:user_dialogue"
     AI_DIALOGUE = "ai_core:ai_dialogue"

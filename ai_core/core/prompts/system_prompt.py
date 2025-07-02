@@ -63,3 +63,18 @@ Your task is to analyze and understand the conversation context based on the abo
 
 **Updated Query**: "Update task A with the due time set to 8 PM tonight, created at 5 PM."
 """
+
+RECURSIVE_SUMMARY_PROMPT = """You are an AI assistant named Gaia, and your task is to generate a recursive summary of the conversation history. Below is the entire context of the conversation between you and the user:
+
+**Recent History**:
+   - {recent_history}
+   
+Your task is to analyze the conversation context based on the above information and generate a concise summary that captures the key points, actions, and requests made by the user.
+
+**Important Considerations**:
+- The summary should be **concise** and **to the point**, capturing the essence of the conversation without unnecessary details.
+- The summary should include any **actions** or **requests** made by the user, as well as any relevant context that may help in understanding the user's intent.
+- The summary should be **self-contained**, meaning it should not rely on external context or information.
+- The summary should be in the form of a **single paragraph** that can be easily understood by both humans and machines.
+
+"""

@@ -7,8 +7,8 @@ from infrastructure.database.postgres import postgres_db
 class RecursiveSummaryRepository:
     async def save_summary(self, summary: RecursiveSummary) -> int:
         query = (
-            "INSERT INTO recursive_summary (user_id, dialogue_id, role, message, summary) "
-            "VALUES ($1, $2, $3, $4, $5) RETURNING id"
+            "INSERT INTO recursive_summary (user_id, dialogue_id, summary, created_at) "
+            "VALUES ($1, $2, $3, $4) RETURNING id"
         )
         pool = await postgres_db.connect()
         async with pool.acquire() as conn:
@@ -16,9 +16,8 @@ class RecursiveSummaryRepository:
                 query,
                 summary.user_id,
                 summary.dialogue_id,
-                summary.role,
-                summary.message,
                 summary.summary,
+                summary.created_at,
             )
 
     async def list_by_dialogue(self, user_id: str, dialogue_id: str) -> List[RecursiveSummary]:

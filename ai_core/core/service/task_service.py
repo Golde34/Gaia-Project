@@ -1,6 +1,8 @@
 import json
 
+from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
+from core.domain.response.base_response import return_success_response
 from core.domain.response.model_output_schema import CreateTaskResultSchema, CreateTaskSchema
 from core.prompts.task_prompt import CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT
 from kernel.config import llm_models
@@ -74,3 +76,21 @@ def create_task_result(query: QueryRequest) -> str:
         return json.loads(response) 
     except Exception as e:
         raise e
+
+def handle_task_service_response(matched_type: str, result: any) -> str:
+    if matched_type == enum.GaiaAbilities.CHITCHAT.value:
+        data = {
+            'type': matched_type,
+            'response': result
+        }
+    else:
+        data = {
+            'type': matched_type,
+            'response': result.get('response'),
+            'task': result
+        }
+
+    return return_success_response(
+        status_message=f"{matched_type.replace('_', ' ').capitalize()} response successfully",
+        data=data
+    )
