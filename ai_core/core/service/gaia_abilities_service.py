@@ -4,10 +4,10 @@ from core.abilities.abilities import ABILITIES
 from core.abilities.function_handlers import FUNCTIONS
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
-from core.domain.response.base_response import return_success_response
 from core.prompts.abilities_prompt import CHITCHAT_PROMPT
 from core.prompts.system_prompt import CLASSIFY_PROMPT
-from kernel.config import llm_models
+from core.service.task_service import handle_task_service_response
+from kernel.config import llm_models, config
 
 
 async def abilities_handler(query: QueryRequest) -> str:
@@ -49,32 +49,13 @@ def chitchat(query: QueryRequest) -> str:
     Returns:
         str: Short response to the request
     """
-
     try:
         prompt = CHITCHAT_PROMPT.format(query=query.query)
         if not query.model_name:
-            query.model_name = "gemini-2.0-flash"
+            query.model_name = config.LLM_DEFAULT_MODEL
         response = llm_models.get_model_generate_content(
             query.model_name)(prompt=prompt, model_name=query.model_name)
         print("Response:", response)
         return response
     except Exception as e:
         raise e
-
-def handle_task_service_response(matched_type: str, result: any) -> str:
-    if matched_type == enum.GaiaAbilities.CHITCHAT.value:
-        data = {
-            'type': matched_type,
-            'response': result
-        }
-    else:
-        data = {
-            'type': matched_type,
-            'response': result.get('response'),
-            'task': result
-        }
-
-    return return_success_response(
-        status_message=f"{matched_type.replace('_', ' ').capitalize()} response successfully",
-        data=data
-    )

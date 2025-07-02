@@ -10,19 +10,6 @@ from infrastructure.repository.recursive_summary_repository import recursive_sum
 from infrastructure.redis.redis import set_key
 
 
-def chitchat(query: QueryRequest) -> str:
-    """
-    Chitchat pipeline
-    Args:
-        query (QueryRequest): The user's query containing task information.
-    Returns:
-        str: Short response to the request
-    """
-    try:
-        return "" 
-    except Exception as e:
-        raise e
-
 async def update_recursive_summary(query: QueryRequest, response: str) -> None:
     """
     Update the recursive summary in Redis.
