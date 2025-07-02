@@ -6,7 +6,7 @@ from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.base_response import return_success_response
 from core.prompts.abilities_prompt import CHITCHAT_PROMPT
-from core.prompts.classify_prompt import CLASSIFY_PROMPT
+from core.prompts.system_prompt import CLASSIFY_PROMPT
 from kernel.config import llm_models
 
 

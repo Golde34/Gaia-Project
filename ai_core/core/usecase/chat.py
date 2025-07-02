@@ -2,7 +2,7 @@ from core.abilities.abilitiy_routers import call_router_function
 from core.domain.enums import redis_enum, kafka_enum 
 from core.domain.request.query_request import QueryRequest
 from core.domain.request.chat_hub_request import RecentHistoryRequest
-from core.prompts.classify_prompt import CHAT_HISTORY_PROMPT 
+from core.prompts.system_prompt import CHAT_HISTORY_PROMPT 
 from core.semantic_router.router_registry import chat_history_route
 from infrastructure.client.chat_hub_service_client import chat_hub_service_client 
 from infrastructure.kafka.producer import send_kafka_message 
