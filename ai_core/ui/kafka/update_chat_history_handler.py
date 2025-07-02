@@ -1,7 +1,7 @@
 from core.service.chitchat_service import update_recursive_summary
 
 
-async def _update_recursive_summary(msg):
+async def update_recursive_summary_handler(msg):
     return await update_recursive_summary(
         query=msg['query'], 
         response=msg['response']

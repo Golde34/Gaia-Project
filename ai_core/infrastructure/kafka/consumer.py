@@ -5,7 +5,7 @@ from aiokafka import AIOKafkaConsumer
 from dotenv import load_dotenv
 
 from kernel.config.kafka_config import KafkaConfig
-from ui.kafka.update_chat_history import _update_recursive_summary
+from ui.kafka.update_chat_history_handler import update_recursive_summary_handler 
 
 
 load_dotenv()
@@ -43,7 +43,7 @@ async def consume():
 
 
 kafka_actions = {
-    "update_recursive_summary": _update_recursive_summary, 
+    "update_recursive_summary": update_recursive_summary_handler, 
 }
 
 asyncio.create_task(consume())
