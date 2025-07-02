@@ -17,7 +17,9 @@ app.include_router(onboarding_controller.OnboardingRouter)
 app.include_router(rag_controller.RagRouter)
 
 # Kafka consumer setup
-asyncio.create_task(consume())
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(consume())
 
 if __name__ == "__main__":
     uvicorn.run("index:app", host="0.0.0.0", port=4002, reload=True)
