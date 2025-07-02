@@ -27,7 +27,12 @@ class ChatUsecase:
             response (str): Response from the chat service after processing the query. 
         """
         recent_history, recursive_summary, long_term_memory = await cls._chat_history_semantic_router(query=query)
-        new_prompt = cls._reflection(recent_history=recent_history, recursive_summary=recursive_summary, long_term_memory=long_term_memory, query=query.query)
+        new_prompt = cls._reflection(
+            recent_history=recent_history,
+            recursive_summary=recursive_summary,
+            long_term_memory=long_term_memory,
+            query=query.query,
+        )
         query.query = new_prompt
         response = await call_router_function(label_value=chat_type, query=query)
         await cls._update_chat_history(query=query, response=response)
@@ -42,15 +47,15 @@ class ChatUsecase:
         semantic_response = await chat_history_route(query=query.query) 
         recent_history = recursive_summary = long_term_memory = ''
         if semantic_response['recent_history'] == True:
-            recent_history = chat_hub_service_client.get_recent_history(
+            recent_history = await chat_hub_service_client.get_recent_history(
                 RecentHistoryRequest(
                     user_id=query.user_id,
                     dialogue_id=query.dialogue_id,
                 )
-            ) 
+            )
         if semantic_response['recursive_summary'] == True:
             print('Call redis to get recursive summary')
-            recursive_summary = cls._get_recursive_summary_content(
+            recursive_summary = await cls._get_recursive_summary_content(
                 user_id=query.user_id,
                 dialogue_id=query.dialogue_id
             )
@@ -60,7 +65,7 @@ class ChatUsecase:
         return recent_history, recursive_summary, long_term_memory
 
     @staticmethod
-    def _get_recursive_summary_content(user_id: str, dialogue_id: str):
+    async def _get_recursive_summary_content(user_id: str, dialogue_id: str):
         """
         Get the recursive summary content from Redis.
         """
@@ -69,11 +74,11 @@ class ChatUsecase:
             recursive_summary_key = redis_enum.RedisEnum.RECURSIVE_SUMMARY_CONTENT.value + f":{user_id}:{dialogue_id}"
             recursive_summary_content = get_key(recursive_summary_key)
             if not recursive_summary_content:
-                recursive_summary_content = recursive_summary_repo.list_by_dialogue(
+                recursive_summary_content = await recursive_summary_repo.list_by_dialogue(
                     user_id=user_id,
-                    dialogue_id=dialogue_id
-                ) 
-            return recursive_summary_content 
+                    dialogue_id=dialogue_id,
+                )
+            return recursive_summary_content
         except Exception as e:
             print(f"Error in _get_recursive_summary_content: {e}")
             return ''
@@ -88,7 +93,7 @@ class ChatUsecase:
             recent_history=recent_history,
             recursive_summary=recursive_summary,
             long_term_memory=long_term_memory,
-            query=query
+            current_query=query,
         )
         print(f"New prompt generated: {new_prompt}")
         return new_prompt
@@ -132,7 +137,9 @@ class ChatUsecase:
             "user_id": user_id,
             "dialogue_id": dialogue_id,
         }
-        send_kafka_message(kafka_enum.KafkaTopic.UPDATE_RECURSIVE_SUMMARY.value, payload)        
+        await send_kafka_message(
+            kafka_enum.KafkaTopic.UPDATE_RECURSIVE_SUMMARY.value, payload
+        )
 
     @staticmethod
     def _update_redis(rs_queue_length: int, lt_queue_length: int, user_id: str, dialogue_id: str):
