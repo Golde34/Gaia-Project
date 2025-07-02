@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 
 from core.domain.enums import enum
 from core.domain.request import query_request
-from core.usecase.chat import chat 
+from core.usecase.chat import ChatUsecase as chatUsecase 
 
 
 OnboardingRouter = APIRouter(
@@ -14,7 +14,7 @@ OnboardingRouter = APIRouter(
 @OnboardingRouter.post("/introduce-gaia")
 async def introduc_gaia(request: query_request.QueryRequest):
     try:
-        return await chat(query=request, chat_type=enum.ChatType.GAIA_INTRODUCTION.value)
+        return await chatUsecase.chat(query=request, chat_type=enum.ChatType.GAIA_INTRODUCTION.value)
     except Exception as e:
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)
@@ -23,7 +23,7 @@ async def introduc_gaia(request: query_request.QueryRequest):
 @OnboardingRouter.post("/register-calendar")
 async def register_task_config(request: query_request.QueryRequest):
     try:
-        return await chat(query=request, chat_type=enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value)
+        return await chatUsecase.chat(query=request, chat_type=enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value)
     except Exception as e:
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)

@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
-from core.usecase.chat import chat
+from core.usecase.chat import ChatUsecase as chatUsecase 
 
 
 ChatRouter = APIRouter(
@@ -14,7 +14,7 @@ ChatRouter = APIRouter(
 @ChatRouter.post("/")
 async def chat_abilities(query: QueryRequest):
     try:
-        return await chat(query=query, chat_type=enum.ChatType.ABILITIES.value)
+        return await chatUsecase.chat(query=query, chat_type=enum.ChatType.ABILITIES.value)
     except Exception as e:
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)
