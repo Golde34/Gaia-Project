@@ -1,6 +1,7 @@
 from aiokafka import AIOKafkaConsumer
 from dotenv import load_dotenv
 
+from core.domain.enums.kafka_enum import KafkaTopic
 from kernel.config.kafka_config import KafkaConfig, convert_topics_to_list 
 from ui.kafka.update_chat_history_handler import update_recursive_summary_handler 
 
@@ -24,7 +25,6 @@ async def consume():
 
     try:
         async for msg in consumer:
-            # await kafka_actions[msg.topic](msg)
             print(f"Received message: {msg.topic} - {msg}")
             await kafka_actions[msg.topic](msg)
 
@@ -33,5 +33,5 @@ async def consume():
 
 
 kafka_actions = {
-    "update_recursive_summary": update_recursive_summary_handler, 
+    KafkaTopic.UPDATE_RECURSIVE_SUMMARY.value: update_recursive_summary_handler, 
 }
