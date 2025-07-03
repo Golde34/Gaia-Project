@@ -78,3 +78,25 @@ Your task is to analyze the conversation context based on the above information 
 - The summary should be in the form of a **single paragraph** that can be easily understood by both humans and machines.
 
 """
+
+LONGTERM_MEMORY_PROMPT = """You are an AI assistant named Gaia, and your task is to retrieve relevant long-term memory information based on the user's query. Below is the user's query:
+**Recent History**:
+   - {recent_history}
+
+Your task is to analyze the query and retrieve any relevant long-term memory information that may help in understanding the user's intent or providing a more accurate response. 
+
+**Important Considerations**:
+- The long-term memory information should be **relevant** to the user's query and should help in understanding the user's intent or providing a more accurate response.
+- The long-term memory information should be **concise** and **to the point**, capturing the essence of the user's past interactions without unnecessary details.
+- The long-term memory information should be in the form of a **single paragraph** that can be easily understood by both humans and machines.
+- If there is no relevant long-term memory information available, simply return an empty string or a message indicating that no relevant information was found.
+
+Return the relevant long-term memory information in the following format:
+```json
+[
+   "Relevant long-term memory information here.",
+   "Another piece of relevant long-term memory information here.",
+   "Additional relevant long-term memory information here.",
+]
+```
+"""

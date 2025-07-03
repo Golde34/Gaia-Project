@@ -1,6 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional
-
+from pydantic import BaseModel, Field
+from typing import List, Dict, Optional
 
 class CreateTaskSchema(BaseModel):
     project: str
@@ -28,8 +27,6 @@ class CreateTaskResultSchema(BaseModel):
     duration: Optional[str] = None
     response: str
 
-from pydantic import BaseModel, Field
-from typing import List, Dict
 
 class TimeBubbleDTO(BaseModel):
     start: str = Field(..., description="Start time in HH:MM format")
@@ -58,3 +55,9 @@ class DailyRoutineSchema(BaseModel):
     )
     totals: TotalsDTO = Field(..., description="Summary of total hours per tag")
  
+
+class LongTermMemorySchema(BaseModel):
+    """
+    Schema for long-term memory content.
+    """
+    content: List[str]= Field(..., description="Content of the long-term memory")
