@@ -7,12 +7,12 @@ from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import LongTermMemorySchema
 from core.validation import milvus_validation
 from core.prompts.system_prompt import LONGTERM_MEMORY_PROMPT, RECURSIVE_SUMMARY_PROMPT, CHAT_HISTORY_PROMPT 
-from kernel.config import llm_models, config
 from infrastructure.repository.recursive_summary_repository import recursive_summary_repo
-from infrastructure.redis.redis import set_key
+from infrastructure.redis.redis import set_key, get_key
 from infrastructure.vector_db.milvus import milvus_db
 from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.client.chat_hub_service_client import chat_hub_service_client
+from kernel.config import llm_models, config
 
 
 def reflection_chat_history(recent_history: str, recursive_summary: str, long_term_memory: str, query: str):
@@ -29,6 +29,21 @@ def reflection_chat_history(recent_history: str, recursive_summary: str, long_te
         print(f"New prompt generated: {new_prompt}")
         return new_prompt
 
+async def get_recursive_summary(user_id: str, dialogue_id: str) -> str:
+        """
+        Retrieves recursive summary from Redis, falling back to the database if necessary.
+        """
+        try:
+            recursive_summary_key = f"{RedisEnum.RECURSIVE_SUMMARY_CONTENT.value}:{user_id}:{dialogue_id}"
+            recursive_summary_content = get_key(recursive_summary_key)
+            if not recursive_summary_content:
+                recursive_summary_content = await recursive_summary_repo.list_by_dialogue(user_id=user_id, dialogue_id=dialogue_id)
+            
+            return recursive_summary_content or ''
+        except Exception as e:
+            print(f"Error in _get_recursive_summary: {e}")
+            return ''
+
 async def update_recursive_summary(user_id: str, dialogue_id: str) -> None:
     """
     Update the recursive summary in Redis.
@@ -42,7 +57,7 @@ async def update_recursive_summary(user_id: str, dialogue_id: str) -> None:
             query=QueryRequest(
                 user_id=user_id,
                 dialogue_id=dialogue_id,
-                number_of_messages=3
+                number_of_messages=config.RECURSIVE_SUMMARY_MAX_LENGTH
             )
         )
         if not recent_history:
@@ -85,7 +100,7 @@ async def update_long_term_memory(user_id: str, dialogue_id: str) -> None:
             query=QueryRequest(
                 user_id=user_id,
                 dialogue_id=dialogue_id,
-                number_of_messages=10
+                number_of_messages=config.LONG_TERM_MEMORY_MAX_LENGTH
             )
         )
         if not recent_history:
@@ -119,3 +134,37 @@ async def update_long_term_memory(user_id: str, dialogue_id: str) -> None:
             )
     except Exception as e:
         print(f"Error updating long term memory: {e}") 
+
+def get_long_term_memory(user_id: str, dialogue_id: str, query: str) -> str:
+    """
+    Retrieve long term memory from Redis or Milvus.
+    
+    Args:
+        user_id (str): The user's ID.
+        dialogue_id (str): The dialogue ID.
+        query (str): The user's query.
+    
+    Returns:
+        str: The long term memory content.
+    """
+    try:
+        long_term_memory = milvus_db.search_top_n(
+            query_embeddings=milvus_validation.validate_milvus_search_top_n(
+                embedding_model.get_embeddings(texts=[query])
+            ),
+            top_k=5,
+            partition_name="default_memory"
+        )    
+
+        if long_term_memory is None or len(long_term_memory) == 0:
+            print(f"No long term memory found for user {user_id} and dialogue {dialogue_id}")
+            return ''
+
+        filtered_memory = [
+            memory for memory in long_term_memory if memory['metadata'].get('user_id') == user_id and memory['metadata'].get('dialogue_id') == dialogue_id
+        ]
+        return ', '.join([memory['content'] for memory in filtered_memory]) if filtered_memory else ''
+
+    except Exception as e:
+        print(f"Error retrieving long term memory: {e}")
+        return ''
