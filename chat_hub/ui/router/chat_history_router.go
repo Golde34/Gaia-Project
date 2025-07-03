@@ -19,7 +19,7 @@ func NewChatHistoryRouter(db *sql.DB, r *chi.Mux) *ChatHistoryRouter {
 	chatHistoryUsecase := usecases.NewChatHistoryUsecase(db)
 
 	r.Route("/chat-history", func(r chi.Router) {
-		r.Get("recent-history", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/recent-history", func(w http.ResponseWriter, r *http.Request) {
 			controller.GetRecentHistory(w, r, chatHistoryUsecase)
 		})
 	})

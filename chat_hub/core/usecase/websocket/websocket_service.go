@@ -142,7 +142,6 @@ func (s *WebSocketUsecase) handleService(messageMap map[string]interface{}, user
 		return
 	}
 	s.SendToUser(userId, []byte(result), sessionId)
-	return
 }
 
 func (s *WebSocketUsecase) SendToUser(userId string, message []byte, excludeSessionId string) {
