@@ -7,7 +7,7 @@ from core.service.chat_service import reflection_chat_history, get_recursive_sum
 from infrastructure.client.chat_hub_service_client import chat_hub_service_client
 from infrastructure.kafka.producer import send_kafka_message
 from infrastructure.redis.redis import get_key, set_key, increase_key, decrease_key
-from kernel.config.config import RECURSIVE_SUMMARY_MAX_LENGTH, LONG_TERM_MEMORY_MAX_LENGTH 
+from kernel.config.config import RECURSIVE_SUMMARY_MAX_LENGTH, LONG_TERM_MEMORY_MAX_LENGTH
 
 
 class ChatUsecase:
@@ -15,26 +15,26 @@ class ChatUsecase:
     async def chat(cls, query: QueryRequest, chat_type: str):
         """
         Handles the user's chat request, including routing, updating query, and saving to history.
-        
+
         Args:
             query (QueryRequest): User query request containing user_id, dialogue_id, and query text. 
             chat_type (str): Type of chat to be routed (e.g., task update, general chat, etc.).
-        
+
         Returns:
             str: Response from the chat service after processing the query.
         """
         recent_history, recursive_summary, long_term_memory = await cls._route_chat_history(query)
-        
+
         new_query = reflection_chat_history(
             recent_history=recent_history,
             recursive_summary=recursive_summary,
             long_term_memory=long_term_memory,
             query=query.query,
         )
-        query.query = new_query 
+        query.query = new_query
         response = await call_router_function(label_value=chat_type, query=query)
         await cls.update_chat_history(query=query, response=response)
-        
+
         return response
 
     @classmethod
@@ -43,19 +43,20 @@ class ChatUsecase:
         Routes the request based on semantic guidance, querying different memory sources.
         """
         semantic_response = await chat_history_route(query=query.query)
-        
+
         recent_history = recursive_summary = long_term_memory = ''
         if semantic_response.get('recent_history'):
             recent_history = await chat_hub_service_client.get_recent_history(
-                RecentHistoryRequest(user_id=query.user_id, dialogue_id=query.dialogue_id)
+                RecentHistoryRequest(user_id=query.user_id,
+                                     dialogue_id=query.dialogue_id)
             )
-        
+
         if semantic_response.get('recursive_summary'):
             recursive_summary = await get_recursive_summary(query.user_id, query.dialogue_id)
-        
+
         if semantic_response.get('long_term_memory'):
             long_term_memory = await get_long_term_memory(query.user_id, query.dialogue_id, query.query)
-        
+
         return recent_history, recursive_summary, long_term_memory
 
     @classmethod
@@ -63,10 +64,11 @@ class ChatUsecase:
         """
         Updates the chat history with the new query and response, including managing Redis queues.
         """
-        rs_len, lt_len = cls._check_redis(user_id=query.user_id, dialogue_id=query.dialogue_id)
+        rs_len, lt_len = cls._check_redis(
+            user_id=query.user_id, dialogue_id=query.dialogue_id)
         if rs_len >= RECURSIVE_SUMMARY_MAX_LENGTH:
             await cls._update_recursive_summary(query.user_id, query.dialogue_id)
-        
+
         if lt_len >= LONG_TERM_MEMORY_MAX_LENGTH:
             await cls._update_long_term_memory(query.user_id, query.dialogue_id)
 
@@ -79,11 +81,11 @@ class ChatUsecase:
         """
         rs_key = f"{redis_enum.RedisEnum.RECURSIVE_SUMMARY.value}:{user_id}:{dialogue_id}"
         lt_key = f"{redis_enum.RedisEnum.LONG_TERM_MEMORY.value}:{user_id}:{dialogue_id}"
-        
+
         # Get the current queue lengths from Redis or set TTL if not found
         rs_len = get_key(rs_key) or ChatUsecase._set_defaultkey(rs_key)
         lt_len = get_key(lt_key) or ChatUsecase._set_defaultkey(lt_key)
-        
+
         return int(rs_len), int(lt_len)
 
     @staticmethod
@@ -124,5 +126,6 @@ class ChatUsecase:
             increase_key(lt_key, amount=1)
         else:
             decrease_key(lt_key, amount=LONG_TERM_MEMORY_MAX_LENGTH)
-        
-        print(f"Updated Redis: {rs_key}={get_key(rs_key)}, {lt_key}={get_key(lt_key)}")
+
+        print(
+            f"Updated Redis: {rs_key}={get_key(rs_key)}, {lt_key}={get_key(lt_key)}")
