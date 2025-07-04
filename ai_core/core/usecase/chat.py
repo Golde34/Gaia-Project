@@ -25,13 +25,13 @@ class ChatUsecase:
         """
         recent_history, recursive_summary, long_term_memory = await cls._route_chat_history(query)
         
-        new_prompt = reflection_chat_history(
+        new_query = reflection_chat_history(
             recent_history=recent_history,
             recursive_summary=recursive_summary,
             long_term_memory=long_term_memory,
             query=query.query,
         )
-        query.query = new_prompt
+        query.query = new_query 
         response = await call_router_function(label_value=chat_type, query=query)
         await cls.update_chat_history(query=query, response=response)
         

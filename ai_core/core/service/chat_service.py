@@ -26,8 +26,11 @@ def reflection_chat_history(recent_history: str, recursive_summary: str, long_te
             long_term_memory=long_term_memory,
             current_query=query,
         )
-        print(f"New prompt generated: {new_prompt}")
-        return new_prompt
+        model_name = config.LLM_DEFAULT_MODEL 
+        new_query = llm_models.get_model_generate_content(
+            model_name)(prompt=new_prompt, model_name=model_name)
+        print(f"New query generated: {new_query}")
+        return new_query 
 
 async def get_recursive_summary(user_id: str, dialogue_id: str) -> str:
         """
