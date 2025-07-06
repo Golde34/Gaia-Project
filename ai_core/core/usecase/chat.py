@@ -10,9 +10,15 @@ from infrastructure.redis.redis import get_key, set_key, increase_key, decrease_
 from kernel.config.config import RECURSIVE_SUMMARY_MAX_LENGTH, LONG_TERM_MEMORY_MAX_LENGTH
 
 
+defaul_semantic_response = {
+    "recent_history": True,
+    "recursive_summary": True,
+    "long_term_memory": True 
+}
+
 class ChatUsecase:
     @classmethod
-    async def chat(cls, query: QueryRequest, chat_type: str):
+    async def chat(cls, query: QueryRequest, chat_type: str, default=True):
         """
         Handles the user's chat request, including routing, updating query, and saving to history.
 
@@ -23,7 +29,11 @@ class ChatUsecase:
         Returns:
             str: Response from the chat service after processing the query.
         """
-        recent_history, recursive_summary, long_term_memory = await cls._route_chat_history(query)
+        if default == False:
+            chat_history_semantic_router = await chat_history_route(query=query.query)
+            recent_history, recursive_summary, long_term_memory = await cls._route_chat_history(query, chat_history_semantic_router)
+
+        recent_history, recursive_summary, long_term_memory = await cls._route_chat_history(query, defaul_semantic_response)
 
         new_query = reflection_chat_history(
             recent_history=recent_history,
@@ -38,12 +48,10 @@ class ChatUsecase:
         return response
 
     @classmethod
-    async def _route_chat_history(cls, query: QueryRequest):
+    async def _route_chat_history(cls, query: QueryRequest, semantic_response: dict = None):
         """
         Routes the request based on semantic guidance, querying different memory sources.
         """
-        semantic_response = await chat_history_route(query=query.query)
-
         recent_history = recursive_summary = long_term_memory = ''
         if semantic_response.get('recent_history'):
             recent_history = await chat_hub_service_client.get_recent_history(
