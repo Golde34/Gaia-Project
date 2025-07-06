@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 	"logging_tracker/cmd/route"
+	database_postgresql "logging_tracker/infrastructure/database"
+	"logging_tracker/infrastructure/kafka"
 	"logging_tracker/kernel/configs"
 	"net/http"
 	"time"
@@ -14,6 +16,30 @@ import (
 
 
 func main() {
+	// Database
+	databaseConfig := configs.DatabaseConfig{}
+	dbCfg, _ := databaseConfig.LoadEnv()
+	dbConnection, err := database_postgresql.ConnectDB(dbCfg.Host, dbCfg.Port, dbCfg.Username, dbCfg.Password, dbCfg.Database)	
+	if err != nil {
+		defer dbConnection.Close()
+		log.Fatalf("Failed to connect to PostgreSQL database: %v", err)
+	}
+	log.Println("Database connected, database name: ", dbCfg.Database)
+
+	// Kafka Initialization
+	kafkaConfig := configs.KafkaConfig{}
+	kafkaCfg, _ := kafkaConfig.LoadEnv()
+	log.Println("Kafka Config: ", kafkaCfg.GroupId)
+
+	handlers := map[string] kafka.MessageHandler {
+	}
+
+	consumerGroupHandler := kafka.NewConsumerGroupHandler(kafkaCfg.Name, handlers)
+
+	go func () {
+		kafka.ConsumerGroup(kafkaCfg.BootstrapServers, kafkaCfg.Topics, kafkaCfg.GroupId, consumerGroupHandler)
+	}()
+	
 	config := configs.Config{}
 	cfg, _ := config.LoadEnv()
 
