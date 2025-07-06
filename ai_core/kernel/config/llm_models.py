@@ -1,4 +1,8 @@
-from  infrastructure.llm import gemini_generate_content 
+import contextvars
+
+from core.domain.enums import kafka_enum
+from infrastructure.llm import gemini_generate_content 
+from infrastructure.kafka.producer import send_kafka_message
 
 
 MODELS_INTERFACE = {
@@ -6,7 +10,7 @@ MODELS_INTERFACE = {
     "unsloth": "UNSLOTH" 
 }
 
-def get_model_generate_content(model_name: str):
+async def get_model_generate_content(model_name: str, user_id: str):
     """
     Get the generate content function for the specified model.
     
@@ -16,10 +20,21 @@ def get_model_generate_content(model_name: str):
     Returns:
         str: The generate content function for the model.
     """
+    if model_name not in MODELS_INTERFACE:
+        raise ValueError(f"Model {model_name} is not supported.")
+    session_id = contextvars.ContextVar("session_id").get() 
     try:
-        if model_name not in MODELS_INTERFACE:
-            raise ValueError(f"Model {model_name} is not supported.")
-        return MODELS_INTERFACE.get(model_name, "unsloth")
+        await push_calling_llm_api_times_message(
+            user_id=user_id,
+            session_id=session_id
+        )
     except Exception as e:
-        print(f"Error getting model generate content: {e}")
-        raise
+        print(f"Error pushing calling LLM API times message: {e}")
+    return MODELS_INTERFACE.get(model_name, "unsloth")
+
+async def push_calling_llm_api_times_message(user_id: str, session_id: str):
+    payload = {
+        "user_id": user_id,
+        "session_id": session_id
+    } 
+    await send_kafka_message(kafka_enum.KafkaTopic.CALLING_LLM_API_TIMES.value, payload)

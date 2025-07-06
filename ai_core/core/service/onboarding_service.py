@@ -16,6 +16,7 @@ from kernel.config import llm_models, config
 
 default_model = config.LLM_DEFAULT_MODEL
 
+
 async def introduce(query: QueryRequest) -> dict:
     """
     Register task via an user's daily life summary
@@ -31,7 +32,7 @@ async def introduce(query: QueryRequest) -> dict:
         if guided_route == SemanticRoute.GAIA_INTRODUCTION:
             response = await _gaia_introduce(query)
         elif guided_route == SemanticRoute.CHITCHAT:
-            response = chitchat(query)
+            response = await chitchat(query)
         else:
             raise ValueError("No route found for the query.")
 
@@ -65,9 +66,8 @@ async def _gaia_introduce(query: QueryRequest):
         query=query.query
     )
 
-    response = llm_models.get_model_generate_content(
-        default_model)(prompt=prompt,
-                       model_name=default_model)
+    response = await llm_models.get_model_generate_content(default_model, query.user_id)(
+        prompt=prompt, model_name=default_model)
     print("Response:", response)
     return response
 
@@ -86,10 +86,9 @@ async def register_task(query: QueryRequest) -> dict:
         prompt = onboarding_prompt.REGISTER_SCHEDULE_CALENDAR.format(
             query=query.query)
         print("Onboarding Prompt:", prompt)
-        response = llm_models.get_model_generate_content(
-            default_model)(prompt=prompt,
-                           model_name=default_model,
-                           )
+        response = await llm_models.get_model_generate_content(default_model, query.user_id)(
+            prompt=prompt, model_name=default_model
+        )
         json_str = clean_json_string(response)
         data_dict = json.loads(json_str)
         schedule_dto = DailyRoutineSchema.parse_obj(data_dict)
