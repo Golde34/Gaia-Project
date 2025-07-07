@@ -1,12 +1,12 @@
 package main
 
 import (
+	"chat_hub/cmd/route"
 	usecases "chat_hub/core/usecase/websocket"
 	"chat_hub/infrastructure/kafka"
 	"chat_hub/kernel/configs"
 	database_postgresql "chat_hub/kernel/database/postgresql"
 	consumer "chat_hub/ui/kafka"
-	"chat_hub/ui/router"
 	"log"
 	"net/http"
 	"time"
@@ -19,7 +19,7 @@ func main() {
 	// Database
 	databaseConfig := configs.DatabaseConfig{}
 	dbCfg, _ := databaseConfig.LoadEnv()
-	dbConnection, err := database_postgresql.ConnectDB(dbCfg.Host, dbCfg.Port, dbCfg.Username, dbCfg.Password, dbCfg.Database)	
+	dbConnection, err := database_postgresql.ConnectDB(dbCfg.Host, dbCfg.Port, dbCfg.Username, dbCfg.Password, dbCfg.Database)
 	if err != nil {
 		defer dbConnection.Close()
 		log.Fatalf("Failed to connect to PostgreSQL database: %v", err)
@@ -31,13 +31,13 @@ func main() {
 	kafkaCfg, _ := kafkaConfig.LoadEnv()
 	log.Println("Kafka Config: ", kafkaCfg.GroupId)
 
-	handlers := map[string] kafka.MessageHandler {
+	handlers := map[string]kafka.MessageHandler{
 		"task-manager.chat-hub-result.topic": consumer.NewTaskResultHandler(dbConnection),
 	}
 
 	consumerGroupHandler := kafka.NewConsumerGroupHandler(kafkaCfg.Name, handlers)
 
-	go func () {
+	go func() {
 		kafka.ConsumerGroup(kafkaCfg.BootstrapServers, kafkaCfg.Topics, kafkaCfg.GroupId, consumerGroupHandler)
 	}()
 
@@ -53,13 +53,11 @@ func main() {
 	r.Use(middleware.Timeout(time.Second * 60))
 
 	// Register WebSocket handler
-	http.HandleFunc("/ws", usecases.NewWebSocketUsecase(dbConnection).HandleChatmessage)
+	r.HandleFunc("/ws", usecases.NewWebSocketUsecase(dbConnection).HandleChatmessage)
 
 	// Rest Router
-	r.Group(func(ro chi.Router) {
-		router.NewChatHistoryRouter(dbConnection, r)
-	})
-	
+	route.Setup(r, dbConnection)
+
 	log.Printf("connect to http://localhost:%s/", cfg.Port)
-	log.Fatal(http.ListenAndServe(":"+cfg.Port, nil))
+	log.Fatal(http.ListenAndServe(":"+cfg.Port, r))
 }
