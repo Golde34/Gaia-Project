@@ -48,8 +48,8 @@ func (r *MessageRepository) CreateMessage(request entity.MessageEntity) (string,
 }
 
 func (r *MessageRepository) GetFarestUserMessageByDialogueId(dialogueId string, numberOfMessages int) (string, error) {
-	query := `SELECT id FROM messages WHERE dialogue_id = ? AND sender_type = ? ORDER BY created_at DESC LIMIT ?`
-	row := r.db.QueryRow(query, dialogueId, enums.UserMessage, numberOfMessages)
+	query := `SELECT id FROM messages WHERE dialogue_id = $1 AND sender_type = $2 ORDER BY created_at DESC LIMIT $3`
+	row := r.db.QueryRow(query, dialogueId, string(enums.UserMessage), numberOfMessages)
 	var messageId string
 	err := row.Scan(&messageId)
 	if err != nil {
@@ -62,7 +62,7 @@ func (r *MessageRepository) GetFarestUserMessageByDialogueId(dialogueId string, 
 }
 
 func (r *MessageRepository) GetRecentChatMessagesByDialogueId(dialogueId, oldestMessageId string) ([]entity.MessageEntity, error) {
-	query := `SELECT * FROM messages WHERE dialogue_id = ? AND id = ? ORDER BY created_at DESC`
+	query := `SELECT * FROM messages WHERE dialogue_id = $1 AND id = $2 ORDER BY created_at DESC`
 	rows, err := r.db.Query(query, dialogueId, oldestMessageId)
 	if err != nil {
 		return nil, err
