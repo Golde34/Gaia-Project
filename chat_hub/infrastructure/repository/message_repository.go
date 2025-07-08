@@ -10,13 +10,13 @@ import (
 )
 
 type MessageRepository struct {
-	db *sql.DB
+	db   *sql.DB
 	base *base_repo.DB
 }
 
-func NewMessageRepository(db *sql.DB) *MessageRepository{
+func NewMessageRepository(db *sql.DB) *MessageRepository {
 	return &MessageRepository{
-		db: db,
+		db:   db,
 		base: base_repo.NewDB(db),
 	}
 }
@@ -47,23 +47,21 @@ func (r *MessageRepository) CreateMessage(request entity.MessageEntity) (string,
 	return id, nil
 }
 
-func (r *MessageRepository) GetFarestUserMessageByDialogueId(dialogueId string, numberOfMessages int) (string, error) {
-	query := `SELECT id FROM messages WHERE dialogue_id = $1 AND sender_type = $2 ORDER BY created_at DESC LIMIT $3`
-	row := r.db.QueryRow(query, dialogueId, string(enums.UserMessage), numberOfMessages)
-	var messageId string
-	err := row.Scan(&messageId)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return "", nil 
-		}
-		return "", err
-	}
-	return messageId, nil
-}
-
-func (r *MessageRepository) GetRecentChatMessagesByDialogueId(dialogueId, oldestMessageId string) ([]entity.MessageEntity, error) {
-	query := `SELECT * FROM messages WHERE dialogue_id = $1 AND id = $2 ORDER BY created_at DESC`
-	rows, err := r.db.Query(query, dialogueId, oldestMessageId)
+// GetRecentChatMessagesByDialogueId retrieves all messages in a dialogue starting
+// from the N-th latest user message. It returns every message from that point
+// onward ordered by creation time descending.
+func (r *MessageRepository) GetRecentChatMessagesByDialogueId(dialogueId string, numberOfMessages int) ([]entity.MessageEntity, error) {
+	query := `SELECT id, user_id, dialogue_id, user_message_id, message_type, sender_type, content, metadata, created_at, updated_at
+                FROM messages
+                WHERE dialogue_id = $1
+                AND created_at >= COALESCE((
+                        SELECT created_at FROM messages
+                        WHERE dialogue_id = $1 AND sender_type = $2
+                        ORDER BY created_at DESC
+                        OFFSET $3 LIMIT 1
+                ), to_timestamp(0))
+                ORDER BY created_at DESC`
+	rows, err := r.db.Query(query, dialogueId, string(enums.UserMessage), numberOfMessages-1)
 	if err != nil {
 		return nil, err
 	}
