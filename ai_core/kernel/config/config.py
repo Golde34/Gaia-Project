@@ -1,8 +1,11 @@
+import contextvars
 from dotenv import load_dotenv
 import os
 
+
 load_dotenv()
 
+session_id_var = contextvars.ContextVar("session_id", default=None)
 
 SYSTEM_API_KEY = os.getenv('SYSTEM_API_KEY', 'your_system_api_key_here')
 OPENAPI_KEY = os.getenv('OPENAPI_KEY', 'your_openai_api_key_here')
@@ -34,9 +37,9 @@ CHAT_HUB_SERVICE_URL = f"http://{CHAT_HUB_SERVICE_HOST}:{CHAT_HUB_SERVICE_PORT}"
 # PostgreSQL configuration for ai_core service
 POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
 POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', 5432))
-POSTGRES_USER = os.getenv('POSTGRES_USER', 'user')
+POSTGRES_USER = os.getenv('POSTGRES_USER', 'postgres')
 POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'password')
-POSTGRES_DB = os.getenv('POSTGRES_DB', 'gaia')
+POSTGRES_DB = os.getenv('POSTGRES_DB', 'ai_core')
 
 RECURSIVE_SUMMARY_MAX_LENGTH = int(os.getenv('RECURSIVE_SUMMARY_MAX_LENGTH', 3))
 LONG_TERM_MEMORY_MAX_LENGTH = int(os.getenv('LONG_TERM_MEMORY_MAX_LENGTH', 10))

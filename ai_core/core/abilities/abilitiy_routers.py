@@ -32,6 +32,7 @@ async def call_router_function(label_value: str, query: dict) -> dict:
     Returns:
         dict: The response from the called function.
     """
+    print(f"Calling function for label: {label_value} with query: {query}")
     for router in ROUTERS:
         if router['label'] == label_value:
             return await router['function'](query)

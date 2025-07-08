@@ -28,6 +28,7 @@ async def introduce(query: QueryRequest) -> dict:
         user_daily_entries (dict):  
     """
     try:
+        print("Onboarding Query:", query.query)
         guided_route = await router_registry.gaia_introduction_route(query.query)
         if guided_route == SemanticRoute.GAIA_INTRODUCTION:
             response = await _gaia_introduce(query)

@@ -1,8 +1,7 @@
-import contextvars
-
 from core.domain.enums import kafka_enum
 from infrastructure.llm import gemini_generate_content 
 from infrastructure.kafka.producer import send_kafka_message
+from kernel.config.config import session_id_var
 
 
 MODELS_INTERFACE = {
@@ -22,7 +21,7 @@ async def get_model_generate_content(model_name: str, user_id: str):
     """
     if model_name not in MODELS_INTERFACE:
         raise ValueError(f"Model {model_name} is not supported.")
-    session_id = contextvars.ContextVar("session_id").get() 
+    session_id = session_id_var.get() 
     try:
         await push_calling_llm_api_times_message(
             user_id=user_id,

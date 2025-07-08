@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 
 class RecursiveSummary(BaseModel):
-    id: Optional[int] = None
+    id: str = None
     user_id: str
     dialogue_id: str
     summary: str

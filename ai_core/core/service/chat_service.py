@@ -27,9 +27,8 @@ async def reflection_chat_history(recent_history: str, recursive_summary: str, l
         current_query=query.query,
     )
     model_name = config.LLM_DEFAULT_MODEL
-    new_query = await llm_models.get_model_generate_content(model_name, query.user_id)(
-        prompt=new_prompt, model_name=model_name
-    )
+    function = await llm_models.get_model_generate_content(model_name, query.user_id)
+    new_query = function(prompt=new_prompt, model_name=model_name)
     print(f"New query generated: {new_query}")
     return new_query
 
@@ -59,7 +58,7 @@ async def update_recursive_summary(user_id: str, dialogue_id: str) -> None:
         response (str): The response to be added to the recursive summary.
     """
     try:
-        recent_history = chat_hub_service_client.get_recent_history(
+        recent_history = await chat_hub_service_client.get_recent_history(
             query=QueryRequest(
                 user_id=user_id,
                 dialogue_id=dialogue_id,
@@ -78,6 +77,7 @@ async def update_recursive_summary(user_id: str, dialogue_id: str) -> None:
         print(f"Recursive Summary: {recursive_summary}")
 
         recursive_summary = RecursiveSummary(
+            id=uuid.uuid4().hex,
             user_id=user_id,
             dialogue_id=dialogue_id,
             summary=recursive_summary,
@@ -147,7 +147,7 @@ async def update_long_term_memory(user_id: str, dialogue_id: str) -> None:
         print(f"Error updating long term memory: {e}")
 
 
-def get_long_term_memory(user_id: str, dialogue_id: str, query: str) -> str:
+async def get_long_term_memory(user_id: str, dialogue_id: str, query: str) -> str:
     """
     Retrieve long term memory from Redis or Milvus.
 
@@ -160,10 +160,9 @@ def get_long_term_memory(user_id: str, dialogue_id: str, query: str) -> str:
         str: The long term memory content.
     """
     try:
+        embeddings = await embedding_model.get_embeddings(texts=[query])
         long_term_memory = milvus_db.search_top_n(
-            query_embeddings=milvus_validation.validate_milvus_search_top_n(
-                embedding_model.get_embeddings(texts=[query])
-            ),
+            query_embeddings=milvus_validation.validate_milvus_search_top_n(embeddings),
             top_k=5,
             partition_name="default_memory"
         )

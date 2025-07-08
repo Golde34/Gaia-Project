@@ -37,7 +37,7 @@ class ChatUsecase:
         else:
             recent_history, recursive_summary, long_term_memory = await cls._route_chat_history(query, defaul_semantic_response)
 
-        new_query = reflection_chat_history(
+        new_query = await reflection_chat_history(
             recent_history=recent_history,
             recursive_summary=recursive_summary,
             long_term_memory=long_term_memory,

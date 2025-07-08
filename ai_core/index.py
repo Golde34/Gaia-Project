@@ -8,6 +8,7 @@ import uvicorn
 
 from ui.controller import chat_controller, onboarding_controller, rag_controller 
 from infrastructure.kafka.consumer import consume
+from kernel.config.config import session_id_var
 
 
 load_dotenv()
