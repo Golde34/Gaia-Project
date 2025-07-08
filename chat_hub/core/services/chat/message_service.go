@@ -58,13 +58,7 @@ func (s *MessageService) buildMessage(dialogue entity.UserDialogueEntity, userId
 }
 
 func (s *MessageService) GetMessageByDialogueId(dialogueId string, numberOfMessages int) ([]entity.MessageEntity, error) {
-	messageId, err := s.messageRepository.GetFarestUserMessageByDialogueId(dialogueId, numberOfMessages)
-	if err != nil {
-		log.Println("Error getting messages by dialogue ID: " + err.Error())
-		return nil, err
-	}
-
-	recentChatMessages, err := s.messageRepository.GetRecentChatMessagesByDialogueId(dialogueId, messageId)
+	recentChatMessages, err := s.messageRepository.GetRecentChatMessagesByDialogueId(dialogueId, numberOfMessages)
 	if err != nil {
 		log.Println("Error getting recent chat messages: " + err.Error())
 		return nil, err
