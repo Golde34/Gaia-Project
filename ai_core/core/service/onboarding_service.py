@@ -67,8 +67,8 @@ async def _gaia_introduce(query: QueryRequest):
         query=query.query
     )
 
-    response = await llm_models.get_model_generate_content(default_model, query.user_id)(
-        prompt=prompt, model_name=default_model)
+    function = await llm_models.get_model_generate_content(default_model, query.user_id)
+    response = function(prompt=prompt, model_name=default_model)
     print("Response:", response)
     return response
 
@@ -87,9 +87,8 @@ async def register_task(query: QueryRequest) -> dict:
         prompt = onboarding_prompt.REGISTER_SCHEDULE_CALENDAR.format(
             query=query.query)
         print("Onboarding Prompt:", prompt)
-        response = await llm_models.get_model_generate_content(default_model, query.user_id)(
-            prompt=prompt, model_name=default_model
-        )
+        function = await llm_models.get_model_generate_content(default_model, query.user_id)
+        response = function(prompt=prompt, model_name=default_model)
         json_str = clean_json_string(response)
         data_dict = json.loads(json_str)
         schedule_dto = DailyRoutineSchema.parse_obj(data_dict)

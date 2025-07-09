@@ -71,9 +71,8 @@ async def update_recursive_summary(user_id: str, dialogue_id: str) -> None:
         prompt = RECURSIVE_SUMMARY_PROMPT.format(
             recent_history=recent_history)
         model_name = config.LLM_DEFAULT_MODEL
-        recursive_summary = await llm_models.get_model_generate_content(model_name, user_id)(
-            prompt=prompt, model_name=model_name
-        )
+        function = await llm_models.get_model_generate_content(model_name, user_id)
+        recursive_summary = function(prompt=prompt, model_name=model_name)
         print(f"Recursive Summary: {recursive_summary}")
 
         recursive_summary = RecursiveSummary(
@@ -119,9 +118,8 @@ async def update_long_term_memory(user_id: str, dialogue_id: str) -> None:
         prompt = LONGTERM_MEMORY_PROMPT.format(
             recent_history=recent_history)
         model_name = config.LLM_DEFAULT_MODEL
-        long_term_memory = await llm_models.get_model_generate_content(model_name, user_id)(
-                prompt=prompt, model_name=model_name, dto=LongTermMemorySchema
-        )
+        function = await llm_models.get_model_generate_content(model_name, user_id)
+        long_term_memory = function(prompt=prompt, model_name=model_name, dto=LongTermMemorySchema)
         print(f"Long Term Memory: {long_term_memory}")
 
         metadata = []

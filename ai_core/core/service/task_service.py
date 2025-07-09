@@ -20,10 +20,9 @@ async def create_task(query: QueryRequest) -> dict:
     try:
         datetime_parse_col = ['startDate', 'deadline']
         prompt = CREATE_TASK_PROMPT.format(query=query.query)
-
-        response = await llm_models.get_model_generate_content(query.model_name, query.user_id)(
-            prompt=prompt, model_name=query.model_name, dto=CreateTaskSchema
-        )
+        function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
+        response = function(prompt=prompt, model_name=query.model_name, dto=CreateTaskSchema)
+        
         task_data = json.loads(response)
 
         datetime_values = {
@@ -55,8 +54,8 @@ async def create_task(query: QueryRequest) -> dict:
 async def _optimize_datetime(datetime_object: dict, model_name: str, user_id: str) -> dict:
     try:
         prompt = PARSING_DATE_PROMPT.format(input=datetime_object)
-        response = await llm_models.get_model_generate_content(model_name, user_id)(
-            prompt=prompt, model_name=model_name)
+        function = await llm_models.get_model_generate_content(model_name, user_id)
+        response = function(prompt=prompt, model_name=model_name)
         return parse_json_string(response)
     except Exception as e:
         raise e
@@ -73,8 +72,8 @@ async def create_task_result(query: QueryRequest) -> str:
     try:
         prompt = TASK_RESULT_PROMPT.format(query=query.query)
 
-        response = await llm_models.get_model_generate_content(query.model_name, query.user_id)(
-            prompt=prompt, model_name=query.model_name, dto=CreateTaskResultSchema)
+        function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
+        response = function(prompt=prompt, model_name=query.model_name, dto=CreateTaskResultSchema)
         return json.loads(response) 
     except Exception as e:
         raise e

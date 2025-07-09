@@ -26,9 +26,8 @@ async def abilities_handler(query: QueryRequest) -> str:
         prompt = CLASSIFY_PROMPT.format(
             query=query.query, tools=tools_string)
 
-        classify_response = await llm_models.get_model_generate_content(query.model_name, query.user_id)(
-                prompt=prompt, model_name=query.model_name
-        )
+        function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
+        classify_response = function(prompt=prompt, model_name=query.model_name)
 
         print("Classify Response:", classify_response)
         
@@ -54,9 +53,8 @@ async def chitchat(query: QueryRequest) -> str:
         prompt = CHITCHAT_PROMPT.format(query=query.query)
         if not query.model_name:
             query.model_name = config.LLM_DEFAULT_MODEL
-        response = await llm_models.get_model_generate_content(query.model_name, query.user_id)(
-                prompt=prompt, model_name=query.model_name
-        )
+        function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
+        response = function(prompt=prompt, model_name=query.model_name)
         print("Response:", response)
         return response
     except Exception as e:
