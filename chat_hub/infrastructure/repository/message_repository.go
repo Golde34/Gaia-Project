@@ -51,7 +51,7 @@ func (r *MessageRepository) CreateMessage(request entity.MessageEntity) (string,
 // from the N-th latest user message. It returns every message from that point
 // onward ordered by creation time descending.
 func (r *MessageRepository) GetRecentChatMessagesByDialogueId(dialogueId string, numberOfMessages int) ([]entity.MessageEntity, error) {
-	query := `SELECT id, user_id, dialogue_id, user_message_id, message_type, sender_type, content, metadata, created_at, updated_at
+	query := `SELECT user_id, dialogue_id, sender_type, content, metadata
                 FROM messages
                 WHERE dialogue_id = $1
                 AND created_at >= COALESCE((
@@ -70,9 +70,8 @@ func (r *MessageRepository) GetRecentChatMessagesByDialogueId(dialogueId string,
 	var messages []entity.MessageEntity
 	for rows.Next() {
 		var message entity.MessageEntity
-		if err := rows.Scan(&message.ID, &message.UserId, &message.DialogueId, &message.UserMessageId,
-			&message.MessageType, &message.SenderType, &message.Content, &message.Metadata,
-			&message.CreatedAt, &message.UpdatedAt); err != nil {
+		if err := rows.Scan(&message.UserId, &message.DialogueId, 
+			&message.SenderType, &message.Content, &message.Metadata); err != nil {
 			return nil, err
 		}
 		messages = append(messages, message)
