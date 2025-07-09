@@ -22,10 +22,26 @@ class ChatHubServiceClient:
                     "dialogueId": request.dialogue_id,
                     "numberOfMessages": request.number_of_messages
                 })
-            print(f"ChatHubServiceClient.get_recent_history: {result}")
-            return result
+            if not result:
+                print("No recent history found.")
+                return ''
+            if not self._validate_recent_history_response(request, result):
+                print("Recent history response validation failed.")
+                return ''
+
+            return result.get('messages')
         except Exception as e:
             print(f"Error in ChatHubServiceClient.get_recent_history: {e}")
             return ''
+
+    def _validate_recent_history_response(self, request: RecentHistoryRequest, response: dict) -> bool:
+        if int(request.user_id) != int(response.get('userId')):
+            print(f"User ID mismatch: {request.user_id} != {response.get('userId')}")
+            return False
+        if request.dialogue_id != response.get('dialogueId'):
+            print(f"Dialogue ID mismatch: {request.dialogue_id} != {response.get('dialogueId')}")
+            return False
+        return True
+
 
 chat_hub_service_client = ChatHubServiceClient()

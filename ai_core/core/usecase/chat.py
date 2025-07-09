@@ -137,5 +137,4 @@ class ChatUsecase:
         else:
             decrease_key(lt_key, amount=LONG_TERM_MEMORY_MAX_LENGTH)
 
-        print(
-            f"Updated Redis: {rs_key}={get_key(rs_key)}, {lt_key}={get_key(lt_key)}")
+        print(f"Updated Redis: {rs_key}={get_key(rs_key)}, {lt_key}={get_key(lt_key)}")
