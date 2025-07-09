@@ -1,6 +1,7 @@
 package services
 
 import (
+	response_dtos "chat_hub/core/domain/dtos/response"
 	entity "chat_hub/core/domain/entities"
 	"chat_hub/infrastructure/repository"
 	"database/sql"
@@ -57,23 +58,28 @@ func (s *MessageService) buildMessage(dialogue entity.UserDialogueEntity, userId
 	return entity, nil
 }
 
-func (s *MessageService) GetMessageByDialogueId(dialogueId string, numberOfMessages int) ([]entity.MessageEntity, error) {
-	messageId, err := s.messageRepository.GetFarestUserMessageByDialogueId(dialogueId, numberOfMessages)
-	if err != nil {
-		log.Println("Error getting messages by dialogue ID: " + err.Error())
-		return nil, err
-	}
-
-	recentChatMessages, err := s.messageRepository.GetRecentChatMessagesByDialogueId(dialogueId, messageId)
+func (s *MessageService) GetMessageByDialogueId(dialogueId string, numberOfMessages int) (response_dtos.RecentHistory, error) {
+	recentChatMessages, err := s.messageRepository.GetRecentChatMessagesByDialogueId(dialogueId, numberOfMessages)
 	if err != nil {
 		log.Println("Error getting recent chat messages: " + err.Error())
-		return nil, err
+		return response_dtos.RecentHistory{}, err
 	}
 	if len(recentChatMessages) == 0 {
 		log.Println("No messages found for dialogue ID: " + dialogueId)
-		return nil, nil
+		return response_dtos.RecentHistory{}, nil
 	}
-	log.Println("Found " + strconv.Itoa(len(recentChatMessages)) + " messages for dialogueID: " + dialogueId)
+	var recentChatMessagesDTO []response_dtos.MessageResponseDTO
+	for _, message := range recentChatMessages {
+		recentChatMessagesDTO = append(recentChatMessagesDTO, response_dtos.MessageResponseDTO{
+			Message:    "<" + message.SenderType + "> " + message.Content,
+			Metadata:   message.Metadata,
+		})
+	}
 
-	return recentChatMessages, nil
+	var recentChatHistoryDTO response_dtos.RecentHistory
+	recentChatHistoryDTO.UserId = recentChatMessages[0].UserId
+	recentChatHistoryDTO.DialogueId = recentChatMessages[0].DialogueId
+	recentChatHistoryDTO.Messages = recentChatMessagesDTO
+
+	return recentChatHistoryDTO, nil
 }

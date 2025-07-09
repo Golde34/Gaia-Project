@@ -9,7 +9,7 @@ from kernel.config import llm_models
 from kernel.utils.parse_json import parse_json_string
 
 
-def create_task(query: QueryRequest) -> dict:
+async def create_task(query: QueryRequest) -> dict:
     """
     Create task information extraction prompt for Gemini API.
     Args:
@@ -20,10 +20,9 @@ def create_task(query: QueryRequest) -> dict:
     try:
         datetime_parse_col = ['startDate', 'deadline']
         prompt = CREATE_TASK_PROMPT.format(query=query.query)
-
-        response = llm_models.get_model_generate_content(query.model_name)(
-            prompt=prompt, model_name=query.model_name, dto=CreateTaskSchema
-        )
+        function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
+        response = function(prompt=prompt, model_name=query.model_name, dto=CreateTaskSchema)
+        
         task_data = json.loads(response)
 
         datetime_values = {
@@ -32,7 +31,9 @@ def create_task(query: QueryRequest) -> dict:
         }
         
         if datetime_values:
-            optimized = _optimize_datetime(datetime_object=datetime_values, model_name=query.model_name)
+            optimized = await _optimize_datetime(
+                datetime_object=datetime_values, model_name=query.model_name, user_id=query.user_id
+            )
 
             for key in list(optimized.keys()):
                 if key not in datetime_values:
@@ -50,16 +51,16 @@ def create_task(query: QueryRequest) -> dict:
     except Exception as e:
         raise e
 
-def _optimize_datetime(datetime_object: dict, model_name: str) -> dict:
+async def _optimize_datetime(datetime_object: dict, model_name: str, user_id: str) -> dict:
     try:
         prompt = PARSING_DATE_PROMPT.format(input=datetime_object)
-        response = llm_models.get_model_generate_content(model_name)(
-            prompt=prompt, model_name=model_name)
+        function = await llm_models.get_model_generate_content(model_name, user_id)
+        response = function(prompt=prompt, model_name=model_name)
         return parse_json_string(response)
     except Exception as e:
         raise e
 
-def create_task_result(query: QueryRequest) -> str:
+async def create_task_result(query: QueryRequest) -> str:
     """
     Task result pipeline
     Args:
@@ -71,8 +72,8 @@ def create_task_result(query: QueryRequest) -> str:
     try:
         prompt = TASK_RESULT_PROMPT.format(query=query.query)
 
-        response = llm_models.get_model_generate_content(
-            query.model_name)(prompt=prompt, model_name=query.model_name, dto=CreateTaskResultSchema)
+        function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
+        response = function(prompt=prompt, model_name=query.model_name, dto=CreateTaskResultSchema)
         return json.loads(response) 
     except Exception as e:
         raise e

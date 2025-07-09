@@ -4,14 +4,12 @@ from infrastructure.semantic_router import route, router
 from kernel.config import config
 
 
-embedding_manager = router.EmbeddingManager()
-
 introduction_route = route.Route(
     name=enum.SemanticRoute.GAIA_INTRODUCTION, samples=introduction_samples.gaia_introduction_sample)
 chitchat_route = route.Route(
     name=enum.SemanticRoute.CHITCHAT, samples=introduction_samples.chitchat_sample)
 onboarding_router = router.SemanticRouter(routes=[introduction_route, chitchat_route],
-                                          model_name=config.EMBEDDING_MODEL, embedding_manager=embedding_manager)
+                                          model_name=config.EMBEDDING_MODEL)
 
 
 async def gaia_introduction_route(query: str) -> route.Route:
@@ -23,7 +21,7 @@ async def gaia_introduction_route(query: str) -> route.Route:
     """
     await onboarding_router.initialize()
     guided_route = await onboarding_router.guide(query)
-    print(f"Semnatic router: {guided_route.name}")
+    print(f"Semantic router of gaia introduction: {guided_route.name}")
     if guided_route is None:
         raise ValueError("No route found for the query.")
     return guided_route.name
@@ -36,7 +34,7 @@ recursive_summary = route.Route(
 long_term_memory = route.Route(
     name=enum.SemanticRoute.LONG_TERM_MEMORY, samples=chat_history_samples.long_term_memory_sample)
 chat_history_router = router.SemanticRouter(routes=[recent_history, recursive_summary, long_term_memory, chitchat_route],
-                                          model_name=config.EMBEDDING_MODEL, embedding_manager=embedding_manager)
+                                          model_name=config.EMBEDDING_MODEL)
 
 async def chat_history_route(query: str) -> route.Route:
     """

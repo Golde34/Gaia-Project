@@ -33,7 +33,8 @@ func (s *ChatHistoryUsecase) GetRecentHistory(userId, dialogueId string, numberO
 	}
 
 	return map[string]interface{}{
-		"dialogue": dialogue,
-		"messages": messages,
+		"userId":     messages.UserId,
+		"dialogueId": messages.DialogueId,
+		"messages":   messages.Messages,
 	}, nil
 }

@@ -46,6 +46,10 @@ Your task is to analyze and understand the conversation context based on the abo
 - **Multiple potential areas of focus**: The user's query could relate to various domains (e.g., task management, medical inquiries, personal information, etc.). It is important to identify which area the current query falls under and analyze the relevant history (task-related or otherwise).
 - For example, if the user is asking to **add a task, view a task, or update a task**, or if they are asking about a **medical issue**, **personal data**, or any other area, you need to retrieve the correct context from the history and modify the query accordingly.
 
+Output:
+You are rewriting the **current query** to include all relevant information from the conversation history. If no additional information is needed, return the current query as is.
+The output should be a single string that is the modified or unmodified current query.
+
 ### Example:
 
 **User's request**: "Show me the task list for today and then update task A."
