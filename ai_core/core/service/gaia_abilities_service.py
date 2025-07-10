@@ -10,7 +10,7 @@ from core.service.task_service import handle_task_service_response
 from kernel.config import llm_models, config
 
 
-async def abilities_handler(query: QueryRequest) -> str:
+async def abilities_handler(query: QueryRequest, guided_route: str) -> str:
     """
     Handle the service request based on the query type dynamically.
     Args:
@@ -21,18 +21,8 @@ async def abilities_handler(query: QueryRequest) -> str:
     """
     print("Abilities Handler called with query:", query)
     try:
-        tools_string = json.dumps(ABILITIES, indent=2)
-
-        prompt = CLASSIFY_PROMPT.format(
-            query=query.query, tools=tools_string)
-
-        function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
-        classify_response = function(prompt=prompt, model_name=query.model_name)
-
-        print("Classify Response:", classify_response)
-        
         matched_type = next(
-            (key for key in FUNCTIONS if key in classify_response), enum.GaiaAbilities.CHITCHAT.value)
+            (key for key in FUNCTIONS if key in guided_route), enum.GaiaAbilities.CHITCHAT.value)
         handler = await FUNCTIONS[matched_type]
 
         result = handler(query=query)
@@ -41,7 +31,7 @@ async def abilities_handler(query: QueryRequest) -> str:
     except Exception as e:
         raise e
 
-async def chitchat(query: QueryRequest) -> str:
+async def chitchat(query: QueryRequest, guided_route) -> str:
     """
     Chitchat pipeline
     Args:
