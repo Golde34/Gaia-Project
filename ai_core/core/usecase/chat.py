@@ -1,6 +1,4 @@
-import uuid
-
-from core.abilities.abilitiy_routers import call_router_function
+from core.abilities.ability_routers import call_router_function, select_ability
 from core.domain.enums import redis_enum, kafka_enum
 from core.domain.request.query_request import QueryRequest
 from core.domain.request.chat_hub_request import RecentHistoryRequest
@@ -31,11 +29,13 @@ class ChatUsecase:
         Returns:
             str: Response from the chat service after processing the query.
         """
+        tool_selection = await select_ability(label_value=chat_type, query=query)
+
         if default == False:
             chat_history_semantic_router = await chat_history_route(query=query.query)
-            recent_history, recursive_summary, long_term_memory = await cls._route_chat_history(query, chat_history_semantic_router)
+            recent_history, recursive_summary, long_term_memory = await cls.route_chat_history(query, chat_history_semantic_router)
         else:
-            recent_history, recursive_summary, long_term_memory = await cls._route_chat_history(query, defaul_semantic_response)
+            recent_history, recursive_summary, long_term_memory = await cls.route_chat_history(query, defaul_semantic_response)
 
         new_query = await reflection_chat_history(
             recent_history=recent_history,
@@ -44,13 +44,13 @@ class ChatUsecase:
             query=query,
         )
         query.query = new_query
-        response = await call_router_function(label_value=chat_type, query=query)
+        response = await call_router_function(label_value=chat_type, query=query, tool_selection=tool_selection)
         await cls.update_chat_history(query=query, response=response)
 
         return response
 
     @classmethod
-    async def _route_chat_history(cls, query: QueryRequest, semantic_response: dict = None):
+    async def route_chat_history(cls, query: QueryRequest, semantic_response: dict = None):
         """
         Routes the request based on semantic guidance, querying different memory sources.
         """

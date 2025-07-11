@@ -7,7 +7,6 @@ from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import DailyRoutineSchema
 from core.domain.response.base_response import return_success_response
 from core.prompts import onboarding_prompt
-from core.semantic_router import router_registry
 from core.service.gaia_abilities_service import chitchat
 from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.vector_db.milvus import milvus_db
@@ -17,7 +16,7 @@ from kernel.config import llm_models, config
 default_model = config.LLM_DEFAULT_MODEL
 
 
-async def introduce(query: QueryRequest) -> dict:
+async def introduce(query: QueryRequest, guided_route: str) -> dict:
     """
     Register task via an user's daily life summary
 
@@ -29,7 +28,6 @@ async def introduce(query: QueryRequest) -> dict:
     """
     try:
         print("Onboarding Query:", query.query)
-        guided_route = await router_registry.gaia_introduction_route(query.query)
         if guided_route == SemanticRoute.GAIA_INTRODUCTION:
             response = await _gaia_introduce(query)
         elif guided_route == SemanticRoute.CHITCHAT:
@@ -73,7 +71,7 @@ async def _gaia_introduce(query: QueryRequest):
     return response
 
 
-async def register_task(query: QueryRequest) -> dict:
+async def register_task(query: QueryRequest, guided_route=None) -> dict:
     """
     Register task via an user's daily life summary
 
