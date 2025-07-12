@@ -4,8 +4,11 @@ import {
 	BellIcon,
 	BookmarkIcon,
 	CalendarIcon,
+	ChartBarIcon,
 	ClipboardCheckIcon,
+	CogIcon,
 	CreditCardIcon,
+	DocumentSearchIcon,
 	ExternalLinkIcon,
 	MailIcon,
 	PencilAltIcon,
@@ -102,9 +105,18 @@ const Sidebar = () => {
 							<Description>User Profile</Description>
 						</LinkWrapper>
 					</Col>
+					<Col numColSpan={1}>
+						<LinkWrapper href="/client-gui/onboarding">
+							<Button variant="primary" color="indigo"
+								className="p-2 rounded-lg mb-4">
+								<CogIcon width={20} />
+							</Button>
+							<Description>Onboarding </Description>
+						</LinkWrapper>
+					</Col>
 				</Grid>
 
-				{/*<ChartBarIcon
+				{/* <ChartBarIcon
 					width={40}
 					className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
 				/>
@@ -116,12 +128,6 @@ const Sidebar = () => {
 					width={40}
 					className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
 				/> */}
-				<a href="/client-gui/scheduling-table">
-					<CreditCardIcon
-						width={40}
-						className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
-					/>
-				</a> 
 				<BellIcon
 					width={40}
 					className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"

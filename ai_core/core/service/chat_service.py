@@ -3,16 +3,90 @@ import uuid
 
 from core.domain.entities.recursive_summary import RecursiveSummary
 from core.domain.enums.redis_enum import RedisEnum
+from core.domain.request.chat_hub_request import RecentHistoryRequest
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import LongTermMemorySchema
+from core.prompts.system_prompt import CHAT_HISTORY_PROMPT, LONGTERM_MEMORY_PROMPT, RECURSIVE_SUMMARY_PROMPT
 from core.validation import milvus_validation
-from core.prompts.system_prompt import LONGTERM_MEMORY_PROMPT, RECURSIVE_SUMMARY_PROMPT, CHAT_HISTORY_PROMPT
 from infrastructure.repository.recursive_summary_repository import recursive_summary_repo
 from infrastructure.redis.redis import set_key, get_key
 from infrastructure.vector_db.milvus import milvus_db
 from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.client.chat_hub_service_client import chat_hub_service_client
 from kernel.config import llm_models, config
+
+
+async def query_chat_history(query: QueryRequest, semantic_response: dict = config.DEFAULT_SEMANTIC_RESPONSE):
+    """
+    Routes the request based on semantic guidance, querying different memory sources.
+    """
+    recent_history = recursive_summary = long_term_memory = ''
+    if semantic_response.get('recent_history'):
+        recent_history = await chat_hub_service_client.get_recent_history(
+            RecentHistoryRequest(user_id=query.user_id,
+                                 dialogue_id=query.dialogue_id,
+                                 number_of_messages=config.RECENT_HISTORY_MAX_LENGTH)
+        )
+
+    if semantic_response.get('recursive_summary'):
+        recursive_summary = await get_recursive_summary(query.user_id, query.dialogue_id)
+
+    if semantic_response.get('long_term_memory'):
+        long_term_memory = await get_long_term_memory(query.user_id, query.dialogue_id, query.query)
+
+    return recent_history, recursive_summary, long_term_memory
+
+
+async def get_recursive_summary(user_id: str, dialogue_id: str) -> str:
+    """
+    Retrieves recursive summary from Redis, falling back to the database if necessary.
+    """
+    try:
+        recursive_summary_key = f"{RedisEnum.RECURSIVE_SUMMARY_CONTENT.value}:{user_id}:{dialogue_id}"
+        recursive_summary_content = get_key(recursive_summary_key)
+        if not recursive_summary_content:
+            recursive_summary_content = await recursive_summary_repo.list_by_dialogue(user_id=user_id, dialogue_id=dialogue_id)
+
+        return recursive_summary_content or ''
+    except Exception as e:
+        print(f"Error in _get_recursive_summary: {e}")
+        return ''
+
+
+async def get_long_term_memory(user_id: str, dialogue_id: str, query: str) -> str:
+    """
+    Retrieve long term memory from Redis or Milvus.
+
+    Args:
+        user_id (str): The user's ID.
+        dialogue_id (str): The dialogue ID.
+        query (str): The user's query.
+
+    Returns:
+        str: The long term memory content.
+    """
+    try:
+        embeddings = await embedding_model.get_embeddings(texts=[query])
+        long_term_memory = milvus_db.search_top_n(
+            query_embeddings=milvus_validation.validate_milvus_search_top_n(
+                embeddings),
+            top_k=5,
+            partition_name="default_memory"
+        )
+
+        if long_term_memory is None or len(long_term_memory) == 0:
+            print(
+                f"No long term memory found for user {user_id} and dialogue {dialogue_id}")
+            return ''
+
+        filtered_memory = [
+            memory for memory in long_term_memory if memory['metadata'].get('user_id') == user_id and memory['metadata'].get('dialogue_id') == dialogue_id
+        ]
+        return ', '.join([memory['content'] for memory in filtered_memory]) if filtered_memory else ''
+
+    except Exception as e:
+        print(f"Error retrieving long term memory: {e}")
+        return ''
 
 
 async def reflection_chat_history(recent_history: str, recursive_summary: str, long_term_memory: str, query: QueryRequest):
@@ -31,22 +105,6 @@ async def reflection_chat_history(recent_history: str, recursive_summary: str, l
     new_query = function(prompt=new_prompt, model_name=model_name)
     print(f"New query generated: {new_query}")
     return new_query
-
-
-async def get_recursive_summary(user_id: str, dialogue_id: str) -> str:
-    """
-    Retrieves recursive summary from Redis, falling back to the database if necessary.
-    """
-    try:
-        recursive_summary_key = f"{RedisEnum.RECURSIVE_SUMMARY_CONTENT.value}:{user_id}:{dialogue_id}"
-        recursive_summary_content = get_key(recursive_summary_key)
-        if not recursive_summary_content:
-            recursive_summary_content = await recursive_summary_repo.list_by_dialogue(user_id=user_id, dialogue_id=dialogue_id)
-
-        return recursive_summary_content or ''
-    except Exception as e:
-        print(f"Error in _get_recursive_summary: {e}")
-        return ''
 
 
 async def update_recursive_summary(user_id: str, dialogue_id: str) -> None:
@@ -119,7 +177,8 @@ async def update_long_term_memory(user_id: str, dialogue_id: str) -> None:
             recent_history=recent_history)
         model_name = config.LLM_DEFAULT_MODEL
         function = await llm_models.get_model_generate_content(model_name, user_id)
-        long_term_memory = function(prompt=prompt, model_name=model_name, dto=LongTermMemorySchema)
+        long_term_memory = function(
+            prompt=prompt, model_name=model_name, dto=LongTermMemorySchema)
         print(f"Long Term Memory: {long_term_memory}")
 
         metadata = []
@@ -143,38 +202,3 @@ async def update_long_term_memory(user_id: str, dialogue_id: str) -> None:
             )
     except Exception as e:
         print(f"Error updating long term memory: {e}")
-
-
-async def get_long_term_memory(user_id: str, dialogue_id: str, query: str) -> str:
-    """
-    Retrieve long term memory from Redis or Milvus.
-
-    Args:
-        user_id (str): The user's ID.
-        dialogue_id (str): The dialogue ID.
-        query (str): The user's query.
-
-    Returns:
-        str: The long term memory content.
-    """
-    try:
-        embeddings = await embedding_model.get_embeddings(texts=[query])
-        long_term_memory = milvus_db.search_top_n(
-            query_embeddings=milvus_validation.validate_milvus_search_top_n(embeddings),
-            top_k=5,
-            partition_name="default_memory"
-        )
-
-        if long_term_memory is None or len(long_term_memory) == 0:
-            print(
-                f"No long term memory found for user {user_id} and dialogue {dialogue_id}")
-            return ''
-
-        filtered_memory = [
-            memory for memory in long_term_memory if memory['metadata'].get('user_id') == user_id and memory['metadata'].get('dialogue_id') == dialogue_id
-        ]
-        return ', '.join([memory['content'] for memory in filtered_memory]) if filtered_memory else ''
-
-    except Exception as e:
-        print(f"Error retrieving long term memory: {e}")
-        return ''

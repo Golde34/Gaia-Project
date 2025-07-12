@@ -41,5 +41,12 @@ POSTGRES_USER = os.getenv('POSTGRES_USER', 'postgres')
 POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'password')
 POSTGRES_DB = os.getenv('POSTGRES_DB', 'ai_core')
 
+RECENT_HISTORY_MAX_LENGTH = int(os.getenv('RECENT_HISTORY_MAX_LENGTH', 3))
 RECURSIVE_SUMMARY_MAX_LENGTH = int(os.getenv('RECURSIVE_SUMMARY_MAX_LENGTH', 3))
 LONG_TERM_MEMORY_MAX_LENGTH = int(os.getenv('LONG_TERM_MEMORY_MAX_LENGTH', 10))
+
+DEFAULT_SEMANTIC_RESPONSE = {
+    "recent_history": True,
+    "recursive_summary": True,
+    "long_term_memory": True
+}

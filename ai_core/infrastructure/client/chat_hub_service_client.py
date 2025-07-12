@@ -29,7 +29,7 @@ class ChatHubServiceClient:
                 print("Recent history response validation failed.")
                 return ''
 
-            return result.get('messages')
+            return self._format_history(result.get('messages'))
         except Exception as e:
             print(f"Error in ChatHubServiceClient.get_recent_history: {e}")
             return ''
@@ -43,5 +43,13 @@ class ChatHubServiceClient:
             return False
         return True
 
+    def _format_history(self, history_list):
+        lines = []
+        for msg in history_list:
+            if msg["message"].startswith("<user>"):
+                lines.append("User: " + msg["message"].replace("<user>", "").strip())
+            elif msg["message"].startswith("<bot>"):
+                lines.append("GAIA: " + msg["message"].replace("<bot>", "").strip())
+        return "\n".join(lines)
 
 chat_hub_service_client = ChatHubServiceClient()

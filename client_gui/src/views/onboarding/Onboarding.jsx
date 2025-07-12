@@ -17,7 +17,7 @@ const StepContent = ({ stepIndex, onPrevious, onNext, onSkip }) => {
   switch (stepIndex) {
     case 1:
       return (
-        <div className="mx-auto mb-20 mt-28 max-w-5xl px-4 md:mt-32 md:px-6">
+        <div className="mx-auto mb-20 mt-28 max-w-7xl px-4 md:mt-32 md:px-6">
           <GaiaIntroduction onNext={onNext} onSkip={onSkip} />
         </div>
       )
@@ -81,11 +81,13 @@ const Onboarding = () => {
           </span>
         </div>
         <StepProgress currentStepIndex={stepIndex - 1} />
-        <Button
-          variant="secondary"
-          className="hidden md:inline-flex"
-        > Skip to Dashboard
-        </Button>
+        <a href="/client-gui/dashboard">
+          <Button
+            variant="secondary"
+            className="hidden md:inline-flex"
+          > Skip to Dashboard
+          </Button>
+        </a>
       </header>
       <main className={cx(scrolled && "pt-12")}>
         <StepContent stepIndex={stepIndex} onNext={handleNext} onSkip={handleSkip} onPrevious={handlePrevious} />

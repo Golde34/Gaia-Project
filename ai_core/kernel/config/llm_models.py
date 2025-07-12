@@ -9,7 +9,7 @@ MODELS_INTERFACE = {
     "unsloth": "UNSLOTH" 
 }
 
-async def get_model_generate_content(model_name: str, user_id: str):
+async def get_model_generate_content(model_name: str, user_id: str, prompt: str = None):
     """
     Get the generate content function for the specified model.
     
@@ -25,15 +25,17 @@ async def get_model_generate_content(model_name: str, user_id: str):
     try:
         await push_calling_llm_api_times_message(
             user_id=user_id,
-            session_id=session_id
+            session_id=session_id,
+            prompt=prompt
         )
     except Exception as e:
         print(f"Error pushing calling LLM API times message: {e}")
     return MODELS_INTERFACE.get(model_name, "unsloth")
 
-async def push_calling_llm_api_times_message(user_id: str, session_id: str):
+async def push_calling_llm_api_times_message(user_id: str, session_id: str, prompt: str = None):
     payload = {
         "user_id": user_id,
-        "session_id": session_id
+        "session_id": session_id,
+        "prompt": prompt if prompt else "",
     } 
     await send_kafka_message(kafka_enum.KafkaTopic.CALLING_LLM_API_TIMES.value, payload)
