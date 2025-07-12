@@ -5,7 +5,7 @@ from core.domain.enums import enum
 from core.prompts.system_prompt import CLASSIFY_PROMPT
 from core.semantic_router import router_registry
 from core.service.onboarding_service import introduce, register_task
-from core.service.gaia_abilities_service import abilities_handler, chitchat
+from core.service.gaia_abilities_service import abilities_handler
 from kernel.config import llm_models
 
 

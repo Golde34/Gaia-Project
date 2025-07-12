@@ -7,7 +7,7 @@ from core.domain.response.base_response import return_success_response
 from core.domain.response.model_output_schema import DailyRoutineSchema
 from core.prompts import onboarding_prompt
 from core.service import chat_service
-from core.service.gaia_abilities_service import chitchat
+from core.service.gaia_abilities_service import chitchat_with_history 
 from core.validation import milvus_validation
 from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.vector_db.milvus import milvus_db
@@ -33,7 +33,7 @@ async def introduce(query: QueryRequest, guided_route: str) -> dict:
         if guided_route == SemanticRoute.GAIA_INTRODUCTION:
             response = await _gaia_introduce(query, recent_history, recursive_summary, long_term_memory)
         elif guided_route == SemanticRoute.CHITCHAT:
-            response = await chitchat(query)
+            response = await chitchat_with_history(query, recent_history, recursive_summary, long_term_memory)
         else:
             raise ValueError("No route found for the query.")
 
@@ -76,7 +76,7 @@ async def _gaia_introduce(query: QueryRequest, recent_history: str, recursive_su
     return response
 
 
-async def register_task(query: QueryRequest, guided_route=None) -> dict:
+async def register_task(query: QueryRequest, _guided_route=None) -> dict:
     """
     Register task via an user's daily life summary
 
