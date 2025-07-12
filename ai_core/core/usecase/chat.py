@@ -1,10 +1,8 @@
 from core.abilities import ability_routers
 from core.domain.enums import redis_enum, kafka_enum
 from core.domain.request.query_request import QueryRequest
-from core.domain.request.chat_hub_request import RecentHistoryRequest
-from core.semantic_router.router_registry import chat_history_route
+from core.semantic_router import router_registry
 from core.service import chat_service
-from infrastructure.client.chat_hub_service_client import chat_hub_service_client
 from infrastructure.kafka.producer import send_kafka_message
 from infrastructure.redis.redis import get_key, set_key, increase_key, decrease_key
 from kernel.config.config import RECURSIVE_SUMMARY_MAX_LENGTH, LONG_TERM_MEMORY_MAX_LENGTH
@@ -50,10 +48,10 @@ class ChatUsecase:
         Retrieves the chat history for the user and dialogue ID from Redis.
         """
         if default == False:
-            chat_history_semantic_router = await chat_history_route(query=query.query)
-            recent_history, recursive_summary, long_term_memory = await cls._route_chat_history(query, chat_history_semantic_router)
+            chat_history_semantic_router = await router_registry.chat_history_route(query=query.query)
+            recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query, chat_history_semantic_router)
         else:
-            recent_history, recursive_summary, long_term_memory = await cls._route_chat_history(query, defaul_semantic_response)
+            recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query, defaul_semantic_response)
 
         new_query = await chat_service.reflection_chat_history(
             recent_history=recent_history,
@@ -63,26 +61,6 @@ class ChatUsecase:
         )
         query.query = new_query
         return query
-
-    @classmethod
-    async def _route_chat_history(cls, query: QueryRequest, semantic_response: dict = None):
-        """
-        Routes the request based on semantic guidance, querying different memory sources.
-        """
-        recent_history = recursive_summary = long_term_memory = ''
-        if semantic_response.get('recent_history'):
-            recent_history = await chat_hub_service_client.get_recent_history(
-                RecentHistoryRequest(user_id=query.user_id,
-                                     dialogue_id=query.dialogue_id)
-            )
-
-        if semantic_response.get('recursive_summary'):
-            recursive_summary = await chat_service.get_recursive_summary(query.user_id, query.dialogue_id)
-
-        if semantic_response.get('long_term_memory'):
-            long_term_memory = await chat_service.get_long_term_memory(query.user_id, query.dialogue_id, query.query)
-
-        return recent_history, recursive_summary, long_term_memory
 
     @classmethod
     async def update_chat_history(cls, query: QueryRequest, response: str):

@@ -1,11 +1,7 @@
-import json
-
-from core.abilities.abilities import ABILITIES
 from core.abilities.function_handlers import FUNCTIONS
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
 from core.prompts.abilities_prompt import CHITCHAT_PROMPT
-from core.prompts.system_prompt import CLASSIFY_PROMPT
 from core.service.task_service import handle_task_service_response
 from kernel.config import llm_models, config
 
