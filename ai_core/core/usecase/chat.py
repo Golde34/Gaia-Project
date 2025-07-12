@@ -1,9 +1,9 @@
-from core.abilities.ability_routers import call_router_function, select_ability
+from core.abilities import ability_routers
 from core.domain.enums import redis_enum, kafka_enum
 from core.domain.request.query_request import QueryRequest
 from core.domain.request.chat_hub_request import RecentHistoryRequest
 from core.semantic_router.router_registry import chat_history_route
-from core.service.chat_service import reflection_chat_history, get_recursive_summary, get_long_term_memory
+from core.service import chat_service
 from infrastructure.client.chat_hub_service_client import chat_hub_service_client
 from infrastructure.kafka.producer import send_kafka_message
 from infrastructure.redis.redis import get_key, set_key, increase_key, decrease_key
@@ -13,44 +13,59 @@ from kernel.config.config import RECURSIVE_SUMMARY_MAX_LENGTH, LONG_TERM_MEMORY_
 defaul_semantic_response = {
     "recent_history": True,
     "recursive_summary": True,
-    "long_term_memory": True 
+    "long_term_memory": True
 }
 
+
 class ChatUsecase:
+
     @classmethod
     async def chat(cls, query: QueryRequest, chat_type: str, default=True):
         """
-        Handles the user's chat request, including routing, updating query, and saving to history.
+        Gaia selects the appropriate ability based on the chat type and query.
+        It retrieves the chat history, generates a new query based on the context,
+        and calls the appropriate router function to handle the request.
 
         Args:
-            query (QueryRequest): User query request containing user_id, dialogue_id, and query text. 
-            chat_type (str): Type of chat to be routed (e.g., task update, general chat, etc.).
-
+            query (QueryRequest): The user's query containing user_id, dialogue_id, and model_name
+            chat_type (str): The type of chat to handle, e.g., abilities, introduction, etc.
+            default (bool): Whether to use the default semantic response or a custom one.
         Returns:
-            str: Response from the chat service after processing the query.
-        """
-        tool_selection = await select_ability(label_value=chat_type, query=query)
+            dict: The response from the selected ability handler.
 
+        """
+        tool_selection, use_chat_history_prompt = await ability_routers.select_ability(label_value=chat_type, query=query)
+
+        if use_chat_history_prompt:
+            query = await cls.get_chat_history(query=query, default=default)
+
+        response = await ability_routers.call_router_function(label_value=chat_type, query=query, tool_selection=tool_selection)
+        await cls.update_chat_history(query=query, response=response)
+
+        return response
+
+    @classmethod
+    async def get_chat_history(cls, query: QueryRequest, default=True):
+        """
+        Retrieves the chat history for the user and dialogue ID from Redis.
+        """
         if default == False:
             chat_history_semantic_router = await chat_history_route(query=query.query)
-            recent_history, recursive_summary, long_term_memory = await cls.route_chat_history(query, chat_history_semantic_router)
+            recent_history, recursive_summary, long_term_memory = await cls._route_chat_history(query, chat_history_semantic_router)
         else:
-            recent_history, recursive_summary, long_term_memory = await cls.route_chat_history(query, defaul_semantic_response)
+            recent_history, recursive_summary, long_term_memory = await cls._route_chat_history(query, defaul_semantic_response)
 
-        new_query = await reflection_chat_history(
+        new_query = await chat_service.reflection_chat_history(
             recent_history=recent_history,
             recursive_summary=recursive_summary,
             long_term_memory=long_term_memory,
             query=query,
         )
         query.query = new_query
-        response = await call_router_function(label_value=chat_type, query=query, tool_selection=tool_selection)
-        await cls.update_chat_history(query=query, response=response)
-
-        return response
+        return query
 
     @classmethod
-    async def route_chat_history(cls, query: QueryRequest, semantic_response: dict = None):
+    async def _route_chat_history(cls, query: QueryRequest, semantic_response: dict = None):
         """
         Routes the request based on semantic guidance, querying different memory sources.
         """
@@ -62,10 +77,10 @@ class ChatUsecase:
             )
 
         if semantic_response.get('recursive_summary'):
-            recursive_summary = await get_recursive_summary(query.user_id, query.dialogue_id)
+            recursive_summary = await chat_service.get_recursive_summary(query.user_id, query.dialogue_id)
 
         if semantic_response.get('long_term_memory'):
-            long_term_memory = await get_long_term_memory(query.user_id, query.dialogue_id, query.query)
+            long_term_memory = await chat_service.get_long_term_memory(query.user_id, query.dialogue_id, query.query)
 
         return recent_history, recursive_summary, long_term_memory
 
@@ -137,4 +152,5 @@ class ChatUsecase:
         else:
             decrease_key(lt_key, amount=LONG_TERM_MEMORY_MAX_LENGTH)
 
-        print(f"Updated Redis: {rs_key}={get_key(rs_key)}, {lt_key}={get_key(lt_key)}")
+        print(
+            f"Updated Redis: {rs_key}={get_key(rs_key)}, {lt_key}={get_key(lt_key)}")

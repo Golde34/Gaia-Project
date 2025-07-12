@@ -28,7 +28,7 @@ ROUTERS = [
 ]
 
 
-async def select_ability(label_value: str, query: str) -> str:
+async def select_ability(label_value: str, query: str) -> tuple[str, bool]:
     """
     Select the appropriate ability based on the label value.
 
@@ -40,9 +40,9 @@ async def select_ability(label_value: str, query: str) -> str:
     """
     if label_value == enum.ChatType.GAIA_INTRODUCTION.value:
         guided_route = await router_registry.gaia_introduction_route(query.query)
-        return guided_route
+        return guided_route, False 
     elif label_value == enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value:
-        return label_value
+        return label_value, False 
     elif label_value == enum.ChatType.ABILITIES.value:
         tools_string = json.dumps(ABILITIES, indent=2)
 
@@ -54,7 +54,7 @@ async def select_ability(label_value: str, query: str) -> str:
             prompt=prompt, model_name=query.model_name)
 
         print("Classify Response:", classify_response)
-        return classify_response
+        return classify_response, True 
 
 
 async def call_router_function(label_value: str, query: dict, guided_route: str) -> dict:
