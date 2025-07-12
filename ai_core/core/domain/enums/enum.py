@@ -1,10 +1,11 @@
 from enum import Enum
 
+from core.prompts.onboarding_prompt import REGISTER_SCHEDULE_CALENDAR
+
 
 class ChatType(Enum):
     ABILITIES = "abilities"
     GAIA_INTRODUCTION = "gaia_introduction"
-    REGISTER_SCHEDULE_CALENDAR = "register_schedule_calendar" 
 
 class ModelMode(Enum):
     LOCAL = "local"
@@ -17,9 +18,11 @@ class SemanticRoute(Enum):
     RECENT_HISTORY = "recent_history"
     RECURSIVE_SUMMARY = "recursive_summary"
     LONG_TERM_MEMORY = "long_term_memory"
+    REGISTER_SCHEDULE_CALENDAR = "register_schedule_calendar"
 
 class GaiaAbilities(Enum):
     CHITCHAT = "chitchat"
     CREATE_TASK = "create_task"
     CREATE_TASK_RESULT = "create_task_result"
+    REGISTER_SCHEDULE_CALENDAR = "register_schedule_calendar"
 

@@ -19,8 +19,8 @@ recursive_summary_sample = [
     "Can you summarize the key points we've covered?",
     "What is the central topic of our conversation?",
     "What have we covered until now?",
-    "Can you summarize the main topics we’ve discussed?",
-    "What’s the overall theme of our conversation?",
+    "Can you summarize the main topics we've discussed?",
+    "What's the overall theme of our conversation?",
     "Give me an overview of this chat so far."
 ]
 
@@ -35,4 +35,8 @@ long_term_memory_sample = [
     "Can you find our previous discussion about [subject]?",
     "Do you recall the details of our conversation about [topic] from before?",
     "What did we talk about in regard to [subject] last time?"
+]
+
+register_schedule_calendar_sample = [
+    
 ]

@@ -29,11 +29,10 @@ async def introduce(query: QueryRequest, guided_route: str) -> dict:
     """
     try:
         print("Onboarding Query:", query.query)
-        recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query, semantic_response=None)
         if guided_route == SemanticRoute.GAIA_INTRODUCTION:
-            response = await _gaia_introduce(query, recent_history, recursive_summary, long_term_memory)
+            response = await _gaia_introduce(query)
         elif guided_route == SemanticRoute.CHITCHAT:
-            response = await chitchat_with_history(query, recent_history, recursive_summary, long_term_memory)
+            response = await chitchat_with_history(query)
         else:
             raise ValueError("No route found for the query.")
 
@@ -50,7 +49,8 @@ async def introduce(query: QueryRequest, guided_route: str) -> dict:
         raise e
 
 
-async def _gaia_introduce(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
+async def _gaia_introduce(query: QueryRequest) -> str:
+    recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query, semantic_response=None)
     query_embedding = await embedding_model.get_embeddings(
         texts=[query.query])
 

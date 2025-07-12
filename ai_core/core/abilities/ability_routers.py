@@ -2,6 +2,7 @@ import json
 
 from core.abilities.abilities import ABILITIES
 from core.domain.enums import enum
+from core.domain.request.query_request import QueryRequest
 from core.prompts.system_prompt import CLASSIFY_PROMPT
 from core.semantic_router import router_registry
 from core.service.onboarding_service import introduce, register_task
@@ -16,11 +17,6 @@ ROUTERS = [
         'function': introduce
     },
     {
-        'label': enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value,
-        'description': 'Register a calendar for task management.',
-        'function': register_task
-    },
-    {
         'label': enum.ChatType.ABILITIES.value,
         'description': 'Gaia\'s abilities.',
         'function': abilities_handler
@@ -28,7 +24,7 @@ ROUTERS = [
 ]
 
 
-async def select_ability(label_value: str, query: str) -> tuple[str, bool]:
+async def select_ability(label_value: str, query: QueryRequest) -> tuple[str, bool]:
     """
     Select the appropriate ability based on the label value.
 
@@ -40,9 +36,7 @@ async def select_ability(label_value: str, query: str) -> tuple[str, bool]:
     """
     if label_value == enum.ChatType.GAIA_INTRODUCTION.value:
         guided_route = await router_registry.gaia_introduction_route(query.query)
-        return guided_route, False 
-    elif label_value == enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value:
-        return label_value, False 
+        return guided_route, False
     elif label_value == enum.ChatType.ABILITIES.value:
         tools_string = json.dumps(ABILITIES, indent=2)
 
@@ -54,8 +48,22 @@ async def select_ability(label_value: str, query: str) -> tuple[str, bool]:
             prompt=prompt, model_name=query.model_name)
 
         print("Classify Response:", classify_response)
-        return classify_response, True 
+        need_history = need_history(classify_response)
+        return classify_response, need_history 
 
+def need_history(label_value: str) -> bool:
+    """
+    Check if the ability requires chat history.
+
+    Args:
+        label_value (str): The label to identify the ability.
+    Returns:
+        bool: True if the ability requires chat history, False otherwise.
+    """
+    for ability in ABILITIES:
+        if ability['label'] == label_value:
+            return ability.get('need_history', False)
+    return False
 
 async def call_router_function(label_value: str, query: dict, guided_route: str) -> dict:
     """

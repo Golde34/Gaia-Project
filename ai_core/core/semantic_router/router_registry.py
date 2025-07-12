@@ -64,3 +64,25 @@ async def chat_history_route(query: str) -> route.Route:
 
     print(f"Chat history routes: {response}")
     return response
+
+register= route.Route(
+    name=enum.SemanticRoute.REGISTER_SCHEDULE_CALENDAR, samples=introduction_samples.register_schedule_calendar_sample)
+chitchat_route = route.Route(
+    name=enum.SemanticRoute.CHITCHAT, samples=introduction_samples.chitchat_sample)
+onboarding_router = router.SemanticRouter(routes=[introduction_route, chitchat_route],
+                                          model_name=config.EMBEDDING_MODEL)
+
+
+async def gaia_introduction_route(query: str) -> route.Route:
+    """
+    Get the GAIA introduction route.
+
+    Returns:
+        route.Route: The GAIA introduction route.
+    """
+    await onboarding_router.initialize()
+    guided_route = await onboarding_router.guide(query)
+    print(f"Semantic router of gaia introduction: {guided_route.name}")
+    if guided_route is None:
+        raise ValueError("No route found for the query.")
+    return guided_route.name

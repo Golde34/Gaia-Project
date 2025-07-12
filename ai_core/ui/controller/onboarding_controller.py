@@ -23,7 +23,7 @@ async def introduc_gaia(request: query_request.QueryRequest):
 @OnboardingRouter.post("/register-calendar")
 async def register_task_config(request: query_request.QueryRequest):
     try:
-        return await chatUsecase.chat(query=request, chat_type=enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value)
+        return await chatUsecase.chat(query=request, chat_type=enum.ChatType.ABILITIES.value)
     except Exception as e:
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)
