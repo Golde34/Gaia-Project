@@ -97,7 +97,7 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
                                 <div className="flex justify-start">
                                     <Grid numItems={1}>
                                         <Col numColSpan={1}>
-                                            <div className="max-w-xs px-4 py-2 rounded-2xl break-words bg-gray-200 text-gray-800">
+                                            <div className="max-w-lg px-4 py-2 rounded-2xl break-words bg-gray-200 text-gray-800">
                                                 Hello! I'm Gaia, your AI assistant. I am very excited because you choose me to be you partner in this journey! 
                                             </div>
                                         </Col>
@@ -110,7 +110,7 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
                                             <Col numColSpan={1}>
                                                 <div
                                                     className={[
-                                                        'max-w-xs px-4 py-2 rounded-2xl break-words',
+                                                        'max-w-lg px-4 py-2 rounded-3xl break-words',
                                                         msg.from === 'bot'
                                                             ? 'bg-gray-200 text-gray-800'
                                                             : 'bg-blue-500 text-white'
