@@ -1,6 +1,7 @@
 import json
 import re
 
+from core.domain.enums import enum
 from core.domain.enums.enum import SemanticRoute
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.base_response import return_success_response
@@ -51,19 +52,17 @@ async def introduce(query: QueryRequest, guided_route: str) -> dict:
 
 
 async def _gaia_introduce(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
-    query_embedding = await embedding_model.get_embeddings(
-        texts=[query.query])
+    embedding = await embedding_model.get_embeddings(texts=[enum.VectorDBContext.GAIA_INTRODUCTION.value])
+    query_embeddings = milvus_validation.validate_milvus_search_top_n(embedding)
 
-    query_embeddings = milvus_validation.validate_milvus_search_top_n(
-        query_embedding)
-    search_result = milvus_db.search_top_n(
+    results = milvus_db.search_top_n(
         query_embeddings=query_embeddings,
-        top_k=1,
-        partition_name="context"
+        top_k=4,
+        partition_name="default_context"
     )
 
     prompt = onboarding_prompt.GAIA_INTRODUCTION_PROMPT.format(
-        system_info=search_result,
+        system_info=results[0][0]['content'],
         recent_history=recent_history,
         recursive_summary=recursive_summary,
         long_term_memory=long_term_memory,

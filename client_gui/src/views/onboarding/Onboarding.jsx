@@ -17,7 +17,7 @@ const StepContent = ({ stepIndex, onPrevious, onNext, onSkip }) => {
   switch (stepIndex) {
     case 1:
       return (
-        <div className="mx-auto mb-20 mt-28 max-w-5xl px-4 md:mt-32 md:px-6">
+        <div className="mx-auto mb-20 mt-28 max-w-7xl px-4 md:mt-32 md:px-6">
           <GaiaIntroduction onNext={onNext} onSkip={onSkip} />
         </div>
       )

@@ -24,7 +24,8 @@ async def query_chat_history(query: QueryRequest, semantic_response: dict = conf
     if semantic_response.get('recent_history'):
         recent_history = await chat_hub_service_client.get_recent_history(
             RecentHistoryRequest(user_id=query.user_id,
-                                 dialogue_id=query.dialogue_id)
+                                 dialogue_id=query.dialogue_id,
+                                 number_of_messages=config.RECENT_HISTORY_MAX_LENGTH)
         )
 
     if semantic_response.get('recursive_summary'):

@@ -1,7 +1,5 @@
 from enum import Enum
 
-from core.prompts.onboarding_prompt import REGISTER_SCHEDULE_CALENDAR
-
 
 class ChatType(Enum):
     ABILITIES = "abilities"
@@ -26,3 +24,5 @@ class GaiaAbilities(Enum):
     CREATE_TASK_RESULT = "create_task_result"
     REGISTER_SCHEDULE_CALENDAR = "register_schedule_calendar"
 
+class VectorDBContext(Enum):
+    GAIA_INTRODUCTION = "Gaia Introduction"
