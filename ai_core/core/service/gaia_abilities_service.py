@@ -62,7 +62,7 @@ async def chitchat_with_history(query: QueryRequest) -> str:
         str: Short response to the request
     """
     try:
-        recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query, None)
+        recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query)
         prompt = CHITCHAT_WITH_HISTORY_PROMPT.format(
             query=query.query,
             recent_history=recent_history,

@@ -29,7 +29,7 @@ async def introduce(query: QueryRequest, guided_route: str) -> dict:
     """
     try:
         print("Onboarding Query:", query.query)
-        recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query, semantic_response=None)
+        recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query)
         if guided_route == SemanticRoute.GAIA_INTRODUCTION:
             response = await _gaia_introduce(query, recent_history, recursive_summary, long_term_memory)
         elif guided_route == SemanticRoute.CHITCHAT:
@@ -112,7 +112,7 @@ async def register_task(query: QueryRequest) -> dict:
         user_daily_entries (dict):  
     """
     try:
-        recent_history, _, long_term_memory = await chat_service.query_chat_history(query, semantic_response=None)
+        recent_history, _, long_term_memory = await chat_service.query_chat_history(query)
         prompt = onboarding_prompt.REGISTER_SCHEDULE_CALENDAR.format(
             query=query.query,
             recentHistory=recent_history,

@@ -43,3 +43,9 @@ POSTGRES_DB = os.getenv('POSTGRES_DB', 'ai_core')
 
 RECURSIVE_SUMMARY_MAX_LENGTH = int(os.getenv('RECURSIVE_SUMMARY_MAX_LENGTH', 3))
 LONG_TERM_MEMORY_MAX_LENGTH = int(os.getenv('LONG_TERM_MEMORY_MAX_LENGTH', 10))
+
+DEFAULT_SEMANTIC_RESPONSE = {
+    "recent_history": True,
+    "recursive_summary": True,
+    "long_term_memory": True
+}

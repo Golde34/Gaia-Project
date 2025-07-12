@@ -16,7 +16,7 @@ from infrastructure.client.chat_hub_service_client import chat_hub_service_clien
 from kernel.config import llm_models, config
 
 
-async def query_chat_history(query: QueryRequest, semantic_response: dict = None):
+async def query_chat_history(query: QueryRequest, semantic_response: dict = config.DEFAULT_SEMANTIC_RESPONSE):
     """
     Routes the request based on semantic guidance, querying different memory sources.
     """

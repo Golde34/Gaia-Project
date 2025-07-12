@@ -8,13 +8,6 @@ from infrastructure.redis.redis import get_key, set_key, increase_key, decrease_
 from kernel.config.config import RECURSIVE_SUMMARY_MAX_LENGTH, LONG_TERM_MEMORY_MAX_LENGTH
 
 
-defaul_semantic_response = {
-    "recent_history": True,
-    "recursive_summary": True,
-    "long_term_memory": True
-}
-
-
 class ChatUsecase:
 
     @classmethod
@@ -37,7 +30,7 @@ class ChatUsecase:
         if use_chat_history_prompt:
             query = await cls.get_chat_history(query=query, default=default)
 
-        response = await ability_routers.call_router_function(label_value=chat_type, query=query, tool_selection=tool_selection)
+        response = await ability_routers.call_router_function(label_value=chat_type, query=query, guided_route=tool_selection)
         await cls.update_chat_history(query=query, response=response)
 
         return response
@@ -51,7 +44,7 @@ class ChatUsecase:
             chat_history_semantic_router = await router_registry.chat_history_route(query=query.query)
             recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query, chat_history_semantic_router)
         else:
-            recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query, defaul_semantic_response)
+            recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query)
 
         new_query = await chat_service.reflection_chat_history(
             recent_history=recent_history,
