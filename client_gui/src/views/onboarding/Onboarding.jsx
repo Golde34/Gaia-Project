@@ -81,11 +81,13 @@ const Onboarding = () => {
           </span>
         </div>
         <StepProgress currentStepIndex={stepIndex - 1} />
-        <Button
-          variant="secondary"
-          className="hidden md:inline-flex"
-        > Skip to Dashboard
-        </Button>
+        <a href="/client-gui/dashboard">
+          <Button
+            variant="secondary"
+            className="hidden md:inline-flex"
+          > Skip to Dashboard
+          </Button>
+        </a>
       </header>
       <main className={cx(scrolled && "pt-12")}>
         <StepContent stepIndex={stepIndex} onNext={handleNext} onSkip={handleSkip} onPrevious={handlePrevious} />
