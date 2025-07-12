@@ -14,8 +14,6 @@ from kernel.config.config import session_id_var
 load_dotenv()
 
 app = FastAPI(title="Task Information Extraction API")
-session_id_var = contextvars.ContextVar("session_id")
-
 
 app.include_router(chat_controller.ChatRouter)
 app.include_router(onboarding_controller.OnboardingRouter)
