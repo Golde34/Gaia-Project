@@ -70,7 +70,7 @@ class ScheduleTaskUsecase {
             const scheduleTask = await scheduleTaskService.findScheduleTaskByTaskId(task.taskId);
             const updateScheduletask = scheduleTaskMapper.kafkaUpdateTaskMapper(task, scheduleTask);
             console.log('Update schedule task: ', updateScheduletask);
-            scheduleTaskService.updateScheduleTask(updateScheduletask.id, updateScheduletask);
+            await scheduleTaskService.updateScheduleTask(updateScheduletask.id, updateScheduletask);
         } catch (error) {
             console.error("Error on updateScheduleTask: ", error);
         }

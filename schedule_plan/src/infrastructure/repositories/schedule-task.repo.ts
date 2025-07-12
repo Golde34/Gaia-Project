@@ -10,7 +10,8 @@ class ScheduleTaskRepository {
     }
 
     async updateScheduleTask(scheduleTaskId: string, scheduleTask: any): Promise<ScheduleTaskEntity | null> {
-        const [affectedCount, affectedRows] = await ScheduleTaskEntity.update(scheduleTask, {
+        const plainObj = scheduleTask.get ? scheduleTask.get({ plain: true }) : scheduleTask;
+        const [affectedCount, affectedRows] = await ScheduleTaskEntity.update(plainObj, {
             where: { id: scheduleTaskId },
             returning: true,
         });
