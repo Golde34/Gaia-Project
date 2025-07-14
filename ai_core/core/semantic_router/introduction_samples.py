@@ -38,6 +38,22 @@ chitchat_sample = [
     "Hello",
     "Hi",
     "How is the weather today?",
-    "Tell me a story."
+    "Tell me a story.",
+    "Tell my a joke.",
+    "What is the meaning of life?",
 ]
 
+register_calendar_example_sample = [
+    "I don't know how to tell you my day, how am I supposed to do that?",
+    "Can you provide me an example of how to describe my day?",
+    "I need help organizing my daily schedule, can you show me how?",
+    "How do I tell you about my daily routine?",
+    "Can you give me an example of a daily schedule?",
+    "I want to register my daily activities, how should I describe them?",
+    "What format should I use to tell you about my day?",
+    "Can you show me how to structure my daily activities?",
+    "I need to organize my day, can you help me with an example?",
+    "How can I describe my daily routine to you?",
+    "Can you provide a template for describing my day?",
+    "I want to share my daily schedule, how should I format it?",
+]

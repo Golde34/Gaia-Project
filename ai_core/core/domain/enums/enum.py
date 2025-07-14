@@ -18,6 +18,7 @@ class SemanticRoute(Enum):
     RECURSIVE_SUMMARY = "recursive_summary"
     LONG_TERM_MEMORY = "long_term_memory"
     REGISTER_SCHEDULE_CALENDAR = "register_schedule_calendar"
+    REGISTER_SCHEDULE_CALENDAR_EXAMPLE = "register_schedule_calendar_example"
 
 class GaiaAbilities(Enum):
     CHITCHAT = "chitchat"
