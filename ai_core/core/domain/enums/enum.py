@@ -4,6 +4,7 @@ from enum import Enum
 class ChatType(Enum):
     ABILITIES = "abilities"
     GAIA_INTRODUCTION = "gaia_introduction"
+    REGISTER_SCHEDULE_CALENDAR = "register_schedule_calendar"
 
 class ModelMode(Enum):
     LOCAL = "local"

@@ -100,7 +100,7 @@ async def _chitchat_with_history(query: QueryRequest, recent_history: str, recur
         raise e
 
 
-async def register_task(query: QueryRequest) -> dict:
+async def register_schedule_calendar(query: QueryRequest, guided_route=None) -> dict:
     """
     Register task via an user's daily life summary
 

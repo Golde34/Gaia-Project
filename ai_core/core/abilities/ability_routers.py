@@ -5,7 +5,7 @@ from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
 from core.prompts.system_prompt import CLASSIFY_PROMPT
 from core.semantic_router import router_registry
-from core.service.onboarding_service import introduce
+from core.service.onboarding_service import introduce, register_schedule_calendar
 from core.service.gaia_abilities_service import abilities_handler
 from kernel.config import llm_models
 
@@ -20,6 +20,11 @@ ROUTERS = [
         'label': enum.ChatType.ABILITIES.value,
         'description': 'Gaia\'s abilities.',
         'function': abilities_handler
+    },
+    {
+        'label': enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value,
+        'description': 'Register schedule calendar.',
+        'function': register_schedule_calendar 
     }
 ]
 
@@ -37,6 +42,8 @@ async def select_ability(label_value: str, query: QueryRequest) -> tuple[str, bo
     if label_value == enum.ChatType.GAIA_INTRODUCTION.value:
         guided_route = await router_registry.gaia_introduction_route(query.query)
         return guided_route, False
+    elif label_value == enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value:
+        return label_value, False
     elif label_value == enum.ChatType.ABILITIES.value:
         tools_string = json.dumps(ABILITIES, indent=2)
 
