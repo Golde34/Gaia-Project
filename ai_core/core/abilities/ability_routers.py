@@ -72,7 +72,7 @@ def need_history(label_value: str) -> bool:
             return ability.get('need_history', False)
     return False
 
-async def call_router_function(label_value: str, query: dict, guided_route: str) -> dict:
+async def call_router_function(label_value: str, query: dict, guided_route: str = None) -> dict:
     """
     Call the appropriate function based on the label value.
 
