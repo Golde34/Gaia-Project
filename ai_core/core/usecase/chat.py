@@ -30,6 +30,7 @@ class ChatUsecase:
         if use_chat_history_prompt:
             query = await cls.get_chat_history(query=query, default=default)
 
+        print(f"Tool Selection: {tool_selection}")
         response = await ability_routers.call_router_function(label_value=chat_type, query=query, guided_route=tool_selection)
         await cls.update_chat_history(query=query, response=response)
 
