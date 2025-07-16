@@ -1,3 +1,8 @@
+from datetime import datetime
+from typing import Dict, List, Optional
+from pydantic import ValidationError
+from langdetect import detect, DetectorFactory
+import logging
 import json
 import re
 
@@ -53,7 +58,8 @@ async def introduce(query: QueryRequest, guided_route: str) -> dict:
 
 async def _gaia_introduce(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
     embedding = await embedding_model.get_embeddings(texts=[enum.VectorDBContext.GAIA_INTRODUCTION.value])
-    query_embeddings = milvus_validation.validate_milvus_search_top_n(embedding)
+    query_embeddings = milvus_validation.validate_milvus_search_top_n(
+        embedding)
 
     results = milvus_db.search_top_n(
         query_embeddings=query_embeddings,
@@ -100,35 +106,68 @@ async def _chitchat_with_history(query: QueryRequest, recent_history: str, recur
         raise e
 
 
-import logging
-import json
-from langdetect import detect, DetectorFactory
-from pydantic import ValidationError
+async def register_task(query: QueryRequest) -> dict:
+    """
+    Register task via an user's daily life summary
+    Args:
+        query (str): onboarding user's daily summary 
+    Returns:
+        user_daily_entries (dict):  
+    """
+    try:
+        recent_history, _, long_term_memory = await chat_service.query_chat_history(query)
+        prompt = onboarding_prompt.REGISTER_SCHEDULE_CALENDAR.format(
+            query=query.query,
+            recentHistory=recent_history,
+            long_term_memory=long_term_memory)
+
+        function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=prompt)
+        response = function(prompt=prompt, model_name=default_model)
+
+        json_response = _clean_json_string(response)
+        schedule_dto = DailyRoutineSchema.model_validate(json.loads(json_response))
+        result = {
+            "response": schedule_dto
+        }
+        return return_success_response(
+            status_message="Task registration response generated successfully",
+            data=result
+        )
+    except Exception as e:
+        raise e
+
 
 logger = logging.getLogger(__name__)
 DetectorFactory.seed = 0
 
-async def register_schedule_calendar(query: QueryRequest, guided_route=None) -> dict:
+async def register_schedule_calendar(query: QueryRequest, guided_route: Optional[str] = None) -> Dict:
     """
-    Register or modify a task via a user's daily life summary, using Chain of Thought to handle incomplete or ambiguous inputs.
+    Register or modify a task via a user's daily life summary, using Chain of Thought to handle
+    incomplete or ambiguous inputs in a single LLM call.
 
     Args:
         query (QueryRequest): User's daily summary or schedule modification request.
         guided_route: Optional parameter for guided routing (not used in this version).
 
     Returns:
-        dict: Response containing the schedule or a clarification request.
+        Dict: Response containing the schedule or a clarification request.
     """
+    logger.info(
+        f"Processing query: {query.query} (Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S %Z')})")
+
     try:
-        # Step 1: Detect query language
-        logger.info(f"Processing query: {query.query}")
+        # Step 1: Preprocess query (language detection and translation)
         query_text = query.query.strip()
         try:
             detected_language = detect(query_text)
+            logger.info(f"Detected language: {detected_language}")
+            if detected_language != "en":
+                query_text = await translate_to_english(query_text, detected_language)
+                logger.info(f"Translated query: {query_text}")
         except LangDetectException:
             detected_language = "en"
-        logger.info(f"Detected language: {detected_language}")
-        
+            logger.warning("Language detection failed; defaulting to English")
+
         # Step 2: Retrieve context
         recent_history, _, long_term_memory = await chat_service.query_chat_history(query)
         logger.info(f"Retrieved recent history: {recent_history}")
@@ -136,29 +175,41 @@ async def register_schedule_calendar(query: QueryRequest, guided_route=None) -> 
         # Step 3: Construct CoT prompt
         prompt = onboarding_prompt.REGISTER_SCHEDULE_CALENDAR.format(
             query=query_text,
-            recent_history=recent_history,
+            recent_history=json.dumps(recent_history),
             long_term_memory=long_term_memory
         )
 
-        # Step 4: Call LLM with CoT reasoning
+        # Step 4: Call LLM
         function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=prompt)
         response = function(prompt=prompt, model_name=default_model)
         logger.info(f"LLM response: {response}")
 
-        # Step 5: Parse and validate response
-        json_response = _clean_json_string(response)
-        parsed_response = json.loads(json_response)
-        logger.info(f"Parsed JSON response: {json_response}")
+        # Step 5: Parse response
+        try:
+            json_response = _clean_json_string(response)
+            parsed_response = json.loads(json_response)
+            logger.info(f"Parsed JSON response: {json_response}")
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON response: {str(e)}")
+            return return_response(
+                status="error",
+                status_message="Failed to parse LLM response",
+                error_code=400,
+                error_message=str(e),
+                data=None
+            )
 
-        # Step 6: Check for clarification request
+        # Step 6: Handle clarification request
         if "clarification_needed" in parsed_response:
+            logger.info(
+                f"Clarification needed: {parsed_response['clarification_needed']}")
             return return_clarification_response(
                 status_message="Additional information required",
                 data={"clarification": parsed_response["clarification_needed"]}
             )
 
         # Step 7: Handle modifications
-        if "modification" in parsed_response and parsed_response["modification"]:
+        if parsed_response.get("modification", False):
             existing_schedule = recent_history.get("latest_schedule", {})
             for day in parsed_response["schedule"]:
                 parsed_response["schedule"][day] = merge_schedules(
@@ -166,29 +217,41 @@ async def register_schedule_calendar(query: QueryRequest, guided_route=None) -> 
                 )
 
         # Step 8: Validate schedule
-        schedule_dto = DailyRoutineSchema.model_validate(parsed_response)
-        total_hours = sum(schedule_dto.totals.values())
-        if total_hours != 24:
-            logger.warning(f"Total hours ({total_hours}) does not sum to 24. Adjusting schedule.")
-            missing_hours = 24 - total_hours
-            if missing_hours > 0:
-                for day in schedule_dto.schedule:
-                    if schedule_dto.schedule[day]:
-                        last_interval = schedule_dto.schedule[day][-1]
-                        if last_interval.end != "23:59":
-                            schedule_dto.schedule[day].append({
-                                "start": last_interval.end,
-                                "end": "23:59",
-                                "tag": "relax"
-                            })
-                            schedule_dto.totals["relax"] += missing_hours
-            elif missing_hours < 0:
-                return return_clarification_response(
-                    status_message="Schedule exceeds 24 hours",
-                    data={"clarification": "Please reduce the duration of some activities to fit within 24 hours."}
-                )
+        try:
+            schedule_dto = DailyRoutineSchema.model_validate(parsed_response)
+            totals = calculate_totals(schedule_dto.schedule)
+            total_hours = sum(totals.values())
 
-        # Step 9: Return success response
+            if abs(total_hours - 24) > 0.01:  # Allow small float errors
+                logger.warning(
+                    f"Total hours ({total_hours}) does not sum to 24; filling gaps")
+                for day in schedule_dto.schedule:
+                    schedule_dto.schedule[day] = fill_schedule_gaps(
+                        schedule_dto.schedule[day])
+                totals = calculate_totals(
+                    schedule_dto.schedule)  # Recalculate totals
+                total_hours = sum(totals.values())
+
+                if abs(total_hours - 24) > 0.01:  # Final check
+                    logger.error(
+                        f"Total hours ({total_hours}) still invalid after gap filling")
+                    return return_clarification_response(
+                        status_message="Schedule does not sum to 24 hours",
+                        data={
+                            "clarification": "Please provide a schedule that covers exactly 24 hours."}
+                    )
+        except ValidationError as e:
+            logger.error(f"Schema validation failed: {str(e)}")
+            return return_response(
+                status="error",
+                status_message="Invalid schedule format",
+                error_code=400,
+                error_message=str(e),
+                data=None
+            )
+
+        # Step 9: Success case
+        schedule_dto.totals = totals  # Update totals in DTO
         result = {"response": schedule_dto}
         logger.info(f"Generated schedule: {schedule_dto}")
         return return_success_response(
@@ -196,43 +259,81 @@ async def register_schedule_calendar(query: QueryRequest, guided_route=None) -> 
             data=result
         )
 
-    except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON response from LLM: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
         return return_response(
             status="error",
-            status_message="Failed to parse LLM response",
+            status_message="Unexpected error occurred",
             error_code=400,
             error_message=str(e),
             data=None
         )
-    except ValidationError as e:
-        logger.error(f"Schema validation failed: {str(e)}")
-        return return_response(
-            status="error",
-            status_message="Invalid schedule format",
-            error_code=422,
-            error_message=str(e),
-            data=None
-        )
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
-        raise e
+
+
+async def translate_to_english(text: str, source_lang: str) -> str:
+    """
+    Translate text to English using a translation service.
+    Replace with actual implementation (e.g., Google Cloud Translate).
+    """
+    logger.info(f"Translating from {source_lang} to English: {text}")
+    # Mock translation; integrate Google Translate, DeepL, or similar
+    return text  # Replace with actual translation logic
+
+
+def merge_schedules(existing_schedule: Dict[str, List], new_intervals: Dict[str, List], day: str) -> List:
+    """
+    Merge new intervals into an existing schedule, resolving conflicts by prioritizing new entries.
+    """
+    merged = existing_schedule.get(day, []).copy()
+    new_entries = new_intervals.get(day, [])
+
+    # Remove conflicting intervals (new entries take precedence)
+    for new_entry in new_entries:
+        merged = [entry for entry in merged if not (
+            entry["start"] < new_entry["end"] and new_entry["start"] < entry["end"]
+        )]
+        merged.append(new_entry)
+
+    # Sort by start time and fill gaps
+    merged.sort(key=lambda x: x["start"])
+    return fill_schedule_gaps(merged)
 
 def _clean_json_string(raw_str: str) -> str:
     cleaned = re.sub(r"^```json\s*|\s*```$", "",
                      raw_str, flags=re.MULTILINE).strip()
     return cleaned
 
-def merge_schedules(existing_schedule: dict, new_intervals: dict, day: str) -> list:
-    """Merge new intervals into an existing schedule, resolving conflicts."""
-    merged = existing_schedule.get(day, []).copy()
-    new_entries = new_intervals.get(day, [])
-    
-    # Remove conflicting intervals
-    for new_entry in new_entries:
-        merged = [entry for entry in merged if not (entry["start"] < new_entry["end"] and new_entry["start"] < entry["end"])]
-        merged.append(new_entry)
-    
-    # Sort by start time
-    merged.sort(key=lambda x: x["start"])
-    return merged
+def fill_schedule_gaps(intervals: List[Dict]) -> List[Dict]:
+    """
+    Fill gaps in a day's schedule with 'relax' to ensure 24-hour coverage.
+    """
+    if not intervals:
+        return [{"start": "00:00", "end": "23:59", "tag": "relax"}]
+
+    filled = []
+    current_time = "00:00"
+    for interval in intervals:
+        if interval["start"] > current_time:
+            filled.append(
+                {"start": current_time, "end": interval["start"], "tag": "relax"})
+        filled.append(interval)
+        current_time = interval["end"]
+
+    if current_time < "23:59":
+        filled.append({"start": current_time, "end": "23:59", "tag": "relax"})
+
+    return filled
+
+
+def calculate_totals(schedule: Dict[str, List]) -> Dict[str, float]:
+    """
+    Calculate total hours per tag for a single day's schedule.
+    """
+    totals = {"work": 0, "eat": 0, "travel": 0, "relax": 0, "sleep": 0}
+    for day in schedule:
+        for interval in schedule[day]:
+            start = datetime.strptime(interval["start"], "%H:%M")
+            end = datetime.strptime(interval["end"], "%H:%M")
+            hours = (end - start).total_seconds() / 3600
+            totals[interval["tag"]] += hours
+    return totals
