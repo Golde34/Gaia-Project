@@ -45,7 +45,7 @@ func (s *ChatHistoryUsecase) GetChatHistory(userId, dialogueId, chatType string,
 		return nil, err
 	}
 
-	messages, err := s.messageService.GetMessageByDialogueId(dialogue.ID, 10) 
+	messages, err := s.messageService.GetMessageByPagination(dialogue.ID, size, page);
 	if err != nil {
 		return nil, err
 	}
