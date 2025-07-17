@@ -46,6 +46,7 @@ import { compareCommitsReducer, getProjectContributionReducer, getUserContributi
 import { createScheduleGroupReducer, scheduleGroupListReducer } from "./schedule_plan/schedule-group.reducers";
 import { getNotificationJwt } from "../actions/auth_service/auth.actions";
 import { getDailyCalendarReducer } from "./schedule_plan/schedule-calendar.reducers";
+import { chatHistoryReducer } from "./chat_hub/messages.reducer";
 
 export const reducer = combineReducers({
     // auth service
@@ -125,4 +126,6 @@ export const reducer = combineReducers({
     userContributions: getUserContributionsReducer,
     compareCommits: compareCommitsReducer,
     projectContributions: getProjectContributionReducer,
+    // chat hub
+    chatHistory: chatHistoryReducer,
 })

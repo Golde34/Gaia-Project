@@ -2,7 +2,7 @@ import {
     GET_CHAT_HISTORY_FAILURE, GET_CHAT_HISTORY_REQUEST, GET_CHAT_HISTORY_SUCCESS 
 } from "../../constants/chat_hub/messages.constant";
 
-export const recentHistoryReducer = (
+export const chatHistoryReducer = (
     state = { loading: true, chatHistory: [] }, action) => {
     switch (action.type) {
         case GET_CHAT_HISTORY_REQUEST:
