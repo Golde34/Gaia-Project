@@ -78,3 +78,27 @@ func (r *MessageRepository) GetRecentChatMessagesByDialogueId(dialogueId string,
 	}
 	return messages, nil
 }
+
+func (r *MessageRepository) GetMessagesByDialogueIdWithPagination(dialogueId string, size, page int) ([]entity.MessageEntity, error) {
+	query := `SELECT user_id, dialogue_id, sender_type, content, metadata
+				FROM messages
+				WHERE dialogue_id = $1
+				ORDER BY created_at DESC
+				LIMIT $2 OFFSET $3`
+	rows, err := r.db.Query(query, dialogueId, size, page*size)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var messages []entity.MessageEntity
+	for rows.Next() {
+		var message entity.MessageEntity
+		if err := rows.Scan(&message.UserId, &message.DialogueId,
+			&message.SenderType, &message.Content, &message.Metadata); err != nil {
+			return nil, err
+		}
+		messages = append(messages, message)
+	}
+	return messages, nil
+}

@@ -38,3 +38,24 @@ func (s *ChatHistoryUsecase) GetRecentHistory(userId, dialogueId string, numberO
 		"messages":   messages.Messages,
 	}, nil
 }
+
+func (s *ChatHistoryUsecase) GetChatHistory(userId, dialogueId, chatType string, size, page int) (map[string]interface{}, error) {
+	dialogue, err := s.dialogueService.GetDialogueByUserIdAndType(userId, chatType)
+	if err != nil {
+		return nil, err
+	}
+
+	dialoguesWithMessages := make([]map[string]interface{}, 0)
+	messages, err := s.messageService.GetMessageByDialogueId(dialogue.ID, 10) 
+	if err != nil {
+		return nil, err
+	}
+	dialoguesWithMessages = append(dialoguesWithMessages, map[string]interface{}{
+		"dialogue": dialogue,
+		"messages": messages,
+	})
+
+	return map[string]interface{}{
+		"dialogues": dialoguesWithMessages,
+	}, nil
+}
