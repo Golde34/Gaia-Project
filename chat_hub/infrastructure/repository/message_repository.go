@@ -4,6 +4,7 @@ import (
 	entity "chat_hub/core/domain/entities"
 	"chat_hub/core/domain/enums"
 	base_repo "chat_hub/infrastructure/repository/base"
+	"chat_hub/kernel/utils"
 	"database/sql"
 
 	"github.com/google/uuid"
@@ -80,6 +81,7 @@ func (r *MessageRepository) GetRecentChatMessagesByDialogueId(dialogueId string,
 }
 
 func (r *MessageRepository) GetMessagesByDialogueIdWithPagination(dialogueId string, size, page int) ([]entity.MessageEntity, error) {
+	size, page = utils.ValidatePagination(size, page)
 	query := `SELECT user_id, dialogue_id, sender_type, content, metadata
 				FROM messages
 				WHERE dialogue_id = $1

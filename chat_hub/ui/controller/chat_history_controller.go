@@ -76,9 +76,6 @@ func GetChatHistory(w http.ResponseWriter, r *http.Request, chatUsecase *usecase
 	}
 
 	chatType := r.URL.Query().Get("chatType")
-	if chatType == "" {
-		chatType = "default" // Default chat type if not provided
-	}
 
 	dialoguesWithMessages, err := chatUsecase.GetChatHistory(userId, dialogueId, chatType, sizeInt, pageInt)
 	if err != nil {

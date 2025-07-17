@@ -45,17 +45,13 @@ func (s *ChatHistoryUsecase) GetChatHistory(userId, dialogueId, chatType string,
 		return nil, err
 	}
 
-	dialoguesWithMessages := make([]map[string]interface{}, 0)
 	messages, err := s.messageService.GetMessageByDialogueId(dialogue.ID, 10) 
 	if err != nil {
 		return nil, err
 	}
-	dialoguesWithMessages = append(dialoguesWithMessages, map[string]interface{}{
+	
+	return map[string]interface{} {
 		"dialogue": dialogue,
 		"messages": messages,
-	})
-
-	return map[string]interface{}{
-		"dialogues": dialoguesWithMessages,
 	}, nil
 }
