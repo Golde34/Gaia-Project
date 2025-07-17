@@ -77,7 +77,7 @@ You have access to the following context to improve parsing and personalization:
 
 -------
 Recent History:
-{revent_history}
+{recent_history}
 
 Use this to identify the user's latest updates, changes in schedule, or context that may influence today's plan.
 
@@ -139,4 +139,20 @@ You are a daily schedule assistant. Your task is to create or modify a user's da
        "sleep": TOTAL_HOURS
      }}
    }}
+
+-------
+Recent History:
+{recent_history}
+
+Use this to identify the user's latest updates, changes in schedule, or context that may influence today's plan.
+
+-------
+Long-Term Core Memory:
+{long_term_memory}
+
+Use this to personalize time allocation based on long-term knowledge of the user's goals, lifestyle (e.g., student, freelancer, night-shift worker), or constraints.
+
+-------
+Note: The user's query may be in Vietnamese, English, or any language.
+User's query: {query}
 """
