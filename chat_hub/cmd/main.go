@@ -2,6 +2,7 @@ package main
 
 import (
 	"chat_hub/cmd/route"
+	chathubMiddleware "chat_hub/core/middleware"
 	usecases "chat_hub/core/usecase/websocket"
 	"chat_hub/infrastructure/kafka"
 	"chat_hub/kernel/configs"
@@ -56,6 +57,7 @@ func main() {
 	r.HandleFunc("/ws", usecases.NewWebSocketUsecase(dbConnection).HandleChatmessage)
 
 	// Rest Router
+	r.Use(chathubMiddleware.ValidateAccessToken())
 	route.Setup(r, dbConnection)
 
 	log.Printf("connect to http://localhost:%s/", cfg.Port)

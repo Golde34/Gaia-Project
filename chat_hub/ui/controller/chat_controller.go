@@ -1,12 +1,14 @@
 package controller
 
 import (
+	"chat_hub/core/middleware"
 	usecases "chat_hub/core/usecase/chat"
 	"fmt"
 	"net/http"
 )
 
 func Chat(w http.ResponseWriter, r *http.Request, chatUsecase *usecases.ChatUsecase) {
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
@@ -26,7 +28,7 @@ func Chat(w http.ResponseWriter, r *http.Request, chatUsecase *usecases.ChatUsec
 		return
 	}
 
-	result, err := chatUsecase.HandleChatMessage(dialogueId, message, msgType)
+	result, err := chatUsecase.HandleChatMessage(userId, dialogueId, message, msgType)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
