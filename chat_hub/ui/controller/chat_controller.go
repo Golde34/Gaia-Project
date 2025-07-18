@@ -17,16 +17,16 @@ func Chat(w http.ResponseWriter, r *http.Request, chatUsecase *usecases.ChatUsec
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 
-	userId := r.URL.Query().Get("userId")
+	dialogueId := r.URL.Query().Get("dialogueId")
 	message := r.URL.Query().Get("message")
 	msgType := r.URL.Query().Get("type")
 
-	if userId == "" || message == "" {
-		http.Error(w, "userId and message are required", http.StatusBadRequest)
+	if message == "" {
+		http.Error(w, "message are required", http.StatusBadRequest)
 		return
 	}
 
-	result, err := chatUsecase.HandleChatMessage(userId, message, msgType)
+	result, err := chatUsecase.HandleChatMessage(dialogueId, message, msgType)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
