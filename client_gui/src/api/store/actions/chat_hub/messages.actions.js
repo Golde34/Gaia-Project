@@ -34,10 +34,10 @@ export const getChatHistory = () => async (dispatch) => {
 };
 
 export const sendChatMessage =
-  (userId, message, chatType) => async (dispatch) => {
+  (dialogueId, message, chatType) => async (dispatch) => {
     dispatch({ type: SEND_CHAT_MESSAGE_REQUEST });
     try {
-      const url = `http://${config.serverHost}:${config.chatHubPort}/chat?userId=${userId}&message=${encodeURIComponent(message)}&type=${chatType}`;
+      const url = `http://${config.serverHost}:${config.chatHubPort}/chat?dialogueId=${dialogueId}&message=${encodeURIComponent(message)}&type=${chatType}`;
       const eventSource = new EventSource(url);
 
       eventSource.onmessage = (event) => {
