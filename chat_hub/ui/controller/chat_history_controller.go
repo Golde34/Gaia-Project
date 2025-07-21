@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"chat_hub/core/middleware"
 	usecases "chat_hub/core/usecase/chat"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -64,17 +66,8 @@ func GetChatHistory(w http.ResponseWriter, r *http.Request, chatUsecase *usecase
 		return
 	}
 
-	userId := r.URL.Query().Get("userId")
-	if userId == "" {
-		http.Error(w, "userId is required", http.StatusBadRequest)
-		return
-	}
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	dialogueId := r.URL.Query().Get("dialogueId")
-	if dialogueId == "" {
-		http.Error(w, "dialogueId is required", http.StatusBadRequest)
-		return
-	}
-
 	chatType := r.URL.Query().Get("chatType")
 
 	dialoguesWithMessages, err := chatUsecase.GetChatHistory(userId, dialogueId, chatType, sizeInt, pageInt)

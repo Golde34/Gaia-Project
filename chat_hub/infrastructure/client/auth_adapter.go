@@ -6,6 +6,7 @@ import (
 	"chat_hub/kernel/utils"
 	"encoding/json"
 	"fmt"
+	"log"
 )
 
 type AuthAdapter struct {
@@ -62,4 +63,33 @@ func (adapter *AuthAdapter) GetUserLLMModelConfig(userId string) (response_dtos.
 	}
 
 	return userLLMModelConfig, nil
+}
+
+func (adapter *AuthAdapter) CheckToken(token string) (response_dtos.TokenResponse, error) {
+	authServiceURL := base.AuthServiceURL + "/auth/check-token"
+	headers := utils.BuildDefaultHeaders()
+	input := map[string]interface{}{
+		"token": token,
+	}
+	bodyResult, err := utils.BaseAPI(authServiceURL, "GET", input, headers)
+	if err != nil {
+		return response_dtos.TokenResponse{}, err
+	}
+	bodyMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return response_dtos.TokenResponse{}, err
+	}
+
+	dataBytes, err := utils.ConvertResponseToMap(bodyMap["message"])
+	if err != nil {
+		return response_dtos.TokenResponse{}, err
+	}
+	var tokenResponse response_dtos.TokenResponse 
+	err = json.Unmarshal(dataBytes, &tokenResponse)
+	if err != nil {
+		return response_dtos.TokenResponse{}, err
+	}
+
+	log.Println("Token response: ", tokenResponse)
+	return tokenResponse, nil
 }

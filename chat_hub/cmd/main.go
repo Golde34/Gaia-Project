@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 )
 
 func main() {
@@ -45,6 +46,8 @@ func main() {
 	// Server Initialization
 	config := configs.Config{}
 	cfg, _ := config.LoadEnv()
+	clientUrl := cfg.ClientCORSAllowedUrl
+
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -53,11 +56,28 @@ func main() {
 	r.Use(middleware.RedirectSlashes)
 	r.Use(middleware.Timeout(time.Second * 60))
 
+	corsHandler := cors.New(
+		cors.Options{
+			AllowedOrigins: []string{"http://localhost:5173", clientUrl},
+			AllowedMethods: []string{
+				http.MethodHead,
+				http.MethodGet,
+				http.MethodPost,
+				http.MethodPut,
+				http.MethodPatch,
+				http.MethodDelete,
+			},
+			AllowedHeaders:   []string{"*"},
+			AllowCredentials: true,
+		})
+	r.Use(corsHandler.Handler)
+
+	r.Use(chathubMiddleware.ValidateAccessToken())
+
 	// Register WebSocket handler
 	r.HandleFunc("/ws", usecases.NewWebSocketUsecase(dbConnection).HandleChatmessage)
 
 	// Rest Router
-	r.Use(chathubMiddleware.ValidateAccessToken())
 	route.Setup(r, dbConnection)
 
 	log.Printf("connect to http://localhost:%s/", cfg.Port)

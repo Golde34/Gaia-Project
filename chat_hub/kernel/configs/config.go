@@ -12,6 +12,8 @@ type Config struct {
 	Port string
 	AuthServicePort string
 	LLMCoreServicePort string
+
+	ClientCORSAllowedUrl string
 }
 
 func (in *Config) LoadEnv() (Config, error) {
@@ -22,6 +24,7 @@ func (in *Config) LoadEnv() (Config, error) {
 
 	url := os.Getenv("URL")
 	port := os.Getenv("PORT")
+	clientCORSAllowedUrl := os.Getenv("CLIENT_CORS_ALLOWED_URL")
 	
 	authServicePort := os.Getenv("AUTH_SERVICE_PORT")
 	llmCoreServicePort := os.Getenv("LLM_CORE_SERVICE_PORT")
@@ -29,6 +32,7 @@ func (in *Config) LoadEnv() (Config, error) {
 	return Config{
 		Url:  url,
 		Port: port,
+		ClientCORSAllowedUrl: clientCORSAllowedUrl,
 		AuthServicePort: authServicePort,
 		LLMCoreServicePort: llmCoreServicePort,	
 	}, nil

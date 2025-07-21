@@ -79,13 +79,13 @@ func validateAccessToken(r *http.Request, w http.ResponseWriter) (string, contex
 		}
 	}
 
-	userId, err := services.NewAuthService().ValidateJwt(r.Context(), accessToken)
+	tokenResponse, err := services.NewAuthService().CheckToken(r.Context(), accessToken)
 	if err != nil {
 		log.Println("Error validating token:", err)
 		http.Error(w, "Unauthorized: Invalid Token", http.StatusUnauthorized)
 		return "", nil
 	}
 
-	ctxWithUser := context.WithValue(r.Context(), ContextKeyUserId, userId)
+	ctxWithUser := context.WithValue(r.Context(), ContextKeyUserId, tokenResponse.Id)
 	return accessToken, ctxWithUser
 }
