@@ -1,5 +1,5 @@
+import { config } from "../../../../kernels/configs/configuration";
 import { HttpMethods, serverRequest } from "../../../baseAPI";
-import { config } from "../../../kernels/configs/configuration";
 import {
   GET_CHAT_HISTORY_FAILURE,
   GET_CHAT_HISTORY_REQUEST,
@@ -13,15 +13,16 @@ const portName = {
   chatHubPort: "chatHubPort",
 };
 
-export const getChatHistory = () => async (dispatch) => {
+export const getChatHistory = (size, page, dialogueId, chatType) => async (dispatch) => {
   dispatch({ type: GET_CHAT_HISTORY_REQUEST });
   try {
     const { data } = await serverRequest(
-      `/chat-history`,
+      `/chat-history?size=${size}&page=${page}&dialogueId=${dialogueId}&chatType=${chatType}`,
       HttpMethods.GET,
       portName.chatHubPort,
     );
-    dispatch({ type: GET_CHAT_HISTORY_SUCCESS, payload: data.data });
+    console.log("Chat history fetched: ", data);
+    dispatch({ type: GET_CHAT_HISTORY_SUCCESS, payload: data });
   } catch (error) {
     dispatch({
       type: GET_CHAT_HISTORY_FAILURE,

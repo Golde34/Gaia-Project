@@ -11,9 +11,9 @@ export const chatHistoryReducer = (
     state = { loading: true, chatHistory: [] }, action) => {
     switch (action.type) {
         case GET_CHAT_HISTORY_REQUEST:
-            return { loading: true, chatHistory: [] };
+            return { loading: true, chatMessages: [] };
         case GET_CHAT_HISTORY_SUCCESS:
-            return { loading: false, chatHistory: action.payload };
+            return { loading: false, chatMessages: action.payload };
         case GET_CHAT_HISTORY_FAILURE:
             return { loading: false, error: action.payload };
         default:
