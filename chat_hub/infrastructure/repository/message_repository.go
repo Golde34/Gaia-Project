@@ -6,6 +6,8 @@ import (
 	base_repo "chat_hub/infrastructure/repository/base"
 	"chat_hub/kernel/utils"
 	"database/sql"
+	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -80,27 +82,36 @@ func (r *MessageRepository) GetRecentChatMessagesByDialogueId(dialogueId string,
 	return messages, nil
 }
 
-func (r *MessageRepository) GetMessagesByDialogueIdWithPagination(dialogueId string, size, page int) ([]entity.MessageEntity, error) {
-	size, page = utils.ValidatePagination(size, page)
-	query := `SELECT user_id, dialogue_id, sender_type, content, metadata
+func (r *MessageRepository) GetMessagesByDialogueIdWithCursorPagination(dialogueId string, size int, cursor string) ([]entity.MessageEntity, error) {
+	size = utils.ValidatePagination(size)
+
+	query := `SELECT user_id, dialogue_id, sender_type, content, metadata, created_at
 				FROM messages
 				WHERE dialogue_id = $1
+				AND ($2 = '' OR created_at < $2::timestamp)
 				ORDER BY created_at DESC
-				LIMIT $2 OFFSET $3`
-	rows, err := r.db.Query(query, dialogueId, size, page*size)
+				LIMIT $3`
+	rows, err := r.db.Query(query, dialogueId, cursor, size)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error executing query: %w", err)
 	}
 	defer rows.Close()
 
 	var messages []entity.MessageEntity
 	for rows.Next() {
 		var message entity.MessageEntity
+		var createdAt time.Time
 		if err := rows.Scan(&message.UserId, &message.DialogueId,
-			&message.SenderType, &message.Content, &message.Metadata); err != nil {
-			return nil, err
+			&message.SenderType, &message.Content, &message.Metadata, &createdAt); err != nil {
+			return nil, fmt.Errorf("error scanning row: %w", err)
 		}
+		message.CreatedAt = createdAt
 		messages = append(messages, message)
 	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
 	return messages, nil
 }

@@ -48,7 +48,7 @@ func GetRecentHistory(w http.ResponseWriter, r *http.Request, chatUsecase *useca
 func GetChatHistory(w http.ResponseWriter, r *http.Request, chatUsecase *usecases.ChatHistoryUsecase) {
 	size := r.URL.Query().Get("size")
 	if size == "" {
-		size = "10" // Default size if not provided
+		size = "10" 
 	}
 	sizeInt, err := strconv.Atoi(size)
 	if err != nil {
@@ -56,28 +56,20 @@ func GetChatHistory(w http.ResponseWriter, r *http.Request, chatUsecase *usecase
 		return
 	}
 
-	page := r.URL.Query().Get("page")
-	if page == "" {
-		page = "0" // Default page if not provided
-	}
-	pageInt, err := strconv.Atoi(page)
-	if err != nil {
-		http.Error(w, "Invalid page parameter", http.StatusBadRequest)
-		return
-	}
+	cursor := r.URL.Query().Get("cursor")
 
 	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	dialogueId := r.URL.Query().Get("dialogueId")
 	chatType := r.URL.Query().Get("chatType")
 
-	dialoguesWithMessages, err := chatUsecase.GetChatHistory(userId, dialogueId, chatType, sizeInt, pageInt)
+	response, err := chatUsecase.GetChatHistory(userId, dialogueId, chatType, sizeInt, cursor)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(dialoguesWithMessages); err != nil {
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

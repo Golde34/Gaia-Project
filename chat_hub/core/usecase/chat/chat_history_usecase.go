@@ -4,6 +4,7 @@ import (
 	entity "chat_hub/core/domain/entities"
 	services "chat_hub/core/services/chat"
 	"database/sql"
+	"time"
 )
 
 type ChatHistoryUsecase struct {
@@ -40,20 +41,26 @@ func (s *ChatHistoryUsecase) GetRecentHistory(userId, dialogueId string, numberO
 	}, nil
 }
 
-func (s *ChatHistoryUsecase) GetChatHistory(userId, dialogueId, chatType string, size, page int) (map[string]interface{}, error) {
+func (s *ChatHistoryUsecase) GetChatHistory(userId, dialogueId, chatType string, size int, cursor string) (map[string]interface{}, error) {
 	dialogue, err := s.getDialogueByIdOrChatType(userId, dialogueId, chatType)
 	if err != nil {
 		return nil, err
 	}
 
-	messages, err := s.messageService.GetMessageByPagination(dialogue.ID, size, page);
+	messages, err := s.messageService.GetMessageByPagination(dialogue.ID, size, cursor)
 	if err != nil {
 		return nil, err
 	}
-	
-	return map[string]interface{} {
-		"dialogue": dialogue,
-		"messages": messages,
+
+	var nextCursor string
+	if len(messages) > 0 {
+		nextCursor = messages[len(messages)-1].CreatedAt.Format(time.RFC3339)
+	}
+
+	return map[string]interface{}{
+		"dialogue":     dialogue,
+		"chatMessages": messages,      // Changed to match frontend
+		"nextCursor":   nextCursor,    // Add next cursor for pagination
 	}, nil
 }
 
