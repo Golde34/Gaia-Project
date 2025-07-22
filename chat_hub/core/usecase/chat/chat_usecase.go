@@ -7,11 +7,15 @@ import (
 	entity "chat_hub/core/domain/entities"
 	"chat_hub/core/domain/enums"
 	services "chat_hub/core/services/chat"
+	redis_cache "chat_hub/infrastructure/cache"
 	"chat_hub/infrastructure/client"
 	"chat_hub/infrastructure/kafka"
+	"chat_hub/kernel/utils"
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 )
 
 type ChatUsecase struct {
@@ -34,6 +38,20 @@ func NewChatUsecase(db *sql.DB) *ChatUsecase {
 		dialogueService: services.NewDialogueService(db),
 		messageService:  services.NewMessageService(db),
 	}
+}
+
+func (s *ChatUsecase) InitiateChat(ctx context.Context, userId string) (string, error) {
+	tokenResponse, err := utils.GenerateSSEToken(userId)
+	if err != nil {
+		return "", err
+	}
+
+	err = redis_cache.SetKeyWithTTL(context.Background(), constants.RedisPrefix+constants.SSEToken+userId, tokenResponse, time.Duration(1)*time.Hour)
+	if err != nil {
+		log.Println("Error setting SSE token in Redis:", err)
+		return "", fmt.Errorf("failed to set SSE token: %w", err)
+	}
+	return tokenResponse, nil
 }
 
 func (s *ChatUsecase) HandleChatMessage(userId, dialogueId, message, msgType string) (string, error) {

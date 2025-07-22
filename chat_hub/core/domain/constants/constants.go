@@ -16,4 +16,5 @@ const (
 const (
 	RedisPrefix = "chat_hub::"
 	ValidateServiceJwt = "validate_jwt::"
+	SSEToken = "sse_token::"
 )

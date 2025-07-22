@@ -19,6 +19,9 @@ func NewChatRouter(db *sql.DB, r *chi.Mux) *ChatRouter {
 	chatUsecase := usecases.NewChatUsecase(db)
 
 	r.Route("/chat", func(r chi.Router) {
+		r.Post("/initiate-chat", func(w http.ResponseWriter, r *http.Request) {
+			controller.InitiateChat(w, r, chatUsecase)
+		})
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			controller.Chat(w, r, chatUsecase)
 		})

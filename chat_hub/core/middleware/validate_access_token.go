@@ -17,7 +17,7 @@ const (
 func ValidateAccessToken() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			noAuthRequired := []string{"/sign-in", "/gaia-auto-sign-in", "/sign-up", "/sign-out", "refresh-token", "/graphql-query"}
+			noAuthRequired := []string{"/chat"}
 
 			for _, path := range noAuthRequired {
 				if strings.Contains(r.URL.Path, path) {
