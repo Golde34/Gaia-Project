@@ -13,11 +13,12 @@ const portName = {
   chatHubPort: "chatHubPort",
 };
 
-export const getChatHistory = (size, page, dialogueId, chatType) => async (dispatch) => {
+export const getChatHistory = (size, cursor, dialogueId, chatType) => async (dispatch) => {
   dispatch({ type: GET_CHAT_HISTORY_REQUEST });
   try {
+    const cursorParam = cursor ? `&cursor=${encodeURIComponent(cursor)}` : '';
     const { data } = await serverRequest(
-      `/chat-history?size=${size}&page=${page}&dialogueId=${dialogueId}&chatType=${chatType}`,
+      `/chat-history?size=${size}${cursorParam}&dialogueId=${dialogueId}&chatType=${chatType}`,
       HttpMethods.GET,
       portName.chatHubPort,
     );

@@ -8,14 +8,20 @@ import {
 } from "../../constants/chat_hub/messages.constant";
 
 export const chatHistoryReducer = (
-    state = { loading: true, chatHistory: [] }, action) => {
+    state = { loading: true, chatMessages: [], nextCursor: "" }, 
+    action
+) => {
     switch (action.type) {
         case GET_CHAT_HISTORY_REQUEST:
-            return { loading: true, chatMessages: [] };
+            return { ...state, loading: true, error: null };
         case GET_CHAT_HISTORY_SUCCESS:
-            return { loading: false, chatMessages: action.payload };
+            return {
+                loading: false,
+                chatMessages: [...state.chatMessages, ...action.payload.chatMessages],
+                nextCursor: action.payload.nextCursor || ""
+            };
         case GET_CHAT_HISTORY_FAILURE:
-            return { loading: false, error: action.payload };
+            return { ...state, loading: false, error: action.payload };
         default:
             return state;
     }
