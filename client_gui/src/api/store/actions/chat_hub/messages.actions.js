@@ -39,7 +39,15 @@ export const sendChatMessage =
   (dialogueId, message, chatType) => async (dispatch) => {
     dispatch({ type: SEND_CHAT_MESSAGE_REQUEST });
     try {
-      const url = `http://${config.serverHost}:${config.chatHubPort}/chat?dialogueId=${dialogueId}&message=${encodeURIComponent(message)}&type=${chatType}`;
+      const tokenResponse = await serverRequest(`/chat/initiate-chat`, HttpMethods.POST, portName.chatHubPort);
+      if (tokenResponse.status !== 200) {
+        throw new Error("Failed to initiate chat");
+      }
+      if (!tokenResponse.data) {
+        throw new Error("SSE token not received");
+      }
+
+      const url = `http://${config.serverHost}:${config.chatHubPort}/chat?dialogueId=${dialogueId}&message=${encodeURIComponent(message)}&type=${chatType}&sseToken=${tokenResponse.data}`;
       const eventSource = new EventSource(url);
 
       eventSource.onmessage = (event) => {
