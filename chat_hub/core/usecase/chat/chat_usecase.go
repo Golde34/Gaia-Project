@@ -4,13 +4,18 @@ import (
 	"chat_hub/core/domain/constants"
 	request_dtos "chat_hub/core/domain/dtos/request"
 	response_dtos "chat_hub/core/domain/dtos/response"
+	entity "chat_hub/core/domain/entities"
 	"chat_hub/core/domain/enums"
 	services "chat_hub/core/services/chat"
+	redis_cache "chat_hub/infrastructure/cache"
 	"chat_hub/infrastructure/client"
 	"chat_hub/infrastructure/kafka"
+	"chat_hub/kernel/utils"
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 )
 
 type ChatUsecase struct {
@@ -35,34 +40,67 @@ func NewChatUsecase(db *sql.DB) *ChatUsecase {
 	}
 }
 
-func (s *ChatUsecase) HandleChatMessage(userId, message, msgType string) (string, error) {
-	log.Println("Message received from user " + userId + ": " + message)
-	dialogue, err := s.dialogueService.CreateDialogueIfNotExists(userId, msgType)
+func (s *ChatUsecase) InitiateChat(ctx context.Context, userId string) (string, error) {
+	tokenResponse, err := utils.GenerateSSEToken(userId)
 	if err != nil {
-		return "Error creating dialogue: " + err.Error(), err
+		return "", err
 	}
+
+	err = redis_cache.SetKeyWithTTL(context.Background(), constants.RedisPrefix+constants.SSEToken+userId, tokenResponse, time.Duration(1)*time.Hour)
+	if err != nil {
+		log.Println("Error setting SSE token in Redis:", err)
+		return "", fmt.Errorf("failed to set SSE token: %w", err)
+	}
+	return tokenResponse, nil
+}
+
+func (s *ChatUsecase) HandleChatMessage(userId, dialogueId, message, msgType string) (string, error) {
+	log.Printf("Message received from user %s: %s", userId, message)
+
+	dialogue, err := s.getOrCreateDialogue(userId, dialogueId, msgType)
+	if err != nil {
+		return "", err
+	}
+
 	userMessageId, err := s.messageService.CreateMessage(
 		dialogue, userId, message, "", enums.UserMessage, msgType)
 	if err != nil {
-		return "Error creating user message: " + err.Error(), err
+		return "", fmt.Errorf("failed to save user message: %w", err)
 	}
+
 	userModel := s.aiCoreService.ValidateUserModel(userId)
 
-	botMessageRequest := request_dtos.NewBotMessageRequestDTO(userId, dialogue.ID, message, msgType, userModel)
-	data, err := s.GetBotMessage(*botMessageRequest)
+	botRequest := request_dtos.NewBotMessageRequestDTO(userId, dialogue.ID, message, msgType, userModel)
+	response, err := s.GetBotMessage(*botRequest)
 	if err != nil {
-		log.Println("Error getting bot message: " + err.Error())
-		return "Error getting bot message: " + err.Error(), err
+		log.Printf("Failed to get bot message: %v", err)
+		return "", fmt.Errorf("bot error: %w", err)
 	}
 
 	botMessageId, err := s.messageService.CreateMessage(
-		dialogue, userId, data, userMessageId, enums.BotMessage, msgType)
+		dialogue, userId, response, userMessageId, enums.BotMessage, msgType)
 	if err != nil {
-		return "Error crating bot message in DB: " + err.Error(), err
+		return "", fmt.Errorf("failed to save bot response: %w", err)
 	}
-	log.Println("Bot message created with ID: " + botMessageId)
 
-	return data, nil
+	log.Printf("Bot message created with ID: %s", botMessageId)
+	return response, nil
+}
+
+func (s *ChatUsecase) getOrCreateDialogue(userId, dialogueId, msgType string) (entity.UserDialogueEntity, error) {
+	if dialogueId != "" {
+		dialogue, err := s.dialogueService.GetDialogueById(userId, dialogueId)
+		if err != nil {
+			return entity.UserDialogueEntity{}, fmt.Errorf("failed to retrieve dialogue: %w", err)
+		}
+		return dialogue, nil
+	}
+
+	dialogue, err := s.dialogueService.CreateDialogueIfNotExists(userId, msgType)
+	if err != nil {
+		return entity.UserDialogueEntity{}, fmt.Errorf("failed to create dialogue: %w", err)
+	}
+	return dialogue, nil
 }
 
 func (s *ChatUsecase) GetBotMessage(request request_dtos.BotMessageRequestDTO) (string, error) {

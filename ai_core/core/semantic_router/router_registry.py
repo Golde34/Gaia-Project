@@ -11,7 +11,6 @@ chitchat_route = route.Route(
 onboarding_router = router.SemanticRouter(routes=[introduction_route, chitchat_route],
                                           model_name=config.EMBEDDING_MODEL)
 
-
 async def gaia_introduction_route(query: str) -> route.Route:
     """
     Get the GAIA introduction route.
@@ -20,7 +19,24 @@ async def gaia_introduction_route(query: str) -> route.Route:
         route.Route: The GAIA introduction route.
     """
     await onboarding_router.initialize()
-    guided_route = await onboarding_router.guide(query)
+    guided_route, _ = await onboarding_router.guide(query)
+    print(f"Semantic router of gaia introduction: {guided_route.name}")
+    if guided_route is None:
+        raise ValueError("No route found for the query.")
+    return guided_route.name
+
+
+register_calendar_example_route = route.Route(
+    name=enum.SemanticRoute.REGISTER_SCHEDULE_CALENDAR_EXAMPLE, 
+    samples=introduction_samples.register_calendar_example_sample)
+register_calendar_router = router.SemanticRouter(routes=[register_calendar_example_route],
+                                          model_name=config.EMBEDDING_MODEL)
+
+async def register_calendar_config_route(query: str) -> route.Route:
+    await register_calendar_router.initialize()
+    guided_route, similarity = await onboarding_router.guide(query)
+    if (similarity < config.REGISTER_CALENDAR_SEMANTIC_THRESHOLD): 
+        return enum.SemanticRoute.REGISTER_SCHEDULE_CALENDAR
     print(f"Semantic router of gaia introduction: {guided_route.name}")
     if guided_route is None:
         raise ValueError("No route found for the query.")

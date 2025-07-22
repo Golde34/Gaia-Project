@@ -34,6 +34,17 @@ def return_success_response(status_message: str, data: dict):
     """
     return BaseResponse("success", status_message, 200, "Success", data).to_dict()
 
+def return_clarification_response(status_message: str, data: dict):
+    """
+    Return a clarification response object.
+    Args:
+        status_message (str): The status message of the response.
+        data (dict): The data of the response.
+    Returns:
+        BaseResponse: The response object.
+    """
+    return BaseResponse("clarification", status_message, 200, "Clarification needed", data).to_dict()
+
 def return_response(status: str, status_message: str, error_code: int, error_message: str, data: dict):
     """
     Return a response object.

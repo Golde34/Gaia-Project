@@ -136,7 +136,7 @@ func (s *WebSocketUsecase) validateUserJwt(ctx context.Context, jwt string) stri
 
 func (s *WebSocketUsecase) handleService(messageMap map[string]interface{}, userId, sessionId string) {
 	log.Println("Handling service for user:", userId)
-	result, err := s.chatService.HandleChatMessage(userId, messageMap["text"].(string), messageMap["type"].(string))
+	result, err := s.chatService.HandleChatMessage(userId, "", messageMap["text"].(string), messageMap["type"].(string))
 	if err != nil {
 		log.Println("Error handling chat message:", err)
 		return

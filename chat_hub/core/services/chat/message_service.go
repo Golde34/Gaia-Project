@@ -83,3 +83,16 @@ func (s *MessageService) GetMessageByDialogueId(dialogueId string, numberOfMessa
 
 	return recentChatHistoryDTO, nil
 }
+
+func (s *MessageService) GetMessageByPagination(dialogueId string, size int, cursor string) ([]entity.MessageEntity, error) {
+	messages, err := s.messageRepository.GetMessagesByDialogueIdWithCursorPagination(dialogueId, size, cursor)
+	if err != nil {
+		log.Println("Error getting messages by pagination: " + err.Error())
+		return nil, err
+	}
+	if len(messages) == 0 {
+		log.Println("No messages found for dialogue ID: " + dialogueId)
+		return nil, nil
+	}
+	return messages, nil
+}

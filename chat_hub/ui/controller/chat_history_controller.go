@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"chat_hub/core/middleware"
 	usecases "chat_hub/core/usecase/chat"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -38,6 +40,36 @@ func GetRecentHistory(w http.ResponseWriter, r *http.Request, chatUsecase *useca
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(dialoguesWithMessages); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func GetChatHistory(w http.ResponseWriter, r *http.Request, chatUsecase *usecases.ChatHistoryUsecase) {
+	size := r.URL.Query().Get("size")
+	if size == "" {
+		size = "10" 
+	}
+	sizeInt, err := strconv.Atoi(size)
+	if err != nil {
+		http.Error(w, "Invalid size parameter", http.StatusBadRequest)
+		return
+	}
+
+	cursor := r.URL.Query().Get("cursor")
+
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	dialogueId := r.URL.Query().Get("dialogueId")
+	chatType := r.URL.Query().Get("chatType")
+
+	response, err := chatUsecase.GetChatHistory(userId, dialogueId, chatType, sizeInt, cursor)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

@@ -49,7 +49,7 @@ class SemanticRouter:
                 best_similarity = similarity
                 best_route = route_name
 
-        return next((route for route in self.routes if route.name == best_route), None)
+        return next((route for route in self.routes if route.name == best_route), None), best_similarity
 
     async def guide_with_many_routes(self, query, threshold=None):
         """
