@@ -3,8 +3,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-	getChatHistory,
-	sendChatMessage,
+  getChatHistory,
+  sendChatMessage,
 } from "../../api/store/actions/chat_hub/messages.actions";
 
 const GaiaIntroduction2 = ({ onNext, onSkip }) => {
@@ -131,7 +131,7 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
                     ref={messagesContainerRef}
                     className="flex-1 overflow-auto p-4 space-y-3"
                   >
-                    <div ref={topRef} /> {/* Trigger for loading more */}
+                    <div ref={topRef} />
                     <div className="flex justify-start">
                       <Grid numItems={1}>
                         <Col numColSpan={1}>
@@ -145,11 +145,11 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
                     </div>
 
                     {chatMessages && chatMessages.length > 0 ? (
-                      chatMessages.map((msg, idx) => (
+                      [...chatMessages].reverse().map((msg, idx) => (
                         <div
-                          key={msg.ID || idx} // Prefer msg.id if available
+                          key={msg.id|| idx}
                           className={`flex ${
-                            msg.SenderType === "bot"
+                            msg.senderType === "bot"
                               ? "justify-start"
                               : "justify-end"
                           }`}
@@ -159,12 +159,12 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
                               <div
                                 className={[
                                   "max-w-lg px-4 py-2 rounded-3xl break-words",
-                                  msg.SenderType === "bot"
+                                  msg.senderType === "bot"
                                     ? "bg-gray-200 text-gray-800"
                                     : "bg-blue-500 text-white",
                                 ].join(" ")}
                               >
-                                {msg.Content}
+                                {msg.content}
                               </div>
                             </Col>
                           </Grid>

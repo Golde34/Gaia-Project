@@ -15,10 +15,10 @@ export const chatHistoryReducer = (
         case GET_CHAT_HISTORY_REQUEST:
             return { ...state, loading: true, error: null };
         case GET_CHAT_HISTORY_SUCCESS:
-            return {
-                loading: false,
-                chatMessages: [...state.chatMessages, ...action.payload.chatMessages],
-                nextCursor: action.payload.nextCursor || ""
+            return { 
+                loading: false, 
+                chatMessages: [...action.payload.chatMessages, ...state.chatMessages], // Prepend new messages
+                nextCursor: action.payload.nextCursor || "" 
             };
         case GET_CHAT_HISTORY_FAILURE:
             return { ...state, loading: false, error: action.payload };
