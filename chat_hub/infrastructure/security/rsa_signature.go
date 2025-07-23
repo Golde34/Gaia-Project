@@ -52,37 +52,36 @@ func Encrypt(plainText string) (string, error) {
 	return base64.StdEncoding.EncodeToString(encryptedBytes), nil
 }
 
-// func decrypt(encryptedText string) (string, error) {
-	// _, privateKeyString, err := ReadKeyPair()
-	// if err != nil {
-		// return "", err
-	// }
-	// privKeyBytes, err := base64.StdEncoding.DecodeString(privateKeyString)
-	// if err != nil {
-		// return "", err
-	// }
-// 
-	// privKey, err := x509.ParsePKCS8PrivateKey(privKeyBytes)
-	// if err != nil {
-		// return "", err
-	// }
-// 
-	// decodedBytes, err := base64.StdEncoding.DecodeString(encryptedText)
-	// if err != nil {
-		// return "", err
-	// }
-	// 
-	// decryptedBytes, err := rsa.DecryptOAEP(
-		// sha256.New(),
-		// rand.Reader,
-		// privKey.(*rsa.PrivateKey),
-		// decodedBytes,
-		// nil,
-	// )
-	// if err != nil {
-		// return "", err
-	// }
-// 
-	// return string(decryptedBytes), nil
-// }
-// 
+func Decrypt(encryptedText string) (string, error) {
+	_, privateKeyString, err := ReadKeyPair()
+	if err != nil {
+		return "", err
+	}
+	privKeyBytes, err := base64.StdEncoding.DecodeString(privateKeyString)
+	if err != nil {
+		return "", err
+	}
+
+	privKey, err := x509.ParsePKCS8PrivateKey(privKeyBytes)
+	if err != nil {
+		return "", err
+	}
+
+	decodedBytes, err := base64.StdEncoding.DecodeString(encryptedText)
+	if err != nil {
+		return "", err
+	}
+	
+	decryptedBytes, err := rsa.DecryptOAEP(
+		sha256.New(),
+		rand.Reader,
+		privKey.(*rsa.PrivateKey),
+		decodedBytes,
+		nil,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return string(decryptedBytes), nil
+}
