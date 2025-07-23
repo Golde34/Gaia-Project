@@ -9,7 +9,6 @@ import (
 )
 
 func Chat(w http.ResponseWriter, r *http.Request, chatUsecase *usecases.ChatUsecase) {
-	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
@@ -23,13 +22,14 @@ func Chat(w http.ResponseWriter, r *http.Request, chatUsecase *usecases.ChatUsec
 	dialogueId := r.URL.Query().Get("dialogueId")
 	message := r.URL.Query().Get("message")
 	msgType := r.URL.Query().Get("type")
+	sseToken := r.URL.Query().Get("sseToken")
 
 	if message == "" {
 		http.Error(w, "message are required", http.StatusBadRequest)
 		return
 	}
 
-	result, err := chatUsecase.HandleChatMessage(userId, dialogueId, message, msgType)
+	result, err := chatUsecase.SendChatMessage(sseToken, dialogueId, message, msgType)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
