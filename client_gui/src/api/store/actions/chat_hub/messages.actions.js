@@ -46,8 +46,15 @@ export const sendChatMessage =
       if (!tokenResponse.data) {
         throw new Error("SSE token not received");
       }
-
-      const url = `http://${config.serverHost}:${config.chatHubPort}/chat?dialogueId=${dialogueId}&message=${encodeURIComponent(message)}&type=${chatType}&sseToken=${tokenResponse.data}`;
+      
+      const params = new URLSearchParams({
+        dialogueId: dialogueId,
+        message: message,
+        type: chatType,
+        sseToken: tokenResponse.data,
+      });
+      const baseUrl = `http://${config.serverHost}:${config.chatHubPort}`;
+      const url = `${baseUrl}/chat/send-message?${params}`;
       const eventSource = new EventSource(url);
 
       eventSource.onmessage = (event) => {
