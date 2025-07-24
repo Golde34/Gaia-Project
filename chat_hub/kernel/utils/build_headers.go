@@ -21,7 +21,7 @@ func BuildDefaultHeaders() map[string]string {
 func BuildAuthorizationHeaders(service string, userId string) map[string]string {
 	headers := BuildDefaultHeaders()
 	headers["Service"] = service
-	token, err := security.Encrypt(service + "::" + privateToken + "::" + userId)
+	token, err := security.EncryptWithKeyPair(service + "::" + privateToken + "::" + userId)
 	if err != nil {
 		fmt.Println("Error encrypting token: ", err)
 		return headers
@@ -32,7 +32,7 @@ func BuildAuthorizationHeaders(service string, userId string) map[string]string 
 
 func GenerateSSEToken(userId string) (string, error) {
 	service := "chat_hub"
-	token, err := security.Encrypt(service + "::" + privateToken + "::" + userId)
+	token, err := security.EncryptSSE(service + "::" + privateToken + "::" + userId)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate SSE token: %w", err)
 	}
@@ -40,7 +40,7 @@ func GenerateSSEToken(userId string) (string, error) {
 }
 
 func DecodeSSEToken(token string) (string, error) {
-	decoded, err := security.Decrypt(token)
+	decoded, err := security.DecryptSSE(token)
 	if err != nil {
 		return "", fmt.Errorf("failed to decode SSE token: %w", err)
 	}

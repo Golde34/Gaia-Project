@@ -5,6 +5,7 @@ import (
 	usecases "chat_hub/core/usecase/chat"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -23,6 +24,7 @@ func Chat(w http.ResponseWriter, r *http.Request, chatUsecase *usecases.ChatUsec
 	message := r.URL.Query().Get("message")
 	msgType := r.URL.Query().Get("type")
 	sseToken := r.URL.Query().Get("sseToken")
+	log.Printf("Received SSE token: %s", sseToken)
 
 	if message == "" {
 		http.Error(w, "message are required", http.StatusBadRequest)
@@ -46,6 +48,7 @@ func InitiateChat(w http.ResponseWriter, r *http.Request, chatUsecase *usecases.
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	log.Printf("SSE Token generated: %s", sseToken)
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(sseToken); err != nil {
