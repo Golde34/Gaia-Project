@@ -14,6 +14,8 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
   const [cursor, setCursor] = useState("");
   const [size, setSize] = useState(20);
   const [chatInput, setChatInput] = useState("");
+  const [chatHistory, setChatHistory] = useState([]);
+  const [lastBotMessage, setLastBotMessage] = useState("");
 
   const endRef = useRef(null);
   const topRef = useRef(null);
@@ -25,8 +27,18 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
     "Why should I use Gaia?",
   ];
 
-  const chatHistory = useSelector((state) => state.chatHistory);
-  const { loading, error, chatMessages, nextCursor } = chatHistory;
+  const dbChatHistory = useSelector((state) => state.chatHistory);
+  const { loading, error, chatMessages, nextCursor } = dbChatHistory;
+
+  useEffect(() => {
+    if (chatMessages && chatMessages.length > 0) {
+      setChatHistory((prevHistory) => {
+        const existingIds = new Set(prevHistory.map((msg) => msg.id));
+        const newMessages = chatMessages.filter((msg) => !existingIds.has(msg.id));
+        return [...newMessages, ...prevHistory]; // Prepend paginated messages
+      });
+    }
+  }, [chatMessages]);
 
   const getChatMessages = useCallback(() => {
     dispatch(getChatHistory(size, cursor, "", "gaia_introduction"));
@@ -49,10 +61,10 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
   }, [getChatMessages]);
 
   useEffect(() => {
-    if (endRef.current && chatMessages.length > 0) {
+    if (endRef.current && chatHistory.length > 0) {
       endRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [chatMessages]);
+  }, [chatHistory]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -75,16 +87,42 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
     };
   }, [nextCursor, loading, loadMoreMessages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!chatInput.trim()) return;
-    const dialogueId = chatHistory.dialogue?.id || "";
-    dispatch(sendChatMessage(dialogueId, chatInput, "gaia_introduction"));
-    setChatInput("");
-  };
+    const dialogueId = dbChatHistory.dialogue?.id || "";
+
+    const userMessage = {
+      id: `user-${Date.now()}`,
+      content: chatInput,
+      senderType: "user",
+      timestamp: new Date().toISOString(),
+    };
+
+    setChatHistory((prevHistory) => [...prevHistory, userMessage]);
+
+    try {
+      const response = await sendChatMessage(dialogueId, chatInput, "gaia_introduction");
+      console.log("Response:", response); 
+
+      if (response) {
+        const botMessage = {
+          id: `bot-${Date.now()}`,
+          content: response,
+          senderType: "bot",
+          timestamp: new Date().toISOString(),
+        };
+        setChatHistory((prevHistory) => [...prevHistory, botMessage]);
+        setLastBotMessage(botMessage.id || botMessage.content);
+      }
+      setChatInput(""); // Clear input after sending
+    } catch (error) {
+      console.error("Failed to send chat message:", error);
+    }
+  }
 
   return (
     <>
-      {loading && !chatMessages.length ? (
+      {loading && !chatHistory.length ? (
         <p>Loading ...</p>
       ) : error ? (
         <p>Error when loading chat history: {error}</p>
@@ -144,15 +182,14 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
                       </Grid>
                     </div>
 
-                    {chatMessages && chatMessages.length > 0 ? (
-                      [...chatMessages].reverse().map((msg, idx) => (
+                    {chatHistory && chatHistory.length > 0 ? (
+                      [...chatHistory].reverse().map((msg, idx) => (
                         <div
-                          key={msg.id|| idx}
-                          className={`flex ${
-                            msg.senderType === "bot"
-                              ? "justify-start"
-                              : "justify-end"
-                          }`}
+                          key={msg.id || idx}
+                          className={`flex ${msg.senderType === "bot"
+                            ? "justify-start"
+                            : "justify-end"
+                            }`}
                         >
                           <Grid numItems={1}>
                             <Col numColSpan={1}>

@@ -35,7 +35,7 @@ export const sendChatMessageReducer = (
 		case SEND_CHAT_MESSAGE_REQUEST:
 			return { ...state, sending: true };
 		case SEND_CHAT_MESSAGE_SUCCESS:
-			return {...state, sending: false, chatMessages: [...state.chatMessages, action.payload] };
+			return {...state, sending: false, message: action.payload };
 		case SEND_CHAT_MESSAGE_FAIL:
 			return { ...state, sending: false, error: action.payload };
 		default:
