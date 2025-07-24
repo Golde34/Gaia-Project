@@ -12,7 +12,7 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
 
   const [showChat, setShowChat] = useState(false);
   const [cursor, setCursor] = useState("");
-  const [size, setSize] = useState(20);
+  const [size, setSize] = useState(6);
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [lastBotMessage, setLastBotMessage] = useState("");
@@ -35,7 +35,7 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
       setChatHistory((prevHistory) => {
         const existingIds = new Set(prevHistory.map((msg) => msg.id));
         const newMessages = chatMessages.filter((msg) => !existingIds.has(msg.id));
-        return [...newMessages, ...prevHistory]; // Prepend paginated messages
+        return [...newMessages, ...prevHistory].reverse(); // Prepend paginated messages
       });
     }
   }, [chatMessages]);
@@ -43,12 +43,6 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
   const getChatMessages = useCallback(() => {
     dispatch(getChatHistory(size, cursor, "", "gaia_introduction"));
   }, [dispatch, size, cursor]);
-
-  const loadMoreMessages = useCallback(() => {
-    if (nextCursor && !loading) {
-      setCursor(nextCursor);
-    }
-  }, [nextCursor, loading]);
 
   const debounceRef = useRef(null);
   useEffect(() => {
@@ -66,27 +60,6 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
     }
   }, [chatHistory]);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && nextCursor && !loading) {
-          loadMoreMessages();
-        }
-      },
-      { root: messagesContainerRef.current, threshold: 0.1 }
-    );
-
-    if (topRef.current) {
-      observer.observe(topRef.current);
-    }
-
-    return () => {
-      if (topRef.current) {
-        observer.unobserve(topRef.current);
-      }
-    };
-  }, [nextCursor, loading, loadMoreMessages]);
-
   const handleSend = async () => {
     if (!chatInput.trim()) return;
     const dialogueId = dbChatHistory.dialogue?.id || "";
@@ -99,6 +72,7 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
     };
 
     setChatHistory((prevHistory) => [...prevHistory, userMessage]);
+    setChatInput(""); // Clear input after sending
 
     try {
       const response = await sendChatMessage(dialogueId, chatInput, "gaia_introduction");
@@ -114,7 +88,6 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
         setChatHistory((prevHistory) => [...prevHistory, botMessage]);
         setLastBotMessage(botMessage.id || botMessage.content);
       }
-      setChatInput(""); // Clear input after sending
     } catch (error) {
       console.error("Failed to send chat message:", error);
     }
@@ -170,7 +143,7 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
                     className="flex-1 overflow-auto p-4 space-y-3"
                   >
                     <div ref={topRef} />
-                    <div className="flex justify-start">
+                    {/* <div className="flex justify-start">
                       <Grid numItems={1}>
                         <Col numColSpan={1}>
                           <div className="max-w-lg px-4 py-2 rounded-2xl break-words bg-gray-200 text-gray-800">
@@ -180,10 +153,10 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
                           </div>
                         </Col>
                       </Grid>
-                    </div>
+                    </div> */}
 
                     {chatHistory && chatHistory.length > 0 ? (
-                      [...chatHistory].reverse().map((msg, idx) => (
+                      chatHistory.map((msg, idx) => (
                         <div
                           key={msg.id || idx}
                           className={`flex ${msg.senderType === "bot"
