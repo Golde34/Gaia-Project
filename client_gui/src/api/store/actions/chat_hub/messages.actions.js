@@ -4,9 +4,6 @@ import {
   GET_CHAT_HISTORY_FAILURE,
   GET_CHAT_HISTORY_REQUEST,
   GET_CHAT_HISTORY_SUCCESS,
-  SEND_CHAT_MESSAGE_REQUEST,
-  SEND_CHAT_MESSAGE_SUCCESS,
-  SEND_CHAT_MESSAGE_FAIL,
 } from "../../constants/chat_hub/messages.constant";
 
 const portName = {
@@ -22,7 +19,6 @@ export const getChatHistory = (size, cursor, dialogueId, chatType) => async (dis
       HttpMethods.GET,
       portName.chatHubPort,
     );
-    console.log("Chat history fetched: ", data);
     dispatch({ type: GET_CHAT_HISTORY_SUCCESS, payload: data });
   } catch (error) {
     dispatch({
