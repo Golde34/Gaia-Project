@@ -94,5 +94,11 @@ func (s *MessageService) GetMessageByPagination(dialogueId string, size int, cur
 		log.Println("No messages found for dialogue ID: " + dialogueId)
 		return nil, nil
 	}
+
+	// reverse the messages to maintain chronological order
+	for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
+		messages[i], messages[j] = messages[j], messages[i]
+	}
+
 	return messages, nil
 }

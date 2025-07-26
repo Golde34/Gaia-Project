@@ -15,7 +15,7 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
   const [size, setSize] = useState(6);
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
-  const [lastBotMessage, setLastBotMessage] = useState("");
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const endRef = useRef(null);
   const topRef = useRef(null);
@@ -33,12 +33,39 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
   useEffect(() => {
     if (chatMessages && chatMessages.length > 0) {
       setChatHistory((prevHistory) => {
-        const existingIds = new Set(prevHistory.map((msg) => msg.id));
-        const newMessages = chatMessages.filter((msg) => !existingIds.has(msg.id));
-        return [...newMessages, ...prevHistory].reverse(); // Prepend paginated messages
+        if (!cursor) {
+          const existingIds = new Set(prevHistory.map((msg) => msg.id));
+          const newMessages = chatMessages.filter((msg) => !existingIds.has(msg.id));
+          return [...newMessages, ...prevHistory];
+        } else {
+          const existingIds = new Set(prevHistory.map((msg) => msg.id));
+          const newMessages = chatMessages.filter((msg) => !existingIds.has(msg.id));
+          return [...newMessages, ...prevHistory];
+        }
       });
     }
-  }, [chatMessages]);
+  }, [chatMessages, cursor]);
+
+  const handleLoadMore = useCallback(() => {
+    if (nextCursor && !loadingMore) {
+      setLoadingMore(true);
+      setCursor(nextCursor);
+    }
+  }, [nextCursor, loadingMore]);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      if (container.scrollTop < 100 && nextCursor && !loadingMore) {
+        handleLoadMore();
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [handleLoadMore, nextCursor, loadingMore]);
 
   const getChatMessages = useCallback(() => {
     dispatch(getChatHistory(size, cursor, "", "gaia_introduction"));
@@ -76,7 +103,7 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
 
     try {
       const response = await sendChatMessage(dialogueId, chatInput, "gaia_introduction");
-      console.log("Response:", response); 
+      console.log("Response:", response);
 
       if (response) {
         const botMessage = {
@@ -86,7 +113,6 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
           timestamp: new Date().toISOString(),
         };
         setChatHistory((prevHistory) => [...prevHistory, botMessage]);
-        setLastBotMessage(botMessage.id || botMessage.content);
       }
     } catch (error) {
       console.error("Failed to send chat message:", error);
@@ -143,18 +169,6 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
                     className="flex-1 overflow-auto p-4 space-y-3"
                   >
                     <div ref={topRef} />
-                    {/* <div className="flex justify-start">
-                      <Grid numItems={1}>
-                        <Col numColSpan={1}>
-                          <div className="max-w-lg px-4 py-2 rounded-2xl break-words bg-gray-200 text-gray-800">
-                            Hello! I'm Gaia, your AI assistant. I am very excited
-                            because you choose me to be your partner in this
-                            journey!
-                          </div>
-                        </Col>
-                      </Grid>
-                    </div> */}
-
                     {chatHistory && chatHistory.length > 0 ? (
                       chatHistory.map((msg, idx) => (
                         <div
