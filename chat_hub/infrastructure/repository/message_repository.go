@@ -85,13 +85,30 @@ func (r *MessageRepository) GetRecentChatMessagesByDialogueId(dialogueId string,
 func (r *MessageRepository) GetMessagesByDialogueIdWithCursorPagination(dialogueId string, size int, cursor string) ([]entity.MessageEntity, error) {
 	size = utils.ValidatePagination(size)
 
-	query := `SELECT user_id, dialogue_id, sender_type, content, metadata, created_at
-				FROM messages
-				WHERE dialogue_id = $1
-				AND ($2 = '' OR created_at < $2::timestamp)
-				ORDER BY created_at DESC
-				LIMIT $3`
-	rows, err := r.db.Query(query, dialogueId, cursor, size)
+	var (
+		rows *sql.Rows
+		err  error
+	)
+
+	baseQuery := `
+		SELECT user_id, dialogue_id, sender_type, content, metadata, created_at
+		FROM messages
+		WHERE dialogue_id = $1
+	`
+
+	if cursor == "" {
+		query := baseQuery + `
+			ORDER BY created_at DESC
+			LIMIT $2`
+		rows, err = r.db.Query(query, dialogueId, size)
+	} else {
+		query := baseQuery + `
+			AND created_at < $2::timestamp
+			ORDER BY created_at DESC
+			LIMIT $3`
+		rows, err = r.db.Query(query, dialogueId, cursor, size)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("error executing query: %w", err)
 	}

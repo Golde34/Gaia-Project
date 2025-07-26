@@ -54,7 +54,7 @@ func (s *ChatHistoryUsecase) GetChatHistory(userId, dialogueId, chatType string,
 
 	var nextCursor string
 	if len(messages) > 0 {
-		nextCursor = messages[len(messages)-1].CreatedAt.Format(time.RFC3339)
+		nextCursor = messages[0].CreatedAt.Format(time.RFC3339)
 	}
 
 	return map[string]interface{}{
