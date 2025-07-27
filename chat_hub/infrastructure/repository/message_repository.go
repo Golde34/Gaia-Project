@@ -73,7 +73,7 @@ func (r *MessageRepository) GetRecentChatMessagesByDialogueId(dialogueId string,
 	var messages []entity.MessageEntity
 	for rows.Next() {
 		var message entity.MessageEntity
-		if err := rows.Scan(&message.UserId, &message.DialogueId, 
+		if err := rows.Scan(&message.UserId, &message.DialogueId,
 			&message.SenderType, &message.Content, &message.Metadata); err != nil {
 			return nil, err
 		}
@@ -91,7 +91,7 @@ func (r *MessageRepository) GetMessagesByDialogueIdWithCursorPagination(dialogue
 	)
 
 	baseQuery := `
-		SELECT user_id, dialogue_id, sender_type, content, metadata, created_at
+		SELECT id, user_id, dialogue_id, sender_type, content, metadata, created_at
 		FROM messages
 		WHERE dialogue_id = $1
 	`
@@ -118,8 +118,8 @@ func (r *MessageRepository) GetMessagesByDialogueIdWithCursorPagination(dialogue
 	for rows.Next() {
 		var message entity.MessageEntity
 		var createdAt time.Time
-		if err := rows.Scan(&message.UserId, &message.DialogueId,
-			&message.SenderType, &message.Content, &message.Metadata, &createdAt); err != nil {
+		if err := rows.Scan(&message.ID, &message.UserId, &message.DialogueId, &message.SenderType,
+			&message.Content, &message.Metadata, &createdAt); err != nil {
 			return nil, fmt.Errorf("error scanning row: %w", err)
 		}
 		message.CreatedAt = createdAt
