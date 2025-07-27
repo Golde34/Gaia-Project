@@ -4,9 +4,6 @@ import {
   GET_CHAT_HISTORY_FAILURE,
   GET_CHAT_HISTORY_REQUEST,
   GET_CHAT_HISTORY_SUCCESS,
-  SEND_CHAT_MESSAGE_REQUEST,
-  SEND_CHAT_MESSAGE_SUCCESS,
-  SEND_CHAT_MESSAGE_FAIL,
 } from "../../constants/chat_hub/messages.constant";
 
 const portName = {
@@ -22,7 +19,6 @@ export const getChatHistory = (size, cursor, dialogueId, chatType) => async (dis
       HttpMethods.GET,
       portName.chatHubPort,
     );
-    console.log("Chat history fetched: ", data);
     dispatch({ type: GET_CHAT_HISTORY_SUCCESS, payload: data });
   } catch (error) {
     dispatch({
@@ -35,37 +31,41 @@ export const getChatHistory = (size, cursor, dialogueId, chatType) => async (dis
   }
 };
 
-export const sendChatMessage =
-  (dialogueId, message, chatType) => async (dispatch) => {
-    dispatch({ type: SEND_CHAT_MESSAGE_REQUEST });
-    try {
-      const tokenResponse = await serverRequest(`/chat/initiate-chat`, HttpMethods.POST, portName.chatHubPort);
-      if (tokenResponse.status !== 200) {
-        throw new Error("Failed to initiate chat");
-      }
-      if (!tokenResponse.data) {
-        throw new Error("SSE token not received");
-      }
+export const sendChatMessage = async (dialogueId, message, chatType) => {
+  try {
+    const tokenResponse = await serverRequest(`/chat/initiate-chat`, HttpMethods.POST, portName.chatHubPort);
+    if (tokenResponse.status !== 200) {
+      throw new Error("Failed to initiate chat");
+    }
+    if (!tokenResponse.data) {
+      throw new Error("SSE token not received");
+    }
 
-      const url = `http://${config.serverHost}:${config.chatHubPort}/chat?dialogueId=${dialogueId}&message=${encodeURIComponent(message)}&type=${chatType}&sseToken=${tokenResponse.data}`;
+    const params = new URLSearchParams({
+      dialogueId: dialogueId,
+      message: message,
+      type: chatType,
+      sseToken: tokenResponse.data,
+    });
+    const baseUrl = `http://${config.serverHost}:${config.chatHubPort}`;
+    const url = `${baseUrl}/chat/send-message?${params}`;
+
+    return new Promise((resolve, reject) => {
       const eventSource = new EventSource(url);
 
       eventSource.onmessage = (event) => {
-        dispatch({ type: SEND_CHAT_MESSAGE_SUCCESS, payload: event.data });
         eventSource.close();
+        const response = event.data;
+        resolve(response);
       };
 
-      eventSource.onerror = () => {
-        dispatch({
-          type: SEND_CHAT_MESSAGE_FAIL,
-          payload: "SSE connection error",
-        });
+      eventSource.onerror = (error) => {
         eventSource.close();
+        reject(new Error("EventSource error"));
       };
-    } catch (error) {
-      dispatch({
-        type: SEND_CHAT_MESSAGE_FAIL,
-        payload: error.message,
-      });
-    }
-  };
+    });
+  } catch (error) {
+    console.error("Error sending chat message:", error);
+    throw error;
+  }
+};

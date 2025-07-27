@@ -7,9 +7,11 @@ import (
 )
 
 type SecurityConfig struct {
-	PublicKey  string
-	PrivateKey string
-	PrivateToken string
+	PublicKey     string
+	PrivateKey    string
+	PrivateToken  string
+	SSEPublicKey  string
+	SSEPrivateKey string
 }
 
 func (in *SecurityConfig) LoadSecurityEnv() (SecurityConfig, error) {
@@ -21,11 +23,15 @@ func (in *SecurityConfig) LoadSecurityEnv() (SecurityConfig, error) {
 	publicKey := os.Getenv("RSA_SIGNATURE.PUBLIC_KEY")
 	privateKey := os.Getenv("RSA_SIGNATURE.PRIVATE_KEY")
 	privateToken := os.Getenv("RSA_SIGNATURE.PRIVATE_TOKEN")
-	
+	ssePublicKey := os.Getenv("RSA_SIGNATURE.SSE_PUBLIC_KEY")
+	ssePrivateKey := os.Getenv("RSA_SIGNATURE.SSE_PRIVATE_KEY")
+
 	securityConfig := SecurityConfig{
-		PublicKey:  publicKey,
-		PrivateKey: privateKey,
-		PrivateToken: privateToken,
+		PublicKey:     publicKey,
+		PrivateKey:    privateKey,
+		PrivateToken:  privateToken,
+		SSEPublicKey:  ssePublicKey,
+		SSEPrivateKey: ssePrivateKey,
 	}
 	return securityConfig, nil
 }

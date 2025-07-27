@@ -47,20 +47,21 @@ func (s *ChatHistoryUsecase) GetChatHistory(userId, dialogueId, chatType string,
 		return nil, err
 	}
 
-	messages, err := s.messageService.GetMessageByPagination(dialogue.ID, size, cursor)
+	messages, hasMore, err := s.messageService.GetMessageByPagination(dialogue.ID, size, cursor)
 	if err != nil {
 		return nil, err
 	}
 
 	var nextCursor string
 	if len(messages) > 0 {
-		nextCursor = messages[len(messages)-1].CreatedAt.Format(time.RFC3339)
+		nextCursor = messages[0].CreatedAt.Format(time.RFC3339)
 	}
 
 	return map[string]interface{}{
 		"dialogue":     dialogue,
-		"chatMessages": messages,      // Changed to match frontend
-		"nextCursor":   nextCursor,    // Add next cursor for pagination
+		"chatMessages": messages,   // Changed to match frontend
+		"nextCursor":   nextCursor, // Add next cursor for pagination
+		"hasMore":      hasMore,    // Indicate if there are more messages
 	}, nil
 }
 
