@@ -1,4 +1,4 @@
-import { Button, Card, Col, Grid, Metric, TextInput } from "@tremor/react";
+import { Button, Card, Col, Grid, TextInput } from "@tremor/react";
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,8 +13,16 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  const dbChatHistory = useSelector((state) => state.chatHistory);
+  const { loading, error, chatMessages, nextCursor } = dbChatHistory;
 
   const messagesContainerRef = useRef(null);
+  const isLoadingMoreRef = useRef(false);
+  const lastLoadedCursorRef = useRef("__init__");
+  const prevScrollHeightRef = useRef(0);
+  const didGetChatHistoryRef = useRef(false);
 
   const suggestions = [
     "Who are you?",
@@ -22,81 +30,85 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
     "Why should I use Gaia?",
   ];
 
-  const dbChatHistory = useSelector((state) => state.chatHistory);
-  const { loading, error, chatMessages, nextCursor } = dbChatHistory;
-
+  // Fetch chat history
   useEffect(() => {
-    if (chatMessages && chatMessages.length > 0) {
-      setChatHistory((prevHistory) => {
-        const existingIds = new Set(prevHistory.map((msg) => msg.id));
-        const newMessages = chatMessages.filter((msg) => !existingIds.has(msg.id));
-        return [...newMessages, ...prevHistory];
-      });
-    }
-  }, [chatMessages]);
-
-  const handleLoadMore = useCallback(() => {
-    if (nextCursor && !loadingMore) {
-      setLoadingMore(true);
-      setCursor(nextCursor);
-    }
-  }, [nextCursor, loadingMore]);
-
-  useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      if (container.scrollTop <= 50) { 
-        handleLoadMore();
-      }
-    };
-
-    container.addEventListener("scroll", handleScroll);
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, [handleLoadMore]);
-
-  const didGetChatHistoryRef = useRef(false);
-  const getChatMessages = useCallback(() => {
-    dispatch(getChatHistory(size, cursor, "", "gaia_introduction"));
-    setLoadingMore(false);
-  }, [dispatch, size, cursor]);
-
-  useEffect(() => {
+    console.log("First time loading chat history");
     if (didGetChatHistoryRef.current) return;
     getChatMessages();
     didGetChatHistoryRef.current = true;
   }, []);
 
   useEffect(() => {
+    if (chatMessages && chatMessages.length > 0) {
+      setChatHistory((prev) => {
+        const existingIds = new Set(prev.map((msg) => msg.id));
+        const newMessages = chatMessages.filter((msg) => !existingIds.has(msg.id));
+        return [...newMessages, ...prev];
+      });
+      setHasMore(!!nextCursor);
+      setCursor(nextCursor || "");
+    } else if (chatMessages && chatMessages.length === 0) {
+      setHasMore(false);
+    }
+    setLoadingMore(false);
+    isLoadingMoreRef.current = false;
+    console.log("Loading more: ", loadingMore, "Has more:", hasMore);
+  }, [chatMessages, nextCursor]);
+
+  const getChatMessages = useCallback((loadCursor) => {
+    const cursorToUse = loadCursor || nextCursor || "";
+    if (cursorToUse === lastLoadedCursorRef.current) return;
+    dispatch(getChatHistory(size, cursorToUse, "", "gaia_introduction"));
+    lastLoadedCursorRef.current = cursorToUse;
+  }, [dispatch, size, nextCursor]);
+
+  // Handle scroll to load more messages
+  useEffect(() => {
     const container = messagesContainerRef.current;
-    if (container) {
+    if (!container) return;
+
+    if (loadingMore) {
+      const scrollDiff = container.scrollHeight - prevScrollHeightRef.current;
+      container.scrollTop = scrollDiff;
+    } else {
       container.scrollTop = container.scrollHeight;
     }
-  }, [chatHistory, showChat]);
+  }, [chatHistory, loadingMore]);
 
-  const handleSend = async () => {
-    if (!chatInput.trim()) return;
-
-    const userMessage = {
-      id: `user-${Date.now()}`,
-      content: chatInput,
-      senderType: "user",
-      timestamp: new Date().toISOString(),
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const handleScroll = () => {
+      if (container.scrollTop == 0 && hasMore &&
+        !loading && !isLoadingMoreRef.current) {
+        isLoadingMoreRef.current = true;
+        prevScrollHeightRef.current = container.scrollHeight;
+        setLoadingMore(true);
+        getChatMessages(cursor);
+      }
     };
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [hasMore, loading, getChatMessages]);
 
+  // Handle sending messages
+  const handleSend = async () => {
+    const createMessage = (content, senderType) => ({
+      id: `${senderType}-${Date.now()}-${Math.random()}`,
+      content,
+      senderType,
+      timestamp: new Date().toISOString(),
+    });
+
+    if (!chatInput.trim()) return;
+    const userMessage = createMessage(chatInput, "user");
     setChatHistory((prevHistory) => [...prevHistory, userMessage]);
     setChatInput("");
 
     try {
       const response = await sendChatMessage("", chatInput, "gaia_introduction");
       if (response) {
-        const botMessage = {
-          id: `bot-${Date.now()}`,
-          content: response,
-          senderType: "bot",
-          timestamp: new Date().toISOString(),
-        };
+        const botMessage = createMessage(response, "bot");
         setChatHistory((prevHistory) => [...prevHistory, botMessage]);
       }
     } catch (error) {
@@ -116,8 +128,14 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
             <div
               ref={messagesContainerRef}
               className="flex-1 overflow-auto p-4 space-y-3"
-              style={{ scrollBehavior: "smooth" }} // For smooth scroll to bottom
+              style={{ scrollBehavior: "smooth" }}
             >
+              {!hasMore && chatHistory.length > 0 && (
+                <div className="text-center text-gray-400 my-2">No more messages</div>
+              )}
+              {loadingMore && (
+                <div className="text-center text-gray-400 my-2">Loading more...</div>
+              )}
               {chatHistory && chatHistory.length > 0 ? (
                 chatHistory.map((msg, idx) => (
                   <div
