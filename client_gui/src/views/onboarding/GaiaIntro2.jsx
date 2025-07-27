@@ -8,19 +8,16 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
   const dispatch = useDispatch();
 
   const [showChat, setShowChat] = useState(false);
-  const [cursor, setCursor] = useState("");
   const [size, setSize] = useState(6);
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
 
   const dbChatHistory = useSelector((state) => state.chatHistory);
-  const { loading, error, chatMessages, nextCursor } = dbChatHistory;
+  const { loading, error, chatMessages, nextCursor, hasMore } = dbChatHistory;
 
   const messagesContainerRef = useRef(null);
   const isLoadingMoreRef = useRef(false);
-  const lastLoadedCursorRef = useRef("__init__");
   const prevScrollHeightRef = useRef(0);
   const didGetChatHistoryRef = useRef(false);
 
@@ -30,37 +27,32 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
     "Why should I use Gaia?",
   ];
 
+  const getChatMessages = useCallback((loadCursor) => {
+    const cursorToUse = loadCursor || nextCursor || "";
+    dispatch(getChatHistory(size, cursorToUse, "", "gaia_introduction"));
+  }, [dispatch, size, nextCursor, hasMore]);
+
   // Fetch chat history
   useEffect(() => {
-    console.log("First time loading chat history");
     if (didGetChatHistoryRef.current) return;
     getChatMessages();
     didGetChatHistoryRef.current = true;
   }, []);
 
   useEffect(() => {
-    if (chatMessages && chatMessages.length > 0) {
-      setChatHistory((prev) => {
-        const existingIds = new Set(prev.map((msg) => msg.id));
-        const newMessages = chatMessages.filter((msg) => !existingIds.has(msg.id));
-        return [...newMessages, ...prev];
-      });
-      setHasMore(!!nextCursor);
-      setCursor(nextCursor || "");
-    } else if (chatMessages && chatMessages.length === 0) {
-      setHasMore(false);
+    if (!chatMessages || chatMessages.length === 0) {
+      setLoadingMore(false);
+      isLoadingMoreRef.current = false;
+      return;
     }
+    setChatHistory((prev) => {
+      const existingIds = new Set(prev.map((msg) => msg.id));
+      const newMessages = chatMessages.filter((msg) => !existingIds.has(msg.id));
+      return [...newMessages, ...prev];
+    });
     setLoadingMore(false);
     isLoadingMoreRef.current = false;
-    console.log("Loading more: ", loadingMore, "Has more:", hasMore);
   }, [chatMessages, nextCursor]);
-
-  const getChatMessages = useCallback((loadCursor) => {
-    const cursorToUse = loadCursor || nextCursor || "";
-    if (cursorToUse === lastLoadedCursorRef.current) return;
-    dispatch(getChatHistory(size, cursorToUse, "", "gaia_introduction"));
-    lastLoadedCursorRef.current = cursorToUse;
-  }, [dispatch, size, nextCursor]);
 
   // Handle scroll to load more messages
   useEffect(() => {
@@ -68,7 +60,7 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
     if (!container) return;
 
     if (loadingMore) {
-      const scrollDiff = container.scrollHeight - prevScrollHeightRef.current;
+      const scrollDiff = container.scrollHeight - 50;
       container.scrollTop = scrollDiff;
     } else {
       container.scrollTop = container.scrollHeight;
@@ -84,7 +76,7 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
         isLoadingMoreRef.current = true;
         prevScrollHeightRef.current = container.scrollHeight;
         setLoadingMore(true);
-        getChatMessages(cursor);
+        getChatMessages();
       }
     };
     container.addEventListener("scroll", handleScroll);
@@ -130,9 +122,6 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
               className="flex-1 overflow-auto p-4 space-y-3"
               style={{ scrollBehavior: "smooth" }}
             >
-              {!hasMore && chatHistory.length > 0 && (
-                <div className="text-center text-gray-400 my-2">No more messages</div>
-              )}
               {loadingMore && (
                 <div className="text-center text-gray-400 my-2">Loading more...</div>
               )}

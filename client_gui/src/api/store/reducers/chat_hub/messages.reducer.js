@@ -17,6 +17,7 @@ export const chatHistoryReducer = (
                 chatMessages: Array.isArray(action.payload.chatMessages) ?
                     action.payload.chatMessages : [],
                 nextCursor: action.payload.nextCursor || "",
+                hasMore: action.payload.hasMore || false,
                 loading: false,
                 error: null,
             };
