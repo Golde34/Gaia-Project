@@ -71,8 +71,8 @@ func (s *MessageService) GetMessageByDialogueId(dialogueId string, numberOfMessa
 	var recentChatMessagesDTO []response_dtos.MessageResponseDTO
 	for _, message := range recentChatMessages {
 		recentChatMessagesDTO = append(recentChatMessagesDTO, response_dtos.MessageResponseDTO{
-			Message:    "<" + message.SenderType + "> " + message.Content,
-			Metadata:   message.Metadata,
+			Message:  "<" + message.SenderType + "> " + message.Content,
+			Metadata: message.Metadata,
 		})
 	}
 
@@ -84,15 +84,15 @@ func (s *MessageService) GetMessageByDialogueId(dialogueId string, numberOfMessa
 	return recentChatHistoryDTO, nil
 }
 
-func (s *MessageService) GetMessageByPagination(dialogueId string, size int, cursor string) ([]entity.MessageEntity, error) {
-	messages, err := s.messageRepository.GetMessagesByDialogueIdWithCursorPagination(dialogueId, size, cursor)
+func (s *MessageService) GetMessageByPagination(dialogueId string, size int, cursor string) ([]entity.MessageEntity, bool, error) {
+	messages, hasMore, err := s.messageRepository.GetMessagesByDialogueIdWithCursorPagination(dialogueId, size, cursor)
 	if err != nil {
 		log.Println("Error getting messages by pagination: " + err.Error())
-		return nil, err
+		return nil, false, err
 	}
 	if len(messages) == 0 {
 		log.Println("No messages found for dialogue ID: " + dialogueId)
-		return nil, nil
+		return nil, false, nil
 	}
 
 	// reverse the messages to maintain chronological order
@@ -100,5 +100,5 @@ func (s *MessageService) GetMessageByPagination(dialogueId string, size int, cur
 		messages[i], messages[j] = messages[j], messages[i]
 	}
 
-	return messages, nil
+	return messages, hasMore, nil
 }

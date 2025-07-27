@@ -82,53 +82,59 @@ func (r *MessageRepository) GetRecentChatMessagesByDialogueId(dialogueId string,
 	return messages, nil
 }
 
-func (r *MessageRepository) GetMessagesByDialogueIdWithCursorPagination(dialogueId string, size int, cursor string) ([]entity.MessageEntity, error) {
-	size = utils.ValidatePagination(size)
+func (r *MessageRepository) GetMessagesByDialogueIdWithCursorPagination(dialogueId string, size int, cursor string) ([]entity.MessageEntity, bool, error) {
+    size = utils.ValidatePagination(size)
+    queryLimit := size + 1
 
-	var (
-		rows *sql.Rows
-		err  error
-	)
+    var (
+        rows *sql.Rows
+        err  error
+    )
 
-	baseQuery := `
-		SELECT id, user_id, dialogue_id, sender_type, content, metadata, created_at
-		FROM messages
-		WHERE dialogue_id = $1
-	`
+    baseQuery := `
+        SELECT id, user_id, dialogue_id, sender_type, content, metadata, created_at
+        FROM messages
+        WHERE dialogue_id = $1
+    `
 
-	if cursor == "" {
-		query := baseQuery + `
-			ORDER BY created_at DESC
-			LIMIT $2`
-		rows, err = r.db.Query(query, dialogueId, size)
-	} else {
-		query := baseQuery + `
-			AND created_at < $2::timestamp
-			ORDER BY created_at DESC
-			LIMIT $3`
-		rows, err = r.db.Query(query, dialogueId, cursor, size)
-	}
+    if cursor == "" {
+        query := baseQuery + `
+            ORDER BY created_at DESC
+            LIMIT $2`
+        rows, err = r.db.Query(query, dialogueId, queryLimit)
+    } else {
+        query := baseQuery + `
+            AND created_at < $2::timestamp
+            ORDER BY created_at DESC
+            LIMIT $3`
+        rows, err = r.db.Query(query, dialogueId, cursor, queryLimit)
+    }
 
-	if err != nil {
-		return nil, fmt.Errorf("error executing query: %w", err)
-	}
-	defer rows.Close()
+    if err != nil {
+        return nil, false, fmt.Errorf("error executing query: %w", err)
+    }
+    defer rows.Close()
 
-	var messages []entity.MessageEntity
-	for rows.Next() {
-		var message entity.MessageEntity
-		var createdAt time.Time
-		if err := rows.Scan(&message.ID, &message.UserId, &message.DialogueId, &message.SenderType,
-			&message.Content, &message.Metadata, &createdAt); err != nil {
-			return nil, fmt.Errorf("error scanning row: %w", err)
-		}
-		message.CreatedAt = createdAt
-		messages = append(messages, message)
-	}
+    var messages []entity.MessageEntity
+    for rows.Next() {
+        var message entity.MessageEntity
+        var createdAt time.Time
+        if err := rows.Scan(&message.ID, &message.UserId, &message.DialogueId, &message.SenderType,
+            &message.Content, &message.Metadata, &createdAt); err != nil {
+            return nil, false, fmt.Errorf("error scanning row: %w", err)
+        }
+        message.CreatedAt = createdAt
+        messages = append(messages, message)
+    }
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating rows: %w", err)
-	}
+    if err := rows.Err(); err != nil {
+        return nil, false, fmt.Errorf("error iterating rows: %w", err)
+    }
 
-	return messages, nil
+    hasMore := len(messages) > size
+    if hasMore {
+        messages = messages[:size]
+    }
+    return messages, hasMore, nil
 }
+
