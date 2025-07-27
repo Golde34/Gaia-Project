@@ -1,4 +1,4 @@
-import { Button, Card, Col, Grid, TextInput } from "@tremor/react";
+import { Button, Card, Col, Grid, Metric, TextInput } from "@tremor/react";
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,7 +8,7 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
   const dispatch = useDispatch();
 
   const [showChat, setShowChat] = useState(false);
-  const [size, setSize] = useState(6);
+  const [size] = useState(20);
   const [chatInput, setChatInput] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -17,9 +17,10 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
   const { loading, error, chatMessages, nextCursor, hasMore } = dbChatHistory;
 
   const messagesContainerRef = useRef(null);
+  const didGetChatHistoryRef = useRef(false);
   const isLoadingMoreRef = useRef(false);
   const prevScrollHeightRef = useRef(0);
-  const didGetChatHistoryRef = useRef(false);
+  const prevScrollTopRef = useRef(0);
 
   const suggestions = [
     "Who are you?",
@@ -30,9 +31,8 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
   const getChatMessages = useCallback((loadCursor) => {
     const cursorToUse = loadCursor || nextCursor || "";
     dispatch(getChatHistory(size, cursorToUse, "", "gaia_introduction"));
-  }, [dispatch, size, nextCursor, hasMore]);
+  }, [dispatch, size, nextCursor]);
 
-  // Fetch chat history
   useEffect(() => {
     if (didGetChatHistoryRef.current) return;
     getChatMessages();
@@ -40,41 +40,43 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
   }, []);
 
   useEffect(() => {
-    if (!chatMessages || chatMessages.length === 0) {
-      setLoadingMore(false);
-      isLoadingMoreRef.current = false;
-      return;
-    }
+    if (!chatMessages || chatMessages.length === 0) return;
+
     setChatHistory((prev) => {
       const existingIds = new Set(prev.map((msg) => msg.id));
       const newMessages = chatMessages.filter((msg) => !existingIds.has(msg.id));
       return [...newMessages, ...prev];
     });
-    setLoadingMore(false);
-    isLoadingMoreRef.current = false;
-  }, [chatMessages, nextCursor]);
+  }, [chatMessages]);
 
-  // Handle scroll to load more messages
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
 
-    if (loadingMore) {
-      const scrollDiff = container.scrollHeight - 50;
-      container.scrollTop = scrollDiff;
+    if (isLoadingMoreRef.current) {
+      const newScrollHeight = container.scrollHeight;
+      const delta = newScrollHeight - prevScrollHeightRef.current - 50;
+      container.scrollTop = prevScrollTopRef.current + delta;
+      isLoadingMoreRef.current = false;
+      setLoadingMore(false);
     } else {
       container.scrollTop = container.scrollHeight;
     }
-  }, [chatHistory, loadingMore]);
+  }, [chatHistory]);
 
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
     const handleScroll = () => {
-      if (container.scrollTop == 0 && hasMore &&
-        !loading && !isLoadingMoreRef.current) {
+      if (
+        container.scrollTop === 0 &&
+        hasMore &&
+        !loading &&
+        !isLoadingMoreRef.current
+      ) {
         isLoadingMoreRef.current = true;
         prevScrollHeightRef.current = container.scrollHeight;
+        prevScrollTopRef.current = container.scrollTop;
         setLoadingMore(true);
         getChatMessages();
       }
@@ -94,20 +96,19 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
 
     if (!chatInput.trim()) return;
     const userMessage = createMessage(chatInput, "user");
-    setChatHistory((prevHistory) => [...prevHistory, userMessage]);
+    setChatHistory((prev) => [...prev, userMessage]);
     setChatInput("");
 
     try {
       const response = await sendChatMessage("", chatInput, "gaia_introduction");
       if (response) {
         const botMessage = createMessage(response, "bot");
-        setChatHistory((prevHistory) => [...prevHistory, botMessage]);
+        setChatHistory((prev) => [...prev, botMessage]);
       }
     } catch (error) {
       console.error("Failed to send chat message:", error);
     }
   };
-
   return (
     <>
       {loading && !chatHistory.length ? (
@@ -116,6 +117,9 @@ const GaiaIntroduction2 = ({ onNext, onSkip }) => {
         <p>Error when loading chat history: {error}</p>
       ) : (
         <>
+          <Metric className="text-center mb-4">
+            Welcome! My name is Gaia! How can I assist you today?
+          </Metric>
           <Card className="flex flex-col h-[600px]">
             <div
               ref={messagesContainerRef}
