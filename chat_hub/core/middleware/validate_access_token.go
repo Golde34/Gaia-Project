@@ -17,7 +17,7 @@ const (
 func ValidateAccessToken() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			noAuthRequired := []string{"/chat/send-message"}
+			noAuthRequired := []string{"/chat-system"}
 
 			for _, path := range noAuthRequired {
 				if strings.Contains(r.URL.Path, path) {

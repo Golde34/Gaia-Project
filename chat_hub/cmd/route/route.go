@@ -9,7 +9,7 @@ import (
 
 func Setup(router *chi.Mux, db *sql.DB) {
 	router.Group(func(r chi.Router) {
-		chathubRouter.NewChatHistoryRouter(db, router)
-		chathubRouter.NewChatRouter(db, router)
+		chathubRouter.NewChatInteractionRouter(db, router)
+		chathubRouter.NewChatSystemRouter(db, router)
 	})
 }
