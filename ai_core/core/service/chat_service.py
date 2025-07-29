@@ -1,4 +1,5 @@
 import datetime
+import json
 import uuid
 
 from core.domain.entities.recursive_summary import RecursiveSummary
@@ -117,10 +118,10 @@ async def update_recursive_summary(user_id: str, dialogue_id: str) -> None:
     """
     try:
         recent_history = await chat_hub_service_client.get_recent_history(
-            query=QueryRequest(
+            request=RecentHistoryRequest(
                 user_id=user_id,
                 dialogue_id=dialogue_id,
-                number_of_messages=config.RECURSIVE_SUMMARY_MAX_LENGTH
+                number_of_messages=config.RECURSIVE_SUMMARY_MAX_LENGTH,
             )
         )
         if not recent_history:
@@ -130,23 +131,23 @@ async def update_recursive_summary(user_id: str, dialogue_id: str) -> None:
             recent_history=recent_history)
         model_name = config.LLM_DEFAULT_MODEL
         function = await llm_models.get_model_generate_content(model_name, user_id)
-        recursive_summary = function(prompt=prompt, model_name=model_name)
-        print(f"Recursive Summary: {recursive_summary}")
+        recursive_summary_str = function(prompt=prompt, model_name=model_name)
+        print(f"Recursive Summary: {recursive_summary_str}")
 
         recursive_summary = RecursiveSummary(
             id=uuid.uuid4().hex,
             user_id=user_id,
             dialogue_id=dialogue_id,
-            summary=recursive_summary,
+            summary=recursive_summary_str,
             created_at=datetime.date.today(),
         )
-        recursive_summary_repo.save_summary(
+        await recursive_summary_repo.save_summary(
             summary=recursive_summary
         )
 
         recursive_summary_key = RedisEnum.RECURSIVE_SUMMARY_CONTENT.value + \
             f":{user_id}:{dialogue_id}"
-        set_key(recursive_summary_key, recursive_summary)
+        set_key(recursive_summary_key, recursive_summary.summary)
         print(
             f"Recursive summary updated for user {user_id} and dialogue {dialogue_id}")
 
