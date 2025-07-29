@@ -14,7 +14,7 @@ class ChatHubServiceClient:
 
     async def get_recent_history(self, request: RecentHistoryRequest) -> str:
         try:
-            endpoint = f"{self.base_url}/chat-history/recent-history/"
+            endpoint = f"{self.base_url}/chat-system/recent-history/"
             result = await aiohttp_utils.get(
                 endpoint=endpoint,
                 params={

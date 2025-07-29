@@ -1,8 +1,7 @@
 from datetime import datetime
 from typing import Dict, List, Optional
 from pydantic import ValidationError
-from langdetect import detect, DetectorFactory
-import logging
+from langdetect import detect
 import json
 import re
 
