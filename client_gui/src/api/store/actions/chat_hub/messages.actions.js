@@ -15,7 +15,7 @@ export const getChatHistory = (size, cursor, dialogueId, chatType) => async (dis
   try {
     const cursorParam = cursor ? `&cursor=${encodeURIComponent(cursor)}` : '';
     const { data } = await serverRequest(
-      `/chat-history?size=${size}${cursorParam}&dialogueId=${dialogueId}&chatType=${chatType}`,
+      `/chat-interaction/history?size=${size}${cursorParam}&dialogueId=${dialogueId}&chatType=${chatType}`,
       HttpMethods.GET,
       portName.chatHubPort,
     );
@@ -33,7 +33,7 @@ export const getChatHistory = (size, cursor, dialogueId, chatType) => async (dis
 
 export const sendChatMessage = async (dialogueId, message, chatType) => {
   try {
-    const tokenResponse = await serverRequest(`/chat/initiate-chat`, HttpMethods.POST, portName.chatHubPort);
+    const tokenResponse = await serverRequest(`/chat-interaction/initiate-chat`, HttpMethods.POST, portName.chatHubPort);
     if (tokenResponse.status !== 200) {
       throw new Error("Failed to initiate chat");
     }
@@ -48,7 +48,7 @@ export const sendChatMessage = async (dialogueId, message, chatType) => {
       sseToken: tokenResponse.data,
     });
     const baseUrl = `http://${config.serverHost}:${config.chatHubPort}`;
-    const url = `${baseUrl}/chat/send-message?${params}`;
+    const url = `${baseUrl}/chat-system/send-message?${params}`;
 
     return new Promise((resolve, reject) => {
       const eventSource = new EventSource(url);
