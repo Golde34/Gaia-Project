@@ -9,26 +9,29 @@ import (
 	"github.com/go-chi/chi"
 )
 
-type ChatHistoryRouter struct {
+type ChatSystemRouter struct {
 	db *sql.DB
 
 	ChatHistoryUsecase *usecases.ChatHistoryUsecase
+	ChatUsecase        *usecases.ChatUsecase
 }
 
-func NewChatHistoryRouter(db *sql.DB, r *chi.Mux) *ChatHistoryRouter {
+func NewChatSystemRouter(db *sql.DB, r *chi.Mux) *ChatSystemRouter {
 	chatHistoryUsecase := usecases.NewChatHistoryUsecase(db)
+	chatUsecase := usecases.NewChatUsecase(db)
 
-	r.Route("/chat-history", func(r chi.Router) {
+	r.Route("/chat-system", func(r chi.Router) {
 		r.Get("/recent-history", func(w http.ResponseWriter, r *http.Request) {
 			controller.GetRecentHistory(w, r, chatHistoryUsecase)
 		})
-		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			controller.GetChatHistory(w, r, chatHistoryUsecase)
+		r.Get("/send-message", func(w http.ResponseWriter, r *http.Request) {
+			controller.Chat(w, r, chatUsecase)
 		})
 	})
 
-	return &ChatHistoryRouter{
+	return &ChatSystemRouter{
 		db:                 db,
 		ChatHistoryUsecase: chatHistoryUsecase,
+		ChatUsecase:        chatUsecase,
 	}
 }
