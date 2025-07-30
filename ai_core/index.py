@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request 
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 import asyncio
@@ -6,7 +7,8 @@ import contextvars
 import uuid
 import uvicorn
 
-from ui.controller import chat_controller, onboarding_controller, rag_controller 
+from ui.controller import chat_controller, onboarding_controller, rag_controller
+from ui.controller.sse_chat_controller import SSEChatRouter
 from infrastructure.kafka.consumer import consume
 from kernel.config.config import session_id_var
 
@@ -15,9 +17,19 @@ load_dotenv()
 
 app = FastAPI(title="Task Information Extraction API")
 
+# Add CORS middleware for SSE
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure this appropriately for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(chat_controller.ChatRouter)
 app.include_router(onboarding_controller.OnboardingRouter)
 app.include_router(rag_controller.RagRouter)
+app.include_router(SSEChatRouter)
 
 # Middleware
 @app.middleware("http")
