@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onboarding SSE Test Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+        }
+        
+        .btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .response-area {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 15px;
+            background-color: #fafafa;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.processing {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 20px;
+            background-color: #007bff;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+        
+        .event-log {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 10px;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        
+        .event-log.error {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        
+        .event-log.success {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Onboarding SSE Test Client</h1>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('gaia')">GAIA Introduction</div>
+            <div class="tab" onclick="switchTab('calendar')">Calendar Registration</div>
+            <div class="tab" onclick="switchTab('status')">System Status</div>
+        </div>
+        
+        <!-- GAIA Introduction Tab -->
+        <div id="gaia-tab" class="tab-content active">
+            <h2 class="section-title">GAIA Introduction Stream</h2>
+            
+            <div class="form-group">
+                <label for="gaiaMessage">Onboarding Message:</label>
+                <input type="text" id="gaiaMessage" placeholder="Hello! I'd like to get started with GAIA..." value="Hello! I'd like to learn about GAIA and get started.">
+            </div>
+            
+            <div class="form-group">
+                <label for="gaiaDialogueId">Dialogue ID (optional):</label>
+                <input type="text" id="gaiaDialogueId" placeholder="Leave empty for auto-generation">
+            </div>
+            
+            <div class="form-group">
+                <label for="gaiaUserId">User ID (optional):</label>
+                <input type="text" id="gaiaUserId" placeholder="user123">
+            </div>
+            
+            <div class="form-group">
+                <label for="gaiaModel">AI Model:</label>
+                <select id="gaiaModel">
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                </select>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="startGaiaStream()" id="gaiaStartBtn">Start GAIA Introduction</button>
+                <button class="btn btn-secondary" onclick="stopStream()" id="gaiaStopBtn" disabled>Stop Stream</button>
+            </div>
+            
+            <div id="gaiaStatus" class="status disconnected">Status: Ready</div>
+            
+            <div class="progress-bar" style="display: none;" id="gaiaProgress">
+                <div class="progress-fill" id="gaiaProgressFill" style="width: 0%">0%</div>
+            </div>
+            
+            <div class="response-area" id="gaiaResponse">
+                <div class="event-log">Ready to start GAIA introduction stream...</div>
+            </div>
+        </div>
+        
+        <!-- Calendar Registration Tab -->
+        <div id="calendar-tab" class="tab-content">
+            <h2 class="section-title">Calendar Registration Stream</h2>
+            
+            <div class="form-group">
+                <label for="calendarMessage">Calendar Message:</label>
+                <input type="text" id="calendarMessage" placeholder="I need help setting up my calendar..." value="I want to register my calendar and set up scheduling.">
+            </div>
+            
+            <div class="form-group">
+                <label for="calendarDialogueId">Dialogue ID (optional):</label>
+                <input type="text" id="calendarDialogueId" placeholder="Leave empty for auto-generation">
+            </div>
+            
+            <div class="form-group">
+                <label for="calendarUserId">User ID (optional):</label>
+                <input type="text" id="calendarUserId" placeholder="user123">
+            </div>
+            
+            <div class="form-group">
+                <label for="calendarModel">AI Model:</label>
+                <select id="calendarModel">
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                </select>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="startCalendarStream()" id="calendarStartBtn">Start Calendar Registration</button>
+                <button class="btn btn-secondary" onclick="stopStream()" id="calendarStopBtn" disabled>Stop Stream</button>
+            </div>
+            
+            <div id="calendarStatus" class="status disconnected">Status: Ready</div>
+            
+            <div class="progress-bar" style="display: none;" id="calendarProgress">
+                <div class="progress-fill" id="calendarProgressFill" style="width: 0%">0%</div>
+            </div>
+            
+            <div class="response-area" id="calendarResponse">
+                <div class="event-log">Ready to start calendar registration stream...</div>
+            </div>
+        </div>
+        
+        <!-- Status Tab -->
+        <div id="status-tab" class="tab-content">
+            <h2 class="section-title">System Status</h2>
+            
+            <div class="button-group">
+                <button class="btn btn-success" onclick="checkStatus()">Refresh Status</button>
+            </div>
+            
+            <div class="response-area" id="statusResponse">
+                <div class="event-log">Click "Refresh Status" to check system status...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:4002';
+        let currentEventSource = null;
+        let currentStream = null;
+        
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function updateStatus(elementId, message, type = 'disconnected') {
+            const statusEl = document.getElementById(elementId);
+            statusEl.textContent = `Status: ${message}`;
+            statusEl.className = `status ${type}`;
+        }
+        
+        function addLog(elementId, message, type = 'info') {
+            const responseEl = document.getElementById(elementId);
+            const logEl = document.createElement('div');
+            logEl.className = `event-log ${type}`;
+            logEl.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            responseEl.appendChild(logEl);
+            responseEl.scrollTop = responseEl.scrollHeight;
+        }
+        
+        function updateProgress(elementId, progress) {
+            const progressEl = document.getElementById(elementId);
+            const fillEl = document.getElementById(elementId + 'Fill');
+            
+            if (progress > 0) {
+                progressEl.style.display = 'block';
+                fillEl.style.width = progress + '%';
+                fillEl.textContent = Math.round(progress) + '%';
+            } else {
+                progressEl.style.display = 'none';
+            }
+        }
+        
+        function setButtonState(startBtnId, stopBtnId, streaming) {
+            document.getElementById(startBtnId).disabled = streaming;
+            document.getElementById(stopBtnId).disabled = !streaming;
+        }
+        
+        async function startGaiaStream() {
+            const message = document.getElementById('gaiaMessage').value.trim();
+            const dialogueId = document.getElementById('gaiaDialogueId').value.trim();
+            const userId = document.getElementById('gaiaUserId').value.trim();
+            const model = document.getElementById('gaiaModel').value;
+            
+            if (!message) {
+                alert('Please enter a message');
+                return;
+            }
+            
+            await startStream('/onboarding/introduce-gaia', {
+                message, dialogue_id: dialogueId, user_id: userId, model_name: model
+            }, 'gaia');
+        }
+        
+        async function startCalendarStream() {
+            const message = document.getElementById('calendarMessage').value.trim();
+            const dialogueId = document.getElementById('calendarDialogueId').value.trim();
+            const userId = document.getElementById('calendarUserId').value.trim();
+            const model = document.getElementById('calendarModel').value;
+            
+            if (!message) {
+                alert('Please enter a message');
+                return;
+            }
+            
+            await startStream('/onboarding/register-calendar', {
+                message, dialogue_id: dialogueId, user_id: userId, model_name: model
+            }, 'calendar');
+        }
+        
+        async function startStream(endpoint, params, streamType) {
+            if (currentEventSource) {
+                stopStream();
+            }
+            
+            const url = new URL(API_BASE + endpoint);
+            Object.keys(params).forEach(key => {
+                if (params[key]) url.searchParams.append(key, params[key]);
+            });
+            
+            updateStatus(streamType + 'Status', 'Connecting...', 'processing');
+            addLog(streamType + 'Response', `Connecting to ${endpoint}...`);
+            setButtonState(streamType + 'StartBtn', streamType + 'StopBtn', true);
+            
+            currentStream = streamType;
+            currentEventSource = new EventSource(url.toString());
+            
+            currentEventSource.onopen = function() {
+                updateStatus(streamType + 'Status', 'Connected', 'connected');
+                addLog(streamType + 'Response', 'Connected successfully!', 'success');
+            };
+            
+            currentEventSource.addEventListener('stream_start', function(event) {
+                const data = JSON.parse(event.data);
+                addLog(streamType + 'Response', `Stream started - ${data.total_chunks} chunks expected`);
+                updateProgress(streamType + 'Progress', 0);
+            });
+            
+            currentEventSource.addEventListener('message_chunk', function(event) {
+                const data = JSON.parse(event.data);
+                addLog(streamType + 'Response', `Chunk ${data.chunk_index + 1}/${data.total_chunks}: "${data.chunk}"`);
+                updateProgress(streamType + 'Progress', data.progress);
+            });
+            
+            currentEventSource.addEventListener('message_complete', function(event) {
+                const data = JSON.parse(event.data);
+                addLog(streamType + 'Response', 'Stream completed successfully!', 'success');
+                addLog(streamType + 'Response', `Full response: "${data.full_response}"`);
+                updateProgress(streamType + 'Progress', 100);
+                setTimeout(() => updateProgress(streamType + 'Progress', 0), 2000);
+                stopStream();
+            });
+            
+            currentEventSource.addEventListener('error', function(event) {
+                const data = JSON.parse(event.data);
+                addLog(streamType + 'Response', `Error: ${data.error}`, 'error');
+                updateStatus(streamType + 'Status', 'Error', 'disconnected');
+                stopStream();
+            });
+            
+            currentEventSource.onerror = function(event) {
+                addLog(streamType + 'Response', 'Connection error occurred', 'error');
+                updateStatus(streamType + 'Status', 'Connection Error', 'disconnected');
+                stopStream();
+            };
+        }
+        
+        function stopStream() {
+            if (currentEventSource) {
+                currentEventSource.close();
+                currentEventSource = null;
+            }
+            
+            if (currentStream) {
+                updateStatus(currentStream + 'Status', 'Disconnected', 'disconnected');
+                addLog(currentStream + 'Response', 'Stream stopped');
+                setButtonState(currentStream + 'StartBtn', currentStream + 'StopBtn', false);
+                updateProgress(currentStream + 'Progress', 0);
+                currentStream = null;
+            }
+        }
+        
+        async function checkStatus() {
+            try {
+                addLog('statusResponse', 'Checking system status...');
+                
+                const response = await fetch(API_BASE + '/onboarding/status');
+                const data = await response.json();
+                
+                addLog('statusResponse', 'System Status:', 'success');
+                addLog('statusResponse', JSON.stringify(data, null, 2));
+                
+            } catch (error) {
+                addLog('statusResponse', `Error checking status: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-generate IDs
+        window.onload = function() {
+            const timestamp = Date.now();
+            document.getElementById('gaiaDialogueId').placeholder = `gaia_${timestamp}`;
+            document.getElementById('calendarDialogueId').placeholder = `calendar_${timestamp}`;
+        };
+    </script>
+</body>
+</html>

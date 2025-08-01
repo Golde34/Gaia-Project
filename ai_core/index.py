@@ -3,12 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 import asyncio
-import contextvars
 import uuid
 import uvicorn
 
 from ui.controller import chat_controller, onboarding_controller, rag_controller
-from ui.controller.sse_chat_controller import SSEChatRouter
 from infrastructure.kafka.consumer import consume
 from kernel.config.config import session_id_var
 
@@ -29,7 +27,6 @@ app.add_middleware(
 app.include_router(chat_controller.ChatRouter)
 app.include_router(onboarding_controller.OnboardingRouter)
 app.include_router(rag_controller.RagRouter)
-app.include_router(SSEChatRouter)
 
 # Middleware
 @app.middleware("http")

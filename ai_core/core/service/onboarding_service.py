@@ -43,7 +43,7 @@ async def introduce(query: QueryRequest, guided_route: str) -> dict:
             raise ValueError("No route found for the query.")
 
         data = {
-            'type': guided_route,
+            'type': guided_route.value,
             'response': response
         }
 

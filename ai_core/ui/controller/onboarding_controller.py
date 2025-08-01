@@ -1,9 +1,7 @@
-import traceback
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from core.domain.enums import enum
-from core.domain.request import query_request
-from core.usecase.chat import ChatUsecase as chatUsecase 
+from ui.controller.base.base_controller import generate_sse_stream, handle_sse_stream 
 
 
 OnboardingRouter = APIRouter(
@@ -11,20 +9,31 @@ OnboardingRouter = APIRouter(
     tags=["Onboarding"],
 )
 
-@OnboardingRouter.post("/introduce-gaia")
-async def introduc_gaia(request: query_request.QueryRequest):
-    try:
-        return await chatUsecase.chat(query=request, chat_type=enum.ChatType.GAIA_INTRODUCTION.value)
-    except Exception as e:
-        stack_trace = traceback.format_exc()
-        print("ERROR:", stack_trace)
-        raise HTTPException(status_code=500, detail=str(e))
+@OnboardingRouter.get("/introduce-gaia")
+async def sse_onboarding_stream(
+    dialogue_id: str = "",
+    message: str = "",
+    model_name: str = "gemini-2.0-flash",
+    user_id: str = None,
+):
+    """
+    SSE streaming endpoint for onboarding introduction.
+    """
+    return await handle_sse_stream(
+        dialogue_id, message, model_name, user_id, enum.ChatType.GAIA_INTRODUCTION
+    )
 
-@OnboardingRouter.post("/register-calendar")
-async def register_calendar(request: query_request.QueryRequest):
-    try:
-        return await chatUsecase.chat(query=request, chat_type=enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value)
-    except Exception as e:
-        stack_trace = traceback.format_exc()
-        print("ERROR:", stack_trace)
-        raise HTTPException(status_code=500, detail=str(e))
+
+@OnboardingRouter.get("/register-calendar")
+async def sse_calendar_stream(
+    dialogue_id: str = "",
+    message: str = "",
+    model_name: str = "gemini-2.0-flash",
+    user_id: str = None,
+):
+    """
+    SSE streaming endpoint for calendar registration.
+    """
+    return await handle_sse_stream(
+        dialogue_id, message, model_name, user_id, enum.ChatType.REGISTER_SCHEDULE_CALENDAR
+    )
