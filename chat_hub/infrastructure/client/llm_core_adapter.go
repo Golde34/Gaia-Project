@@ -3,7 +3,6 @@ package client
 import (
 	"bufio"
 	request_dtos "chat_hub/core/domain/dtos/request"
-	"chat_hub/core/domain/enums"
 	"chat_hub/infrastructure/client/base"
 	"chat_hub/kernel/utils"
 	"encoding/json"
@@ -20,23 +19,24 @@ func NewLLMCoreAdapter() *LLMCoreAdapter {
 	return &LLMCoreAdapter{}
 }
 
-func (adapter *LLMCoreAdapter) ChatForTask(input request_dtos.BotMessageRequestDTO) (map[string]interface{}, error) {
-	// Use SSE endpoint instead of regular POST
-	sseURL := base.LLMCoreServiceURL + "/chat/send-message"
+// Helper function to handle SSE requests
+func (adapter *LLMCoreAdapter) handleSSERequest(endpoint string, input request_dtos.BotMessageRequestDTO, chatType string) (map[string]interface{}, error) {
+	// Use SSE endpoint
+	sseURL := base.LLMCoreServiceURL + endpoint
 
 	// Build query parameters for SSE request
 	params := url.Values{}
 	params.Add("dialogue_id", input.DialogueId)
 	params.Add("message", input.Content)
-	params.Add("type", "abilities")
-	params.Add("sse_token", "chat_hub_token") // You might want to generate a proper token
+	params.Add("model_name", input.UserModel)
+	params.Add("user_id", input.UserId)
 
 	fullURL := fmt.Sprintf("%s?%s", sseURL, params.Encode())
 
 	// Create HTTP request for SSE
 	req, err := http.NewRequest("GET", fullURL, nil)
 	if err != nil {
-		log.Println("Error creating SSE request: ", err)
+		log.Printf("Error creating SSE request for %s: %v", endpoint, err)
 		return nil, err
 	}
 
@@ -54,13 +54,13 @@ func (adapter *LLMCoreAdapter) ChatForTask(input request_dtos.BotMessageRequestD
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println("Cannot connect with Gaia Bot SSE, try later: ", err)
+		log.Printf("Cannot connect with Gaia Bot SSE (%s), try later: %v", endpoint, err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("SSE request failed with status: %d", resp.StatusCode)
+		log.Printf("SSE request failed with status: %d for endpoint: %s", resp.StatusCode, endpoint)
 		return nil, fmt.Errorf("SSE request failed with status: %d", resp.StatusCode)
 	}
 
@@ -90,13 +90,14 @@ func (adapter *LLMCoreAdapter) ChatForTask(input request_dtos.BotMessageRequestD
 
 				// Check for completion event
 				if fullResp, ok := eventData["full_response"].(string); ok {
+					// Use the full response from completion event instead of concatenated chunks
 					fullResponse = fullResp
 					break
 				}
 
 				// Check for error
 				if errorMsg, ok := eventData["error"].(string); ok {
-					log.Printf("Error from AI Core SSE: %s", errorMsg)
+					log.Printf("Error from AI Core SSE (%s): %s", endpoint, errorMsg)
 					return nil, fmt.Errorf("AI Core error: %s", errorMsg)
 				}
 			}
@@ -110,11 +111,16 @@ func (adapter *LLMCoreAdapter) ChatForTask(input request_dtos.BotMessageRequestD
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Println("Error reading SSE stream: ", err)
+		log.Printf("Error reading SSE stream for %s: %v", endpoint, err)
 		return nil, err
 	}
 
-	log.Println("Full Response from LLMCoreAdapter SSE: ", fullResponse)
+	// Clean the response text to ensure no extra formatting issues
+	fullResponse = strings.ReplaceAll(fullResponse, "\n\n", " ")
+	fullResponse = strings.ReplaceAll(fullResponse, "\r\n", " ")
+	fullResponse = strings.TrimSpace(fullResponse)
+
+	log.Printf("Full Response from LLMCoreAdapter SSE (%s): %s", endpoint, fullResponse)
 
 	// Return response in the expected format
 	result := map[string]interface{}{
@@ -124,44 +130,14 @@ func (adapter *LLMCoreAdapter) ChatForTask(input request_dtos.BotMessageRequestD
 	return result, nil
 }
 
+func (adapter *LLMCoreAdapter) ChatForTask(input request_dtos.BotMessageRequestDTO) (map[string]interface{}, error) {
+	return adapter.handleSSERequest("/chat/send-message", input, "abilities")
+}
+
 func (adapter *LLMCoreAdapter) ChatForOnboarding(input request_dtos.BotMessageRequestDTO) (map[string]interface{}, error) {
-	userPrompURL := base.LLMCoreServiceURL + "/onboarding/introduce-gaia"
-	headers := utils.BuildDefaultHeaders()
-	bodyResult, err := utils.BaseAPI(userPrompURL, enums.POST, input, headers)
-	if err != nil {
-		log.Println("Cannot connect with Gaia Bot, try later: ", err)
-		return nil, err
-	}
-
-	log.Println("Response from LLMCoreAdapter: ", bodyResult)
-	bodyResultMap, ok := bodyResult.(map[string]interface{})
-	if !ok {
-		log.Println("Error converting response to map: ", bodyResult)
-		return nil, err
-	}
-
-	log.Println("Response map from LLMCoreAdapter: ", bodyResultMap)
-
-	return bodyResultMap, nil
+	return adapter.handleSSERequest("/chat/onboarding/introduce-gaia", input, "abilities")
 }
 
 func (adapter *LLMCoreAdapter) ChatForRegisterCalendar(input request_dtos.BotMessageRequestDTO) (map[string]interface{}, error) {
-	userPrompURL := base.LLMCoreServiceURL + "/onboarding/register-calendar"
-	headers := utils.BuildDefaultHeaders()
-	bodyResult, err := utils.BaseAPI(userPrompURL, enums.POST, input, headers)
-	if err != nil {
-		log.Println("Cannot connect with Gaia Bot, try later: ", err)
-		return nil, err
-	}
-
-	log.Println("Response from LLMCoreAdapter: ", bodyResult)
-	bodyResultMap, ok := bodyResult.(map[string]interface{})
-	if !ok {
-		log.Println("Error converting response to map: ", bodyResult)
-		return nil, err
-	}
-
-	log.Println("Response map from LLMCoreAdapter: ", bodyResultMap)
-
-	return bodyResultMap, nil
+	return adapter.handleSSERequest("/chat/onboarding/register-calendar", input, "abilities")
 }
