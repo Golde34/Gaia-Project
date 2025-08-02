@@ -7,6 +7,7 @@ import (
 	entity "chat_hub/core/domain/entities"
 	"chat_hub/core/domain/enums"
 	services "chat_hub/core/services/chat"
+	sse "chat_hub/core/usecase/sse_streaming"
 	"chat_hub/infrastructure/client"
 	"chat_hub/infrastructure/kafka"
 	"chat_hub/kernel/utils"
@@ -53,7 +54,15 @@ func (s *ChatUsecase) SendChatMessage(sseToken, dialogueId, message, msgType str
 		return "", fmt.Errorf("invalid SSE token: %w", err)
 	}
 
-	return s.HandleChatMessage(userId, dialogueId, message, msgType)
+	response, err := s.HandleChatMessage(userId, dialogueId, message, msgType)
+	if err != nil {
+		log.Printf("Error handling chat message: %v", err)
+		return "", fmt.Errorf("failed to handle chat message: %w", err)
+	}
+	
+	sse.BroadcastToDialogue(dialogueId, response)
+
+	return response, nil
 }
 
 func (s *ChatUsecase) HandleChatMessage(userId, dialogueId, message, msgType string) (string, error) {
