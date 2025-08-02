@@ -4,7 +4,6 @@ import (
 	"chat_hub/core/domain/constants"
 	request_dtos "chat_hub/core/domain/dtos/request"
 	response_dtos "chat_hub/core/domain/dtos/response"
-	entity "chat_hub/core/domain/entities"
 	"chat_hub/core/domain/enums"
 	services "chat_hub/core/services/chat"
 	sse "chat_hub/core/usecase/sse_streaming"
@@ -39,6 +38,12 @@ func NewChatUsecase(db *sql.DB) *ChatUsecase {
 	}
 }
 
+/** InitiateChat starts a new chat session for the user and returns a token for SSE streaming.
+ * @param ctx - context for the request
+ * @param userId - ID of the user initiating the chat
+ * @return string - token for SSE streaming
+ * @return error - error if any occurs during the process
+ */
 func (s *ChatUsecase) InitiateChat(ctx context.Context, userId string) (string, error) {
 	tokenResponse, err := utils.GenerateSSEToken(userId)
 	if err != nil {
@@ -47,6 +52,16 @@ func (s *ChatUsecase) InitiateChat(ctx context.Context, userId string) (string, 
 	return tokenResponse, nil
 }
 
+/**
+ * SendChatMessage processes the chat message from the user, interacts with the AI core service,
+ * and returns the response to be sent back to the user.
+ * @param sseToken - token for SSE streaming
+ * @param dialogueId - ID of the dialogue
+ * @param message - message sent by the user
+ * @param msgType - type of the message (e.g., chat, introduction, etc
+ * @return string - response from the AI core service
+ * @return error - error if any occurs during the process
+ */
 func (s *ChatUsecase) SendChatMessage(sseToken, dialogueId, message, msgType string) (string, error) {
 	userId, err := utils.DecodeSSEToken(sseToken)
 	if err != nil {
@@ -68,7 +83,7 @@ func (s *ChatUsecase) SendChatMessage(sseToken, dialogueId, message, msgType str
 func (s *ChatUsecase) HandleChatMessage(userId, dialogueId, message, msgType string) (string, error) {
 	log.Printf("Message received from user %s: %s", userId, message)
 
-	dialogue, err := s.getOrCreateDialogue(userId, dialogueId, msgType)
+	dialogue, err := s.dialogueService.GetOrCreateDialogue(userId, dialogueId, msgType)
 	if err != nil {
 		return "", err
 	}
@@ -96,22 +111,6 @@ func (s *ChatUsecase) HandleChatMessage(userId, dialogueId, message, msgType str
 
 	log.Printf("Bot message created with ID: %s", botMessageId)
 	return response, nil
-}
-
-func (s *ChatUsecase) getOrCreateDialogue(userId, dialogueId, msgType string) (entity.UserDialogueEntity, error) {
-	if dialogueId != "" {
-		dialogue, err := s.dialogueService.GetDialogueById(userId, dialogueId)
-		if err != nil {
-			return entity.UserDialogueEntity{}, fmt.Errorf("failed to retrieve dialogue: %w", err)
-		}
-		return dialogue, nil
-	}
-
-	dialogue, err := s.dialogueService.CreateDialogueIfNotExists(userId, msgType)
-	if err != nil {
-		return entity.UserDialogueEntity{}, fmt.Errorf("failed to create dialogue: %w", err)
-	}
-	return dialogue, nil
 }
 
 func (s *ChatUsecase) GetBotMessage(request request_dtos.BotMessageRequestDTO) (string, error) {
@@ -190,6 +189,12 @@ func handleRegisterCalendarResponse(chatResponse map[string]interface{}, userId 
 	}
 }
 
+/** ResponseTaskResultToUser processes the task result and sends it back to the user.
+ * @param taskResult - the result of the task to be sent back
+ * @param userId - ID of the user to whom the result should be sent
+ * @return response_dtos.TaskResultMessageDTO - the formatted response to be sent back to
+ * @return error - error if any occurs during the process
+ */
 func (s *ChatUsecase) ResponseTaskResultToUser(taskResult map[string]interface{}, userId string) (response_dtos.TaskResultMessageDTO, error) {
 	log.Printf("Message received from user %s: %v", userId, taskResult)
 	userModel := s.aiCoreService.ValidateUserModel(userId)

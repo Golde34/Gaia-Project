@@ -5,6 +5,7 @@ import (
 	"chat_hub/core/domain/enums"
 	"chat_hub/infrastructure/repository"
 	"database/sql"
+	"fmt"
 	"log"
 	"strconv"
 	"time"
@@ -25,16 +26,32 @@ func NewDialogueService(db *sql.DB) *DialogueService {
 	}
 }
 
+func (s *DialogueService) GetOrCreateDialogue(userId, dialogueId, msgType string) (entity.UserDialogueEntity, error) {
+	if dialogueId != "" {
+		dialogue, err := s.GetDialogueById(userId, dialogueId)
+		if err != nil {
+			return entity.UserDialogueEntity{}, fmt.Errorf("failed to retrieve dialogue: %w", err)
+		}
+		return dialogue, nil
+	}
+
+	dialogue, err := s.CreateDialogueIfNotExists(userId, msgType)
+	if err != nil {
+		return entity.UserDialogueEntity{}, fmt.Errorf("failed to create dialogue: %w", err)
+	}
+	return dialogue, nil
+}
+
 func (s *DialogueService) CreateDialogueIfNotExists(userId, dialogueType string) (entity.UserDialogueEntity, error) {
 	log.Println("Checking if dialogue exists for user:", userId, "with dialog type:", dialogueType)
 
 	dialogue, err := s.GetDialogueByUserIdAndType(userId, dialogueType)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		log.Println("Error retrieving dialogue from repository:", err)
 		return entity.UserDialogueEntity{}, err
 	}
 
-	if dialogue.ID != "" {
+	if err == nil && dialogue.ID != "" {
 		log.Println("Dialogue already exists for user:", userId, "with dialog type:", dialogueType)
 		return dialogue, nil
 	}
@@ -79,12 +96,7 @@ func (s *DialogueService) GetDialogueByUserIdAndType(userId, dialogueType string
 		return entity.UserDialogueEntity{}, err
 	}
 
-	if err == sql.ErrNoRows {
-		log.Println("No dialogue found for user:", userId, "with dialog type:", dialogueType)
-		return entity.UserDialogueEntity{}, nil
-	}
-
-	return dialogue, nil
+	return dialogue, err
 }
 
 func (s *DialogueService) GetDialogueById(userId, dialogueId string) (entity.UserDialogueEntity, error) {
@@ -96,10 +108,5 @@ func (s *DialogueService) GetDialogueById(userId, dialogueId string) (entity.Use
 		return entity.UserDialogueEntity{}, err
 	}
 
-	if err == sql.ErrNoRows {
-		log.Println("No dialogue found with ID:", dialogueId)
-		return entity.UserDialogueEntity{}, nil
-	}
-
-	return dialogue, nil
+	return dialogue, err 
 }

@@ -1,7 +1,6 @@
 package usecases
 
 import (
-	entity "chat_hub/core/domain/entities"
 	services "chat_hub/core/services/chat"
 	"database/sql"
 	"time"
@@ -42,7 +41,7 @@ func (s *ChatHistoryUsecase) GetRecentHistory(userId, dialogueId string, numberO
 }
 
 func (s *ChatHistoryUsecase) GetChatHistory(userId, dialogueId, chatType string, size int, cursor string) (map[string]interface{}, error) {
-	dialogue, err := s.getDialogueByIdOrChatType(userId, dialogueId, chatType)
+	dialogue, err := s.dialogueService.GetOrCreateDialogue(userId, dialogueId, chatType)
 	if err != nil {
 		return nil, err
 	}
@@ -63,21 +62,4 @@ func (s *ChatHistoryUsecase) GetChatHistory(userId, dialogueId, chatType string,
 		"nextCursor":   nextCursor, // Add next cursor for pagination
 		"hasMore":      hasMore,    // Indicate if there are more messages
 	}, nil
-}
-
-func (s *ChatHistoryUsecase) getDialogueByIdOrChatType(userId, dialogueId, chatType string) (entity.UserDialogueEntity, error) {
-	var dialogue entity.UserDialogueEntity
-	if dialogueId == "" {
-		dialogue, err := s.dialogueService.GetDialogueByUserIdAndType(userId, chatType)
-		if err != nil {
-			return entity.UserDialogueEntity{}, err
-		}
-		return dialogue, nil
-	}
-
-	dialogue, err := s.dialogueService.GetDialogueById(userId, dialogueId)
-	if err != nil {
-		return entity.UserDialogueEntity{}, err
-	}
-	return dialogue, nil
 }
