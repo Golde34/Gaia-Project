@@ -2,7 +2,7 @@ import { Button, Card, Col, Grid, Metric, TextInput } from "@tremor/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getChatHistory, sendChatMessage } from "../../api/store/actions/chat_hub/messages.actions";
+import { getChatHistory, sendSSEChatMessage } from "../../api/store/actions/chat_hub/messages.actions";
 
 const GaiaIntroduction = ({ onNext, onSkip }) => {
   const dispatch = useDispatch();
@@ -100,7 +100,7 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
     setChatInput("");
 
     try {
-      const response = await sendChatMessage("", chatInput, "gaia_introduction");
+      const response = await sendSSEChatMessage("", chatInput, "gaia_introduction");
       if (response) {
         const botMessage = createMessage(response, "bot");
         setChatHistory((prev) => [...prev, botMessage]);
