@@ -23,7 +23,7 @@ const StepContent = ({ stepIndex, onPrevious, onNext, onSkip }) => {
       )
     case 2:
       return (
-        <div className="mx-auto mb-20 mt-28 max-w-8xl px-4 md:mt-32 md:px-6">
+        <div className="mx-auto mb-20 mt-28 max-w-9xl px-4 md:mt-32 md:px-6">
           <CalendarRegistration onNext={onNext} onSkip={onSkip} onPrevious={onPrevious} />
         </div >
       )
