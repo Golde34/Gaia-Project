@@ -6,7 +6,6 @@ import { cx } from "../../kernels/utils/cx"
 import useScroll from "../../kernels/utils/userScroll"
 import LogoIcon from "../../components/icons/LogoIcon"
 import CalendarRegistration from "./CalendarRegisgtration"
-import GaiaIntroduction2 from "./GaiaIntro2"
 
 const steps = [
   { id: 1, screenLabel: "Gaia Introduction" },
@@ -19,12 +18,12 @@ const StepContent = ({ stepIndex, onPrevious, onNext, onSkip }) => {
     case 1:
       return (
         <div className="mx-auto mb-20 mt-28 max-w-7xl px-4 md:mt-32 md:px-6">
-          <GaiaIntroduction2 onNext={onNext} onSkip={onSkip} />
+          <GaiaIntroduction onNext={onNext} onSkip={onSkip} />
         </div>
       )
     case 2:
       return (
-        <div className="mx-auto mb-20 mt-28 max-w-8xl px-4 md:mt-32 md:px-6">
+        <div className="mx-auto mb-20 mt-28 max-w-9xl px-4 md:mt-32 md:px-6">
           <CalendarRegistration onNext={onNext} onSkip={onSkip} onPrevious={onPrevious} />
         </div >
       )

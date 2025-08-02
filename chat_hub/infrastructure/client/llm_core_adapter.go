@@ -117,9 +117,9 @@ func (adapter *LLMCoreAdapter) ChatForTask(input request_dtos.BotMessageRequestD
 }
 
 func (adapter *LLMCoreAdapter) ChatForOnboarding(input request_dtos.BotMessageRequestDTO) (map[string]interface{}, error) {
-	return adapter.handleSSERequest("/chat/onboarding/introduce-gaia", input)
+	return adapter.handleSSERequest("/onboarding/introduce-gaia", input)
 }
 
 func (adapter *LLMCoreAdapter) ChatForRegisterCalendar(input request_dtos.BotMessageRequestDTO) (map[string]interface{}, error) {
-	return adapter.handleSSERequest("/chat/onboarding/register-calendar", input)
+	return adapter.handleSSERequest("/onboarding/register-calendar", input)
 }

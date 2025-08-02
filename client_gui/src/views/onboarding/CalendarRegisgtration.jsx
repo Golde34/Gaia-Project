@@ -2,6 +2,7 @@ import { Button, Col, Grid, Metric } from "@tremor/react";
 import ChatComponent from "../chat_hub/ChatComponent";
 import TaskRegistration from "./TaskRegistration";
 import { motion } from "framer-motion";
+import ChatComponent2 from "../chat_hub/ChatComponent2";
 
 const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     return (
@@ -12,7 +13,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
             <Grid numItems={9}>
                 <Col numColSpan={4}>
                     <div className="m-4">
-                        <ChatComponent chatType={'onboarding'} />
+                        <ChatComponent2 chatType={'register_calendar'} />
                     </div>
                 </Col>
                 <Col numColSpan={5}>
@@ -29,7 +30,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
                             Back
                         </Button>
                         <Button variant="light" onClick={onSkip}>
-                            Skip
+                            SkipchatType
                         </Button>
                         <Button variant="primary" onClick={onNext}>
                             Continue

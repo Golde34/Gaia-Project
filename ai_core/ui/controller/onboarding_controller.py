@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from core.domain.enums import enum
-from ui.controller.base.base_controller import generate_sse_stream, handle_sse_stream 
+from ui.controller.base.base_controller import handle_sse_stream 
 
 
 OnboardingRouter = APIRouter(
@@ -20,7 +20,7 @@ async def sse_onboarding_stream(
     SSE streaming endpoint for onboarding introduction.
     """
     return await handle_sse_stream(
-        dialogue_id, message, model_name, user_id, enum.ChatType.GAIA_INTRODUCTION
+        dialogue_id, message, model_name, user_id, enum.ChatType.GAIA_INTRODUCTION.value
     )
 
 
@@ -35,5 +35,5 @@ async def sse_calendar_stream(
     SSE streaming endpoint for calendar registration.
     """
     return await handle_sse_stream(
-        dialogue_id, message, model_name, user_id, enum.ChatType.REGISTER_SCHEDULE_CALENDAR
+        dialogue_id, message, model_name, user_id, enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value
     )
