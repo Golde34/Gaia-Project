@@ -2,6 +2,7 @@ package controller
 
 import (
 	"chat_hub/core/middleware"
+	services "chat_hub/core/services/chat"
 	usecases "chat_hub/core/usecase/chat"
 	"encoding/json"
 	"fmt"
@@ -55,6 +56,37 @@ func InitiateChat(w http.ResponseWriter, r *http.Request, chatUsecase *usecases.
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}	
+}
+
+func RefreshToken(w http.ResponseWriter, r *http.Request, authService *services.AuthService) {
+	cookie, err := r.Cookie("refreshToken")
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+	refreshToken := cookie.Value
+	if refreshToken == "" {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	newAccessToken, err := authService.RefreshToken(r.Context(), refreshToken)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	accessTokenCookie := &http.Cookie{
+		Name:     "accessToken",
+		Value:    newAccessToken,
+		Path:     "/",
+		HttpOnly: true,
+		// Secure:   true, //
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   15 * 60, // 15 minutes
+	}
+	http.SetCookie(w, accessTokenCookie)
+
+	w.Header().Set("Content-Type", "application/json")
 }
 
 // func Chat(w http.ResponseWriter, r *http.Request, chatUsecase *usecases.ChatUsecase) {

@@ -59,8 +59,7 @@ const baseRequest = async (api, method, portConfig, body, headers) => {
                 try {
                     await _fetchData(refreshUrl, HttpMethods.POST, null, headers);
                     // Retry the original request with the new access token
-                    const retry = await _fetchData(url, method, body, headers);
-                    return retry;
+                    return await _fetchData(url, method, body, headers);
                 } catch (refreshErr) {
                     console.error('Refresh token failed, redirecting to login', refreshErr);
                     throw refreshErr;

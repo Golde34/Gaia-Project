@@ -164,6 +164,27 @@ func (s *WebSocketUsecase) SendToUser(userId string, message []byte, excludeSess
 	})
 }
 
+func (s *WebSocketUsecase) SendToUserWithNoSession(userId string, message []byte) {
+	log.Println("No Session - Attempting to send message to user:", userId)
+	log.Println("No Session - Message content:", string(message))
+
+	activeConnections.Range(func(key, value interface{}) bool {
+		connInfo := value.(*ConnectionInfo)
+		if connInfo.UserId == userId {
+			log.Println("Sending message to session:", key.(string))
+			err := connInfo.Conn.WriteMessage(websocket.TextMessage, message)
+			if err != nil {
+				log.Println("Error sending message to session:", key.(string))
+				connInfo.Conn.Close()
+				activeConnections.Delete(key)
+			} else {
+				log.Println("Message sent successfully to session:", key.(string))
+			}
+		}
+		return true
+	})
+}
+
 func LogActiveConnections() {
 	log.Println("Active connections:")
 	activeConnections.Range(func(key, value interface{}) bool {
