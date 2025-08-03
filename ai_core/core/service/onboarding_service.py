@@ -5,7 +5,7 @@ from langdetect import detect
 import json
 import re
 
-from core.domain.enums import enum
+from core.domain.enums import enum, kafka_enum
 from core.domain.enums.enum import SemanticRoute
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.base_response import return_success_response, return_response
@@ -15,6 +15,7 @@ from core.prompts.abilities_prompt import CHITCHAT_WITH_HISTORY_PROMPT
 from core.service import chat_service
 from core.validation import milvus_validation
 from infrastructure.embedding.base_embedding import embedding_model
+from infrastructure.kafka.producer import send_kafka_message
 from infrastructure.vector_db.milvus import milvus_db
 from kernel.config import llm_models, config
 
@@ -70,11 +71,10 @@ async def register_schedule_calendar(query: QueryRequest, guided_route: Optional
         f"Processing query: {query.query} (Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S %Z')})")
 
     try:
-        # selection_prompt = onboarding_prompt.CLASSIFY_REGISTER_CALENDAR_PROMPT.format(query=query.query)
-        # function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=selection_prompt)
-        # selection = function(prompt=selection_prompt,
-        #                      model_name=default_model).strip().lower()
-        selection = enum.GaiaAbilities.REGISTER_SCHEDULE_CALENDAR.value
+        selection_prompt = onboarding_prompt.CLASSIFY_REGISTER_CALENDAR_PROMPT.format(query=query.query)
+        function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=selection_prompt)
+        selection = function(prompt=selection_prompt,
+                             model_name=default_model).strip().lower()
         response = await handle_onboarding_action(query, selection)
 
         return return_success_response(
@@ -176,17 +176,12 @@ async def _generate_calendar_schedule_response(query: QueryRequest, recent_histo
         response = function(prompt=prompt, model_name=query.model_name)
         json_response = _clean_json_string(response)
         parsed_response = json.loads(json_response)
+        if (parsed_response.get("ready", False)):
+            print("User is ready to register calendar schedule.")
+            query.query = parsed_response.get("requirement", query.query)
+            send_kafka_message(kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value, query)
 
         return parsed_response 
-        # schedule_dto = DailyRoutineSchema.model_validate(
-        #     json.loads(json_response))
-        # result = {
-        #     "response": schedule_dto
-        # }
-        # return return_success_response(
-        #     status_message="Task registration response generated successfully",
-        #     data=result
-        # )
     except Exception as e:
         print(f"Error generating calendar schedule: {str(e)}")
 
@@ -206,7 +201,7 @@ async def _chitchat_and_register_calendar(query: QueryRequest, recent_history: s
         raise e
 
 
-async def _generate_calendar_schedule(query: QueryRequest, recent_history, long_term_memory) -> Dict:
+async def generate_calendar_schedule(query: QueryRequest) -> Dict:
     # Step 1: Preprocess query (language detection and translation)
     query_text = query.query.strip()
     try:
@@ -219,6 +214,7 @@ async def _generate_calendar_schedule(query: QueryRequest, recent_history, long_
         detected_language = "en"
         print("Language detection failed; defaulting to English")
 
+    recent_history, _, long_term_memory = await chat_service.query_chat_history(query)
     print(f"Retrieved recent history: {recent_history}")
     # Step 3: Construct CoT prompt
     prompt = onboarding_prompt.REGISTER_SCHEDULE_CALENDAR_V2.format(
@@ -302,10 +298,7 @@ async def _generate_calendar_schedule(query: QueryRequest, recent_history, long_
     schedule_dto.totals = totals  # Update totals in DTO
     result = {"response": schedule_dto}
     print(f"Generated schedule: {schedule_dto}")
-    return return_success_response(
-        status_message="Task registration response generated successfully",
-        data=result
-    )
+    send_kafka_message(kafka_enum.KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value, result)
 
 
 async def translate_to_english(text: str, source_lang: str) -> str:
@@ -377,34 +370,3 @@ def calculate_totals(schedule: Dict[str, List[TimeBubbleDTO]]) -> Dict[str, floa
             hours = (end - start).total_seconds() / 3600
             totals[interval.tag] += hours
     return totals
-
-async def register_task(query: QueryRequest) -> dict:
-    """
-    Register task via an user's daily life summary
-    Args:
-        query (str): onboarding user's daily summary
-    Returns:
-        user_daily_entries (dict):
-    """
-    try:
-        recent_history, _, long_term_memory = await chat_service.query_chat_history(query)
-        prompt = onboarding_prompt.REGISTER_SCHEDULE_CALENDAR.format(
-            query=query.query,
-            recentHistory=recent_history,
-            long_term_memory=long_term_memory)
-
-        function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=prompt)
-        response = function(prompt=prompt, model_name=default_model)
-
-        json_response = _clean_json_string(response)
-        schedule_dto = DailyRoutineSchema.model_validate(
-            json.loads(json_response))
-        result = {
-            "response": schedule_dto
-        }
-        return return_success_response(
-            status_message="Task registration response generated successfully",
-            data=result
-        )
-    except Exception as e:
-        raise e
