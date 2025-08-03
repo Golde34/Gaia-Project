@@ -56,7 +56,7 @@ func (s *AuthService) CheckToken(ctx context.Context, accessToken string) (respo
 		return tr, nil
 	}
 
-	tokenResponse, err := client.NewAuthAdapter().CheckToken(accessToken)
+	tokenResponse, err := s.authClient.CheckToken(accessToken)
 	if err != nil {
 		return response_dtos.TokenResponse{}, err
 	}
@@ -83,4 +83,13 @@ func (s *AuthService) buildAccessTokenRedis(ctx context.Context, tokenResponse r
 	redis_cache.SetKeyWithTTL(ctx, tokenResponse.AccessToken, tokenResponseInterface, time.Duration(ttl)*time.Second)
 	log.Println("Set token in Redis of username: ", tokenResponse.Username, " successfully")
 	return nil
+}
+
+func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (string, error) {
+	newAccessToken, err := s.authClient.RefreshToken(refreshToken)
+	if err != nil {
+		return "", err
+	} else {
+		return newAccessToken, nil
+	}
 }
