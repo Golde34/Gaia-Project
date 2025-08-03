@@ -40,8 +40,6 @@ async def handle_sse_stream(
                     chat_type=chat_type
                 )
 
-                print("SSE onboarding response:", response)
-
                 if isinstance(response, dict):
                     if 'data' in response and 'response' in response['data']:
                         response_text = response['data']['response']
