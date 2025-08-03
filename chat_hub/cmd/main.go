@@ -2,6 +2,7 @@ package main
 
 import (
 	"chat_hub/cmd/route"
+	"chat_hub/core/domain/constants"
 	chathubMiddleware "chat_hub/core/middleware"
 	usecases "chat_hub/core/usecase/websocket"
 	"chat_hub/infrastructure/kafka"
@@ -34,7 +35,8 @@ func main() {
 	log.Println("Kafka Config: ", kafkaCfg.GroupId)
 
 	handlers := map[string]kafka.MessageHandler{
-		"task-manager.chat-hub-result.topic": consumer.NewTaskResultHandler(dbConnection),
+		constants.TaskResultTopic: consumer.NewTaskResultHandler(dbConnection),
+		constants.AIRegisterCalendarTopic: consumer.NewScheduleResultHandler(dbConnection),
 	}
 
 	consumerGroupHandler := kafka.NewConsumerGroupHandler(kafkaCfg.Name, handlers)

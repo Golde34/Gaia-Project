@@ -3,7 +3,8 @@ package constants
 // Kafka Topic
 const (
 	AICreateTaskTopic = "chat-hub.create-task.topic"
-	AIRegisterCalendarTopic = "chat-hub.register-calendar.topic"
+	TaskResultTopic = "task-manager.chat-hub-result.topic" 
+	AIRegisterCalendarTopic = "ai-core.generate-calendar-schedule.topic"
 )
 
 // Kafka Command
