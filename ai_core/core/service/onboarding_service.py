@@ -15,7 +15,7 @@ from core.prompts.abilities_prompt import CHITCHAT_WITH_HISTORY_PROMPT
 from core.service import chat_service
 from core.validation import milvus_validation
 from infrastructure.embedding.base_embedding import embedding_model
-from infrastructure.kafka.producer import send_kafka_message
+from infrastructure.kafka.producer import send_kafka_message, publish_message
 from infrastructure.vector_db.milvus import milvus_db
 from kernel.config import llm_models, config
 
@@ -298,7 +298,8 @@ async def generate_calendar_schedule(query: QueryRequest) -> Dict:
     schedule_dto.totals = totals  # Update totals in DTO
     result = {"response": schedule_dto}
     print(f"Generated schedule: {schedule_dto}")
-    send_kafka_message(kafka_enum.KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value, result)
+    publish_message(kafka_enum.KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value,
+                   kafka_enum.KafkaCommand.GENERATE_CALENDAR_SCHEDULE.value, result)
 
 
 async def translate_to_english(text: str, source_lang: str) -> str:
