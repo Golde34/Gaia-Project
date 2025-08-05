@@ -296,7 +296,7 @@ async def generate_calendar_schedule(query: QueryRequest) -> Dict:
 
     # Step 9: Success case
     schedule_dto.totals = totals  # Update totals in DTO
-    result = {"response": schedule_dto}
+    result = {"response": schedule_dto, "userId": query.user_id}
     print(f"Generated schedule: {schedule_dto}")
     publish_message(kafka_enum.KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value,
                    kafka_enum.KafkaCommand.GENERATE_CALENDAR_SCHEDULE.value, result)
