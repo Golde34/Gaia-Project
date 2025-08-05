@@ -6,6 +6,17 @@ export const scheduleCalendarRouter = Router();
 
 const scheduleCalendarControllerImpl = scheduleCalendarController;
 
+scheduleCalendarRouter.post("/register",
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const scheduleCalendarResult = await scheduleCalendarControllerImpl.registerScheduleCalendar(req, next);
+            return returnResult(scheduleCalendarResult, "FAIL", res, next);
+        } catch (error) {
+            next(error);
+        }
+    }
+)
+
 scheduleCalendarRouter.get("/daily-calendar/:userId",
     async (req: Request, res: Response, next: NextFunction) => {
         try {

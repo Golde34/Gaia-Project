@@ -1,10 +1,29 @@
 import { HttpMethods, serverRequest } from "../../../baseAPI";
-import { CREATE_DAILY_CALENDAR_FAILURE, CREATE_DAILY_CALENDAR_REQUEST, CREATE_DAILY_CALENDAR_SUCCESS, 
-    GET_DAILY_CALENDAR_FAILURE, GET_DAILY_CALENDAR_REQUEST, GET_DAILY_CALENDAR_SUCCESS 
+import {
+    CREATE_DAILY_CALENDAR_FAILURE, CREATE_DAILY_CALENDAR_REQUEST, CREATE_DAILY_CALENDAR_SUCCESS,
+    GET_DAILY_CALENDAR_FAILURE, GET_DAILY_CALENDAR_REQUEST, GET_DAILY_CALENDAR_SUCCESS,
+    REGISTER_SCHEDULE_CALENDAR_FAILURE,
+    REGISTER_SCHEDULE_CALENDAR_REQUEST,
+    REGISTER_SCHEDULE_CALENDAR_SUCCESS
 } from "../../constants/schedule_plan/schedule-calendar.constants"
 
 const portName = {
     middleware: 'middlewarePort'
+}
+
+export const registerDailyCalendarAction = (scheduleCalendar) => async (dispatch) => {
+    dispatch({ type: REGISTER_SCHEDULE_CALENDAR_REQUEST, payload: scheduleCalendar });
+    try {
+        const { data } = await serverRequest('/schedule-calendar/register', HttpMethods.POST, portName.middleware, scheduleCalendar);
+        dispatch({ type: REGISTER_SCHEDULE_CALENDAR_SUCCESS, payload: data });
+    } catch (error) {
+        dispatch({
+            type: REGISTER_SCHEDULE_CALENDAR_FAILURE,
+            payload: error.response && error.response.data.message
+                ? error.response.data.message
+                : error.message,
+        });
+    }
 }
 
 export const createDailyCalendarAction = (dailyCalendar) => async (dispatch) => {
