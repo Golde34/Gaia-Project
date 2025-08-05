@@ -6,7 +6,7 @@ import ChatComponent2 from "../chat_hub/ChatComponent2";
 import { useMultiWS } from "../../kernels/context/MultiWSContext";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { createDailyCalendarAction } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
+import { registerDailyCalendarAction } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 
 const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     const dispatch = useDispatch();
@@ -48,12 +48,12 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
         return time;
     };
 
-    const createScheduleCalendar = (scheduleCalendarRegistration) => {
-        dispatch(createDailyCalendarAction(scheduleCalendarRegistration))
+    const registerScheduleCalendar = (scheduleCalendarRegistration) => {
+        dispatch(registerDailyCalendarAction(scheduleCalendarRegistration))
             .then(response => {
                 if (response.status === 200) {
                     if (response.data.status === "success") {
-                        alert("Schedule calendar created successfully!");
+                        alert("Schedule calendar registerd successfully!");
                     }
                 }
             })
@@ -203,8 +203,8 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
                             <Button
                                 variant="secondary"
                                 className="mt-4"
-                                onClick={() => createScheduleCalendar(scheduleCalendarRegistration)}
-                            > Create Calendar</Button>
+                                onClick={() => registerScheduleCalendar(scheduleCalendarRegistration)}
+                            > register Calendar</Button>
                         </Card>
                     </motion.div>
                     <div className="mt-4 flex justify-end gap-2">
