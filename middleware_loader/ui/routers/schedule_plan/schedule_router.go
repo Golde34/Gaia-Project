@@ -48,6 +48,9 @@ func NewScheduleTaskRouter(r *chi.Mux) *ScheduleTaskRouter {
 		r.Get("/daily-tasks", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.GetUserDailyTasks(w, r, scheduleCalendarService)
 		})
+		r.Post("/create", func(w http.ResponseWriter, r *http.Request) {
+			controller_services.RegisterScheduleCalendar(w, r, scheduleCalendarService)
+		})
 	})
 	return &ScheduleTaskRouter{
 		ScheduleTaskService: scheduleTaskService,

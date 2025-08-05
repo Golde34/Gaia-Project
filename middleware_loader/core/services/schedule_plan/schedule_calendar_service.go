@@ -19,3 +19,11 @@ func (s *ScheduleCalendarService) GetUserDailyTasks(userId string) (response_dto
 	}
 	return dailyTasks, nil
 }
+
+func (s *ScheduleCalendarService) RegisterScheduleCalendar(userId string, scheduleCalendar map[string]interface{}) (response_dtos.RegisteredCalendarStatusResponseDTO, error) {
+	registeredCalendarStatus, err := client.IScheduleCalendarAdapter(&adapter.ScheduleCalendarAdapter{}).RegisterScheduleCalendar(userId, scheduleCalendar)
+	if err != nil {
+		return response_dtos.RegisteredCalendarStatusResponseDTO{}, err
+	}
+	return registeredCalendarStatus, nil
+}

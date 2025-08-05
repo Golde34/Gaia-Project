@@ -46,3 +46,22 @@ func (adapter *ScheduleCalendarAdapter) GetUserDailyTasks(userId string) (respon
 		Tasks:   scheduleTasks,
 	}, nil
 }
+
+func (adapter *ScheduleCalendarAdapter) RegisterScheduleCalendar(userId string, scheduleCalendar map[string]interface{}) (response_dtos.RegisteredCalendarStatusResponseDTO, error) {
+	registerCalendarURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-calendar/register"
+	headers := utils.BuildDefaultHeaders()
+	bodyResult, err := utils.BaseAPI(registerCalendarURL, "POST", scheduleCalendar, headers)
+	if err != nil {
+		return response_dtos.RegisteredCalendarStatusResponseDTO{}, err
+	}
+
+	bodyResultMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return response_dtos.RegisteredCalendarStatusResponseDTO{}, nil
+	}
+
+	return response_dtos.RegisteredCalendarStatusResponseDTO{
+		Status:  bodyResultMap["status"].(string),
+		Message: bodyResultMap["message"].(string),
+	}, nil
+}
