@@ -3,6 +3,7 @@ package consumer
 import (
 	"chat_hub/core/domain/constants"
 	base_dtos "chat_hub/core/domain/dtos/base"
+	"chat_hub/core/domain/enums"
 	chat_usecases "chat_hub/core/usecase/chat"
 	ws_usecases "chat_hub/core/usecase/websocket"
 	"database/sql"
@@ -63,9 +64,8 @@ func (handler *ScheduleResultHandler) RegisterCalendarTopic(key []byte, data map
 func (handler *ScheduleResultHandler) handleService(messageMap map[string]interface{}, userId string) {
 	// return messageMap to client
 	response := map[string]interface{}{
-		"type": "calendar_registered",
+		"type": enums.RegisterCalendarDialogueType,
 		"userId": userId,
-		"status": "success",
 		"data": messageMap,
 	}
 
