@@ -5,6 +5,17 @@ import { scheduleCalendarUsecase } from "../../core/usecase/schedule-calendar.us
 class ScheduleCalendarController {
     constructor() {}
 
+    async registerScheduleCalendar(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const userId = req.body.userId;
+            const scheduleCalendar = req.body.scheduleCalendar;
+            // return await scheduleCalendarUsecase.registerScheduleCalendar(userId, scheduleCalendar);
+            return undefined;
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async getDailyCalendar(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = Number(req.params.userId);
