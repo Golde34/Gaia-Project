@@ -45,7 +45,7 @@ import { getProjectAndRepoRequestReducer } from "./contribution_tracker/project-
 import { compareCommitsReducer, getProjectContributionReducer, getUserContributionsReducer } from "./contribution_tracker/contribution.reducer";
 import { createScheduleGroupReducer, scheduleGroupListReducer } from "./schedule_plan/schedule-group.reducers";
 import { getNotificationJwt } from "../actions/auth_service/auth.actions";
-import { getDailyCalendarReducer } from "./schedule_plan/schedule-calendar.reducers";
+import { getDailyCalendarReducer, registerScheduleCalendarReducer } from "./schedule_plan/schedule-calendar.reducers";
 import { chatHistoryReducer } from "./chat_hub/messages.reducer";
 
 export const reducer = combineReducers({
@@ -115,6 +115,7 @@ export const reducer = combineReducers({
     scheduleGroupList: scheduleGroupListReducer,
     activeTaskBatch: activeTaskBatchReducer,
     getDailyCalendar: getDailyCalendarReducer,
+    registerScheduleCalendar: registerScheduleCalendarReducer,
     // middleware loader
     microserviceList: microserviceListReducer,
     screenList: screenListReducer,

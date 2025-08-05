@@ -5,25 +5,30 @@ import { motion } from "framer-motion";
 import ChatComponent2 from "../chat_hub/ChatComponent2";
 import { useMultiWS } from "../../kernels/context/MultiWSContext";
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { createDailyCalendarAction } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 
 const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
+    const dispatch = useDispatch();
     const { messages, isConnected, sendMessage } = useMultiWS();
 
     const [scheduleCalendarRegistration, setScheduleCalendarRegistration] = useState(null);
     const [viewMode, setViewMode] = useState('day'); // 'day' or 'week'
     const [selectedDay, setSelectedDay] = useState('2'); // Default to Monday
-    
+
     const dayNames = {
-        '2': 'Thứ Hai',
-        '3': 'Thứ Ba', 
-        '4': 'Thứ Tư',
-        '5': 'Thứ Năm',
-        '6': 'Thứ Sáu'
+        '0': 'Sunday',
+        '1': 'Monday',
+        '2': 'Tuesday',
+        '3': 'Wednesday',
+        '4': 'Thursday',
+        '5': 'Friday',
+        '6': 'Saturday' 
     };
 
     const tagColors = {
         'work': 'blue',
-        'eat': 'green', 
+        'eat': 'green',
         'travel': 'yellow',
         'relax': 'purple',
         'sleep': 'gray'
@@ -43,9 +48,23 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
         return time;
     };
 
+    const createScheduleCalendar = (scheduleCalendarRegistration) => {
+        dispatch(createDailyCalendarAction(scheduleCalendarRegistration))
+            .then(response => {
+                if (response.status === 200) {
+                    if (response.data.status === "success") {
+                        alert("Schedule calendar created successfully!");
+                    }
+                }
+            })
+            .catch(error => {
+                console.log("Task Config registration failed: ", error);
+            })
+    }
+
     const renderDaySchedule = (dayKey) => {
         const daySchedule = scheduleCalendarRegistration?.data?.schedule?.[dayKey] || [];
-        
+
         return (
             <div className="space-y-2">
                 <Title className="text-lg font-semibold mb-3">{dayNames[dayKey]}</Title>
@@ -83,7 +102,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
 
     const renderTotals = () => {
         const totals = scheduleCalendarRegistration?.data?.totals || {};
-        
+
         return (
             <Card className="p-4 mt-4">
                 <Title className="text-lg font-semibold mb-3">Total time in week</Title>
@@ -119,67 +138,74 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
                         exit={{ opacity: 0, y: 20 }}
                         transition={{ duration: 0.8, delay: 3 }}
                     >
-                        {!scheduleCalendarRegistration ? (
-                            <TaskRegistration />
-                        ) : (
-                            <div className="space-y-4">
-                                {/* View Mode Controls */}
-                                <div className="flex items-center justify-between mb-4">
-                                    <Title className="text-xl">Lịch trình của bạn</Title>
-                                    <div className="flex space-x-2">
-                                        <Button
-                                            variant={viewMode === 'day' ? 'primary' : 'secondary'}
-                                            size="sm"
-                                            onClick={() => setViewMode('day')}
-                                        >
-                                            For days 
-                                        </Button>
-                                        <Button
-                                            variant={viewMode === 'week' ? 'primary' : 'secondary'}
-                                            size="sm"
-                                            onClick={() => setViewMode('week')}
-                                        >
-                                            For weeks 
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                {/* Day Selector for Day View */}
-                                {viewMode === 'day' && (
-                                    <div className="flex space-x-2 mb-4">
-                                        {Object.entries(dayNames).map(([dayKey, dayName]) => (
+                        <Card>
+                            {!scheduleCalendarRegistration ? (
+                                <TaskRegistration />
+                            ) : (
+                                <div className="space-y-4">
+                                    {/* View Mode Controls */}
+                                    <div className="flex items-center justify-between mb-4">
+                                        <Title className="text-xl">Your Calendar</Title>
+                                        <div className="flex space-x-2">
                                             <Button
-                                                key={dayKey}
-                                                variant={selectedDay === dayKey ? 'primary' : 'light'}
+                                                variant={viewMode === 'day' ? 'primary' : 'secondary'}
                                                 size="sm"
-                                                onClick={() => setSelectedDay(dayKey)}
+                                                onClick={() => setViewMode('day')}
                                             >
-                                                {dayName}
+                                                For days
                                             </Button>
-                                        ))}
+                                            <Button
+                                                variant={viewMode === 'week' ? 'primary' : 'secondary'}
+                                                size="sm"
+                                                onClick={() => setViewMode('week')}
+                                            >
+                                                For weeks
+                                            </Button>
+                                        </div>
                                     </div>
-                                )}
 
-                                {/* Schedule Display */}
-                                <Card className="p-4">
-                                    {viewMode === 'day' ? (
-                                        renderDaySchedule(selectedDay)
-                                    ) : (
-                                        renderWeekSchedule()
+                                    {/* Day Selector for Day View */}
+                                    {viewMode === 'day' && (
+                                        <div className="flex space-x-2 mb-4">
+                                            {Object.entries(dayNames).map(([dayKey, dayName]) => (
+                                                <Button
+                                                    key={dayKey}
+                                                    variant={selectedDay === dayKey ? 'primary' : 'light'}
+                                                    size="sm"
+                                                    onClick={() => setSelectedDay(dayKey)}
+                                                >
+                                                    {dayName}
+                                                </Button>
+                                            ))}
+                                        </div>
                                     )}
+
+                                    {/* Schedule Display */}
+                                    <Card className="p-4">
+                                        {viewMode === 'day' ? (
+                                            renderDaySchedule(selectedDay)
+                                        ) : (
+                                            renderWeekSchedule()
+                                        )}
+                                    </Card>
+
+                                    {/* Totals */}
+                                    {renderTotals()}
+                                </div>
+                            )}
+
+                            {/* Default fallback card when no data */}
+                            {scheduleCalendarRegistration && !scheduleCalendarRegistration.data && (
+                                <Card className="p-4 bg-white shadow-md rounded-lg">
+                                    <div className="text-gray-500">No schedule calendar data</div>
                                 </Card>
-
-                                {/* Totals */}
-                                {renderTotals()}
-                            </div>
-                        )}
-
-                        {/* Default fallback card when no data */}
-                        {scheduleCalendarRegistration && !scheduleCalendarRegistration.data && (
-                            <Card className="p-4 bg-white shadow-md rounded-lg">
-                                <div className="text-gray-500">No schedule calendar data</div>
-                            </Card>
-                        )}
+                            )}
+                            <Button
+                                variant="secondary"
+                                className="mt-4"
+                                onClick={() => createScheduleCalendar(scheduleCalendarRegistration)}
+                            > Create Calendar</Button>
+                        </Card>
                     </motion.div>
                     <div className="mt-4 flex justify-end gap-2">
                         <Button variant="secondary" onClick={onPrevious}>
