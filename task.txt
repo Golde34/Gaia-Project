@@ -26,6 +26,9 @@ port gate:
 
 middleware server: 4000
 auth service: 4001
+notify agent: 4002
+ai core: 4003
+chat hub: 4004
 
 task manager: 3000
 work optimization: 3001
