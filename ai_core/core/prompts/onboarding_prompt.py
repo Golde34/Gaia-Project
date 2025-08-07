@@ -243,9 +243,16 @@ Format:
       {{
         "ready": true,
         "requirement": "<Brief summary of user's needs>",
-        "response": "I will create a calendar schedule for you based on your daily routine. Please wait a moment while I process your request."
+        "response": "<Your response to the user, confirming readiness and next steps, you can say to user that wait a moment while the system processes their requirement>"
       }}
     ```
+For example:
+    ```json
+      {{
+        "ready": true,
+        "requirement": "User needs a daily schedule to organize their work, meals, and relaxation time.",
+        "response": "I will create a calendar schedule for you based on your daily routine. Please wait a moment while I process your request."
+      }}
 
 If the user is not ready:
 Return "not ready", politely request more details about the daily schedule.
@@ -254,9 +261,17 @@ Format:
       {{
         "ready": false,
         "requirement": "<Brief summary of user's needs>",,
-        "response": "I need a bit more information about your routine to create a calendar schedule. Could you tell me about your typical day, including work hours, meal times, travel, and relaxation?"
+        "response": "<Your response to the user, asking for more information about their daily routine>"        
       }}
     ``` 
+For example:
+    ```json
+      {{
+        "ready": false,
+        "requirement": "User's description lacks specific time intervals or activities for a complete daily schedule."
+        "response": "I need a bit more information about your routine to create a calendar schedule. Could you tell me about your typical day, including work hours, meal times, travel, and relaxation?"
+      }}
+    ```
 
 Guidance:
 - Always be concise, courteous, and helpful.
