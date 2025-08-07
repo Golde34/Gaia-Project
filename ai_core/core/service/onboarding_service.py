@@ -75,6 +75,7 @@ async def register_schedule_calendar(query: QueryRequest, guided_route: Optional
         function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=selection_prompt)
         selection = function(prompt=selection_prompt,
                              model_name=default_model).strip().lower()
+        print(f"Selected action: {selection}")
         response = await handle_onboarding_action(query, selection)
 
         return return_success_response(
@@ -179,7 +180,7 @@ async def _generate_calendar_schedule_response(query: QueryRequest, recent_histo
         if (parsed_response.get("ready", False)):
             print("User is ready to register calendar schedule.")
             query.query = parsed_response.get("requirement", query.query)
-            send_kafka_message(kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value, query)
+            await send_kafka_message(kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value, query)
 
         return parsed_response 
     except Exception as e:
