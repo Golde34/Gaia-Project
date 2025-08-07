@@ -21,6 +21,7 @@ class RecursiveSummaryRepository:
     async def save_summary(self, summary: RecursiveSummary) -> int:
         record = await self.get_summary_by_dialogue_id_and_user_id(summary.user_id, summary.dialogue_id)
         if record:
+            print(f"Updating existing summary for user {summary.user_id} and dialogue {summary.dialogue_id}")
             query = (
                 "UPDATE recursive_summary SET summary=$1, created_at=$2 WHERE id=$3 RETURNING id"
             )
@@ -33,6 +34,7 @@ class RecursiveSummaryRepository:
                     record.id
                 )
         else:
+            print(f"Creating new summary for user {summary.user_id} and dialogue {summary.dialogue_id}")
             query = (
                 "INSERT INTO recursive_summary (id, user_id, dialogue_id, summary, created_at) "
                 "VALUES ($1, $2, $3, $4, $5) RETURNING id"

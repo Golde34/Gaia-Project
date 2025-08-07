@@ -179,7 +179,13 @@ async def _generate_calendar_schedule_response(query: QueryRequest, recent_histo
         parsed_response = json.loads(json_response)
         if (parsed_response.get("ready", False)):
             print("User is ready to register calendar schedule.")
-            query.query = parsed_response.get("requirement", query.query)
+            query: QueryRequest = {
+                "user_id": query.user_id,
+                "dialogue_id": query.dialogue_id,
+                "model_name": query.model_name,
+                "query": parsed_response.get("requirement", query.query),
+                "type": "register_calendar_schedule"
+            }
             await send_kafka_message(kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value, query)
 
         return parsed_response 
