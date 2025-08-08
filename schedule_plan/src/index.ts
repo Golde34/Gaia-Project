@@ -4,7 +4,6 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import { MongoHelper } from "./kernel/database/mongodb.db";
 import { msg404, sendResponse } from "./core/common/response";
 import { MSG404 } from "./core/domain/constants/string.constants";
 import { dashboardRouter } from "./ui/routers/dashboard.router";
@@ -12,7 +11,6 @@ import { KafkaHandler } from "./infrastructure/kafka/kafka-handler";
 import { kafkaController } from "./infrastructure/kafka/kafka-controller";
 import { scheduleTaskRouter } from "./ui/routers/schedule-task.router";
 import { scheduleGroupRouter } from "./ui/routers/schedule-group.router";
-import { scheduleCalendarRouter } from "./ui/routers/schedule-calendar.router";
 import { validateDBEnvironmentVars } from "./kernel/config/database.configuration";
 import PostgresDatabase from "./infrastructure/database/postgresql.db";
 
@@ -56,7 +54,6 @@ async function main(): Promise<void> {
     app.use(applicationContext + "/dashboard", dashboardRouter);
     app.use(applicationContext + "/schedule", scheduleTaskRouter);
     app.use(applicationContext + "/schedule-group", scheduleGroupRouter);
-    app.use(applicationContext + "/schedule-calendar", scheduleCalendarRouter);
 
     app.use((req: Request, res: Response, next: NextFunction) => {
         sendResponse(msg404(MSG404), res, next);
