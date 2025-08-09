@@ -1,33 +1,32 @@
-import { Column, DataType, Index, Model, Table } from "sequelize-typescript";
-import { Tag } from "../enums/enums";
+import { Column, DataType, Model, Table } from "sequelize-typescript";
 
 @Table({
-    tableName: "time_bubbles",
+    tableName: "schedule_day_bubbles", 
 })
-export default class TimeBubblesEntity extends Model {
+export default class ScheduleDayBubbleEntity extends Model {
     @Column({
         type: DataType.UUID,
         primaryKey: true,
         field: "id",
     })
     id!: string;
-    
-    @Column({
-        type: DataType.INTEGER,
-        field: "user_id",
-    })
-    userId!: number;
 
     @Column({
-        type: DataType.INTEGER,
-        field: "day_of_week",
+        type: DataType. STRING,
+        field: "user_id",
     })
-    dayOfWeek!: number;
+    userId!: string;
+
+    @Column({
+        type: DataType.STRING,
+        field: "schedule_plan_id",
+    })
+    schedulePlanId!: string;
 
     @Column({
         type: 'time without time zone',
         field: "start_time",
-    })
+    }) 
     startTime!: string; // "HH:mm:ss" format
 
     @Column({
@@ -37,22 +36,20 @@ export default class TimeBubblesEntity extends Model {
     endTime!: string; // "HH:mm:ss" format
 
     @Column({
-        type: DataType.STRING,
-        field: "tag",
+        type: DataType.UUID,
+        field: "schedule_task_id",
     })
-    tag!: Tag;
+    taskId: string | null = null;
 
     @Column({
         type: DataType.DATE,
         field: "created_at",
-        defaultValue: DataType.NOW,
-    })
-    createdAt?: Date;
+    }) 
+    createdAt!: Date;
 
     @Column({
         type: DataType.DATE,
         field: "updated_at",
-        defaultValue: DataType.NOW,
     })
-    updatedAt?: Date;
+    updatedAt!: Date;
 }

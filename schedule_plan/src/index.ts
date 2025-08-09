@@ -13,6 +13,7 @@ import { scheduleTaskRouter } from "./ui/routers/schedule-task.router";
 import { scheduleGroupRouter } from "./ui/routers/schedule-group.router";
 import { validateDBEnvironmentVars } from "./kernel/config/database.configuration";
 import PostgresDatabase from "./infrastructure/database/postgresql.db";
+import { scheduleDayRouter } from "./ui/routers/schedule-day.router";
 
 async function main(): Promise<void> {
     validateEnvironmentVars();
@@ -54,6 +55,7 @@ async function main(): Promise<void> {
     app.use(applicationContext + "/dashboard", dashboardRouter);
     app.use(applicationContext + "/schedule", scheduleTaskRouter);
     app.use(applicationContext + "/schedule-group", scheduleGroupRouter);
+    app.use(applicationContext + "/schedule-day", scheduleDayRouter);
 
     app.use((req: Request, res: Response, next: NextFunction) => {
         sendResponse(msg404(MSG404), res, next);
