@@ -20,3 +20,8 @@ def parse_json_string(s: str):
         s = s[:-len("```")].strip()
     
     return json.loads(s)
+
+def bytes_to_str(obj):
+    if isinstance(obj, bytes):
+        return obj.decode("utf-8")
+    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
