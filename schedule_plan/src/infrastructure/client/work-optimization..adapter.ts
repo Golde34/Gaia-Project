@@ -13,7 +13,7 @@ class WorkOptimizationAdapter {
         if (!workOptimizationServiceDomain) {
             throw new Error("Work optimization service domain is not provided");
         }
-        this.registerTaskConfigURL = workOptimizationServiceDomain + process.env.WORK_OPTIMIZATION_SERVICE_OPTIMIZE_SCHEDULE;
+        this.registerTaskConfigURL = workOptimizationServiceDomain + process.env.WORK_OPTIMIZATION_SERVICE_REGISTER_TASK_CONFIG_URL;
     }
 
     async registerTaskConfig(taskConfig: any): Promise<any> {
