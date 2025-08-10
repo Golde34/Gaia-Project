@@ -1,5 +1,4 @@
 import { IResponse, msg200 } from "../common/response";
-import { scheduleCalendarService } from "../services/schedule-calendar.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
 
 class SchedulePlanUsecase {

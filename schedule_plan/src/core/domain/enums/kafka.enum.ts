@@ -21,6 +21,7 @@ export enum KafkaCommand {
     UPDATE_TASK = "updateTask",
     DELETE_TASK = "deleteTask",
     SCHEDULE_GROUP_CREATE_TASK = "scheduleGroupCreateTask",
+    GENERATE_SCHEDULE_CALENDAR = "gaiaRegisterCalendar",
 }
 
 export class KafkaMessage {

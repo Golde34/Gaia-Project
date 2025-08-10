@@ -1,11 +1,12 @@
 import CacheSingleton from "../../infrastructure/cache/internal-cache/cache-singleton";
 import { authServiceAdapter } from "../../infrastructure/client/auth-service.adapter";
+import { workOptimizationAdapter } from "../../infrastructure/client/work-optimization..adapter";
 import { schedulePlanRepository } from "../../infrastructure/repositories/schedule-plan.repo";
 import { returnInternalServiceErrorResponse } from "../../kernel/utils/return-result";
 import { IResponse, msg200, msg400 } from "../common/response";
 import { InternalCacheConstants } from "../domain/constants/constants";
 import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
-import { ActiveStatus } from "../domain/enums/enums";
+import { ActiveStatus, ErrorStatus } from "../domain/enums/enums";
 
 class SchedulePlanService {
     constructor(
@@ -124,6 +125,27 @@ class SchedulePlanService {
         } catch (error: any) {
             console.log("Cannot find schedule plan by id: ", schedulePlanId)
             return null;
+        }
+    }
+
+    async registerTaskConfig(schedulePlan: any, registerTaskConfig: any): Promise<string> {
+        try {
+            const taskConfig = {
+                userId: schedulePlan.userId,
+                sleepDuration: registerTaskConfig.sleep,
+                startSleepTime: registerTaskConfig.startSleepTime,
+                endSleepTime: registerTaskConfig.endSleepTime,
+                relaxTime: registerTaskConfig.relax,
+                eatTime: registerTaskConfig.eat,
+                travelTime: registerTaskConfig.travel,
+                workTime: registerTaskConfig.work
+            };
+            const response = await workOptimizationAdapter.registerTaskConfig(taskConfig);
+            console.log("Task configuration registered successfully: ", response);
+            return ErrorStatus.SUCCESS;
+        } catch (error: any) {
+            console.error("Error registering task configuration: ", error);
+            return error.message.toString();
         }
     }
 }

@@ -18,6 +18,7 @@ from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.kafka.producer import send_kafka_message, publish_message
 from infrastructure.vector_db.milvus import milvus_db
 from kernel.config import llm_models, config
+from kernel.utils.parse_json import bytes_to_str
 
 
 default_model = config.LLM_DEFAULT_MODEL
@@ -75,6 +76,7 @@ async def register_schedule_calendar(query: QueryRequest, guided_route: Optional
         function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=selection_prompt)
         selection = function(prompt=selection_prompt,
                              model_name=default_model).strip().lower()
+        print(f"Selected action: {selection}")
         response = await handle_onboarding_action(query, selection)
 
         return return_success_response(
@@ -178,8 +180,14 @@ async def _generate_calendar_schedule_response(query: QueryRequest, recent_histo
         parsed_response = json.loads(json_response)
         if (parsed_response.get("ready", False)):
             print("User is ready to register calendar schedule.")
-            query.query = parsed_response.get("requirement", query.query)
-            send_kafka_message(kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value, query)
+            query: QueryRequest = {
+                "user_id": query.user_id,
+                "dialogue_id": query.dialogue_id,
+                "model_name": query.model_name,
+                "query": parsed_response.get("requirement", query.query),
+                "type": "register_calendar_schedule"
+            }
+            await send_kafka_message(kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value, query)
 
         return parsed_response 
     except Exception as e:
@@ -243,47 +251,9 @@ async def generate_calendar_schedule(query: QueryRequest) -> Dict:
             data=None
         )
 
-    # Step 6: Handle clarification request
-    # if "clarification_needed" in parsed_response:
-    #     print(
-    #         f"Clarification needed: {parsed_response['clarification_needed']}")
-    #     return return_clarification_response(
-    #         status_message="Additional information required",
-    #         data={"clarification": parsed_response["clarification_needed"]}
-    #     )
-
-    # # Step 7: Handle modifications
-    # if parsed_response.get("modification", False):
-    #     existing_schedule = recent_history.get("latest_schedule", {})
-    #     for day in parsed_response["schedule"]:
-    #         parsed_response["schedule"][day] = merge_schedules(
-    #             existing_schedule, parsed_response["schedule"], day
-    #         )
-
     # Step 8: Validate schedule
     try:
         schedule_dto = DailyRoutineSchema.model_validate(parsed_response)
-        totals = calculate_totals(schedule_dto.schedule)
-        total_hours = sum(totals.values())
-
-        # if abs(total_hours - 24) > 0.01:  # Allow small float errors
-        #     print(
-        #         f"Total hours ({total_hours}) does not sum to 24; filling gaps")
-        #     for day in schedule_dto.schedule:
-        #         schedule_dto.schedule[day] = fill_schedule_gaps(
-        #             schedule_dto.schedule[day])
-        #     totals = calculate_totals(
-        #         schedule_dto.schedule)  # Recalculate totals
-        #     total_hours = sum(totals.values())
-
-        #     if abs(total_hours - 24) > 0.01:  # Final check
-        #         print(
-        #             f"Total hours ({total_hours}) still invalid after gap filling")
-        #         return return_clarification_response(
-        #             status_message="Schedule does not sum to 24 hours",
-        #             data={
-        #                 "clarification": "Please provide a schedule that covers exactly 24 hours."}
-        #         )
     except ValidationError as e:
         print(f"Schema validation failed: {str(e)}")
         return return_response(
@@ -295,10 +265,10 @@ async def generate_calendar_schedule(query: QueryRequest) -> Dict:
         )
 
     # Step 9: Success case
-    schedule_dto.totals = totals  # Update totals in DTO
-    result = {"response": schedule_dto, "userId": query.user_id}
+    safe_response = json.loads(json.dumps(schedule_dto.model_dump(), default=bytes_to_str))
+    result = {"response": safe_response, "userId": query.user_id}
     print(f"Generated schedule: {schedule_dto}")
-    publish_message(kafka_enum.KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value,
+    await publish_message(kafka_enum.KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value,
                    kafka_enum.KafkaCommand.GENERATE_CALENDAR_SCHEDULE.value, result)
 
 
@@ -357,17 +327,3 @@ def fill_schedule_gaps(intervals: List[Dict]) -> List[Dict]:
         filled.append({"start": current_time, "end": "23:59", "tag": "relax"})
 
     return filled
-
-
-def calculate_totals(schedule: Dict[str, List[TimeBubbleDTO]]) -> Dict[str, float]:
-    """
-    Calculate total hours per tag for a single day's schedule.
-    """
-    totals = {"work": 0, "eat": 0, "travel": 0, "relax": 0, "sleep": 0}
-    for day in schedule:
-        for interval in schedule[day]:
-            start = datetime.strptime(interval.start, "%H:%M")
-            end = datetime.strptime(interval.end, "%H:%M")
-            hours = (end - start).total_seconds() / 3600
-            totals[interval.tag] += hours
-    return totals

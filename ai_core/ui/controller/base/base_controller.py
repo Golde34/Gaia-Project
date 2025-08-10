@@ -43,8 +43,8 @@ async def handle_sse_stream(
                 if isinstance(response, dict):
                     if 'data' in response and 'response' in response['data']:
                         response_text = response['data']['response']
-                    elif 'response' in response:
-                        response_text = response['response']
+                    elif 'data' in response:
+                        response_text = response['data']
                     else:
                         response_text = json.dumps(response, ensure_ascii=False)
                 else:

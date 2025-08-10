@@ -1,4 +1,4 @@
-import { Column, DataType, Model, Table } from "sequelize-typescript";
+import { Column, DataType, Index, Model, Table } from "sequelize-typescript";
 import { Tag } from "../enums/enums";
 
 @Table({
@@ -11,42 +11,43 @@ export default class TimeBubblesEntity extends Model {
         field: "id",
     })
     id!: string;
-
+    
     @Column({
-        type: DataType.STRING,
-        field: "schedule_calendar_id",
+        type: DataType.INTEGER,
+        field: "user_id",
     })
-    scheduleCalendarId!: string;
+    userId!: number;
 
     @Column({
         type: DataType.INTEGER,
-        field: "start_hour",
+        field: "day_of_week",
     })
-    startHour!: number;
+    dayOfWeek!: number;
 
     @Column({
-        type: DataType.INTEGER,
-        field: "start_minute",
+        type: 'time without time zone',
+        field: "start_time",
     })
-    startMinute!: number;
+    startTime!: string; // "HH:mm:ss" format
 
     @Column({
-        type: DataType.INTEGER,
-        field: "end_hour",
+        type: 'time without time zone',
+        field: "end_time",
     })
-    endHour!: number;
-
-    @Column({
-        type: DataType.INTEGER,
-        field: "end_minute",
-    })
-    endMinute!: number;
+    endTime!: string; // "HH:mm:ss" format
 
     @Column({
         type: DataType.STRING,
         field: "tag",
     })
     tag!: Tag;
+    
+    @Column({
+        type: DataType.STRING,
+        field: "status",
+        allowNull: true,
+    })
+    status?: string;
 
     @Column({
         type: DataType.DATE,

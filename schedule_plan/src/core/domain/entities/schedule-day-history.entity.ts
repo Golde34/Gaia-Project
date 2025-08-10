@@ -1,9 +1,9 @@
 import { Column, DataType, Model, Table } from "sequelize-typescript";
 
 @Table({
-    tableName: "schedule_calendars",
+    tableName: "schedule_day_history",
 })
-export default class ScheduleCalendarEntity extends Model {
+export default class ScheduleDayHistoryEntity extends Model {
     @Column({
         type: DataType.UUID,
         primaryKey: true,
@@ -12,29 +12,19 @@ export default class ScheduleCalendarEntity extends Model {
     id!: string;
 
     @Column({
-        type: DataType.INTEGER,
+        type: DataType.STRING,
         field: "user_id",
     })
-    userId!: number;
+    userId!: string;
 
     @Column({
-        type: DataType.BOOLEAN,
-        field: "repeatable",
-        defaultValue: false,
+        type: DataType.JSONB,
+        field: "schedule_snapshot",
     })
-    repeatable!: boolean;
-
-    @Column({
-        type: DataType.ARRAY(DataType.INTEGER),
-        field: "repeatable_days",
-    })
-    repeatableDays?: number[] | null;
-
-    @Column({
-        type: DataType.DATE,
-        field: "urgent_date",
-    })
-    urgentDate?: Date | null;
+    scheduleSnapshot!: Array<{
+        startTime: string; endTime: string; tag: string;
+        task_id: string | null; task_title?: string; 
+    }>
 
     @Column({
         type: DataType.DATE,
