@@ -54,9 +54,8 @@ func (handler *ScheduleResultHandler) HandleMessage(topic string, key, value []b
 func (handler *ScheduleResultHandler) RegisterCalendarTopic(key []byte, data map[string]interface{}) {
 	messageId := string(key)
 	log.Println("Processing Register Calendar for data:", data)
-	userId := data["userId"].(float64)
-	userIdStr := fmt.Sprintf("%.0f", userId)
-	go handler.handleService(data, userIdStr)
+	userId := data["userId"].(string)
+	go handler.handleService(data, userId)
 
 	fmt.Printf("Register Calendar handled successfully for message ID: %s\n", messageId)
 }
