@@ -37,7 +37,8 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     useEffect(() => {
         const handleMessage = (message) => {
             const data = JSON.parse(message);
-            if (data.type === 'calendar_registered') {
+            if (data.type === 'register_calendar') {
+                console.log("Received schedule calendar registration data:", data);
                 setScheduleCalendarRegistration(data);
             }
         };
@@ -63,7 +64,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     }
 
     const renderDaySchedule = (dayKey) => {
-        const daySchedule = scheduleCalendarRegistration?.data?.schedule?.[dayKey] || [];
+        const daySchedule = scheduleCalendarRegistration?.data?.response?.schedule?.[dayKey] || [];
 
         return (
             <div className="space-y-2">
