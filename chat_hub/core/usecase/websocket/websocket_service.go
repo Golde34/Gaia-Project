@@ -3,11 +3,13 @@ package usecases
 import (
 	services "chat_hub/core/services/chat"
 	usecases "chat_hub/core/usecase/chat"
+	"chat_hub/kernel/configs"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -24,7 +26,7 @@ type WebSocketUsecase struct {
 
 func NewWebSocketUsecase(db *sql.DB) *WebSocketUsecase {
 	return &WebSocketUsecase{
-		db: db,
+		db:          db,
 		chatService: usecases.NewChatUsecase(db),
 		authService: services.NewAuthService(),
 	}
@@ -35,6 +37,9 @@ var upgrader = websocket.Upgrader{
 		return true
 	},
 }
+
+var config = configs.Config{}
+var env, _ = config.LoadEnv()
 
 type ConnectionInfo struct {
 	Conn     *websocket.Conn
@@ -89,6 +94,7 @@ func (s *WebSocketUsecase) HandleChatmessage(w http.ResponseWriter, r *http.Requ
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
+			log.Println(`Error reading message from WebSocket connection:`, err)
 			log.Println("Connection closed for session:", sessionId)
 			break
 		}
@@ -112,7 +118,12 @@ func (s *WebSocketUsecase) monitorConnection(sessionId string) {
 	for range ticker.C {
 		if info, ok := activeConnections.Load(sessionId); ok {
 			connInfo := info.(*ConnectionInfo)
-			if time.Since(connInfo.LastPing) > 60*time.Second {
+			websocketTimeout, err := strconv.Atoi(env.WebSocketTimeout)
+			if err != nil || websocketTimeout <= 0 {
+				websocketTimeout = 1800 // Default to 30 minutes if not set or invalid
+			}
+
+			if time.Since(connInfo.LastPing) > time.Duration(websocketTimeout)*time.Second {
 				log.Println("Connection timeout for session:", sessionId)
 				connInfo.Conn.Close()
 				activeConnections.Delete(sessionId)
