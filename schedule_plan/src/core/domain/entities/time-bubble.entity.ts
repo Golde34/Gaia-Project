@@ -41,6 +41,13 @@ export default class TimeBubblesEntity extends Model {
         field: "tag",
     })
     tag!: Tag;
+    
+    @Column({
+        type: DataType.STRING,
+        field: "status",
+        allowNull: true,
+    })
+    status?: string;
 
     @Column({
         type: DataType.DATE,
