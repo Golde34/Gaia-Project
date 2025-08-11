@@ -12,10 +12,10 @@ func NewScheduleCalendarService() *ScheduleCalendarService {
 	return &ScheduleCalendarService{}
 }
 
-func (s *ScheduleCalendarService) GetTimeBubbleConfig(userId string) (response_dtos.TimeBubbleConfigDTO, error) {
+func (s *ScheduleCalendarService) GetTimeBubbleConfig(userId string) ([]response_dtos.TimeBubbleConfigDTO, error) {
 	dailyTasks, err := client.IScheduleCalendarAdapter(&adapter.ScheduleCalendarAdapter{}).GetTimeBubbleConfig(userId)
 	if err != nil {
-		return response_dtos.TimeBubbleConfigDTO{}, err
+		return []response_dtos.TimeBubbleConfigDTO{}, err
 	}
 	return dailyTasks, nil
 }

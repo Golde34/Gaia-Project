@@ -37,3 +37,16 @@ func ReturnScheduleTaskObjectMapper(body map[string]interface{}) *response_dtos.
 	}
 	return &input
 }
+
+func ReturnTimeBubbleConfigObjectMapper(body map[string]interface{}) *response_dtos.TimeBubbleConfigDTO {
+	var input response_dtos.TimeBubbleConfigDTO
+	input.Id = body["id"].(string)
+	input.UserId = body["userId"].(string)
+	input.DayOfWeek = body["dayOfWeek"].(float64)
+	input.DayOfWeekStr = body["dayOfWeekStr"].(string)
+	input.Tag = body["tag"].(string)
+	input.Status = body["status"].(string)
+	input.StartTime = body["startTime"].(string)
+	input.EndTime = body["endTime"].(string)
+	return &input
+}
