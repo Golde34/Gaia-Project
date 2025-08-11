@@ -2,15 +2,15 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE public.time_bubbles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    schedule_calendar_id VARCHAR(255) NULL,
-    start_hour  INTEGER NULL,
-    start_minute INTEGER NULL,
-    end_hour    INTEGER NULL,
-    end_minute  INTEGER NULL,
-    tag         VARCHAR(255) NULL,
+    user_id VARCHAR(50) NOT NULL,
+    day_of_week INTEGER NOT NULL,
+    start_time  TIME WITHOUT TIME ZONE NOT NULL,
+    end_time    TIME WITHOUT TIME ZONE NOT NULL,
+    tag         VARCHAR(50) NULL,
+    status      VARCHAR(50) NULL,
     created_at  TIMESTAMP WITHOUT TIME ZONE NULL,
-    updated_at  TIMESTAMP WITHOUT TIME ZONE NULL,
+    updated_at  TIMESTAMP WITHOUT TIME ZONE NULL
 );
 
-CREATE INDEX idx_time_bubbles_schedule_calendar_id
-    ON public.time_bubbles(schedule_calendar_id);
+CREATE INDEX idx_time_bubbles_user_id ON public.time_bubbles (user_id);
+CREATE INDEX idx_time_bubbles_day_of_week ON public.time_bubbles (day_of_week); 
