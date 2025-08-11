@@ -31,6 +31,17 @@ class TimeBubbleRepository {
             console.error("Error updating time bubble status:", error.message);
         }
     }
+
+    async findTimeBubbleConfigByUserId(userId: number): Promise<any> {
+        try {
+            return await TimeBubblesEntity.findAll({
+                where: { userId: userId }
+            });
+        } catch (error: any) {
+            console.error("Error finding time bubble config by user ID:", error.message);
+            throw error;
+        }
+    }
 }
 
 export const timeBubbleRepository = new TimeBubbleRepository();

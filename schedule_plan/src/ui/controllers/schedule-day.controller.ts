@@ -5,12 +5,21 @@ import { scheduleDayUsecase } from "../../core/usecase/schedule-day.usecase";
 class ScheduleDayController {
     constructor() { }
 
+    async getTimeBubbleConfig(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const userId = req.params.userId;
+            console.log(`Fetching time bubble config for user: ${userId}`);
+            return await scheduleDayUsecase.getTimeBubbleConfig(Number(userId));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async registerScheduleConfig(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = req.body.userId;
-            const registerScheduleConfig = req.body.registerScheduleConfig;
             console.log(`Registering schedule config for user: ${userId}`);
-            return await scheduleDayUsecase.registerScheduleConfig(userId, registerScheduleConfig);
+            return await scheduleDayUsecase.registerScheduleConfig(userId);
         } catch (error) {
             next(error);
         }

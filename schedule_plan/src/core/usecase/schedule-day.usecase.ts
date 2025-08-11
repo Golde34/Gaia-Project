@@ -49,6 +49,20 @@ class ScheduleDayUsecase {
             return null;
         }
     }
+
+    async getTimeBubbleConfig(userId: number): Promise<IResponse | undefined> {
+        try {
+            const timeBubbleConfig = await scheduleDayService.getTimeBubbleConfig(userId);
+            if (!timeBubbleConfig) {
+                return msg400("Failed to get time bubble config");
+            }
+            return msg200(timeBubbleConfig);
+        } catch (error: any) {
+            console.error("Error getting time bubble config:", error.message);
+            return msg400("Error getting time bubble config");
+        }
+    }
+
 }
 
 export const scheduleDayUsecase = new ScheduleDayUsecase();
