@@ -12,6 +12,37 @@ func NewScheduleCalendarAdapter() *ScheduleCalendarAdapter {
 	return &ScheduleCalendarAdapter{}
 }
 
+func (adapter *ScheduleCalendarAdapter) GetTimeBubbleConfig(userId string) (response_dtos.TimeBubbleConfigDTO, error) {
+	userDailyTasksURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-calendar/time-bubble-config/" + userId
+	headers := utils.BuildDefaultHeaders()
+	bodyResult, err := utils.BaseAPI(userDailyTasksURL, "GET", nil, headers)
+	if err != nil {
+		return response_dtos.TimeBubbleConfigDTO{}, err
+	}
+
+	bodyResultMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return response_dtos.TimeBubbleConfigDTO{}, nil
+	}
+	if bodyResultMap["tasks"] == nil || len(bodyResultMap["tasks"].([]interface{})) == 0 {
+		return response_dtos.TimeBubbleConfigDTO{
+			Id:           "",
+			UserId:       0,
+			DayOfWeek:    0,
+			DayOfWeekStr: "",
+			StartTime:    "",
+			EndTime:      "",
+			Tag:          "",
+			Status:       "",
+			CreatedAt:    "",
+			UpdatedAt:    "",
+		}, nil
+	}
+
+	return response_dtos.TimeBubbleConfigDTO{}, nil	
+}
+
+
 func (adapter *ScheduleCalendarAdapter) GetUserDailyTasks(userId string) (response_dtos.DailyTasksResponseDTO, error) {
 	userDailyTasksURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-calendar/daily-calendar/" + userId
 	var scheduleTasks []response_dtos.ScheduleTaskResponseDTO
