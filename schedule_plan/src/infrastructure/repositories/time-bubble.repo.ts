@@ -32,7 +32,7 @@ class TimeBubbleRepository {
         }
     }
 
-    async findTimeBubbleConfigByUserId(userId: number): Promise<any> {
+    async findAllByUserId(userId: number): Promise<any> {
         try {
             return await TimeBubblesEntity.findAll({
                 where: { userId: userId }

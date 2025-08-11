@@ -58,7 +58,7 @@ class ScheduleDayService {
 
     async getTimeBubbleConfig(userId: number): Promise<any> {
         try {
-            return await timeBubbleRepository.findTimeBubbleConfigByUserId(userId);
+            return await timeBubbleRepository.findAllByUserId(userId);
         } catch (error: any) {
             console.error("Error getting time bubble config:", error);
             throw error;
