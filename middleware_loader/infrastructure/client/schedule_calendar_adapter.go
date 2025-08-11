@@ -12,6 +12,28 @@ func NewScheduleCalendarAdapter() *ScheduleCalendarAdapter {
 	return &ScheduleCalendarAdapter{}
 }
 
+func (adapter *ScheduleCalendarAdapter) GetTimeBubbleConfig(userId string) ([]response_dtos.TimeBubbleConfigDTO, error) {
+	userDailyTasksURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-day/time-bubble-config/" + "1"
+	var timeBubbles []response_dtos.TimeBubbleConfigDTO
+	headers := utils.BuildDefaultHeaders()
+	bodyResult, err := utils.BaseAPI(userDailyTasksURL, "GET", nil, headers)
+	if err != nil {
+		return []response_dtos.TimeBubbleConfigDTO{}, err
+	}
+	bodyResultArray, ok := bodyResult.([]interface{})
+	if !ok {
+		return []response_dtos.TimeBubbleConfigDTO{}, nil
+	}
+
+	for _, item := range bodyResultArray {
+		timeBubbleConfig := mapper_response.ReturnTimeBubbleConfigObjectMapper(item.(map[string]interface{}))
+		timeBubbles = append(timeBubbles, *timeBubbleConfig)
+	}
+
+	return timeBubbles, nil
+}
+
+
 func (adapter *ScheduleCalendarAdapter) GetUserDailyTasks(userId string) (response_dtos.DailyTasksResponseDTO, error) {
 	userDailyTasksURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-calendar/daily-calendar/" + userId
 	var scheduleTasks []response_dtos.ScheduleTaskResponseDTO

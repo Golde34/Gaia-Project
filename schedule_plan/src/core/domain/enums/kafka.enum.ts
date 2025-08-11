@@ -8,6 +8,7 @@ export enum KafkaTopic {
     DELETE_TASK = "task-manager.delete-task.topic",
     UPDATE_TASK = "task-manager.update-task.topic",
     SCHEDULE_GROUP_CREATE_TASK = "schedule-plan.schedule-group-create-task.topic",
+    GENERATE_SCHEDULE_CALENDAR = "ai-core.generate-calendar-schedule.topic"
 }
 
 export enum KafkaCommand {

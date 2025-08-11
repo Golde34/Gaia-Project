@@ -1,6 +1,18 @@
-import { Router } from "express";
-import { scheduleGroupController } from "../controllers/schedule-group.controller";
+import { NextFunction, Request, Response, Router } from "express";
+import { returnResult } from "../../kernel/utils/return-result";
+import { scheduleDayController } from "../controllers/schedule-day.controller";
 
 export const scheduleDayRouter = Router();
 
-const scheduleDayControllerImpl = scheduleGroupController; 
+const scheduleDayControllerImpl = scheduleDayController; 
+
+scheduleDayRouter.get("/time-bubble-config/:userId",
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const scheduleTaskResult = await scheduleDayControllerImpl.getTimeBubbleConfig(req, next);
+            return returnResult(scheduleTaskResult, "FAIL", res, next);
+        } catch (error) {
+            next(error);
+        }
+    }
+);

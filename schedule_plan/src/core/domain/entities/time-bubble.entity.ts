@@ -25,6 +25,12 @@ export default class TimeBubblesEntity extends Model {
     dayOfWeek!: number;
 
     @Column({
+        type: DataType.STRING,
+        field: "day_of_week_str",
+    })
+    dayOfWeekStr!: string;
+
+    @Column({
         type: 'time without time zone',
         field: "start_time",
     })

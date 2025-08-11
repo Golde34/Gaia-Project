@@ -3,10 +3,34 @@ package controller_services
 import (
 	"encoding/json"
 	"fmt"
+	base_dtos "middleware_loader/core/domain/dtos/base"
 	"middleware_loader/core/middleware"
 	services "middleware_loader/core/services/schedule_plan"
 	"net/http"
 )
+
+func GetTimeBubbleConfig(w http.ResponseWriter, r *http.Request, scheduleCalendarService *services.ScheduleCalendarService) {
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	timeBubbleConfig, err := scheduleCalendarService.GetTimeBubbleConfig(userId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := base_dtos.ErrorResponse{
+		Status:        "success",
+		StatusMessage: "Time bubble config retrieved successfully",
+		ErrorCode:     200,
+		ErrorMessage:  "Success",
+		Data:         timeBubbleConfig,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}	
+}
 
 func GetUserDailyTasks(w http.ResponseWriter, r *http.Request, scheduleCalendarService *services.ScheduleCalendarService) {
 	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
