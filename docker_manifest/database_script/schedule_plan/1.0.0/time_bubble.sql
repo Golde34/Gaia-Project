@@ -2,7 +2,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE public.time_bubbles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id VARCHAR(50) NOT NULL,
+    user_id BIGINT NOT NULL,
     day_of_week INTEGER NOT NULL,
     start_time  TIME WITHOUT TIME ZONE NOT NULL,
     end_time    TIME WITHOUT TIME ZONE NOT NULL,

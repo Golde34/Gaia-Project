@@ -8,7 +8,7 @@ export const generateScheduleCalendarHandler = (message: string) => {
         case KafkaCommand.GENERATE_SCHEDULE_CALENDAR:
             const userId = Number(kafkaMessage.data.userId);
             const schedule = kafkaMessage.data.response;
-            scheduleDayUsecase.registerScheduleConfig(userId, schedule);
+            scheduleDayUsecase.generateScheduleConfig(userId, schedule);
             break;
         default:
             console.warn("No handler for command: ", cmd);

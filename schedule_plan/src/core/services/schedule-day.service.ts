@@ -2,6 +2,7 @@ import { timeBubbleRepository } from "../../infrastructure/repositories/time-bub
 import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
 import { randomUUID } from "crypto";
 import { ActiveStatus, ErrorStatus } from "../domain/enums/enums";
+import { dayOfWeekMap } from "../domain/constants/constants";
 
 class ScheduleDayService {
     constructor() { }
@@ -11,42 +12,35 @@ class ScheduleDayService {
             for (const day in schedule) {
                 if (schedule.hasOwnProperty(day)) {
                     const activities = schedule[day];
+                    if (activities.length === 0) {
+                        continue;
+                    }
+                    await timeBubbleRepository.deleteDraftTimeBubbles(schedulePlan.userId, Number(day), ActiveStatus.draft);
                     for (const activity of activities) {
                         if (!activity.start || !activity.end || !activity.tag) {
                             throw new Error("Invalid activity data");
                         }
-                        const timeBubble = await this.handleDraftScheduleConfig(schedulePlan, Number(day));  
-                        console.log("Generated time bubble:", timeBubble);
+                        const timeBubble = this.buildTimeBubble(activity, schedulePlan, Number(day), ActiveStatus.draft);
+                        await timeBubbleRepository.generateTimeBubble(timeBubble);
                     }
                 }
             }
-            return ErrorStatus.SUCCESS; 
+            return ErrorStatus.SUCCESS;
         } catch (error: any) {
             console.error("Error registering schedule config:", error);
             return error.message.toString();
         }
     }
-    
-    async handleDraftScheduleConfig(schedule: any, dayOfWeek: number): Promise<any> {
-        try {
-            await timeBubbleRepository.deleteDraftTimeBubbles(schedule.userId, dayOfWeek, ActiveStatus.draft);
-            const timeBubble = this.buildTimeBubble(schedule, dayOfWeek, ActiveStatus.draft);
-            const createdTimeBubble = await timeBubbleRepository.generateTimeBubble(timeBubble);
-            return createdTimeBubble;
-        } catch (error: any) {
-            console.error("Error handling draft schedule config:", error);
-            return error.message.toString();
-        } 
-    }
 
-    private buildTimeBubble(schedule: any, dayOfWeek: number, status: string): any {
+    private buildTimeBubble(activity: any, schedulePlan: SchedulePlanEntity, dayOfWeek: number, status: string): any {
         return {
             id: randomUUID(),
-            userId: schedule.userId,
+            userId: schedulePlan.userId,
             dayOfWeek: dayOfWeek,
-            startTime: schedule.startTime,
-            endTime: schedule.endTime,
-            tag: schedule.tag,
+            dayOfWeekStr: dayOfWeekMap[dayOfWeek],
+            startTime: activity.start,
+            endTime: activity.end,
+            tag: activity.tag,
             status: status,
             createdAt: new Date(),
             updatedAt: new Date()

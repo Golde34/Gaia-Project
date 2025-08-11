@@ -2,6 +2,7 @@ import { KafkaTopic } from "../../core/domain/enums/kafka.enum";
 import { handleCreateScheduleTaskMessage } from "../../ui/kafka/create-schedule-task.consumer";
 import { handlerCreateTaskMessage } from "../../ui/kafka/create-task.consumer";
 import { handleDeleteTaksmessage } from "../../ui/kafka/delete-task.consumer";
+import { generateScheduleCalendarHandler } from "../../ui/kafka/generate.schedule-calendar.consumer";
 import { optimizeTasksHandler } from "../../ui/kafka/optimize-task.consumer";
 import { handlerSyncTaskMessage } from "../../ui/kafka/sync-task.consumer";
 import { handleUpdatetaskMessage } from "../../ui/kafka/update-task.consumer";
@@ -47,4 +48,5 @@ const kafkaTopicHandlers: Record<string, (message: string) => void> = {
     [KafkaTopic.DELETE_TASK]: (message: string) => handleDeleteTaksmessage(message),
     [KafkaTopic.UPDATE_TASK]: (message: string) => handleUpdatetaskMessage(message),
     [KafkaTopic.SCHEDULE_GROUP_CREATE_TASK]: (message: string) => handleCreateScheduleTaskMessage(message),
+    [KafkaTopic.GENERATE_SCHEDULE_CALENDAR]: (message: string) => generateScheduleCalendarHandler(message),
 };
