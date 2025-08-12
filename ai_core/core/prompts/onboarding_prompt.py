@@ -219,6 +219,8 @@ The calendar schedule have format like this example:
    ```json
    {{
      "schedule": {{
+       "0": [ {{ "start": "HH:MM", "end": "HH:MM", "tag": "TAG" }}, … ],
+       "1": [ {{ "start": "HH:MM", "end": "HH:MM", "tag": "TAG" }}, … ],
        "2": [ {{ "start": "HH:MM", "end": "HH:MM", "tag": "TAG" }}, … ],
        "3": [ … ],
        "4": [ … ],

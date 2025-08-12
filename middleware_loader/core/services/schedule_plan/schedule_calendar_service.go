@@ -4,6 +4,7 @@ import (
 	response_dtos "middleware_loader/core/domain/dtos/response"
 	"middleware_loader/core/port/client"
 	adapter "middleware_loader/infrastructure/client"
+	"strconv"
 )
 
 type ScheduleCalendarService struct {}
@@ -18,6 +19,27 @@ func (s *ScheduleCalendarService) GetTimeBubbleConfig(userId string) ([]response
 		return []response_dtos.TimeBubbleConfigDTO{}, err
 	}
 	return dailyTasks, nil
+}
+
+func (s *ScheduleCalendarService) ReturnTimeBubbleMap(timeBubbleConfigs []response_dtos.TimeBubbleConfigDTO,) map[string]interface{} {
+    schedule := make(map[string][]map[string]string)
+    for i := 0; i < 7; i++ {
+        schedule[strconv.Itoa(i)] = []map[string]string{}
+    }
+
+    for _, cfg := range timeBubbleConfigs {
+        dayKey := strconv.Itoa(int(cfg.DayOfWeek)) // float64 -> int
+        item := map[string]string{
+            "start": cfg.StartTime,
+            "end":   cfg.EndTime,
+            "tag":   cfg.Tag,
+        }
+        schedule[dayKey] = append(schedule[dayKey], item)
+    }
+
+    return map[string]interface{}{
+        "schedule": schedule,
+    }
 }
 
 func (s *ScheduleCalendarService) GetUserDailyTasks(userId string) (response_dtos.DailyTasksResponseDTO, error) {

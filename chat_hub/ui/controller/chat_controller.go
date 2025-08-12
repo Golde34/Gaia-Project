@@ -2,7 +2,7 @@ package controller
 
 import (
 	"chat_hub/core/middleware"
-	services "chat_hub/core/services/chat"
+	"chat_hub/core/services"
 	usecases "chat_hub/core/usecase/chat"
 	"encoding/json"
 	"fmt"

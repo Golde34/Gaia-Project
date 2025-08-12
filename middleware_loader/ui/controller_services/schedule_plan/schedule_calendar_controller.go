@@ -17,12 +17,14 @@ func GetTimeBubbleConfig(w http.ResponseWriter, r *http.Request, scheduleCalenda
 		return
 	}
 
+	timeBubbleMap := scheduleCalendarService.ReturnTimeBubbleMap(timeBubbleConfig)
+
 	response := base_dtos.ErrorResponse{
 		Status:        "success",
 		StatusMessage: "Time bubble config retrieved successfully",
 		ErrorCode:     200,
 		ErrorMessage:  "Success",
-		Data:         timeBubbleConfig,
+		Data:         timeBubbleMap,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
