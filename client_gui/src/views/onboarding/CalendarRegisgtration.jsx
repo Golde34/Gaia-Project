@@ -1,12 +1,13 @@
+import { useDispatch, useSelector } from "react-redux";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Card, Col, Grid, Metric, Badge, Title, Text } from "@tremor/react";
 import ChatComponent from "../chat_hub/ChatComponent";
 import TaskRegistration from "./TaskRegistration";
-import { motion } from "framer-motion";
+import { motion, time } from "framer-motion";
 import ChatComponent2 from "../chat_hub/ChatComponent2";
 import { useMultiWS } from "../../kernels/context/MultiWSContext";
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { registerDailyCalendarAction } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
+import { getTimeBubbleConfig, registerDailyCalendarAction } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
+import { dayNames, tagColors } from "../../kernels/utils/calendar";
 
 const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     const dispatch = useDispatch();
@@ -16,38 +17,35 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     const [viewMode, setViewMode] = useState('day'); // 'day' or 'week'
     const [selectedDay, setSelectedDay] = useState('2'); // Default to Monday
 
-    const dayNames = {
-        '0': 'Sunday',
-        '1': 'Monday',
-        '2': 'Tuesday',
-        '3': 'Wednesday',
-        '4': 'Thursday',
-        '5': 'Friday',
-        '6': 'Saturday' 
-    };
-
-    const tagColors = {
-        'work': 'blue',
-        'eat': 'green',
-        'travel': 'yellow',
-        'relax': 'purple',
-        'sleep': 'gray'
-    };
-
     useEffect(() => {
         const handleMessage = (message) => {
             const data = JSON.parse(message);
             if (data.type === 'register_calendar') {
-                console.log("Received schedule calendar registration data:", data);
                 setScheduleCalendarRegistration(data);
             }
         };
         messages.chat.forEach(handleMessage);
     }, [messages])
 
-    const formatTime = (time) => {
-        return time;
-    };
+    const timeBubbleConfigList = useSelector((state) => state.getTimeBubbleConfig);
+    const { loading, error, config } = timeBubbleConfigList;
+    const didTimeBubbleConfig = useRef();
+    const timeBubbleConfigs = useCallback(() => {
+        dispatch(getTimeBubbleConfig())
+    }, [dispatch])
+
+    useEffect(() => {
+        if (didTimeBubbleConfig.current) return;
+        timeBubbleConfigs();
+        didTimeBubbleConfig.current = true;
+    }, [])
+    useEffect(() => {
+        if (!loading && !error && config) {
+            const wrapped = { type: 'register_calendar', data: { response: config.data } };
+            console.log("Received time bubble config:", wrapped);
+            setScheduleCalendarRegistration(wrapped);
+        }
+    }, [loading, error, config]);
 
     const registerScheduleCalendar = (scheduleCalendarRegistration) => {
         dispatch(registerDailyCalendarAction(scheduleCalendarRegistration))
@@ -77,7 +75,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
                                     {slot.tag}
                                 </Badge>
                                 <Text>
-                                    {formatTime(slot.start)} - {formatTime(slot.end)}
+                                    {slot.start} - {slot.end}
                                 </Text>
                             </div>
                         </div>
