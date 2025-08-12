@@ -43,7 +43,7 @@ func (s *SchedulePlanService) ReturnTimeBubbleConfig(userId string, messageMapSt
 		grouped[day] = append(grouped[day], cfg)
 	}
 
-	targetDays := []int{2, 3, 4, 5, 6}
+	targetDays := []int{0, 1, 2, 3, 4, 5, 6}
 
 	for _, day := range targetDays {
 		dayKey := fmt.Sprintf("%d", day)
