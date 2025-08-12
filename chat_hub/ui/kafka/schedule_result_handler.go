@@ -4,6 +4,7 @@ import (
 	"chat_hub/core/domain/constants"
 	base_dtos "chat_hub/core/domain/dtos/base"
 	"chat_hub/core/domain/enums"
+	"chat_hub/core/services"
 	chat_usecases "chat_hub/core/usecase/chat"
 	ws_usecases "chat_hub/core/usecase/websocket"
 	"database/sql"
@@ -17,6 +18,8 @@ type ScheduleResultHandler struct {
 
 	chatUsecase      *chat_usecases.ChatUsecase
 	websocketUsecase *ws_usecases.WebSocketUsecase
+
+	schedulePlanService *services.SchedulePlanService
 }
 
 func NewScheduleResultHandler(db *sql.DB) *ScheduleResultHandler {
@@ -25,6 +28,8 @@ func NewScheduleResultHandler(db *sql.DB) *ScheduleResultHandler {
 
 		chatUsecase:      chat_usecases.NewChatUsecase(db),
 		websocketUsecase: ws_usecases.NewWebSocketUsecase(db),
+
+		schedulePlanService: services.NewSchedulePlanService(),
 	}
 }
 
@@ -73,6 +78,13 @@ func (handler *ScheduleResultHandler) handleService(messageMap map[string]interf
 		log.Println("Error marshaling messageMap:", err)
 		return
 	}
+
+	response, err = handler.schedulePlanService.ReturnTimeBubbleConfig(userId, messageMap)
+	if err != nil {
+		log.Println("Error getting time bubble config:", err)
+		return
+	}
+
 	log.Println("Handling service for user:", messageMapStr)
 	handler.websocketUsecase.SendToUserWithNoSession(userId, messageMapStr)
 }
