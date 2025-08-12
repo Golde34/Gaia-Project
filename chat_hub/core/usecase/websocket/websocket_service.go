@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	services "chat_hub/core/services/chat"
+	services "chat_hub/core/services"
 	usecases "chat_hub/core/usecase/chat"
 	"chat_hub/kernel/configs"
 	"context"

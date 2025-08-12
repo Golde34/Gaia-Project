@@ -5,7 +5,7 @@ import (
 	request_dtos "chat_hub/core/domain/dtos/request"
 	response_dtos "chat_hub/core/domain/dtos/response"
 	"chat_hub/core/domain/enums"
-	services "chat_hub/core/services/chat"
+	"chat_hub/core/services"
 	sse "chat_hub/core/usecase/sse_streaming"
 	"chat_hub/infrastructure/client"
 	"chat_hub/infrastructure/kafka"

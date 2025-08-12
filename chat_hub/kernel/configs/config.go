@@ -8,10 +8,11 @@ import (
 )
 
 type Config struct {
-	Url                string
-	Port               string
-	AuthServicePort    string
-	LLMCoreServicePort string
+	Url                     string
+	Port                    string
+	AuthServicePort         string
+	LLMCoreServicePort      string
+	SchedulePlanServicePort string
 
 	ClientCORSAllowedUrl string
 
@@ -30,14 +31,16 @@ func (in *Config) LoadEnv() (Config, error) {
 
 	authServicePort := os.Getenv("AUTH_SERVICE_PORT")
 	llmCoreServicePort := os.Getenv("LLM_CORE_SERVICE_PORT")
+	schedulePlanServicePort := os.Getenv("SCHEDULE_PLAN_SERVICE_PORT")
 	webSocketTimeout := os.Getenv("WEBSOCKET_TIMEOUT")
 
 	return Config{
-		Url:                  url,
-		Port:                 port,
-		ClientCORSAllowedUrl: clientCORSAllowedUrl,
-		AuthServicePort:      authServicePort,
-		LLMCoreServicePort:   llmCoreServicePort,
-		WebSocketTimeout:     webSocketTimeout,
+		Url:                     url,
+		Port:                    port,
+		ClientCORSAllowedUrl:    clientCORSAllowedUrl,
+		AuthServicePort:         authServicePort,
+		LLMCoreServicePort:      llmCoreServicePort,
+		WebSocketTimeout:        webSocketTimeout,
+		SchedulePlanServicePort: schedulePlanServicePort,
 	}, nil
 }

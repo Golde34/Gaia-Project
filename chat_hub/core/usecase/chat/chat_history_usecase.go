@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	services "chat_hub/core/services/chat"
+	"chat_hub/core/services"
 	"database/sql"
 	"time"
 )

@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	services "chat_hub/core/services/chat"
+	"chat_hub/core/services"
 	"context"
 	"log"
 	"net/http"

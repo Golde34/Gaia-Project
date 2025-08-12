@@ -3,7 +3,7 @@ package route
 import (
 	"database/sql"
 
-	services "chat_hub/core/services/chat"
+	"chat_hub/core/services"
 	chathubRouter "chat_hub/ui/router"
 
 	"github.com/go-chi/chi"

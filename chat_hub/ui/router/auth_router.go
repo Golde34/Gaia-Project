@@ -1,7 +1,7 @@
 package router
 
 import (
-	services "chat_hub/core/services/chat"
+	"chat_hub/core/services"
 	"chat_hub/ui/controller"
 	"net/http"
 
