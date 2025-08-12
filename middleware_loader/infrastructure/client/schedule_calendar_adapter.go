@@ -13,7 +13,7 @@ func NewScheduleCalendarAdapter() *ScheduleCalendarAdapter {
 }
 
 func (adapter *ScheduleCalendarAdapter) GetTimeBubbleConfig(userId string) ([]response_dtos.TimeBubbleConfigDTO, error) {
-	userDailyTasksURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-day/time-bubble-config/" + "1"
+	userDailyTasksURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-day/time-bubble-config/" + userId 
 	var timeBubbles []response_dtos.TimeBubbleConfigDTO
 	headers := utils.BuildDefaultHeaders()
 	bodyResult, err := utils.BaseAPI(userDailyTasksURL, "GET", nil, headers)
