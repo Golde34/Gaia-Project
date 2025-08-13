@@ -3,11 +3,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Card, Col, Grid, Metric, Badge, Title, Text } from "@tremor/react";
 import ChatComponent from "../chat_hub/ChatComponent";
 import TaskRegistration from "./TaskRegistration";
-import { motion, time } from "framer-motion";
+import { motion } from "framer-motion";
 import ChatComponent2 from "../chat_hub/ChatComponent2";
 import { useMultiWS } from "../../kernels/context/MultiWSContext";
-import { getTimeBubbleConfig, registerDailyCalendarAction } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
+import { getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 import { dayNames, tagColors } from "../../kernels/utils/calendar";
+import { useRegisterScheduleCalendarDispatch } from "../../kernels/utils/write-dialog-api-requests";
 
 const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     const dispatch = useDispatch();
@@ -47,18 +48,23 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
         }
     }, [loading, error, config]);
 
-    const registerScheduleCalendar = (scheduleCalendarRegistration) => {
-        dispatch(registerDailyCalendarAction(scheduleCalendarRegistration))
-            .then(response => {
-                if (response.status === 200) {
-                    if (response.data.status === "success") {
-                        alert("Schedule calendar registerd successfully!");
-                    }
+    const registerScheduleCalendar = useRegisterScheduleCalendarDispatch();
+    const handleRegisterCalendar = () => {
+        if (!scheduleCalendarRegistration) {
+            alert("No schedule calendar data to register.");
+            return;
+        }
+        registerScheduleCalendar(scheduleCalendarRegistration)
+            .then((result) => {
+                if (result && result.status === "success") {
+                    alert("Registered calendar successfully.");
+                } else {
+                    alert("Registered calendar failed: " + (result?.message || "Unknown error"));
                 }
             })
-            .catch(error => {
-                console.log("Task Config registration failed: ", error);
-            })
+            .catch((error) => {
+                alert("Register calendar failed: " + (error?.message || error));
+            });
     }
 
     const renderDaySchedule = (dayKey) => {
@@ -202,7 +208,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
                             <Button
                                 variant="secondary"
                                 className="mt-4"
-                                onClick={() => registerScheduleCalendar(scheduleCalendarRegistration)}
+                                onClick={() => handleRegisterCalendar()}
                             > register Calendar</Button>
                         </Card>
                     </motion.div>

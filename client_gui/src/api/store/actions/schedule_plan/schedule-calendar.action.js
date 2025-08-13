@@ -10,7 +10,7 @@ const portName = {
     middleware: 'middlewarePort'
 }
 
-export const registerDailyCalendarAction = (scheduleCalendar) => async (dispatch) => {
+export const registerCalendarAction = (scheduleCalendar) => async (dispatch) => {
     dispatch({ type: REGISTER_SCHEDULE_CALENDAR_REQUEST, payload: scheduleCalendar });
     try {
         const { data } = await serverRequest('/schedule-calendar/register', HttpMethods.POST, portName.middleware, scheduleCalendar);
