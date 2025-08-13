@@ -69,10 +69,13 @@ func (adapter *ScheduleCalendarAdapter) GetUserDailyTasks(userId string) (respon
 	}, nil
 }
 
-func (adapter *ScheduleCalendarAdapter) RegisterScheduleCalendar(userId string, scheduleCalendar map[string]interface{}) (response_dtos.RegisteredCalendarStatusResponseDTO, error) {
-	registerCalendarURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-calendar/register"
+func (adapter *ScheduleCalendarAdapter) RegisterScheduleCalendar(userId string) (response_dtos.RegisteredCalendarStatusResponseDTO, error) {
+	registerCalendarURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-day/register-time-bubble" 
 	headers := utils.BuildDefaultHeaders()
-	bodyResult, err := utils.BaseAPI(registerCalendarURL, "POST", scheduleCalendar, headers)
+	body := map[string]interface{}{
+		"userId": userId,
+	}
+	bodyResult, err := utils.BaseAPI(registerCalendarURL, "POST", body, headers)
 	if err != nil {
 		return response_dtos.RegisteredCalendarStatusResponseDTO{}, err
 	}
