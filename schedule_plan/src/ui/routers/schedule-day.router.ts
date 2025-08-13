@@ -16,3 +16,14 @@ scheduleDayRouter.get("/time-bubble-config/:userId",
         }
     }
 );
+
+scheduleDayRouter.post("/register-time-bubble/:userId",
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const scheduleTaskResult = await scheduleDayControllerImpl.registerScheduleConfig(req, next);
+            return returnResult(scheduleTaskResult, "FAIL", res, next);
+        } catch (error) {
+            next(error);
+        }
+    }
+);
