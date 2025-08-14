@@ -6,6 +6,7 @@ import { cx } from "../../kernels/utils/cx"
 import useScroll from "../../kernels/utils/userScroll"
 import LogoIcon from "../../components/icons/LogoIcon"
 import CalendarRegistration from "./CalendarRegisgtration"
+import FinishOnboarding from "./FinishOnboarding"
 
 const steps = [
   { id: 1, screenLabel: "Gaia Introduction" },
@@ -29,14 +30,9 @@ const StepContent = ({ stepIndex, onPrevious, onNext, onSkip }) => {
       )
     case 3:
       return (
-        <div>
-          <h2>Gaia Task Registration</h2>
-          <p>Register your tasks here...</p>
-          <div className="mt-4 flex gap-2">
-            <Button onClick={onSkip} variant="secondary">Skip</Button>
-            <Button onClick={onNext}>Finish</Button>
-          </div>
-        </div>
+        <div className="mx-auto mb-20 mt-28 max-w-9xl px-4 md:mt-32 md:px-6">
+          <FinishOnboarding onNext={onNext} onSkip={onSkip} onPrevious={onPrevious} />
+        </div >
       )
     default:
       return <p>Onboarding complete!</p>
