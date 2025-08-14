@@ -17,7 +17,7 @@ scheduleDayRouter.get("/time-bubble-config/:userId",
     }
 );
 
-scheduleDayRouter.post("/register-time-bubble/:userId",
+scheduleDayRouter.post("/register-time-bubble",
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const scheduleTaskResult = await scheduleDayControllerImpl.registerScheduleConfig(req, next);
