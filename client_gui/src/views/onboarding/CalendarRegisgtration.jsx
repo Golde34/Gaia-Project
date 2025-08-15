@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Card, Col, Grid, Metric, Badge, Title, Text } from "@tremor/react";
 import ChatComponent from "../chat_hub/ChatComponent";
 import TaskRegistration from "./TaskRegistration";
-import { motion } from "framer-motion";
 import ChatComponent2 from "../chat_hub/ChatComponent2";
 import { useMultiWS } from "../../kernels/context/MultiWSContext";
 import { getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
@@ -15,8 +14,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     const { messages, isConnected, sendMessage } = useMultiWS();
 
     const [scheduleCalendarRegistration, setScheduleCalendarRegistration] = useState(null);
-    const [viewMode, setViewMode] = useState('day'); // 'day' or 'week'
-    const [selectedDay, setSelectedDay] = useState('2'); // Default to Monday
+    const [selectedDay, setSelectedDay] = useState('1'); // Default to Monday
 
     useEffect(() => {
         const handleMessage = (message) => {
@@ -43,7 +41,6 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     useEffect(() => {
         if (!loading && !error && config) {
             const wrapped = { type: 'register_calendar', data: { response: config.data } };
-            console.log("Received time bubble config:", wrapped);
             setScheduleCalendarRegistration(wrapped);
         }
     }, [loading, error, config]);
@@ -93,18 +90,6 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
         );
     };
 
-    const renderWeekSchedule = () => {
-        return (
-            <div className="space-y-4">
-                {Object.keys(dayNames).map(dayKey => (
-                    <Card key={dayKey} className="p-4">
-                        {renderDaySchedule(dayKey)}
-                    </Card>
-                ))}
-            </div>
-        );
-    };
-
     const renderTotals = () => {
         const totals = scheduleCalendarRegistration?.data?.totals || {};
 
@@ -137,81 +122,52 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
                     </div>
                 </Col>
                 <Col numColSpan={5}>
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 20 }}
-                        transition={{ duration: 0.8, delay: 3 }}
-                    >
-                        <Card>
-                            {!scheduleCalendarRegistration ? (
-                                <TaskRegistration />
-                            ) : (
-                                <div className="space-y-4">
-                                    {/* View Mode Controls */}
-                                    <div className="flex items-center justify-between mb-4">
-                                        <Title className="text-xl">Your Calendar</Title>
-                                        <div className="flex space-x-2">
+                    <Card className="mt-4">
+                        {!scheduleCalendarRegistration ? (
+                            <TaskRegistration />
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="flex flex-row items-center justify-between mb-4">
+                                    <div className="flex flex-row space-x-2">
+                                        {Object.entries(dayNames).map(([dayKey, dayName]) => (
                                             <Button
-                                                variant={viewMode === 'day' ? 'primary' : 'secondary'}
+                                                key={dayKey}
+                                                variant={selectedDay === dayKey ? 'secondary' : 'light'}
                                                 size="sm"
-                                                onClick={() => setViewMode('day')}
+                                                onClick={() => setSelectedDay(dayKey)}
+                                                color="indigo"
                                             >
-                                                For days
+                                                {dayName}
                                             </Button>
-                                            <Button
-                                                variant={viewMode === 'week' ? 'primary' : 'secondary'}
-                                                size="sm"
-                                                onClick={() => setViewMode('week')}
-                                            >
-                                                For weeks
-                                            </Button>
-                                        </div>
+                                        ))}
                                     </div>
-
-                                    {/* Day Selector for Day View */}
-                                    {viewMode === 'day' && (
-                                        <div className="flex space-x-2 mb-4">
-                                            {Object.entries(dayNames).map(([dayKey, dayName]) => (
-                                                <Button
-                                                    key={dayKey}
-                                                    variant={selectedDay === dayKey ? 'primary' : 'light'}
-                                                    size="sm"
-                                                    onClick={() => setSelectedDay(dayKey)}
-                                                >
-                                                    {dayName}
-                                                </Button>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {/* Schedule Display */}
-                                    <Card className="p-4">
-                                        {viewMode === 'day' ? (
-                                            renderDaySchedule(selectedDay)
-                                        ) : (
-                                            renderWeekSchedule()
-                                        )}
-                                    </Card>
-
-                                    {/* Totals */}
-                                    {renderTotals()}
+                                    <Button
+                                        variant="primary"
+                                        color="indigo"
+                                        onClick={handleRegisterCalendar}
+                                    >
+                                        Register Calendar
+                                    </Button>
                                 </div>
-                            )}
 
-                            {/* Default fallback card when no data */}
-                            {scheduleCalendarRegistration && !scheduleCalendarRegistration.data && (
-                                <Card className="p-4 bg-white shadow-md rounded-lg">
-                                    <div className="text-gray-500">No schedule calendar data</div>
+                                {/* Schedule Display */}
+                                <Card className="p-4">
+                                    {renderDaySchedule(selectedDay)}
                                 </Card>
-                            )}
-                            <Button
-                                variant="secondary"
-                                className="mt-4"
-                                onClick={() => handleRegisterCalendar()}
-                            > register Calendar</Button>
-                        </Card>
-                    </motion.div>
+
+                                {/* Totals */}
+                                {renderTotals()}
+                            </div>
+                        )}
+
+                        {/* Default fallback card when no data */}
+                        {scheduleCalendarRegistration && !scheduleCalendarRegistration.data && (
+                            <Card className="p-4 bg-white shadow-md rounded-lg">
+                                <div className="text-gray-500">No schedule calendar data</div>
+                            </Card>
+                        )}
+
+                    </Card>
                     <div className="mt-4 flex justify-end gap-2">
                         <Button variant="secondary" onClick={onPrevious}>
                             Back

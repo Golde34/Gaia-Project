@@ -18,19 +18,19 @@ const StepContent = ({ stepIndex, onPrevious, onNext, onSkip }) => {
   switch (stepIndex) {
     case 1:
       return (
-        <div className="mx-auto mb-20 mt-28 max-w-7xl px-4 md:mt-32 md:px-6">
+        <div className="mx-auto mb-20 mt-10 max-w-7xl px-4 md:mt-20 md:px-6">
           <GaiaIntroduction onNext={onNext} onSkip={onSkip} />
         </div>
       )
     case 2:
       return (
-        <div className="mx-auto mb-20 mt-28 max-w-9xl px-4 md:mt-32 md:px-6">
+        <div className="mx-auto mb-20 max-w-9xl px-4 md:mt-20 md:px-6">
           <CalendarRegistration onNext={onNext} onSkip={onSkip} onPrevious={onPrevious} />
         </div >
       )
     case 3:
       return (
-        <div className="mx-auto mb-20 mt-28 max-w-9xl px-4 md:mt-32 md:px-6">
+        <div className="mx-auto mb-20 mt-20 max-w-9xl px-4 md:mt-20 md:px-6">
           <FinishOnboarding onNext={onNext} onSkip={onSkip} onPrevious={onPrevious} />
         </div >
       )
@@ -45,7 +45,7 @@ const Onboarding = () => {
 
   const handleNext = () => {
     if (stepIndex < steps.length) setStepIndex(stepIndex + 1)
-    else window.location.href = "/dashboard"
+    else window.location.href = "/client-gui/dashboard"
   }
 
   const handleSkip = () => {
