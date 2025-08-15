@@ -33,6 +33,13 @@ class ScheduleDayUsecase {
             console.log("Failed to register schedule config: ", scheduleConfigStatus);
             return false;
         }
+
+        const registerOptimizeTaskConfig = await schedulePlanService.registerTaskConfig(schedulePlan, registerScheduleConfig);
+        if (registerOptimizeTaskConfig !== ErrorStatus.SUCCESS) {
+            console.log("Failed to register optimize task config: ", registerOptimizeTaskConfig);
+            return false;
+        }
+
         return true;
     }
 

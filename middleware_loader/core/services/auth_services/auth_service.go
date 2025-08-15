@@ -28,17 +28,18 @@ func NewAuthService() *AuthService {
 var authValidator = validator.NewAuthDTOValidator()
 var signinResponesDTO = response_dtos.NewSigninResponseDTO()
 
-func (s *AuthService) Signup(ctx context.Context, input request_dtos.SignupDTO) (response_dtos.UserDetailDTO, error) {
+func (s *AuthService) Signup(ctx context.Context, input request_dtos.SignupDTO) (response_dtos.UserDetailDTO, string, error) {
 	err := authValidator.ValidateSignup(input)
 	if err != nil {
-		return response_dtos.UserDetailDTO{}, err
+		log.Println("Validation error:", err)
+		return response_dtos.UserDetailDTO{}, fmt.Sprint(err), nil
 	}
 	log.Println("Validation passed!")
 	signupResponse, err := client.IAuthAdapter(&adapter.AuthAdapter{}).Signup(input)
 	if err != nil {
-		return response_dtos.UserDetailDTO{}, err
+		return response_dtos.UserDetailDTO{}, "Auth service problem", nil 
 	}
-	return signupResponse, nil
+	return signupResponse, "", nil 
 }
 
 func (s *AuthService) Signin(ctx context.Context, input model.SigninInput) (model.AuthTokenResponse, response_dtos.AuthTokenResponseDTO, error) {

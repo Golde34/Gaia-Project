@@ -1,111 +1,172 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Card, Button, Metric, Text, Badge } from "@tremor/react";
+import { Card, Button, Metric, Text, Badge, Subtitle } from "@tremor/react";
 import { getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 import { queryTaskConfig } from "../../api/store/actions/onboarding/task-registration.actions";
 
 const FinishOnboarding = ({ onNext, onSkip, onPrevious }) => {
-    const dispatch = useDispatch();
-    const [status, setStatus] = useState({
-        timeBubble: null,
-        taskConfig: null,
-        task: null,
-        schedulePlan: null
-    });
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+  const [status, setStatus] = useState({
+    timeBubble: { ok: false, notReadyMessage: null },
+    taskConfig: { ok: false, notReadyMessage: null },
+    work: { ok: false, notReadyMessage: null }, // gộp Task + Schedule
+  });
+  const [loading, setLoading] = useState(true);
 
-    // Get time bubble config
-    const timeBubbleConfigList = useSelector(state => state.getTimeBubbleConfig);
-    const { config: timeBubbleConfig, loading: loadingBubble, error: errorBubble } = timeBubbleConfigList;
+  const timeBubbleConfigList = useSelector((state) => state.getTimeBubbleConfig);
+  const { config: timeBubbleConfig, loading: loadingBubble, error: errorBubble } = timeBubbleConfigList;
 
-    // Get task config
-    const taskConfigState = useSelector(state => state.queryTaskConfig);
-    const { loading: loadingTask, error: errorTask, data: taskConfigData } = taskConfigState;
+  const taskConfigState = useSelector((state) => state.queryTaskConfig);
+  const { loading: loadingTask, error: errorTask, taskRegistry: taskConfigData } = taskConfigState;
 
-    const fetchStatus = useCallback(() => {
-        setLoading(true);
-        setError(null);
-        dispatch(getTimeBubbleConfig());
-        dispatch(queryTaskConfig());
-    }, [dispatch]);
+  const didFetch = useRef(false);
+  const fetchStatus = useCallback(() => {
+    if (didFetch.current) return;
+    didFetch.current = true;
+    setLoading(true);
+    dispatch(getTimeBubbleConfig());
+    dispatch(queryTaskConfig());
+  }, [dispatch]);
 
-    useEffect(() => {
-        fetchStatus();
-    }, [fetchStatus]);
+  useEffect(() => {
+    fetchStatus();
+  }, [fetchStatus]);
 
-    useEffect(() => {
-        // Check time bubble config
-        let timeBubbleStatus = null;
-        if (errorBubble) {
-            timeBubbleStatus = { ok: false, message: "Failed to fetch Time Bubble info." };
-        } else if (!timeBubbleConfig || !Array.isArray(timeBubbleConfig.data) || timeBubbleConfig.data.length === 0) {
-            timeBubbleStatus = { ok: false, message: "No Time Bubble found. Cannot use Generate Daily Calendar feature." };
-        } else {
-            const draftBubble = timeBubbleConfig.data.find(b => b.status === "DRAFT");
-            if (draftBubble) {
-                timeBubbleStatus = { ok: false, message: "Time Bubble is in DRAFT status. Configuration not completed." };
-            } else {
-                timeBubbleStatus = { ok: true, message: "Time Bubble is created and completed." };
-            }
-        }
+  useEffect(() => {
+    // ---- TimeBubble ----
+    let timeBubble = { ok: false, notReadyMessage: null };
+    if (errorBubble) {
+      timeBubble.notReadyMessage = "Failed to fetch Time Bubble info.";
+    } else if (!timeBubbleConfig?.data?.schedule?.[0]) {
+      timeBubble.notReadyMessage = "No Time Bubble found.";
+    } else {
+      const draft = timeBubbleConfig.data.schedule[0]?.find?.((b) => b?.status === "DRAFT");
+      if (draft) {
+        timeBubble.notReadyMessage = "Time Bubble is in DRAFT.";
+      } else {
+        timeBubble = { ok: true, notReadyMessage: null };
+      }
+    }
 
-        // Check task config
-        let taskConfigStatus = null;
-        let taskStatus = null;
-        let schedulePlanStatus = null;
-        if (errorTask) {
-            taskConfigStatus = { ok: false, message: "Failed to fetch Task Config info." };
-        } else if (!taskConfigData || !taskConfigData.data) {
-            taskConfigStatus = { ok: false, message: "Task Config not registered. Cannot use work optimization feature." };
-        } else {
-            const { isTaskConfigExisted, isTaskExisted, isScheduleExisted } = taskConfigData.data;
-            taskConfigStatus = isTaskConfigExisted ? { ok: true, message: "Task Config registered." } : { ok: false, message: "Task Config not registered. Cannot use work optimization feature." };
-            taskStatus = isTaskExisted ? { ok: true, message: "Task exists." } : { ok: false, message: "No Task found. Cannot use Project feature." };
-            schedulePlanStatus = isScheduleExisted ? { ok: true, message: "Schedule Plan exists." } : { ok: false, message: "No Schedule Plan found. Cannot use Schedule feature." };
-        }
+    // ---- TaskConfig + Work ----
+    let taskConfig = { ok: false, notReadyMessage: null };
+    let work = { ok: false, notReadyMessage: null };
 
-        setStatus({
-            timeBubble: timeBubbleStatus,
-            taskConfig: taskConfigStatus,
-            task: taskStatus,
-            schedulePlan: schedulePlanStatus
-        });
-        setLoading(false);
-    }, [timeBubbleConfig, errorBubble, taskConfigData, errorTask]);
+    if (errorTask) {
+      taskConfig.notReadyMessage = "Failed to fetch Task Config.";
+      work.notReadyMessage = "Cannot verify Tasks & Schedule.";
+    } else if (!taskConfigData) {
+      taskConfig.notReadyMessage = "Task Config not registered.";
+      work.notReadyMessage = "Tasks & Schedule are unavailable.";
+    } else {
+      const { queryTaskConfig: qc, isTaskExisted, isScheduleExisted } = taskConfigData || {};
+      const hasTaskConfig = !!qc?.isTaskConfigExist;
 
-    return (
-        <Card className="p-6 max-w-xl mx-auto mt-10">
-            <Metric className="mb-4">Finish Onboarding</Metric>
-            {loading ? (
-                <Text>Checking status...</Text>
-            ) : (
-                <div className="space-y-4">
-                    <div>
-                        <Text className="font-semibold">Time Bubble Check:</Text>
-                        <Badge color={status.timeBubble?.ok ? "green" : "red"} className="ml-2">{status.timeBubble?.message}</Badge>
-                    </div>
-                    <div>
-                        <Text className="font-semibold">Task Config Check:</Text>
-                        <Badge color={status.taskConfig?.ok ? "green" : "red"} className="ml-2">{status.taskConfig?.message}</Badge>
-                    </div>
-                    <div>
-                        <Text className="font-semibold">Task Check:</Text>
-                        <Badge color={status.task?.ok ? "green" : "red"} className="ml-2">{status.task?.message}</Badge>
-                    </div>
-                    <div>
-                        <Text className="font-semibold">Schedule Plan Check:</Text>
-                        <Badge color={status.schedulePlan?.ok ? "green" : "red"} className="ml-2">{status.schedulePlan?.message}</Badge>
-                    </div>
-                </div>
-            )}
-            <div className="mt-6 flex justify-end gap-2">
-                <Button variant="secondary" onClick={onPrevious}>Back</Button>
-                <Button variant="light" onClick={onSkip}>Skip</Button>
-                <Button variant="primary" onClick={onNext}>Continue</Button>
+      taskConfig = hasTaskConfig
+        ? { ok: true, notReadyMessage: null }
+        : { ok: false, notReadyMessage: "Task Config not registered." };
+
+      // gộp: chỉ ok khi cả task & schedule đều tồn tại
+      if (isTaskExisted && isScheduleExisted) {
+        work = { ok: true, notReadyMessage: null };
+      } else {
+        work = {
+          ok: false,
+          notReadyMessage: !isTaskExisted
+            ? "No Task found."
+            : "No Schedule Plan found.",
+        };
+      }
+    }
+
+    setStatus({ timeBubble, taskConfig, work });
+
+    if (!loadingBubble && !loadingTask) setLoading(false);
+  }, [timeBubbleConfig, errorBubble, taskConfigData, errorTask, loadingBubble, loadingTask]);
+
+  const getFriendlyMessage = (s) => {
+    if (s.timeBubble.ok && s.taskConfig.ok && s.work.ok) return "🎉 There you go, all setup is done!";
+    const okCount = [s.timeBubble, s.taskConfig, s.work].filter((x) => x.ok).length;
+    if (okCount >= 2) return "👍 You are almost done! Just a few more steps.";
+    if (okCount >= 1) return "👌 That's okay, you can configure the rest later!";
+    return "Let's get started with your setup!";
+  };
+
+  return (
+    <>
+      {loading ? (
+        <Text>Checking status...</Text>
+      ) : (
+        <>
+          <Metric className="mb-4 text-3xl">{getFriendlyMessage(status)}</Metric>
+
+          <Card className="p-6 max-w-xl mx-auto mt-10">
+            <div className="space-y-6">
+              {/* Time Bubble */}
+              <div>
+                <Subtitle className="mt-2">
+                  {status.timeBubble.ok
+                    ? "🕒 Daily schedule with AI"
+                    : "AI Calendar is not ready yet."}
+                </Subtitle>
+                <Badge
+                  color={status.timeBubble.ok ? "green" : "yellow"}
+                  className="mt-2 text-base px-4 py-2 rounded-full"
+                >
+                  {status.timeBubble.ok ? "Ready! 🎉" : "Not Ready 😢"}
+                </Badge>
+                {!status.timeBubble.ok && status.timeBubble.notReadyMessage && (
+                  <Text className="mt-2">{status.timeBubble.notReadyMessage}</Text>
+                )}
+              </div>
+
+              {/* Task Config */}
+              <div>
+                <Subtitle className="mt-2">
+                  {status.taskConfig.ok
+                    ? "⚡ Working efficiently with Optimize algorithm"
+                    : "AI Work Optimization is not ready yet."}
+                </Subtitle>
+                <Badge
+                  color={status.taskConfig.ok ? "green" : "yellow"}
+                  className="mt-2 text-base px-4 py-2 rounded-full"
+                >
+                  {status.taskConfig.ok ? "Ready! 🚀" : "Not Ready 😢"}
+                </Badge>
+                {!status.taskConfig.ok && status.taskConfig.notReadyMessage && (
+                  <Text className="mt-2">{status.taskConfig.notReadyMessage}</Text>
+                )}
+              </div>
+
+              {/* Work (Tasks + Schedule) */}
+              <div>
+                <Subtitle className="mt-2">
+                  {status.work.ok
+                    ? "📋 Tasks Management & Schedule are ready"
+                    : "Tasks Management & Schedule setup is not ready yet."}
+                </Subtitle>
+                <Badge
+                  color={status.work.ok ? "green" : "yellow"}
+                  className="mt-2 text-base px-4 py-2 rounded-full"
+                >
+                  {status.work.ok ? "Ready! 🛠 Project & Schedule" : "Not Ready 😢"}
+                </Badge>
+                {!status.work.ok && status.work.notReadyMessage && (
+                  <Text className="mt-2">{status.work.notReadyMessage}</Text>
+                )}
+              </div>
             </div>
-        </Card>
-    );
+          </Card>
+
+          <div className="mt-6 flex justify-center gap-2">
+            <Button variant="secondary" onClick={onPrevious}>Back</Button>
+            <Button variant="light" onClick={onSkip}>Skip</Button>
+            <Button variant="primary" onClick={onNext}>Continue</Button>
+          </div>
+        </>
+      )}
+    </>
+  );
 };
 
 export default FinishOnboarding;

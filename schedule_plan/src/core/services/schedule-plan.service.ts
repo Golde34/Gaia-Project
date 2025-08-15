@@ -1,6 +1,6 @@
 import CacheSingleton from "../../infrastructure/cache/internal-cache/cache-singleton";
 import { authServiceAdapter } from "../../infrastructure/client/auth-service.adapter";
-import { workOptimizationAdapter } from "../../infrastructure/client/work-optimization..adapter";
+import { workOptimizationAdapter } from "../../infrastructure/client/work-optimization.adapter";
 import { schedulePlanRepository } from "../../infrastructure/repositories/schedule-plan.repo";
 import { returnInternalServiceErrorResponse } from "../../kernel/utils/return-result";
 import { IResponse, msg200, msg400 } from "../common/response";
@@ -130,11 +130,14 @@ class SchedulePlanService {
 
     async registerTaskConfig(schedulePlan: any, registerTaskConfig: any): Promise<string> {
         try {
+            const monday = registerTaskConfig.schedule[1];
+            const startSleepTime = monday.find((item: any) => item.tag === "sleep")?.start;
+            const endSleepTime = monday.find((item: any) => item.tag === "sleep")?.end;
             const taskConfig = {
                 userId: schedulePlan.userId,
                 sleepDuration: registerTaskConfig.sleep,
-                startSleepTime: registerTaskConfig.startSleepTime,
-                endSleepTime: registerTaskConfig.endSleepTime,
+                startSleepTime: startSleepTime,
+                endSleepTime: endSleepTime,
                 relaxTime: registerTaskConfig.relax,
                 eatTime: registerTaskConfig.eat,
                 travelTime: registerTaskConfig.travel,

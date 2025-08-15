@@ -156,17 +156,22 @@ func Signup(w http.ResponseWriter, r *http.Request, authService *services.AuthSe
 	}
 
 	input := mapper.SignupRequestDTOMapper(body)
-	result, err := authService.Signup(r.Context(), input)
+	result, validation, err := authService.Signup(r.Context(), input)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	response := map[string]interface{}{
-		"message":  "Signup successfully",
-		"userInfo": result,
+	var response = make(map[string]interface{})
+	if validation != "" {
+		response["validation"] = validation
+		response["message"] = "Signup failed"
+	} else {
+		response["message"] = "Signup successfully"
+		response["userInfo"] = result
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Error encoding response: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
