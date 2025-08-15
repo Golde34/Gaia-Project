@@ -105,7 +105,7 @@ const Sidebar = () => {
 							<Description>User Profile</Description>
 						</LinkWrapper>
 					</Col>
-					<Col numColSpan={1}>
+					{/* <Col numColSpan={1}>
 						<LinkWrapper href="/client-gui/onboarding">
 							<Button variant="primary" color="indigo"
 								className="p-2 rounded-lg mb-4">
@@ -113,7 +113,7 @@ const Sidebar = () => {
 							</Button>
 							<Description>Onboarding </Description>
 						</LinkWrapper>
-					</Col>
+					</Col> */}
 				</Grid>
 
 				{/* <ChartBarIcon

@@ -53,7 +53,7 @@ const UserProfileInfoScreen = (props) => {
                 </Col>
 
             </Grid>
-            <div className="flex justify-end p-2 rounded-lg mb-3">
+            {/* <div className="flex justify-end p-2 rounded-lg mb-3">
                 <Button
                     className="flex justify-end"
                     variant="primary"
@@ -62,6 +62,16 @@ const UserProfileInfoScreen = (props) => {
                         navigate('/privilege-role-dashboard');
                     }}
                 > Privilege And Role Dashboard</Button>
+            </div> */}
+            <div className="flex justify-end p-2 rounded-lg mb-3">
+                <Button
+                    className="flex justify-end"
+                    variant="primary"
+                    color="indigo"
+                    onClick={() => {
+                        navigate('/onboarding');
+                    }}
+                > Setting your calendar config</Button>
             </div>
         </Card>
     )
