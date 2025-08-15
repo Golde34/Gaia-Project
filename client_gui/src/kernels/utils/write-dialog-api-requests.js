@@ -8,6 +8,7 @@ import { registerTaskConfig } from '../../api/store/actions/onboarding/task-regi
 import { createNote } from '../../api/store/actions/task_manager/note.actions';
 import { chooseTaskBatch } from '../../api/store/actions/schedule_plan/schedule-task.action';
 import { createScheduleGroupAction } from '../../api/store/actions/schedule_plan/schedule-group.action';
+import { registerCalendarAction } from '../../api/store/actions/schedule_plan/schedule-calendar.action';
 
 export const useCreateGroupTaskDispatch = () => {
     const dispatch = useDispatch();
@@ -137,4 +138,14 @@ export const useUpdateUserModelDispatch = () => {
     }
 
     return updateUserModelDispatch;
+}
+
+export const useRegisterScheduleCalendarDispatch = () => {
+    const dispatch = useDispatch();
+
+    const registerScheduleCalendarDispatch = (scheduleCalendar) => {
+        dispatch(registerCalendarAction(scheduleCalendar));
+    }
+
+    return registerScheduleCalendarDispatch;
 }
