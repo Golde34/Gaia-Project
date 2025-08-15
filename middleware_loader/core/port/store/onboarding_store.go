@@ -20,7 +20,7 @@ func NewOnboardingStore(db database_mongo.Database) OnboardingStore {
 	}
 }
 
-func (store *OnboardingStore) CheckUserOnboarding(ctx context.Context, userId string) (entity.Onboarding, error) {
+func (store *OnboardingStore) CheckUserOnboarding(ctx context.Context, userId string) (entity.Onboarding, bool, error) {
 	collection := store.Database.Collection(store.Collection)
 	db := store.Database
 

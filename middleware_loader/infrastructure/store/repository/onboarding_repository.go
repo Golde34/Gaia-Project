@@ -18,20 +18,20 @@ func NewOnboardingRepository(db database_mongo.Database, collection database_mon
 	return OnboardingRepository{db, collection}
 }
 
-func (repo *OnboardingRepository) FindOneOrInsertOnboarding(ctx context.Context, userId string) (entity.Onboarding, error) {
+func (repo *OnboardingRepository) FindOneOrInsertOnboarding(ctx context.Context, userId string) (entity.Onboarding, bool, error) {
 	foundedOnboarding, err := repo.FindByUserId(ctx, userId)
 	if err == nil {
 		log.Println("Onboarding already exists for user:", userId)
-		return foundedOnboarding, nil
+		return foundedOnboarding, true, nil
 	}
 
 	newOnboarding := entity.NewOnboarding(userId, true)
 	result, err := repo.Collection.InsertOne(ctx, newOnboarding)
 	if err != nil {
-		return entity.Onboarding{}, err
+		return entity.Onboarding{}, false, err
 	}
 	log.Println("Inserted new onboarding for user:", userId, "Result:", result)
-	return *newOnboarding, nil
+	return *newOnboarding, false, nil
 }
 
 func (repo *OnboardingRepository) FindByUserId(ctx context.Context, userId string) (entity.Onboarding, error) {

@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"middleware_loader/core/domain/entity"
+	"log"
 	"middleware_loader/core/port/store"
 )
 
@@ -17,14 +17,13 @@ func NewOnboardingService(store store.OnboardingStore) *OnboardingService {
 }
 
 func (s *OnboardingService) CheckUserOnboarding(userId string) (bool, error) {
-	onboarding, err := s.Store.CheckUserOnboarding(context.Background(), userId)
+	onboarding, firstTime, err := s.Store.CheckUserOnboarding(context.Background(), userId)
 	if err != nil {
-		return false, err
+		return true, err
 	}
-	if onboarding == (entity.Onboarding{}) {
-		if !onboarding.FirstTime && onboarding.UserId == "" {
-			return false, nil
-		}
+	if !firstTime {
+		return true, nil
 	}
-	return true, nil
+	log.Printf("Onboarding details: %+v\n", onboarding)
+	return false, nil
 }
