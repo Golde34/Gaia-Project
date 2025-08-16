@@ -132,22 +132,4 @@ export default class ScheduleTaskEntity extends Model {
         field: "schedule_group_id",
     })
     scheduleGroupId!: string;
-
-    @Column({
-        type: DataType.JSONB,
-        field: "allowed_tag_codes"
-    })
-    allowedTagCodes?: string[];
-
-    @Column({
-        type: DataType.BOOLEAN,
-        field: "split_allowed"
-    })
-    splitAllowed?: boolean;
-
-    @Column({
-        type: DataType.INTEGER,
-        field: "min_chunk_minutes"
-    })
-    minChunkMinutes?: number;
 }
