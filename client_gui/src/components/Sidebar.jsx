@@ -5,6 +5,7 @@ import {
 	BookmarkIcon,
 	CalendarIcon,
 	ChartBarIcon,
+	ChatAltIcon,
 	ClipboardCheckIcon,
 	CogIcon,
 	CreditCardIcon,
@@ -82,7 +83,7 @@ const Sidebar = () => {
 						<LinkWrapper href="/client-gui/note-dashboard">
 							<Button variant="primary" color="indigo"
 								className="p-2 rounded-lg mb-4">
-								<BookmarkIcon width={20} />
+								<PencilAltIcon width={20} />
 							</Button>
 							<Description>Note </Description>
 						</LinkWrapper>
@@ -91,7 +92,7 @@ const Sidebar = () => {
 						<LinkWrapper href="/client-gui/chat">
 							<Button variant="primary" color="indigo"
 								className="p-2 rounded-lg mb-4">
-								<PencilAltIcon width={20} />
+								<ChatAltIcon width={20} />
 							</Button>
 							<Description>Chat Bot</Description>
 						</LinkWrapper>
