@@ -1,6 +1,7 @@
 package controller
 
 import (
+	base_dtos "chat_hub/core/domain/dtos/base"
 	"chat_hub/core/middleware"
 	usecases "chat_hub/core/usecase/chat"
 	"encoding/json"
@@ -91,10 +92,18 @@ func GetChatDialogues(w http.ResponseWriter, r *http.Request, dialogueUsecase *u
 	// userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	userId := "1"
 
-	response, err := dialogueUsecase.GetChatDialogues(userId, sizeInt, cursor)
+	dialogues, err := dialogueUsecase.GetChatDialogues(userId, sizeInt, cursor)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	response := base_dtos.ErrorResponse{
+		Status:        "Success",
+		StatusMessage: "Success",
+		ErrorCode:     200,
+		ErrorMessage:  "Chat dialogues retrieved successfully",
+		Data:         dialogues,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
