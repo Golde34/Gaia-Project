@@ -10,7 +10,7 @@ export const getAllDialoguesReducer = (
         case GET_ALL_DIALOGUES_REQUEST:
             return { ...state, loading: true };
         case GET_ALL_DIALOGUES_SUCCESS:
-            return { ...state, loading: false, dialogues: action.payload };
+            return { ...state, loading: false, dialogues: action.payload.data.dialogues, nextCursor: action.payload.data.nextCursor, hasMore: action.payload.data.hasMore };
         case GET_ALL_DIALOGUES_FAILURE:
             return { ...state, loading: false, error: action.payload };
         default:
