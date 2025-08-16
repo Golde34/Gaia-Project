@@ -17,29 +17,29 @@ const (
 func ValidateAccessToken() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			noAuthRequired := []string{"/chat-system", "refresh-token"}
+			// noAuthRequired := []string{"/chat-system", "refresh-token"}
 
-			for _, path := range noAuthRequired {
-				if strings.Contains(r.URL.Path, path) {
-					next.ServeHTTP(w, r)
-					return
-				}
-			}
+			// for _, path := range noAuthRequired {
+			// 	if strings.Contains(r.URL.Path, path) {
+			// 		next.ServeHTTP(w, r)
+			// 		return
+			// 	}
+			// }
 
-			validateRefreshToken := validateRefreshToken(r, w)
-			if !validateRefreshToken {
-				http.Error(w, "Unauthorized", http.StatusForbidden)
-				return
-			}
+			// validateRefreshToken := validateRefreshToken(r, w)
+			// if !validateRefreshToken {
+			// 	http.Error(w, "Unauthorized", http.StatusForbidden)
+			// 	return
+			// }
 
-			accessToken, ctxWithUser := validateAccessToken(r, w)
-			if accessToken == "" || ctxWithUser == nil {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
+			// accessToken, ctxWithUser := validateAccessToken(r, w)
+			// if accessToken == "" || ctxWithUser == nil {
+			// 	http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			// 	return
+			// }
 
 			// test without validate access token
-			// ctxWithUser := context.WithValue(r.Context(), ContextKeyUserId, "1")
+			ctxWithUser := context.WithValue(r.Context(), ContextKeyUserId, "1")
 
 			next.ServeHTTP(w, r.WithContext(ctxWithUser))
 		})

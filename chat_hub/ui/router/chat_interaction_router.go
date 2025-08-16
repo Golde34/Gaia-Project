@@ -19,6 +19,7 @@ type ChatInteractionRouter struct {
 func NewChatInteractionRouter(db *sql.DB, r *chi.Mux) *ChatInteractionRouter {
 	chatUsecase := usecases.NewChatUsecase(db)
 	chatHistoryUsecase := usecases.NewChatHistoryUsecase(db)
+	chatDialogueUsecase := usecases.NewChatDialogueUsecase(db)
 
 	r.Route("/chat-interaction", func(r chi.Router) {
 		r.Post("/initiate-chat", func(w http.ResponseWriter, r *http.Request) {
@@ -26,6 +27,9 @@ func NewChatInteractionRouter(db *sql.DB, r *chi.Mux) *ChatInteractionRouter {
 		})
 		r.Get("/history", func(w http.ResponseWriter, r *http.Request) {
 			controller.GetChatHistory(w, r, chatHistoryUsecase)
+		})
+		r.Get("/dialogues", func(w http.ResponseWriter, r *http.Request) {
+			controller.GetChatDialogues(w, r, chatDialogueUsecase)
 		})
 	})
 

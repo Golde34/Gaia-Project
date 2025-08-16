@@ -110,3 +110,20 @@ func (s *DialogueService) GetDialogueById(userId, dialogueId string) (entity.Use
 
 	return dialogue, err 
 }
+
+func (s *DialogueService) GetAllDialoguesByUserId(userId string, size int, cursor string) ([]entity.UserDialogueEntity, bool, error) {
+	dialogues, hasMore, err := s.dialogueRepo.GetAllDialoguesByUserId(userId, size, cursor)
+	if err != nil {
+		log.Println("Error retrieving dialogues from repository:", err)
+		return nil, false, err 
+	}
+	if len(dialogues) == 0 {
+		log.Println("No dialogues found for user:", userId)
+		return nil, false, nil
+	}
+
+	var result []entity.UserDialogueEntity
+	result = append(result, dialogues...)
+
+	return result, hasMore, nil 
+}

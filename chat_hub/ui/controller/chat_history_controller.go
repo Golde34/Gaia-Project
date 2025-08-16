@@ -74,3 +74,32 @@ func GetChatHistory(w http.ResponseWriter, r *http.Request, chatUsecase *usecase
 		return
 	}
 }
+
+func GetChatDialogues(w http.ResponseWriter, r *http.Request, dialogueUsecase *usecases.ChatDialogueUsecase) {
+	size := r.URL.Query().Get("size")
+	if size == "" {
+		size = "20" 
+	}
+	sizeInt, err := strconv.Atoi(size)
+	if err != nil {
+		http.Error(w, "Invalid size parameter", http.StatusBadRequest)
+		return
+	}
+
+	cursor := r.URL.Query().Get("cursor")
+
+	// userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	userId := "1"
+
+	response, err := dialogueUsecase.GetChatDialogues(userId, sizeInt, cursor)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
