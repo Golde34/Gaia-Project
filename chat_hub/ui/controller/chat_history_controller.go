@@ -89,13 +89,17 @@ func GetChatDialogues(w http.ResponseWriter, r *http.Request, dialogueUsecase *u
 
 	cursor := r.URL.Query().Get("cursor")
 
-	// userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
-	userId := "1"
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 
-	dialogues, err := dialogueUsecase.GetChatDialogues(userId, sizeInt, cursor)
+	dialogues, nextCursor, hasMore, err := dialogueUsecase.GetChatDialogues(userId, sizeInt, cursor)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+	data := map[string]interface{}{
+		"dialogues":  dialogues,
+		"nextCursor": nextCursor,
+		"hasMore":    hasMore,
 	}
 
 	response := base_dtos.ErrorResponse{
@@ -103,7 +107,7 @@ func GetChatDialogues(w http.ResponseWriter, r *http.Request, dialogueUsecase *u
 		StatusMessage: "Success",
 		ErrorCode:     200,
 		ErrorMessage:  "Chat dialogues retrieved successfully",
-		Data:         dialogues,
+		Data:         data,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

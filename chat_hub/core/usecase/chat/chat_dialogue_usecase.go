@@ -1,8 +1,10 @@
-package usecases 
+package usecases
 
 import (
+	entity "chat_hub/core/domain/entities"
 	"chat_hub/core/services"
 	"database/sql"
+	"time"
 )
 
 type ChatDialogueUsecase struct {
@@ -19,19 +21,16 @@ func NewChatDialogueUsecase(db *sql.DB) *ChatDialogueUsecase {
 	}
 }
 
-func (s *ChatDialogueUsecase) GetChatDialogues(userId string, size int, cursor string) ([]map[string]interface{}, error) {
+func (s *ChatDialogueUsecase) GetChatDialogues(userId string, size int, cursor string) ([]entity.UserDialogueEntity, string, bool, error) {
 	dialogues, hasMore, err := s.dialogueService.GetAllDialoguesByUserId(userId, size, cursor)
 	if err != nil {
-		return nil, err
+		return nil, "", false, err 
 	}
 
-	var response[]map[string]interface{}
-	for _, dialogue := range dialogues {
-		response = append(response, map[string]interface{}{
-			"dialogue": dialogue,
-			"hasMore":  hasMore,
-		})
+	var nextCursor string
+	if len(dialogues) > 0 {
+		nextCursor = dialogues[0].CreatedAt.Format(time.RFC3339)
 	}
 
-	return response, nil
+	return dialogues, nextCursor, hasMore, nil
 }

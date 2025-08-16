@@ -16,7 +16,6 @@ type UserDialogueEntity struct {
 func NewUserDialogueRow(row map[string]interface{}) UserDialogueEntity {
 	return UserDialogueEntity{
 		ID:             string(row["id"].([]byte)),
-		UserID:         row["user_id"].(int64),
 		DialogueName:   row["dialogue_name"].(string),
 		DialogueType:   row["dialogue_type"].(string),
 		DialogueStatus: row["dialogue_status"].(bool),
