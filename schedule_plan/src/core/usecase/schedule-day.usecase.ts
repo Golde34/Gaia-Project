@@ -73,17 +73,26 @@ class ScheduleDayUsecase {
 
     async findDailyScheduleTasks(userId: number): Promise<IResponse | undefined> {
         try {
+            return await schedulePlanUsecase.findOptimizedScheduleTasksByUserId(userId);
+        } catch (error: any) {
+            console.error("Error generating daily calendar:", error.message);
+            return msg400("Error generating daily calendar");
+        }
+    }
+
+    async generateDailyCalendar(userId: number, scheduleTasks: any[]): Promise<IResponse | undefined> {
+        try {
             // get user time bubble query by userId and weekDay
-            // const weekDay: number = new Date().getDay();
-            // const timeBubble = await scheduleDayService.inquiryTimeBubbleByUserIdAndWeekday(userId, weekDay);
-            // get list tasks todo or inprogress
-            const scheduleTasks = await schedulePlanUsecase.findOptimizedScheduleTasksByUserId(userId);
-            // in case they are not optimized by the algorithm, call api to optimize them
-            // get list tasks must do of user in the schedule plan
-            // if the tasks dont have their  tag, using ai to generate the tag
+            const weekDay: number = new Date().getDay();
+            const timeBubble = await scheduleDayService.inquiryTimeBubbleByUserIdAndWeekday(userId, weekDay);
+            // if the tasks dont have their tag, using ai to generate the tag
+            // handleTaskTag()
             // after you get the tag for each task, trace back their project, their group task, and mark them a respective tag using asynchronous kafka flow
+            // pushKafkaToUpdateTag();
             // match the tasks with the time bubble
+            // matchTasksWithTimeBubble(timeBubble, scheduleTasks);
             // generate the daily calendar
+            return msg200("Daily calendar generated successfully");
         } catch (error: any) {
             console.error("Error generating daily calendar:", error.message);
             return msg400("Error generating daily calendar");
