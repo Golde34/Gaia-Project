@@ -5,13 +5,14 @@ import { getChatHistory, sendSSEChatMessage } from "../../api/store/actions/chat
 import { Button, Card, Col, Grid, TextInput } from "@tremor/react";
 import { useSearchParams } from "react-router-dom";
 
-export default function ChatComponent2(props) {
+export default function ChatComponent(props) {
+    const isDashboard = props.isDashboard === undefined ? false : props.isDashboard;
     const chatType = props.chatType === undefined ? "" : props.chatType;
     const tabId = getTabId();
 
     const dispatch = useDispatch();
-	const [searchParams] = useSearchParams();
-	const dialogueId = searchParams.get("dialogueId") ?? "";
+    const [searchParams] = useSearchParams();
+    const dialogueId = searchParams.get("dialogueId") ?? "";
 
     const [size] = useState(20);
     const [chatInput, setChatInput] = useState("");
@@ -29,7 +30,6 @@ export default function ChatComponent2(props) {
 
     const getChatMessages = useCallback((loadCursor) => {
         const cursorToUse = loadCursor || nextCursor || "";
-		console.log("Dialogue ID:", dialogueId);
         dispatch(getChatHistory(size, cursorToUse, dialogueId, chatType));
     }, [dispatch, size, nextCursor]);
 
@@ -109,6 +109,10 @@ export default function ChatComponent2(props) {
             console.error("Failed to send chat message:", error);
         }
     };
+
+    const getDashboardClass = (isDashboard) =>
+        `flex flex-col ${isDashboard ? 'h-[40vh]' : 'h-[80vh]'}`;
+
     return (
         <>
             {loading && !chatHistory.length ? (
@@ -116,7 +120,7 @@ export default function ChatComponent2(props) {
             ) : error ? (
                 <p>Error when loading chat history: {error}</p>
             ) : (
-                <Card className="flex flex-col h-[80vh]">
+                <Card className={getDashboardClass(isDashboard)}>
                     <div
                         ref={messagesContainerRef}
                         className="flex-1 overflow-auto p-4 space-y-3"
