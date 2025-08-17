@@ -42,6 +42,20 @@ class TimeBubbleRepository {
             throw error;
         }
     }
+
+    async findByUserIdAndWeekday(userId: number, weekDay: number): Promise<any> {
+        try {
+            return await TimeBubblesEntity.findOne({
+                where: {
+                    userId: userId,
+                    dayOfWeek: weekDay
+                }
+            });
+        } catch (error: any) {
+            console.error("Error finding time bubble by user ID and weekday:", error.message);
+            throw error;
+        }
+    }
 }
 
 export const timeBubbleRepository = new TimeBubbleRepository();

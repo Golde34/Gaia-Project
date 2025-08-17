@@ -2,6 +2,7 @@ import { IResponse, msg200, msg400 } from "../common/response";
 import { ActiveStatus, ErrorStatus } from "../domain/enums/enums";
 import { scheduleDayService } from "../services/schedule-day.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
+import { schedulePlanUsecase } from "./schedule-plan.usecase";
 
 class ScheduleDayUsecase {
     constructor() { }
@@ -70,6 +71,24 @@ class ScheduleDayUsecase {
         }
     }
 
+    async generateDailyCalendar(userId: number): Promise<IResponse | undefined> {
+        try {
+            // get user time bubble query by userId and weekDay
+            const weekDay: number = new Date().getDay();
+            const timeBubble = await scheduleDayService.inquiryTimeBubbleByUserIdAndWeekday(userId, weekDay);
+            // get list tasks todo or inprogress
+            const scheduleTasks = await schedulePlanUsecase.optimizedAndListTasksByUserId(userId);
+            // in case they are not optimized by the algorithm, call api to optimize them
+            // get list tasks must do of user in the schedule plan
+            // if the tasks dont have their  tag, using ai to generate the tag
+            // after you get the tag for each task, trace back their project, their group task, and mark them a respective tag using asynchronous kafka flow
+            // match the tasks with the time bubble
+            // generate the daily calendar
+        } catch (error: any) {
+            console.error("Error generating daily calendar:", error.message);
+            return msg400("Error generating daily calendar");
+        }
+    }
 }
 
 export const scheduleDayUsecase = new ScheduleDayUsecase();

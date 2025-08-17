@@ -77,7 +77,6 @@ export const getLLMModels = () => async (dispatch) => {
     dispatch({ type: LLM_MODEL_LIST_REQUEST, payload: null });
     try {
         const { data } = await serverRequest('/user-model/get-all-models', HttpMethods.GET, portName.middlewarePort);
-        console.log("getLLMModels data: ", data.llmModels);
         dispatch({ type: LLM_MODEL_LIST_SUCCESS, payload: data });
     } catch (error) {
         dispatch({

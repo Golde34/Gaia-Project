@@ -76,16 +76,13 @@ const Navbar = () => {
     const debounceRef = useRef(null);
 
     useEffect(() => {
-        clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            userNotification();
-        }, 200);
-    }, [])
+        if (debounceRef.current) return;
+        userNotification();
+        debounceRef.current = true;
+    }, [userNotification]);
 
     useEffect(() => {
-        if (notiLoading == false && notificationJwt) {
-            console.log("Connected to notification service");
-        }
+        if (notiLoading == false && notificationJwt) return;
     }, [notificationJwt]);
 
     // Loading chat hub websocket
@@ -94,20 +91,17 @@ const Navbar = () => {
     const getUserJwt = useCallback(() => {
         dispatch(getUserChatHubJwt());
     }, [dispatch]);
-    const chDebounceRef = useRef(null);
+    const chDebounceRef = useRef();
 
     useEffect(() => {
-        clearTimeout(chDebounceRef.current);
-        chDebounceRef.current = setTimeout(() => {
-            getUserJwt();
-        }, 200);
-    }, []);
+        if (chDebounceRef.current) return;
+        getUserJwt();
+        chDebounceRef.current = true;
+    }, [getUserJwt]);
 
     useEffect(() => {
-        if (chLoading == false && chatHubJwt) {
-            console.log("Connected to chat service");
-        }
-    })
+        if (chLoading == false && chatHubJwt) return;
+    }, [chatHubJwt])
     return (
         <div id="top" className="relative w-full sm:flex justify-between item-center p-2 mb-10">
             {/* Make item center */}

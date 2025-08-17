@@ -24,7 +24,6 @@ function ContentArea() {
   }, [getOnboardingCallback]);
 
   useEffect(() => {
-    console.log("Onboarding data:", onboardingData);
     if (!loading && !error && onboardingData) {
       navigate("/onboarding");
     }

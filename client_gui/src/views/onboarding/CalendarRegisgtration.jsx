@@ -1,9 +1,8 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Card, Col, Grid, Metric, Badge, Title, Text } from "@tremor/react";
-import ChatComponent from "../chat_hub/ChatComponent";
 import TaskRegistration from "./TaskRegistration";
-import ChatComponent2 from "../chat_hub/ChatComponent2";
+import ChatComponent from "../chat_hub/ChatComponent";
 import { useMultiWS } from "../../kernels/context/MultiWSContext";
 import { getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 import { dayNames, tagColors } from "../../kernels/utils/calendar";
@@ -118,7 +117,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
             <Grid numItems={9}>
                 <Col numColSpan={4}>
                     <div className="m-4">
-                        <ChatComponent2 chatType={'register_calendar'} />
+                        <ChatComponent chatType={'register_calendar'} />
                     </div>
                 </Col>
                 <Col numColSpan={5}>

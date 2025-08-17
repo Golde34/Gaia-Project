@@ -57,11 +57,16 @@ const baseRequest = async (api, method, portConfig, body, headers) => {
                 const refreshUrl = `http://${config.serverHost}:${config[portName]}/auth/refresh-token`;
                 console.info('Access token expired, trying to refresh...');
                 try {
-                    await _fetchData(refreshUrl, HttpMethods.POST, null, headers);
-                    // Retry the original request with the new access token
-                    return await _fetchData(url, method, body, headers);
+                    const refreshRes = await _fetchData(refreshUrl, HttpMethods.POST, null, headers);
+                    if (refreshRes && refreshRes.status === 200) {
+                        return await _fetchData(url, method, body, headers);
+                    }
+                    console.error('Refresh token failed (non-200), redirecting to login');
+                    window.location.href = '/client-gui/signin';
+                    return response;
                 } catch (refreshErr) {
                     console.error('Refresh token failed, redirecting to login', refreshErr);
+                    window.location.href = '/client-gui/signin';
                     throw refreshErr;
                 }
             }

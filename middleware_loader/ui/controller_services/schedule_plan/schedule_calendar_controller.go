@@ -49,6 +49,21 @@ func RegisterScheduleCalendar(w http.ResponseWriter, r *http.Request, scheduleCa
 	}
 }
 
+func GenerateDailyCalendar(w http.ResponseWriter, r *http.Request, scheduleCalendarService *services.ScheduleCalendarService) {
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	generatedCalendarStatus, err := scheduleCalendarService.GenerateDailyCalendar(userId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(generatedCalendarStatus); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func GetUserDailyTasks(w http.ResponseWriter, r *http.Request, scheduleCalendarService *services.ScheduleCalendarService) {
 	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	dailyTasks, err := scheduleCalendarService.GetUserDailyTasks(userId)

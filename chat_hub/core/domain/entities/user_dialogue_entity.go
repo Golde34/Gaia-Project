@@ -12,3 +12,15 @@ type UserDialogueEntity struct {
 	CreatedAt      time.Time `db:"created_at" json:"createdAt"`
 	UpdatedAt      time.Time `db:"updated_at" json:"updatedAt"`
 }
+
+func NewUserDialogueRow(row map[string]interface{}) UserDialogueEntity {
+	return UserDialogueEntity{
+		ID:             string(row["id"].([]byte)),
+		DialogueName:   row["dialogue_name"].(string),
+		DialogueType:   row["dialogue_type"].(string),
+		DialogueStatus: row["dialogue_status"].(bool),
+		Metadata:       row["metadata"].(string),
+		CreatedAt:      row["created_at"].(time.Time),
+		UpdatedAt:      row["updated_at"].(time.Time),
+	}
+}

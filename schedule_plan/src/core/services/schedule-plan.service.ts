@@ -52,7 +52,7 @@ class SchedulePlanService {
 
     async findSchedulePlanById(schedulePlanId: string): Promise<IResponse> {
         try {
-            const schedulePlan = await schedulePlanRepository.findSchedulePlanById(schedulePlanId);
+            const schedulePlan = await this.getSchedulePlanById(schedulePlanId);
             return msg200({
                 schedulePlan: schedulePlan
             });

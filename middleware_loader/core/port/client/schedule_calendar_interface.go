@@ -6,4 +6,5 @@ type IScheduleCalendarAdapter interface {
 	GetTimeBubbleConfig(userId string) ([]response_dtos.TimeBubbleConfigDTO, error)
 	GetUserDailyTasks(userId string) (response_dtos.DailyTasksResponseDTO, error)
 	RegisterScheduleCalendar(userId string) (response_dtos.RegisteredCalendarStatusResponseDTO, error)
+	GenerateDailyCalendar(userId string) (map[string]interface{}, error)
 }

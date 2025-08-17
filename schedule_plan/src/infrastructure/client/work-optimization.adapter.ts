@@ -8,12 +8,14 @@ const workOptimizationServiceDomain = process.env.WORK_OPTIMIZATION_SERVICE_DOMA
 
 class WorkOptimizationAdapter {
     private registerTaskConfigURL: string;
+    private optimizeTasksByUserIdURL: string;
 
     constructor() {
         if (!workOptimizationServiceDomain) {
             throw new Error("Work optimization service domain is not provided");
         }
         this.registerTaskConfigURL = workOptimizationServiceDomain + process.env.WORK_OPTIMIZATION_SERVICE_REGISTER_TASK_CONFIG_URL;
+        this.optimizeTasksByUserIdURL = workOptimizationServiceDomain + process.env.WORK_OPTIMIZATION_SERVICE_OPTIMIZE_TASKS_BY_USER_ID_URL;
     }
 
     async registerTaskConfig(taskConfig: any): Promise<any> {
@@ -26,6 +28,33 @@ class WorkOptimizationAdapter {
                 method: HttpMethod.POST,
                 body: JSON.stringify(taskConfig)
             });
+
+            if (response.status !== 200) {
+                return getInternalServiceErrorResponse(response.status);
+            }
+            const data = await response.json();
+            console.log("Response from work optimization service: ", data);
+            return data.data;
+        } catch (error: any) {
+            console.log("Exception when calling work optimization service");
+            return getInternalServiceErrorResponse(HttpCodeMessage.INTERNAL_SERVER_ERROR); 
+        }
+    }
+
+    async optimizeTasksByUserId(userId: number): Promise<any> {
+        try {
+            const headers = buildDefaultHeaders({});
+            const uri = this.optimizeTasksByUserIdURL;
+            console.log(`Calling api to work optimization service...`);
+            const body = {
+                userId: userId,
+                optimizedDate: new Date().toLocaleDateString()
+            };
+            const response = await fetch(uri, {
+                headers,
+                method: HttpMethod.POST,
+                body: JSON.stringify(body)
+            }); 
 
             if (response.status !== 200) {
                 return getInternalServiceErrorResponse(response.status);

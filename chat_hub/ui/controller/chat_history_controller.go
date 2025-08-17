@@ -1,6 +1,7 @@
 package controller
 
 import (
+	base_dtos "chat_hub/core/domain/dtos/base"
 	"chat_hub/core/middleware"
 	usecases "chat_hub/core/usecase/chat"
 	"encoding/json"
@@ -66,6 +67,47 @@ func GetChatHistory(w http.ResponseWriter, r *http.Request, chatUsecase *usecase
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func GetChatDialogues(w http.ResponseWriter, r *http.Request, dialogueUsecase *usecases.ChatDialogueUsecase) {
+	size := r.URL.Query().Get("size")
+	if size == "" {
+		size = "20" 
+	}
+	sizeInt, err := strconv.Atoi(size)
+	if err != nil {
+		http.Error(w, "Invalid size parameter", http.StatusBadRequest)
+		return
+	}
+
+	cursor := r.URL.Query().Get("cursor")
+
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+
+	dialogues, nextCursor, hasMore, err := dialogueUsecase.GetChatDialogues(userId, sizeInt, cursor)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	data := map[string]interface{}{
+		"dialogues":  dialogues,
+		"nextCursor": nextCursor,
+		"hasMore":    hasMore,
+	}
+
+	response := base_dtos.ErrorResponse{
+		Status:        "Success",
+		StatusMessage: "Success",
+		ErrorCode:     200,
+		ErrorMessage:  "Chat dialogues retrieved successfully",
+		Data:         data,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

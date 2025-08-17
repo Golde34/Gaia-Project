@@ -24,6 +24,15 @@ class ScheduleDayController {
             next(error);
         }
     }
+
+    async generateDailyCalendar(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const userId = req.body.userId;
+            return await scheduleDayUsecase.generateDailyCalendar(userId);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export const scheduleDayController = new ScheduleDayController();

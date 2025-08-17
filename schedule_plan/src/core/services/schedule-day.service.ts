@@ -65,6 +65,14 @@ class ScheduleDayService {
         }
     }
 
+    async inquiryTimeBubbleByUserIdAndWeekday(userId: number, weekDay: number): Promise<any> {
+        try {
+            return await timeBubbleRepository.findByUserIdAndWeekday(userId, weekDay);
+        } catch (error: any) {
+            console.error("Error inquiring time bubble by user ID and weekday:", error);
+            throw error;
+        }
+    }
 }
 
 export const scheduleDayService = new ScheduleDayService();
