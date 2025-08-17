@@ -92,7 +92,7 @@ func (adapter *ScheduleCalendarAdapter) RegisterScheduleCalendar(userId string) 
 }
 
 func (adapter *ScheduleCalendarAdapter) GenerateDailyCalendar(userId string) (map[string]interface{}, error) {
-	generateDailyCalendarURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-day/generate-daily-calendar/" + userId
+	generateDailyCalendarURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-day/generate-daily-calendar" 
 	var body = map[string]interface{}{
 		"userId": userId,
 	}
