@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Template from '../../components/template/Template';
 import CardItem from '../../components/subComponents/CardItem';
 import dayjs from 'dayjs';
-import { Button, Card, Col, Dialog, DialogPanel, Flex, Grid, Metric, Subtitle, Text } from '@tremor/react';
+import { Button, Card, Col, Dialog, DialogPanel, Flex, Grid, Metric, Text } from '@tremor/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getScheduleTaskBatchList, getScheduleTaskList } from '../../api/store/actions/schedule_plan/schedule-task.action';
 import MessageBox from '../../components/subComponents/MessageBox';
@@ -12,7 +11,6 @@ import CalendarChart from '../../screens/scheduleTaskScreen/CalendarChart';
 
 function ContentArea() {
     const dispatch = useDispatch();
-    const navigate = useNavigate();
 
     const currentDate = dayjs();
     const [selectDate, setSelectDate] = useState(currentDate);
@@ -86,15 +84,9 @@ function ContentArea() {
                 <MessageBox message={error} />
             ) : (
                 <>
-                    <Metric style={{ marginBottom: '30px', marginTop: '10px' }}
+                    <Metric style={{ marginBottom: '30px', marginTop: '30px' }}
                         className="text-2xl font-bold text-gray-800"> Schedule Calendar
                     </Metric>
-                    <Flex justifyContent='end'>
-                        <Button type='button' className="col-span-5 mb-1" variant='secondary'
-                            color='indigo' onClick={() => navigate('/fixed-schedule-tasks')}>
-                            See your fixed schedule tasks you must do
-                        </Button>
-                    </Flex>
                     <Card className='mt-4'>
                         <div className="flex gap-10 sm:divide-x justify-center mt-10 mb-10">
                             <CalendarChart currentDate={currentDate} selectDate={selectDate}

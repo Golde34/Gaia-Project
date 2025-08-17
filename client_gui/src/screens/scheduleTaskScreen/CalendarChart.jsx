@@ -48,7 +48,8 @@ const CalendarChart = (props) => {
     const listCenterButton = [
         { name: 'Add Event', color: 'rose' },
         { name: 'Optimize task list', color: 'green', onClick: () => handleOptimizeClick() },
-        { name: 'Full calendar', color: 'indigo', onClick: () => navigate('/calendar') },
+        { name: 'View Fixed Schedule Task', color: 'indigo', onClick: () => navigate('/fixed-schedule-tasks') },
+        { name: 'Full calendar', color: 'blue', onClick: () => navigate('/calendar') },
     ]
 
     return (
