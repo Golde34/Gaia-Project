@@ -42,18 +42,26 @@ func (s *ScheduleCalendarService) ReturnTimeBubbleMap(timeBubbleConfigs []respon
     }
 }
 
-func (s *ScheduleCalendarService) GetUserDailyTasks(userId string) (response_dtos.DailyTasksResponseDTO, error) {
-	dailyTasks, err := client.IScheduleCalendarAdapter(&adapter.ScheduleCalendarAdapter{}).GetUserDailyTasks(userId)
-	if err != nil {
-		return response_dtos.DailyTasksResponseDTO{}, err
-	}
-	return dailyTasks, nil
-}
-
 func (s *ScheduleCalendarService) RegisterScheduleCalendar(userId string) (response_dtos.RegisteredCalendarStatusResponseDTO, error) {
 	registeredCalendarStatus, err := client.IScheduleCalendarAdapter(&adapter.ScheduleCalendarAdapter{}).RegisterScheduleCalendar(userId)
 	if err != nil {
 		return response_dtos.RegisteredCalendarStatusResponseDTO{}, err
 	}
 	return registeredCalendarStatus, nil
+}
+
+func (s *ScheduleCalendarService) GenerateDailyCalendar(userId string) (map[string]interface{}, error) {
+	generatedTasks, err := client.IScheduleCalendarAdapter(&adapter.ScheduleCalendarAdapter{}).GenerateDailyCalendar(userId)
+	if err != nil {
+		return nil, err
+	}
+	return generatedTasks, nil
+}
+
+func (s *ScheduleCalendarService) GetUserDailyTasks(userId string) (response_dtos.DailyTasksResponseDTO, error) {
+	dailyTasks, err := client.IScheduleCalendarAdapter(&adapter.ScheduleCalendarAdapter{}).GetUserDailyTasks(userId)
+	if err != nil {
+		return response_dtos.DailyTasksResponseDTO{}, err
+	}
+	return dailyTasks, nil
 }
