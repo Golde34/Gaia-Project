@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Template from '../../components/template/Template';
 import CardItem from '../../components/subComponents/CardItem';
 import dayjs from 'dayjs';
@@ -8,10 +9,10 @@ import { getScheduleTaskBatchList, getScheduleTaskList } from '../../api/store/a
 import MessageBox from '../../components/subComponents/MessageBox';
 import TaskBatchScreen from '../../screens/scheduleTaskScreen/TaskBatchScreen';
 import CalendarChart from '../../screens/scheduleTaskScreen/CalendarChart';
-import { ScheduleGroups } from '../../screens/scheduleTaskScreen/ScheduleGroups';
 
 function ContentArea() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const currentDate = dayjs();
     const [selectDate, setSelectDate] = useState(currentDate);
@@ -23,13 +24,12 @@ function ContentArea() {
         dispatch(getScheduleTaskList());
     }, [dispatch]);
 
-    const debounceRef = useRef(null);
+    const debounceRef = useRef();
     useEffect(() => {
-        clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            getListScheduleTasks();
-        }, 200);
-    }, [])
+        if (debounceRef.current) return;
+        getListScheduleTasks();
+        debounceRef.current = true; 
+    }, [getListScheduleTasks]);
 
     let [isOpen, setIsOpen] = useState(false);
     function closeModal() {
@@ -86,12 +86,17 @@ function ContentArea() {
                 <MessageBox message={error} />
             ) : (
                 <>
-                    <Metric style={{ marginBottom: '30px', marginTop: '30px' }}
+                    <Metric style={{ marginBottom: '30px', marginTop: '10px' }}
                         className="text-2xl font-bold text-gray-800"> Schedule Calendar
                     </Metric>
-                    <ScheduleGroups />
+                    <Flex justifyContent='end'>
+                        <Button type='button' className="col-span-5 mb-1" variant='secondary'
+                            color='indigo' onClick={() => navigate('/fixed-schedule-tasks')}>
+                            See your fixed schedule tasks you must do
+                        </Button>
+                    </Flex>
                     <Card className='mt-4'>
-                        <div className="flex gap-10 sm:divide-x justify-center mt-10">
+                        <div className="flex gap-10 sm:divide-x justify-center mt-10 mb-10">
                             <CalendarChart currentDate={currentDate} selectDate={selectDate}
                                 checkEmptyScheduleTaskList={checkEmptyTaskListAndOpenModal}
                             />

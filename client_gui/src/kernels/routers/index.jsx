@@ -22,6 +22,7 @@ import Signin from '../../views/signin/Signin';
 import Signup from '../../views/signin/Signup';
 import TaskRegistration from '../../views/onboarding/TaskRegistration';
 import Onboarding from '../../views/onboarding/Onboarding';
+import { ScheduleGroups } from '../../screens/scheduleTaskScreen/ScheduleGroups';
 
 // Guest is public
 // User is protected, only logged in when the Role higher than User
@@ -87,6 +88,11 @@ const routeList = [
         key: 'calendar',
         // element: <DailyRoutine redirecrPage="Schedule Plan" />
         element: <Calendar />,
+    },
+    {
+        path: '/fixed-schedule-tasks',
+        key: 'schedule-group',
+        element: <ScheduleGroups />,
     },
     {
         path: '/project/:id',
