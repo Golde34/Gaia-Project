@@ -41,7 +41,7 @@ const LinkWrapper = styled.a`
 const Sidebar = () => {
 	return (
 		<>
-			<div className="fixed left-3 sm:left-6 top-[100px] mt-10">
+			<div className="fixed left-3 sm:left-6 top-[20vh] mt-10">
 				<Grid numItems={1}>
 					<Col numColSpan={1}>
 						<LinkWrapper href="/client-gui/dashboard">
