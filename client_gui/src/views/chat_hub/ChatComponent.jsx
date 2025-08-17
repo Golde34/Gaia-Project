@@ -111,7 +111,7 @@ export default function ChatComponent(props) {
     };
 
     const getDashboardClass = (isDashboard) =>
-        `flex flex-col ${isDashboard ? 'h-[40vh]' : 'h-[80vh]'}`;
+        `flex flex-col ${isDashboard ? 'h-[40vh] mt-4' : 'h-[80vh]'}`;
 
     return (
         <>
