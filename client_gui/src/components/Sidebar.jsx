@@ -89,7 +89,7 @@ const Sidebar = () => {
 						</LinkWrapper>
 					</Col>
 					<Col numColSpan={1}>
-						<LinkWrapper href="/client-gui/chat">
+						<LinkWrapper href="/client-gui/chat?dialogueId">
 							<Button variant="primary" color="indigo"
 								className="p-2 rounded-lg mb-4">
 								<ChatAltIcon width={20} />

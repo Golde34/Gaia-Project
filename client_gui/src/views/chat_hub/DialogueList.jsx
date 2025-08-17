@@ -2,20 +2,19 @@ import { useDispatch, useSelector } from "react-redux";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, Button, Text, Title, Badge, Metric, Subtitle } from "@tremor/react";
 import { getAllDialogues } from "../../api/store/actions/chat_hub/dialogue.actions";
+import { useNavigate } from "react-router-dom";
 
 const DialogueList = ({
     onNavigate,
-    onDialogueList,
     onOpenFolder,
-    maxHeightClass = "max-h-[60vh]",
+    maxHeightClass = "max-h-[80vh]",
 }) => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     // ---- Mock data ----
-    const [shortcuts, setShortcuts] = useState([]);
     const [size] = useState(20);
 
-    const [gpts, setGpts] = useState([]);
     const [folders, setFolders] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -23,7 +22,7 @@ const DialogueList = ({
     const { loading: loadingDialogues, error: errorDialogues, dialogues, nextCursor, hasMore } = listDialogue;
     const debounceRef = useRef();
     const getAllUserDialogues = useCallback((loadCursor) => {
-        const cursorToUse = loadCursor || nextCursor || ""; 
+        const cursorToUse = loadCursor || nextCursor || "";
         dispatch(getAllDialogues(size, cursorToUse));
     }, [dispatch, nextCursor, size]);
     useEffect(() => {
@@ -32,32 +31,28 @@ const DialogueList = ({
         debounceRef.current = true;
     }, [getAllUserDialogues]);
 
-
     useEffect(() => {
-        // fake load
         setTimeout(() => {
-            setShortcuts([
-                { id: "new", label: "New chat", route: "new", icon: "🆕" },
-                { id: "search", label: "Search chats", route: "search", icon: "🔎" },
-                { id: "library", label: "Library", route: "library", icon: "📚" },
-            ]);
             setFolders([
                 { id: "new-project", name: "New project", icon: "📁" },
                 { id: "5gsystem", name: "5GSystem", icon: "📁" },
                 { id: "shaw_vu", name: "Shaw_Vu", icon: "📁", unreadCount: 2 },
                 { id: "khiem_french", name: "Khiem_ÉtudierLeFrancais", icon: "📁" },
-                { id: "khiem_future", name: "Khiem_future", icon: "📁" },
-                { id: "chiennt", name: "Chiennt", icon: "📁" },
             ]);
             setLoading(false);
         }, 500);
     }, []);
 
+    const handleDialogueClick = (dialogueId) => {
+        navigate(`/chat?dialogueId=${encodeURIComponent(dialogueId)}`);
+        window.location.reload();
+    };
+
     const notReadyMessage = useMemo(() => {
         if (loading) return "Loading workspace…";
-        if (!shortcuts.length && !gpts.length && !folders.length) return "No items yet.";
+        if (!dialogues.length && !folders.length) return "No items yet.";
         return null;
-    }, [loading, shortcuts, gpts, folders]);
+    }, [loading, dialogues, folders]);
 
     const ItemRow = ({ icon, label, onClick, right }) => (
         <button
@@ -75,50 +70,27 @@ const DialogueList = ({
     return (
         <div className="flex flex-col gap-3">
             <div>
-                <Metric className="text-xl">Workspace</Metric>
-                <Subtitle className="text-sm text-gray-500">Your chats, GPTs & projects</Subtitle>
+                <Metric className="text-xl">Chat Hub</Metric>
+                <Subtitle className="text-sm text-gray-500">Your chats & projects</Subtitle>
             </div>
 
-            <div className={`overflow-y-auto pr-1 space-y-3 ${maxHeightClass}`}>
+            <div className={`overflow-y-auto p-1 space-y-3 ${maxHeightClass}`}>
                 <Card className="p-3">
                     <Title className="text-sm mb-2">Shortcuts</Title>
-                    {loading ? (
-                        <Text>Loading…</Text>
-                    ) : (
-                        (shortcuts.length ? shortcuts : [
-                            { id: "new", label: "New chat", route: "new", icon: "🆕" },
-                            { id: "search", label: "Search chats", route: "search", icon: "🔎" },
-                            { id: "library", label: "Library", route: "library", icon: "📚" },
-                        ]).map((sc) => (
-                            <ItemRow
-                                key={sc.id}
-                                icon={sc.icon}
-                                label={sc.label}
-                                onClick={() => onNavigate?.(sc.route)}
-                            />
-                        ))
-                    )}
-                </Card>
-
-                {/* GPTs */}
-                <Card className="p-3">
-                    <div className="flex items-center justify-between mb-2">
-                        <Title className="text-sm">Dialogues</Title>
-                        <Badge color="gray">{dialogues.length}</Badge>
-                    </div>
-                    {loadingDialogues ? (
-                        <Text>Loading Dialogues…</Text>
-                    ) : dialogues.length ? (
-                        dialogues.map((g) => (
-                            <ItemRow
-                                key={g.id}
-                                label={g.dialogueType}
-                                onClick={() => onDialogueList?.(g.id)}
-                            />
-                        ))
-                    ) : (
-                        <Text>No Dialogues yet.</Text>
-                    )}
+                    <ItemRow
+                        key={"new_search_button"}
+                        icon={"🆕"}
+                        label={"New Chat"}
+                        onClick={() => {
+                            navigate("/chat");
+                            window.location.reload();
+                        }}
+                    />
+                    <ItemRow
+                        key={"search_chat_button"}
+                        icon={"🔎"}
+                        label={"Search Chats"}
+                    />
                 </Card>
 
                 {/* Projects */}
@@ -149,6 +121,26 @@ const DialogueList = ({
                                 New project
                             </Button>
                         </div>
+                    )}
+                </Card>
+
+                <Card className="p-3">
+                    <div className="flex items-center justify-between mb-2">
+                        <Title className="text-sm">Dialogues</Title>
+                        <Badge color="gray">{dialogues.length}</Badge>
+                    </div>
+                    {loadingDialogues ? (
+                        <Text>Loading Dialogues…</Text>
+                    ) : dialogues.length ? (
+                        dialogues.map((g) => (
+                            <ItemRow
+                                key={g.id}
+                                label={g.dialogueType}
+                                onClick={() => handleDialogueClick(g.id)}
+                            />
+                        ))
+                    ) : (
+                        <Text>No Dialogues yet.</Text>
                     )}
                 </Card>
             </div>

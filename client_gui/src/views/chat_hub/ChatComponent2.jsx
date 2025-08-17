@@ -3,11 +3,15 @@ import { getTabId } from "../../kernels/utils/set-interval";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getChatHistory, sendSSEChatMessage } from "../../api/store/actions/chat_hub/messages.actions";
 import { Button, Card, Col, Grid, TextInput } from "@tremor/react";
+import { useSearchParams } from "react-router-dom";
 
-function ContentArea(props) {
-    const chatType = props.chatType;
+export default function ChatComponent2(props) {
+    const chatType = props.chatType === undefined ? "" : props.chatType;
     const tabId = getTabId();
+
     const dispatch = useDispatch();
+	const [searchParams] = useSearchParams();
+	const dialogueId = searchParams.get("dialogueId") ?? "";
 
     const [size] = useState(20);
     const [chatInput, setChatInput] = useState("");
@@ -25,7 +29,8 @@ function ContentArea(props) {
 
     const getChatMessages = useCallback((loadCursor) => {
         const cursorToUse = loadCursor || nextCursor || "";
-        dispatch(getChatHistory(size, cursorToUse, "", chatType));
+		console.log("Dialogue ID:", dialogueId);
+        dispatch(getChatHistory(size, cursorToUse, dialogueId, chatType));
     }, [dispatch, size, nextCursor]);
 
     useEffect(() => {
@@ -111,7 +116,7 @@ function ContentArea(props) {
             ) : error ? (
                 <p>Error when loading chat history: {error}</p>
             ) : (
-                <Card className="flex flex-col h-[700px]">
+                <Card className="flex flex-col h-[80vh]">
                     <div
                         ref={messagesContainerRef}
                         className="flex-1 overflow-auto p-4 space-y-3"
@@ -157,12 +162,5 @@ function ContentArea(props) {
                 </Card>
             )}
         </>
-    );
-};
-
-export default function ChatComponent2(props) {
-    const chatType = props.chatType
-    return (
-        <ContentArea chatType={chatType} />
     );
 }
