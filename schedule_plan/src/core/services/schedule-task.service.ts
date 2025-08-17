@@ -135,8 +135,8 @@ class ScheduleTaskService {
         return scheduleTask;
     }
 
-    async findTop10NewestTask(schedulePlanId: string): Promise<ScheduleTaskEntity[]> {
-        return await scheduleTaskRepository.findTop10NewestTask(schedulePlanId);
+    async findTopKNewestTask(schedulePlanId: string, topK: number): Promise<ScheduleTaskEntity[]> {
+        return await scheduleTaskRepository.findTopKNewestTask(schedulePlanId, topK);
     }
 
     async findByTaskBatch(schedulePlanId: string, taskBatch: number): Promise<ScheduleTaskEntity[]> {
@@ -224,79 +224,6 @@ class ScheduleTaskService {
             });
         } catch (error: any) {
             return msg500(error.message.toString());
-        }
-    }
-
-    async findUserDailyTasks(schedulePlanId: string, taskBatch: number, date: Date): Promise<ScheduleTaskEntity[] | null> {
-        try {
-            return await scheduleTaskRepository.findUserDailyTasks(schedulePlanId, taskBatch, date);
-        } catch (error: any) {
-            console.error("Error on findUserDailyTasks: ", error);
-            return null;
-        }
-    }
-
-    async optimizeDailyTasks(dailyTasks: ScheduleTaskEntity[]): Promise<ScheduleTaskEntity[]> {
-        try {
-            const scheduleGroupTasks = dailyTasks.filter((task) => task.scheduleGroupId !== null);
-            const scheduleTasks = dailyTasks.filter((task) => task.scheduleGroupId === null);
-
-            const startOfDay = new Date();
-            startOfDay.setHours(7, 0, 0, 0); // start of day is 00:00:00
-            // end of day is 23:00:00
-            const endOfDay = new Date();
-            endOfDay.setHours(23, 0, 0, 0); 
-
-            function assignTasksToTimeSlots(tasks: any[], groupTasks: any[], startOfDay: Date, endOfDay: Date, defaultDurationMinutes: number = 60) {
-                const occupiedSlots = groupTasks
-                    .map(task => ({
-                        start: new Date(task.startTime),
-                        end: new Date(task.endTime)
-                    }))
-                    .sort((a, b) => a.start.getTime() - b.start.getTime());
-            
-                const freeSlots = [];
-                let lastEnd = new Date(startOfDay);
-            
-                for (const slot of occupiedSlots) {
-                    if (slot.start > lastEnd) {
-                        freeSlots.push({ start: new Date(lastEnd), end: new Date(slot.start) });
-                    }
-                    lastEnd = slot.end > lastEnd ? slot.end : lastEnd;
-                }
-
-                if (lastEnd < endOfDay) {
-                    freeSlots.push({ start: new Date(lastEnd), end: new Date(endOfDay) });
-                }
-            
-                const nonGroupTasks = tasks
-                    .filter(task => !task.scheduleGroupId)
-                    .sort((a, b) => a.taskOrder - b.taskOrder);
-            
-                let taskIdx = 0;
-                for (const slot of freeSlots) {
-                    let slotTime = new Date(slot.start);
-                    while (
-                        taskIdx < nonGroupTasks.length &&
-                        slotTime.getTime() + defaultDurationMinutes * 60000 <= slot.end.getTime()
-                    ) {
-                        const task = nonGroupTasks[taskIdx];
-                        task.startTime = new Date(slotTime);
-                        task.endTime = new Date(slotTime.getTime() + defaultDurationMinutes * 60000);
-                        slotTime = new Date(task.endTime);
-                        taskIdx++;
-                    }
-                    if (taskIdx >= nonGroupTasks.length) break;
-                }
-            
-                return [...groupTasks, ...nonGroupTasks];
-            }
-
-            const sortedTasks = assignTasksToTimeSlots(scheduleTasks, scheduleGroupTasks, startOfDay, endOfDay);
-            return sortedTasks;
-        } catch (error: any) {
-            console.error("Error on optimizeDailyTasks: ", error);
-            return dailyTasks;
         }
     }
 }

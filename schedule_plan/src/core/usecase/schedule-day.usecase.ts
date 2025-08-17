@@ -71,13 +71,13 @@ class ScheduleDayUsecase {
         }
     }
 
-    async generateDailyCalendar(userId: number): Promise<IResponse | undefined> {
+    async findDailyScheduleTasks(userId: number): Promise<IResponse | undefined> {
         try {
             // get user time bubble query by userId and weekDay
-            const weekDay: number = new Date().getDay();
-            const timeBubble = await scheduleDayService.inquiryTimeBubbleByUserIdAndWeekday(userId, weekDay);
+            // const weekDay: number = new Date().getDay();
+            // const timeBubble = await scheduleDayService.inquiryTimeBubbleByUserIdAndWeekday(userId, weekDay);
             // get list tasks todo or inprogress
-            const scheduleTasks = await schedulePlanUsecase.optimizedAndListTasksByUserId(userId);
+            const scheduleTasks = await schedulePlanUsecase.findOptimizedScheduleTasksByUserId(userId);
             // in case they are not optimized by the algorithm, call api to optimize them
             // get list tasks must do of user in the schedule plan
             // if the tasks dont have their  tag, using ai to generate the tag
