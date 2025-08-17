@@ -37,7 +37,7 @@ const routeList = [
     {
         path: '/',
         key: 'root',
-        element: <Navigate to="/gaia" replace />,
+        element: <Navigate to="/dashboard" replace />,
     },
     {
         path: '/gaia',

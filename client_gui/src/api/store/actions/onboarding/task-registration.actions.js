@@ -15,7 +15,6 @@ export const queryTaskConfig = () => async (dispatch) => {
         const { data } = await serverRequest(`/work-optimization/query-task-config`,
             HttpMethods.GET,
             portName.middlewarePort);
-        console.log("TaskConfig data: ", data);
         dispatch({ type: QUERY_TASK_CONFIG_SUCCESS, payload: data });
     } catch (error) {
         dispatch({
