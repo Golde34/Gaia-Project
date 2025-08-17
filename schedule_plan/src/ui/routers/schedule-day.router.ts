@@ -27,3 +27,14 @@ scheduleDayRouter.post("/register-time-bubble",
         }
     }
 );
+
+scheduleDayRouter.post("/generate-daily-calendar",
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const scheduleTaskResult = await scheduleDayControllerImpl.generateDailyCalendar(req, next);
+            return returnResult(scheduleTaskResult, "FAIL", res, next);
+        } catch (error) {
+            next(error);
+        }
+    }
+)
