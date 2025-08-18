@@ -1,7 +1,10 @@
 import { IResponse, msg200, msg400 } from "../common/response";
+import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
+import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
 import { ActiveStatus, ErrorStatus } from "../domain/enums/enums";
 import { scheduleDayService } from "../services/schedule-day.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
+import { scheduleTaskService } from "../services/schedule-task.service";
 import { schedulePlanUsecase } from "./schedule-plan.usecase";
 
 class ScheduleDayUsecase {
@@ -72,11 +75,34 @@ class ScheduleDayUsecase {
     }
 
     async findDailyScheduleTasks(userId: number): Promise<IResponse | undefined> {
+        let scheduleTasks: ScheduleTaskEntity[] = [];
+        let message: string = "";
         try {
-            return await schedulePlanUsecase.findOptimizedScheduleTasksByUserId(userId);
+            const schedulePlan: SchedulePlanEntity | null = await schedulePlanService.findSchedulePlanByUserId(userId);
+            if (!schedulePlan) {
+                throw new Error("What the heck Schedule plan not found for user ID?: " + userId);
+            }
+
+            // Check if the schedule plan has been optimized
+            if (schedulePlan.activeStatus === ActiveStatus.active
+                && schedulePlan.isTaskBatchActive
+                && schedulePlan.activeTaskBatch > 0) {
+                scheduleTasks = await scheduleTaskService.getScheduleTaskByBatchNumber(
+                    schedulePlan.id, schedulePlan.activeTaskBatch);
+                message = "Optimized tasks successfully";
+            } else {
+                scheduleTasks = await scheduleTaskService.findTopKNewestTask(schedulePlan.id, 5);
+                message = "Tasks are not optimized, should you want to optimize them?";
+                // push kafka optimize request.
+            }
+
+            return msg200({
+                message: message,
+                tasks: scheduleTasks
+            });
         } catch (error: any) {
-            console.error("Error generating daily calendar:", error.message);
-            return msg400("Error generating daily calendar");
+            console.error("Error getting optimized tasks by user ID:", error.message);
+            throw error;
         }
     }
 
