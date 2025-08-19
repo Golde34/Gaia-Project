@@ -34,6 +34,7 @@ public class TopicConstants {
         public static final String TOPIC = "work-optimization.optimize-task.topic";
 
         public static final String OPTIMIZE_CREATING_TASK = "optimizeCreatingTask";
+        public static final String OPTIMIZE_TASKS = "optimizeTasks";
     }
 
     @UtilityClass
