@@ -50,7 +50,7 @@ class ScheduleTaskRepository {
         return await ScheduleTaskEntity.findOne({ where: { taskId: taskId } });
     }
 
-    async findTop10NewestTask(schedulePlanId: string): Promise<ScheduleTaskEntity[]> {
+    async findTopKNewestTask(schedulePlanId: string, topK: number): Promise<ScheduleTaskEntity[]> {
         return await ScheduleTaskEntity.findAll({
             where: {
                 schedulePlanId: schedulePlanId,
@@ -58,7 +58,7 @@ class ScheduleTaskRepository {
                 activeStatus: ActiveStatus.active 
             },
             order: [['createdAt', 'DESC']],
-            limit: 10
+            limit: topK 
         });
     }
 
@@ -88,23 +88,6 @@ class ScheduleTaskRepository {
 
     async findByScheduleGroup(scheduleGroupId: string): Promise<ScheduleTaskEntity[]> {
         return await ScheduleTaskEntity.findAll({ where: { scheduleGroupId: scheduleGroupId } });
-    }
-
-    async findUserDailyTasks(schedulePlanId: string, taskBatch: number, date: Date): Promise<ScheduleTaskEntity[]> {
-        const startOfDay = new Date(date);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(date);
-        endOfDay.setHours(23, 59, 59, 999);
-
-        return await ScheduleTaskEntity.findAll({
-            where: {
-                schedulePlanId: schedulePlanId,
-                taskBatch: taskBatch,
-                createdAt: { [Op.between]: [startOfDay, endOfDay] },
-                status: { [Op.ne]: TaskStatus.DONE },
-                activeStatus: ActiveStatus.active 
-            }
-        });
     }
 }
 

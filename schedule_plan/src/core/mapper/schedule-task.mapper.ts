@@ -85,5 +85,12 @@ export const scheduleTaskMapper = {
             repeat: RepeatLevel.WEEKLY,
             isSynchronizedWithWO: false
         };
+    },
+
+    buidlOptimizeTaskListKafkaMessage(userId: number): any {
+        return {
+            userId: userId,
+            optimizedDate: new Date().toLocaleDateString("vi-VN"),
+        };
     }
 }

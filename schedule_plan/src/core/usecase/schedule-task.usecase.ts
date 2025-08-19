@@ -109,7 +109,7 @@ class ScheduleTaskUsecase {
                 }
                 console.log("No task found in active task batch, update task batch to 0");
                 await schedulePlanService.updateTaskBatch(schedulePlan, 0, false);
-                return scheduleTaskService.findTop10NewestTask(schedulePlanId);
+                return scheduleTaskService.findTopKNewestTask(schedulePlanId, 10);
             }
 
             if (isTaskBatchActive && activeTaskBatch === 0) {
@@ -117,7 +117,7 @@ class ScheduleTaskUsecase {
             }
 
             if (activeTaskBatch === 0) {
-                return scheduleTaskService.findTop10NewestTask(schedulePlanId);
+                return scheduleTaskService.findTopKNewestTask(schedulePlanId, 10);
             }
 
             return undefined;

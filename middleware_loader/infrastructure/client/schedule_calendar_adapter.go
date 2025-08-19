@@ -35,7 +35,7 @@ func (adapter *ScheduleCalendarAdapter) GetTimeBubbleConfig(userId string) ([]re
 
 
 func (adapter *ScheduleCalendarAdapter) GetUserDailyTasks(userId string) (response_dtos.DailyTasksResponseDTO, error) {
-	userDailyTasksURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-calendar/daily-calendar/" + userId
+	userDailyTasksURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-day/daily-schedule-tasks/" + userId
 	var scheduleTasks []response_dtos.ScheduleTaskResponseDTO
 	headers := utils.BuildDefaultHeaders()
 	bodyResult, err := utils.BaseAPI(userDailyTasksURL, "GET", nil, headers)

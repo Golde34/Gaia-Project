@@ -45,7 +45,7 @@ import { getProjectAndRepoRequestReducer } from "./contribution_tracker/project-
 import { compareCommitsReducer, getProjectContributionReducer, getUserContributionsReducer } from "./contribution_tracker/contribution.reducer";
 import { createScheduleGroupReducer, scheduleGroupListReducer } from "./schedule_plan/schedule-group.reducers";
 import { getNotificationJwt } from "../actions/auth_service/auth.actions";
-import { getDailyCalendarReducer, getTimeBubbleConfigReducer, registerScheduleCalendarReducer } from "./schedule_plan/schedule-calendar.reducers";
+import { getDailyTasksReducer, getTimeBubbleConfigReducer, registerScheduleCalendarReducer } from "./schedule_plan/schedule-calendar.reducers";
 import { chatHistoryReducer } from "./chat_hub/messages.reducer";
 import { getAllDialoguesReducer } from "./chat_hub/dialogue.reducer";
 
@@ -115,7 +115,7 @@ export const reducer = combineReducers({
     createScheduleGroup: createScheduleGroupReducer,
     scheduleGroupList: scheduleGroupListReducer,
     activeTaskBatch: activeTaskBatchReducer,
-    getDailyCalendar: getDailyCalendarReducer,
+    getDailyTasks: getDailyTasksReducer,
     registerScheduleCalendar: registerScheduleCalendarReducer,
     getTimeBubbleConfig: getTimeBubbleConfigReducer,
     // middleware loader

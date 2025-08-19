@@ -1,7 +1,10 @@
 import { IResponse, msg200, msg400 } from "../common/response";
+import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
+import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
 import { ActiveStatus, ErrorStatus } from "../domain/enums/enums";
 import { scheduleDayService } from "../services/schedule-day.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
+import { scheduleTaskService } from "../services/schedule-task.service";
 import { schedulePlanUsecase } from "./schedule-plan.usecase";
 
 class ScheduleDayUsecase {
@@ -71,19 +74,63 @@ class ScheduleDayUsecase {
         }
     }
 
-    async generateDailyCalendar(userId: number): Promise<IResponse | undefined> {
+    async findDailyScheduleTasks(userId: number, topK: number = 5): Promise<IResponse> {
+        const plan = await schedulePlanService.findSchedulePlanByUserId(userId);
+        if (!plan) {
+            throw new Error(`Schedule plan not found for user ID: ${userId}`);
+        }
+
+        const isActive = plan.activeStatus === ActiveStatus.active;
+        const hasBatching = !!plan.isTaskBatchActive;
+        const hasActiveBatch = (plan.activeTaskBatch ?? 0) > 0;
+
+        if (isActive && hasBatching && hasActiveBatch) {
+            const tasks = await scheduleTaskService.getScheduleTaskByBatchNumber(
+                plan.id,
+                plan.activeTaskBatch
+            );
+            return msg200({
+                message: "Optimized tasks successfully.",
+                tasks,
+            });
+        }
+
+        const tasks = await scheduleTaskService.findTopKNewestTask(plan.id, topK);
+
+        if (isActive && hasBatching && !hasActiveBatch) {
+            scheduleTaskService
+                .pushOptimizeTaskListKafkaMessage(userId)
+                .catch((err: unknown) =>
+                    console.error("Failed to enqueue optimize request:", err)
+                );
+
+            return msg200({
+                message:
+                    "Your optimization settings are set. Do you want to use this optimized list?",
+                tasks,
+            });
+        }
+
+        return msg200({
+            message:
+                "Tasks are not optimized yet. Please provide your optimization configuration to enable optimization.",
+            tasks,
+        });
+    }
+
+    async generateDailyCalendar(userId: number, scheduleTasks: any[]): Promise<IResponse | undefined> {
         try {
             // get user time bubble query by userId and weekDay
             const weekDay: number = new Date().getDay();
             const timeBubble = await scheduleDayService.inquiryTimeBubbleByUserIdAndWeekday(userId, weekDay);
-            // get list tasks todo or inprogress
-            const scheduleTasks = await schedulePlanUsecase.optimizedAndListTasksByUserId(userId);
-            // in case they are not optimized by the algorithm, call api to optimize them
-            // get list tasks must do of user in the schedule plan
-            // if the tasks dont have their  tag, using ai to generate the tag
+            // if the tasks dont have their tag, using ai to generate the tag
+            // handleTaskTag()
             // after you get the tag for each task, trace back their project, their group task, and mark them a respective tag using asynchronous kafka flow
+            // pushKafkaToUpdateTag();
             // match the tasks with the time bubble
+            // matchTasksWithTimeBubble(timeBubble, scheduleTasks);
             // generate the daily calendar
+            return msg200("Daily calendar generated successfully");
         } catch (error: any) {
             console.error("Error generating daily calendar:", error.message);
             return msg400("Error generating daily calendar");

@@ -25,10 +25,21 @@ class ScheduleDayController {
         }
     }
 
+    async findOptimizedScheduleTasks(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const userId = req.params.userId;
+            console.log(`Finding optimized schedule tasks for user: ${userId}`);
+            return await scheduleDayUsecase.findDailyScheduleTasks(Number(userId));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async generateDailyCalendar(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = req.body.userId;
-            return await scheduleDayUsecase.generateDailyCalendar(userId);
+            const scheduleTasks = req.body.scheduleTasks;
+            return await scheduleDayUsecase.generateDailyCalendar(userId, scheduleTasks);
         } catch (error) {
             next(error);
         }

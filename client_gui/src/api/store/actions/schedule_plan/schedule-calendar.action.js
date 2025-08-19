@@ -1,7 +1,7 @@
 import { HttpMethods, serverRequest } from "../../../baseAPI";
 import {
     CREATE_DAILY_CALENDAR_FAILURE, CREATE_DAILY_CALENDAR_REQUEST, CREATE_DAILY_CALENDAR_SUCCESS,
-    GET_DAILY_CALENDAR_FAILURE, GET_DAILY_CALENDAR_REQUEST, GET_DAILY_CALENDAR_SUCCESS,
+    GET_DAILY_TASKS_FAILURE, GET_DAILY_TASKS_REQUEST, GET_DAILY_TASKS_SUCCESS,
     REGISTER_SCHEDULE_CALENDAR_FAILURE, REGISTER_SCHEDULE_CALENDAR_REQUEST, REGISTER_SCHEDULE_CALENDAR_SUCCESS,
     GET_TIME_BUBBLE_CONFIG_FAILURE, GET_TIME_BUBBLE_CONFIG_REQUEST, GET_TIME_BUBBLE_CONFIG_SUCCESS
 } from "../../constants/schedule_plan/schedule-calendar.constants";
@@ -40,14 +40,14 @@ export const createDailyCalendarAction = (dailyCalendar) => async (dispatch) => 
     }
 }
 
-export const getDailyCalendarAction = () => async (dispatch) => {
-    dispatch({ type: GET_DAILY_CALENDAR_REQUEST });
+export const getDailyTasksAction = () => async (dispatch) => {
+    dispatch({ type: GET_DAILY_TASKS_REQUEST });
     try {
-        const { data } = await serverRequest('/schedule-calendar/get', HttpMethods.GET, portName.middleware);
-        dispatch({ type: GET_DAILY_CALENDAR_SUCCESS, payload: data });
+        const { data } = await serverRequest('/schedule-calendar/daily-tasks', HttpMethods.GET, portName.middleware);
+        dispatch({ type: GET_DAILY_TASKS_SUCCESS, payload: data });
     } catch (error) {
         dispatch({
-            type: GET_DAILY_CALENDAR_FAILURE,
+            type: GET_DAILY_TASKS_FAILURE,
             payload: error.response && error.response.data.message
                 ? error.response.data.message
                 : error.message,
