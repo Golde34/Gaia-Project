@@ -226,6 +226,17 @@ class ScheduleTaskService {
             return msg500(error.message.toString());
         }
     }
+    
+    async pushOptimizeTaskListKafkaMessage(userId: number): Promise<void> {
+        const data = scheduleTaskMapper.buidlOptimizeTaskListKafkaMessage(userId);
+        const messages = [{
+            value: JSON.stringify(createMessage(
+                KafkaCommand.OPTIMIZE_TASK_LIST, '00', 'Successful', data
+            ))
+        }]
+        console.log("Push Kafka Message: ", messages);
+        this.kafkaHandler.produce(KafkaTopic.OPTIMIZE_TASK, messages);
+    }
 }
 
 export const scheduleTaskService = new ScheduleTaskService();   

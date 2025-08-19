@@ -16,6 +16,7 @@ export enum KafkaCommand {
     GAIA_CREATE_TASK = "gaiaCreateTask",
     CREATE_SCHEDULE_TASK = "schedulePlanCreateTask",
     OPTIMIZE_CREATING_TASK = "optimizeCreatingTask",
+    OPTIMIZE_TASK_LIST = "optimizeTasks",
     SYNC_SCHEDULE_TASK = "syncScheduleTask",
     OPTIMIZE_SCHEDULE_TASK = "optimizeScheduleTask",
     OPTIMIZE_TASK = "optimizeTask",
