@@ -1,5 +1,5 @@
 import { CREATE_DAILY_CALENDAR_FAILURE, CREATE_DAILY_CALENDAR_REQUEST, CREATE_DAILY_CALENDAR_SUCCESS, 
-    GET_DAILY_CALENDAR_FAILURE, GET_DAILY_CALENDAR_REQUEST, GET_DAILY_CALENDAR_SUCCESS, 
+    GET_DAILY_TASKS_FAILURE, GET_DAILY_TASKS_REQUEST, GET_DAILY_TASKS_SUCCESS,
     GET_TIME_BUBBLE_CONFIG_FAILURE,  GET_TIME_BUBBLE_CONFIG_REQUEST, GET_TIME_BUBBLE_CONFIG_SUCCESS, 
     REGISTER_SCHEDULE_CALENDAR_FAILURE, REGISTER_SCHEDULE_CALENDAR_REQUEST, REGISTER_SCHEDULE_CALENDAR_SUCCESS
 } from "../../constants/schedule_plan/schedule-calendar.constants";
@@ -32,14 +32,14 @@ export const createDailyCalendarReducer = (
     }
 }
 
-export const getDailyCalendarReducer = (
+export const getDailyTasksReducer = (
     state = { loading: true }, action) => {
     switch (action.type) {
-        case GET_DAILY_CALENDAR_REQUEST:
+        case GET_DAILY_TASKS_REQUEST:
             return { loading: true };
-        case GET_DAILY_CALENDAR_SUCCESS:
+        case GET_DAILY_TASKS_SUCCESS:
             return { loading: false, dailyTasks: action.payload };
-        case GET_DAILY_CALENDAR_FAILURE:
+        case GET_DAILY_TASKS_FAILURE:
             return { loading: false, error: action.payload };
         default:
             return state;
