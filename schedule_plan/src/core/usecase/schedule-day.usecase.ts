@@ -118,11 +118,11 @@ class ScheduleDayUsecase {
         });
     }
 
-    async generateDailyCalendar(userId: number, scheduleTasks: any[]): Promise<IResponse | undefined> {
+    async generateDailyCalendar(userId: number, dailyTasks: any[]): Promise<IResponse | undefined> {
         try {
             // get user time bubble query by userId and weekDay
             const weekDay: number = new Date().getDay();
-            const timeBubble = await scheduleDayService.inquiryTimeBubbleByUserIdAndWeekday(userId, weekDay);
+            const timeBubbles = await scheduleDayService.inquiryTimeBubbleByUserIdAndWeekday(userId, weekDay);
             // if the tasks dont have their tag, using ai to generate the tag
             // handleTaskTag()
             // after you get the tag for each task, trace back their project, their group task, and mark them a respective tag using asynchronous kafka flow

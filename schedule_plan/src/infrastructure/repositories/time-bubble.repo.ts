@@ -45,7 +45,7 @@ class TimeBubbleRepository {
 
     async findByUserIdAndWeekday(userId: number, weekDay: number): Promise<any> {
         try {
-            return await TimeBubblesEntity.findOne({
+            return await TimeBubblesEntity.findAll({
                 where: {
                     userId: userId,
                     dayOfWeek: weekDay
