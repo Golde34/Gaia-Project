@@ -1,3 +1,4 @@
+import { aiCoreServiceAdapter } from "../../infrastructure/client/ai-core-service.adapter";
 import { taskManagerAdapter } from "../../infrastructure/client/task-manager.adapter";
 import { createMessage } from "../../infrastructure/kafka/create-message";
 import { KafkaHandler } from "../../infrastructure/kafka/kafka-handler";
@@ -16,6 +17,7 @@ class ScheduleTaskService {
     constructor(
         public kafkaHandler: KafkaHandler = new KafkaHandler(),
         public taskManagerAdapterImpl = taskManagerAdapter,
+        public aiCoreAdapterImpl = aiCoreServiceAdapter,
     ) { }
 
     async createScheduleTask(scheduleTask: any): Promise<IResponse> {
@@ -60,6 +62,19 @@ class ScheduleTaskService {
             });
         } catch (error: any) {
             return msg400(error.message.toString());
+        }
+    }
+
+    async findScheduleTasksByListIds(scheduleTaskIds: string[]): Promise<ScheduleTaskEntity[]> {
+        try {
+            const scheduleTasks = await scheduleTaskRepository.findScheduleTasksByListIds(scheduleTaskIds);
+            if (scheduleTasks.length === 0) {
+                return [];
+            }
+            return scheduleTasks;
+        } catch (error: any) {
+            console.error("Error finding schedule tasks by IDs:", error.message);
+            throw new Error(`Error finding schedule tasks: ${error.message}`);
         }
     }
 
@@ -226,7 +241,7 @@ class ScheduleTaskService {
             return msg500(error.message.toString());
         }
     }
-    
+
     async pushOptimizeTaskListKafkaMessage(userId: number): Promise<void> {
         const data = scheduleTaskMapper.buidlOptimizeTaskListKafkaMessage(userId);
         const messages = [{
@@ -236,6 +251,29 @@ class ScheduleTaskService {
         }]
         console.log("Push Kafka Message: ", messages);
         this.kafkaHandler.produce(KafkaTopic.OPTIMIZE_TASK, messages);
+    }
+
+    async tagScheduleTask(scheduleTasks: ScheduleTaskEntity[]): Promise<ScheduleTaskEntity[] | undefined> {
+        try {
+            const tagTaskRequest: any[] = [];
+            scheduleTasks.forEach((task) => {
+                tagTaskRequest.push({
+                    taskId: task.taskId,
+                    scheduleTaskId: task.id,
+                    title: task.title,
+                })
+            })
+            const response = await this.aiCoreAdapterImpl.tagTheTasks(tagTaskRequest);
+
+            response.map(async (task: any) => {
+                 await scheduleTaskRepository.updateTagTask(task.id, task.tag);
+            });
+            console.log("Tag tasks successfully: ", response);  
+            return scheduleTasks;
+        } catch (error: any) {
+            console.error("Error on tagScheduleTask: ", error.message);
+            return undefined;
+        }
     }
 }
 

@@ -92,5 +92,27 @@ export const scheduleTaskMapper = {
             userId: userId,
             optimizedDate: new Date().toLocaleDateString("vi-VN"),
         };
+    },
+
+    mapDailyTasksToScheduleTasks(dailyTasks: any[]): ScheduleTaskEntity[] {
+        return dailyTasks.map(task => {
+            const scheduleTask = new ScheduleTaskEntity();
+            scheduleTask.id = task.id;
+            scheduleTask.title = task.title;
+            scheduleTask.priority = task.priority;
+            scheduleTask.status = task.status;
+            scheduleTask.startDate = task.startDate;
+            scheduleTask.deadline = task.deadline;
+            scheduleTask.duration = task.duration;
+            scheduleTask.activeStatus = task.activeStatus;
+            scheduleTask.preferenceLevel = convertPriority(task.priority);
+            scheduleTask.schedulePlanId = task.schedulePlanId;
+            scheduleTask.isNotify = task.isNotify || false;
+            scheduleTask.taskOrder = task.taskOrder || 0;
+            scheduleTask.weight = task.weight || 0;
+            scheduleTask.stopTime = task.stopTime || 0;
+            scheduleTask.taskBatch = task.taskBatch || 0;
+            return scheduleTask;
+        });
     }
 }
