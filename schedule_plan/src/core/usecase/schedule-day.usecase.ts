@@ -120,19 +120,16 @@ class ScheduleDayUsecase {
 
     async generateDailyCalendar(userId: number, dailyTasks: any[]): Promise<IResponse | undefined> {
         try {
-            // get user time bubble query by userId and weekDay
             const weekDay: number = new Date().getDay();
             const timeBubbles = await scheduleDayService.inquiryTimeBubbleByUserIdAndWeekday(userId, weekDay);
-            // if the tasks dont have their tag, using ai to generate the tag
             const scheduleTasks: ScheduleTaskEntity[] = scheduleTaskMapper.mapDailyTasksToScheduleTasks(dailyTasks);
             const taggedScheduleTasks = await scheduleTaskUsecase.tagScheduleTask(scheduleTasks);
-            // handleTaskTag()
-            // after you get the tag for each task, trace back their project, their group task, and mark them a respective tag using asynchronous kafka flow
-            // pushKafkaToUpdateTag();
-            // match the tasks with the time bubble
-            // matchTasksWithTimeBubble(timeBubble, scheduleTasks);
-            // generate the daily calendar
-            return msg200("Daily calendar generated successfully");
+            if (taggedScheduleTasks === undefined) throw new Error("There's an error when tagged your task to make daily calendar");
+            const dailyCalendar = scheduleDayService.matchScheduleTasksWithTimeBubble(taggedScheduleTasks, timeBubbles);
+            return msg200({
+                message: "Daily calendar generated successfully",
+                dailyClendar: dailyCalendar
+            });
         } catch (error: any) {
             console.error("Error generating daily calendar:", error.message);
             return msg400("Error generating daily calendar");

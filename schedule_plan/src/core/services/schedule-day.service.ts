@@ -3,6 +3,9 @@ import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
 import { randomUUID } from "crypto";
 import { ActiveStatus, ErrorStatus } from "../domain/enums/enums";
 import { dayOfWeekMap } from "../domain/constants/constants";
+import { timeBubbleMapper } from "../mapper/time-bubble.mapper";
+import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
+import TimeBubblesEntity from "../domain/entities/time-bubble.entity";
 
 class ScheduleDayService {
     constructor() { }
@@ -20,7 +23,7 @@ class ScheduleDayService {
                         if (!activity.start || !activity.end || !activity.tag) {
                             throw new Error("Invalid activity data");
                         }
-                        const timeBubble = this.buildTimeBubble(activity, schedulePlan, Number(day), ActiveStatus.draft);
+                        const timeBubble = timeBubbleMapper.buildTimeBubble(activity, schedulePlan, Number(day), ActiveStatus.draft);
                         await timeBubbleRepository.generateTimeBubble(timeBubble);
                     }
                 }
@@ -30,21 +33,6 @@ class ScheduleDayService {
             console.error("Error registering schedule config:", error);
             return error.message.toString();
         }
-    }
-
-    private buildTimeBubble(activity: any, schedulePlan: SchedulePlanEntity, dayOfWeek: number, status: string): any {
-        return {
-            id: randomUUID(),
-            userId: schedulePlan.userId,
-            dayOfWeek: dayOfWeek,
-            dayOfWeekStr: dayOfWeekMap[dayOfWeek],
-            startTime: activity.start,
-            endTime: activity.end,
-            tag: activity.tag,
-            status: status,
-            createdAt: new Date(),
-            updatedAt: new Date()
-        };
     }
 
     async updateTimeBubbleStatus(userId: number, status: string): Promise<void> {
@@ -71,6 +59,15 @@ class ScheduleDayService {
         } catch (error: any) {
             console.error("Error inquiring time bubble by user ID and weekday:", error);
             throw error;
+        }
+    }
+
+    async matchScheduleTasksWithTimeBubble(scheduleTasks: ScheduleTaskEntity[], timeBubbles: TimeBubblesEntity[]): Promise<any> {
+        try {
+            
+        } catch (error: any) {
+            console.error("Error while match schedule tasks with time bubbles, ", error);
+            throw new Error("Error while match schedule tasks with time bubbles") 
         }
     }
 }

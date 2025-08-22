@@ -253,7 +253,7 @@ class ScheduleTaskService {
         this.kafkaHandler.produce(KafkaTopic.OPTIMIZE_TASK, messages);
     }
 
-    async tagScheduleTask(scheduleTasks: ScheduleTaskEntity[]): Promise<ScheduleTaskEntity[] | undefined> {
+    async tagScheduleTask(scheduleTasks: ScheduleTaskEntity[]): Promise<void> {
         try {
             const tagTaskRequest: any[] = [];
             scheduleTasks.forEach((task) => {
@@ -266,14 +266,24 @@ class ScheduleTaskService {
             const response = await this.aiCoreAdapterImpl.tagTheTasks(tagTaskRequest);
 
             response.map(async (task: any) => {
-                 await scheduleTaskRepository.updateTagTask(task.id, task.tag);
+                await scheduleTaskRepository.updateTagTask(task.id, task.tag);
             });
+
+            await this.pushUpdateTaskTagKafkaMessage(tagTaskRequest);
             console.log("Tag tasks successfully: ", response);  
-            return scheduleTasks;
         } catch (error: any) {
             console.error("Error on tagScheduleTask: ", error.message);
-            return undefined;
         }
+    }
+
+    async pushUpdateTaskTagKafkaMessage(tagTaskRequest: any[]): Promise<void> {
+        const messages = [{
+            value: JSON.stringify(createMessage(
+                KafkaCommand.UPDATE_TASK_TAG, '00', 'Successful', tagTaskRequest
+            ))
+        }]
+        console.log("Push Kafka Message: ", messages);
+        this.kafkaHandler.produce(KafkaTopic.UPDATE_TASK, messages);
     }
 }
 

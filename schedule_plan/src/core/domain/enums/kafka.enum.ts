@@ -21,6 +21,7 @@ export enum KafkaCommand {
     OPTIMIZE_SCHEDULE_TASK = "optimizeScheduleTask",
     OPTIMIZE_TASK = "optimizeTask",
     UPDATE_TASK = "updateTask",
+    UPDATE_TASK_TAG = "updateTaskTag",
     DELETE_TASK = "deleteTask",
     SCHEDULE_GROUP_CREATE_TASK = "scheduleGroupCreateTask",
     GENERATE_SCHEDULE_CALENDAR = "gaiaRegisterCalendar",

@@ -285,10 +285,7 @@ class ScheduleTaskUsecase {
 
             await scheduleTaskService.tagScheduleTask(scheduleTasks); 
             const listTaskIds = scheduleTasks.map(task => task.id);
-            const updatedTasks = await scheduleTaskService.findScheduleTasksByListIds(listTaskIds);
-            
-            
-            console.log("Tag tasks successfully: ", updatedTasks); 
+            return await scheduleTaskService.findScheduleTasksByListIds(listTaskIds);
         } catch (error: any) {
             console.error("Error on tagScheduleTask: ", error.message);
             return undefined;

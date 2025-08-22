@@ -41,6 +41,18 @@ export default class ScheduleDayBubbleEntity extends Model {
     })
     taskId: string | null = null;
 
+    @if (!Array.isArray(scheduleTasks)) return undefined;
+
+  const allTagged = scheduleTasks.every(
+    (task) => task?.tag != null && String(task.tag).trim() !== ""
+  );
+
+  return allTagged ? scheduleTasks : undefined;Column({
+        type: DataType.UUID,
+        field: "task_title",
+    })
+    taskTitle?: string;
+
     @Column({
         type: DataType.DATE,
         field: "created_at",
