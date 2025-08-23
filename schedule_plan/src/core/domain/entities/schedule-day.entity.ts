@@ -9,59 +9,65 @@ export default class ScheduleDayBubbleEntity extends Model {
         primaryKey: true,
         field: "id",
     })
-    id!: string;
+    id?: string;
 
     @Column({
         type: DataType. STRING,
         field: "user_id",
     })
-    userId!: string;
-
-    @Column({
-        type: DataType.STRING,
-        field: "schedule_plan_id",
-    })
-    schedulePlanId!: string;
+    userId?: string;
 
     @Column({
         type: 'time without time zone',
         field: "start_time",
     }) 
-    startTime!: string; // "HH:mm:ss" format
+    startTime?: string; // "HH:mm:ss" format
 
     @Column({
         type: 'time without time zone',
         field: "end_time",
     })
-    endTime!: string; // "HH:mm:ss" format
+    endTime?: string; // "HH:mm:ss" format
 
     @Column({
         type: DataType.UUID,
-        field: "schedule_task_id",
+        field: "primary_task_id",
     })
-    taskId: string | null = null;
+    primaryTaskId: string | null = null;
 
-    @if (!Array.isArray(scheduleTasks)) return undefined;
-
-  const allTagged = scheduleTasks.every(
-    (task) => task?.tag != null && String(task.tag).trim() !== ""
-  );
-
-  return allTagged ? scheduleTasks : undefined;Column({
+    @Column({
         type: DataType.UUID,
-        field: "task_title",
+        field: "backup_task_id",
     })
-    taskTitle?: string;
+    backupTaskId: string | null = null;
+
+    @Column({
+        type: DataType.UUID,
+        field: "primary_task_title",
+    })
+    primaryTaskTitle?: string;
+
+    @Column({
+        type: DataType.UUID,
+        field: "backupTaskTitle",
+    })
+    backupTaskTitle?: string;
+
+    @Column({
+        type: DataType.UUID,
+        field: "tag"
+    })
+    tag?: string;
 
     @Column({
         type: DataType.DATE,
         field: "created_at",
     }) 
-    createdAt!: Date;
+    createdAt?: Date;
 
     @Column({
         type: DataType.DATE,
         field: "updated_at",
     })
-    updatedAt!: Date;
+    updatedAt?: Date;
 }

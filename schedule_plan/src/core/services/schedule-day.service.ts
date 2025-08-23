@@ -1,11 +1,12 @@
 import { timeBubbleRepository } from "../../infrastructure/repositories/time-bubble.repo";
 import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
-import { randomUUID } from "crypto";
 import { ActiveStatus, ErrorStatus } from "../domain/enums/enums";
-import { dayOfWeekMap } from "../domain/constants/constants";
 import { timeBubbleMapper } from "../mapper/time-bubble.mapper";
 import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
 import TimeBubblesEntity from "../domain/entities/time-bubble.entity";
+import { parseTime } from "../../kernel/utils/string-utils";
+import { AssignedBubble } from "../domain/dto/assigned-bubble.dto";
+import { scheduleDayRepository } from "../../infrastructure/repositories/schedule-day.repo";
 
 class ScheduleDayService {
     constructor() { }
@@ -62,12 +63,93 @@ class ScheduleDayService {
         }
     }
 
-    async matchScheduleTasksWithTimeBubble(scheduleTasks: ScheduleTaskEntity[], timeBubbles: TimeBubblesEntity[]): Promise<any> {
+    async matchScheduleTasksWithTimeBubble(scheduleTasks: ScheduleTaskEntity[], timeBubbles: TimeBubblesEntity[]): Promise<AssignedBubble[]> {
         try {
-            
+            const results: AssignedBubble[] = [];
+            const tags = ["work", "relax", "eat", "travel", "sleep"];
+
+            // Group tasks by tag
+            const taskMap = new Map<string, ScheduleTaskEntity[]>();
+            for (const tag of tags) {
+                taskMap.set(tag, scheduleTasks.filter(t => t.tag === tag));
+            }
+
+            // Track current task index + remaining duration for each tag
+            const taskPointers = new Map<string, { index: number; remaining: number }>();
+            for (const tag of tags) {
+                const tagTasks = taskMap.get(tag) || [];
+                if (tagTasks.length > 0) {
+                    taskPointers.set(tag, {
+                        index: 0,
+                        remaining: tagTasks[0].duration,
+                    });
+                }
+            }
+
+            // Main loop
+            for (const bubble of timeBubbles) {
+                const duration = parseTime(bubble.endTime) - parseTime(bubble.startTime);
+                const matchedTag = tags.find(tag => bubble.tag === tag) || null;
+
+                if (!matchedTag) {
+                    results.push({ ...bubble, tag: "", primaryTaskId: null, backupTaskId: null });
+                    continue;
+                }
+
+                const tagTasks = taskMap.get(matchedTag) || [];
+                const pointer = taskPointers.get(matchedTag);
+
+                if (!pointer || pointer.index >= tagTasks.length) {
+                    results.push({ ...bubble, tag: matchedTag, primaryTaskId: null, backupTaskId: null });
+                    continue;
+                }
+
+                const primary = tagTasks[pointer.index];
+                const backup = (pointer.index + 1 < tagTasks.length)
+                    ? tagTasks[pointer.index + 1]
+                    : null;
+
+                results.push({
+                    startTime: bubble.startTime,
+                    endTime: bubble.endTime,
+                    tag: matchedTag,
+                    primaryTaskId: primary.id,
+                    primaryTaskTitle: primary.title,
+                    backupTaskId: backup?.id || null,
+                    backupTaskTitle: backup?.title,
+                });
+                // Reduce remaining time of primary task
+                pointer.remaining -= duration
+                if (pointer.remaining <= 0 && backup && typeof backup.duration === "number") {
+                    pointer.index++
+                    pointer.remaining = backup.duration + pointer.remaining
+                }
+                // If finished, move to next task
+                if (pointer.remaining <= 0) {
+                    pointer.index++;
+                    pointer.remaining = 0;
+                    if (pointer.index < tagTasks.length) {
+                        pointer.remaining = tagTasks[pointer.index].duration + pointer.remaining; // carry over excess time
+                    }
+                }
+            }
+
+            return results;
         } catch (error: any) {
             console.error("Error while match schedule tasks with time bubbles, ", error);
-            throw new Error("Error while match schedule tasks with time bubbles") 
+            throw new Error("Error while match schedule tasks with time bubbles")
+        }
+    }
+
+    async updateDailyCalendar(userId: number, assignedBubbleList: AssignedBubble[]): Promise<void> {
+        try {
+            assignedBubbleList.forEach(bubble => {
+                const scheduleDay = scheduleDayRepository.createScheduleDay(bubble);
+                console.log(`Save scheduleday of user ${userId}: ${scheduleDay}`)
+            });
+        } catch (error: any) {
+            console.error("Error inquiring time bubble by user ID and weekday:", error);
+            throw error;
         }
     }
 }

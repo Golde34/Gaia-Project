@@ -1,3 +1,4 @@
+import { runInBackground } from "../../kernel/utils/run-in-background";
 import { IResponse, msg200, msg400 } from "../common/response";
 import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
 import { ActiveStatus, ErrorStatus } from "../domain/enums/enums";
@@ -125,7 +126,9 @@ class ScheduleDayUsecase {
             const scheduleTasks: ScheduleTaskEntity[] = scheduleTaskMapper.mapDailyTasksToScheduleTasks(dailyTasks);
             const taggedScheduleTasks = await scheduleTaskUsecase.tagScheduleTask(scheduleTasks);
             if (taggedScheduleTasks === undefined) throw new Error("There's an error when tagged your task to make daily calendar");
-            const dailyCalendar = scheduleDayService.matchScheduleTasksWithTimeBubble(taggedScheduleTasks, timeBubbles);
+            const dailyCalendar = await scheduleDayService.matchScheduleTasksWithTimeBubble(taggedScheduleTasks, timeBubbles);
+            runInBackground(() => scheduleDayService.updateDailyCalendar(userId, dailyCalendar));
+
             return msg200({
                 message: "Daily calendar generated successfully",
                 dailyClendar: dailyCalendar
