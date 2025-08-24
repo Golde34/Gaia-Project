@@ -1,5 +1,4 @@
 import datetime
-import json
 import uuid
 
 from core.domain.entities.recursive_summary import RecursiveSummary
