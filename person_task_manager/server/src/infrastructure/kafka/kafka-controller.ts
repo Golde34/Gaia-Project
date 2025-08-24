@@ -2,6 +2,7 @@ import * as dotenv from "dotenv";
 import { KafkaConfig } from "./kafka-config";
 import { KafkaTopic } from "../../core/domain/enums/kafka.enums";
 import { handleGaiaCreateTaskMessage } from "../../ui/kafka/gaia-create-task.consumer";
+import { handleUpdateTaskTagMessage } from "../../ui/kafka/update-task-tag.consumer";
 
 dotenv.config({ path: "./src/.env" });
 
@@ -37,4 +38,5 @@ const getKafkaTopicsFromEnv = (): string[] => {
 
 const kafkaTopicHandlers: Record<string, (message: string) => void> = {
     [KafkaTopic.GAIA_CREATE_TASK]: (message: string) => handleGaiaCreateTaskMessage(message),
+    [KafkaTopic.UPDATE_TASK]: (message: string) => handleUpdateTaskTagMessage(message),
 };

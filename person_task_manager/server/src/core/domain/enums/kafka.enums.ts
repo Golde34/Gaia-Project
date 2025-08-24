@@ -16,6 +16,7 @@ export enum KafkaCommand {
     UPLOAD_FILE = 'uploadFile',
     UPLOAD_UPDATED_FILE = 'uploadUpdatedFile',
     UPDATE_TASK = 'updateTask',
+    UPDATE_TASK_TAG = 'updateTaskTag',
     DELETE_TASK = 'deleteTask',
     CREATE_COMMIT = 'createCommit',
     CREATE_SCHEDULE_TASK = 'scheduleGroupCreateTask',
