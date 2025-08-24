@@ -283,7 +283,7 @@ class ScheduleTaskService {
             ))
         }]
         console.log("Push Kafka Message: ", messages);
-        this.kafkaHandler.produce(KafkaTopic.UPDATE_TASK, messages);
+        this.kafkaHandler.produce(KafkaTopic.UPDATE_SCHEDULE_TASK_TAG, messages);
     }
 }
 
