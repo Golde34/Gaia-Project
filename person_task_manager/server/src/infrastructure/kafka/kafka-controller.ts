@@ -38,5 +38,5 @@ const getKafkaTopicsFromEnv = (): string[] => {
 
 const kafkaTopicHandlers: Record<string, (message: string) => void> = {
     [KafkaTopic.GAIA_CREATE_TASK]: (message: string) => handleGaiaCreateTaskMessage(message),
-    [KafkaTopic.UPDATE_TASK]: (message: string) => handleUpdateTaskTagMessage(message),
+    [KafkaTopic.UPDATE_TASK_TAG]: (message: string) => handleUpdateTaskTagMessage(message),
 };

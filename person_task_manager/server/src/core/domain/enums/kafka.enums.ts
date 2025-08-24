@@ -9,6 +9,7 @@ export enum KafkaTopic {
     // Consumer
     CREATE_SCHEDULE_TASK = "schedule-plan.create-schedule-task.topic",
     GAIA_CREATE_TASK = "chat-hub.create-task.topic",
+    UPDATE_TASK_TAG = "schedule-plan.update-task-tag.topic",
 }
 
 export enum KafkaCommand {
