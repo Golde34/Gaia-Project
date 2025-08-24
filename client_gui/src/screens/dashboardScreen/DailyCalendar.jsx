@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getDailyTasksAction, getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 import { priorityColor } from "../../kernels/utils/field-utils";
+import { userGenerateDailyCalendarDispatch } from "../../kernels/utils/write-dialog-api-requests";
 
 const DailyCalendar = () => {
     const dispatch = useDispatch();
@@ -44,6 +45,11 @@ const DailyCalendar = () => {
         return <div>Error: {errorTasks}</div>;
     }
 
+    const handleAutoGenerateCalendar = (dailyTasks) =>{
+        generateDailyCalendar(dailyTasks);
+    }
+    const generateDailyCalendar = userGenerateDailyCalendarDispatch();
+
     return (
         <>
             <Grid numItems={12}>
@@ -56,14 +62,14 @@ const DailyCalendar = () => {
                     <>
                         <Col numColSpan={6}>
                             <Flex className="justify-end items-center mt-4">
-                                <Button color="indigo" variant="primary">
+                                <Button color="indigo" variant="primary" onClick={handleAutoGenerateCalendar(dailyTasks)}>
                                     Auto generate calendar
                                 </Button>
                             </Flex>
                         </Col>
                         <Col numColSpan={12}>
                             <Card className="mt-4">
-                                <Title>Priority Tasks</Title>
+                                <Title>Do you want to include these tasks in your calendar?</Title>
                                 <Table className="mt-5">
                                     <TableHead>
                                         <TableRow>

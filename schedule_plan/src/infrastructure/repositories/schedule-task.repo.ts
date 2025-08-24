@@ -28,6 +28,16 @@ class ScheduleTaskRepository {
         return await ScheduleTaskEntity.findByPk(scheduleTaskId);
     }
 
+    async findScheduleTasksByListIds(scheduleTaskIds: string[]): Promise<ScheduleTaskEntity[]> {
+        return await ScheduleTaskEntity.findAll({
+            where: {
+                id: { [Op.in]: scheduleTaskIds },
+                activeStatus: ActiveStatus.active
+            },
+            order: [['createdAt', 'DESC']]
+        });
+    }
+
     async isTaskSynchronized(taskId: string): Promise<boolean> {
         const scheduleTask = await ScheduleTaskEntity.findByPk(taskId);
         if (!scheduleTask) return false;
@@ -88,6 +98,14 @@ class ScheduleTaskRepository {
 
     async findByScheduleGroup(scheduleGroupId: string): Promise<ScheduleTaskEntity[]> {
         return await ScheduleTaskEntity.findAll({ where: { scheduleGroupId: scheduleGroupId } });
+    }
+
+    async updateTagTask(scheduleTaskId: string, tag: string): Promise<ScheduleTaskEntity | null> {
+        const [affectedCount, affectedRows] = await ScheduleTaskEntity.update({ tag: tag }, {
+            where: { id: scheduleTaskId },
+            returning: true,
+        });
+        return affectedCount > 0 ? affectedRows[0] : null;
     }
 }
 

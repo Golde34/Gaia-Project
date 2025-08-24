@@ -50,8 +50,8 @@ func (s *ScheduleCalendarService) RegisterScheduleCalendar(userId string) (respo
 	return registeredCalendarStatus, nil
 }
 
-func (s *ScheduleCalendarService) GenerateDailyCalendar(userId string) (map[string]interface{}, error) {
-	generatedTasks, err := client.IScheduleCalendarAdapter(&adapter.ScheduleCalendarAdapter{}).GenerateDailyCalendar(userId)
+func (s *ScheduleCalendarService) GenerateDailyCalendar(userId string, dailyTasks map[string]interface{}) (map[string]interface{}, error) {
+	generatedTasks, err := client.IScheduleCalendarAdapter(&adapter.ScheduleCalendarAdapter{}).GenerateDailyCalendar(userId, dailyTasks)
 	if err != nil {
 		return nil, err
 	}

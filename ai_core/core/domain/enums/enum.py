@@ -28,3 +28,12 @@ class GaiaAbilities(Enum):
 
 class VectorDBContext(Enum):
     GAIA_INTRODUCTION = "Gaia Introduction"
+
+class TagEnum(Enum):
+    WORK = "work",
+    EAT = "eat",
+    RELAX = "relax",
+    TRAVEL = "travel",
+    SLEEP = "sleep"
+
+TAG_LIST = [TagEnum.WORK, TagEnum.EAT, TagEnum.RELAX, TagEnum.TRAVEL, TagEnum.SLEEP]

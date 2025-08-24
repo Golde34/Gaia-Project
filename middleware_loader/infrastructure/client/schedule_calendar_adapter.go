@@ -91,10 +91,11 @@ func (adapter *ScheduleCalendarAdapter) RegisterScheduleCalendar(userId string) 
 	}, nil
 }
 
-func (adapter *ScheduleCalendarAdapter) GenerateDailyCalendar(userId string) (map[string]interface{}, error) {
+func (adapter *ScheduleCalendarAdapter) GenerateDailyCalendar(userId string, dailyTasks map[string]interface{}) (map[string]interface{}, error) {
 	generateDailyCalendarURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-day/generate-daily-calendar" 
 	var body = map[string]interface{}{
 		"userId": userId,
+		"dailyTasks": dailyTasks,
 	}
 	headers := utils.BuildDefaultHeaders()
 	bodyResult, err := utils.BaseAPI(generateDailyCalendarURL, "POST", body, headers)

@@ -6,3 +6,8 @@ export const buildCommonStringValue = (value: string): string => {
 export const isStringEmpty = (value: string | undefined): boolean => {
     return value === null || value === undefined || value.trim() === '';
 }
+
+export function parseTime(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}

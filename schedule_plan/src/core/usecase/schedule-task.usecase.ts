@@ -233,7 +233,7 @@ class ScheduleTaskUsecase {
             throw new Error("Task creation failed");
         }
 
-        await scheduleGroupService.updateRotationDay(scheduleGroup, today); 
+        await scheduleGroupService.updateRotationDay(scheduleGroup, today);
         delete failedScheduleMap[scheduleGroup.id]
     }
 
@@ -272,6 +272,25 @@ class ScheduleTaskUsecase {
             console.error("Error on getScheduleTasksBatch: ", error);
             return undefined;
         }
+    }
+
+    async tagScheduleTask(scheduleTasks: ScheduleTaskEntity[]): Promise<ScheduleTaskEntity[] | undefined> {
+        try {
+            if (!Array.isArray(scheduleTasks)) return undefined;
+
+            const allTagged = scheduleTasks.every(
+                (task) => task?.tag != null && String(task.tag).trim() !== ""
+            );
+            if (allTagged) return scheduleTasks;
+
+            await scheduleTaskService.tagScheduleTask(scheduleTasks); 
+            const listTaskIds = scheduleTasks.map(task => task.id);
+            return await scheduleTaskService.findScheduleTasksByListIds(listTaskIds);
+        } catch (error: any) {
+            console.error("Error on tagScheduleTask: ", error.message);
+            return undefined;
+        }
+
     }
 }
 

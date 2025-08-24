@@ -12,10 +12,10 @@ export default class ScheduleDayHistoryEntity extends Model {
     id!: string;
 
     @Column({
-        type: DataType.STRING,
+        type: DataType.BIGINT,
         field: "user_id",
     })
-    userId!: string;
+    userId!: number;
 
     @Column({
         type: DataType.JSONB,

@@ -8,7 +8,7 @@ import { registerTaskConfig } from '../../api/store/actions/onboarding/task-regi
 import { createNote } from '../../api/store/actions/task_manager/note.actions';
 import { chooseTaskBatch } from '../../api/store/actions/schedule_plan/schedule-task.action';
 import { createScheduleGroupAction } from '../../api/store/actions/schedule_plan/schedule-group.action';
-import { registerCalendarAction } from '../../api/store/actions/schedule_plan/schedule-calendar.action';
+import { createDailyCalendarAction, registerCalendarAction } from '../../api/store/actions/schedule_plan/schedule-calendar.action';
 
 export const useCreateGroupTaskDispatch = () => {
     const dispatch = useDispatch();
@@ -148,4 +148,14 @@ export const useRegisterScheduleCalendarDispatch = () => {
     }
 
     return registerScheduleCalendarDispatch;
+}
+
+export const userGenerateDailyCalendarDispatch = () => {
+    const dispatch = useDispatch();
+    
+    const generateDailyCalendarDispatch = (dailyTasks) => {
+        dispatch(createDailyCalendarAction(dailyTasks));
+    }
+
+    return generateDailyCalendarDispatch;
 }
