@@ -49,7 +49,7 @@ export default class ScheduleDayBubbleEntity extends Model {
 
     @Column({
         type: DataType.UUID,
-        field: "backupTaskTitle",
+        field: "backup_task_title",
     })
     backupTaskTitle?: string;
 

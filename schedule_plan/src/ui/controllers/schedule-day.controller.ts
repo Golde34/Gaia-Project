@@ -38,7 +38,7 @@ class ScheduleDayController {
     async generateDailyCalendar(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = req.body.userId;
-            const dailyTasks = req.body.dailyTasks;
+            const dailyTasks = req.body.dailyTasks.tasks;
             return await scheduleDayUsecase.generateDailyCalendar(userId, dailyTasks);
         } catch (error) {
             next(error);

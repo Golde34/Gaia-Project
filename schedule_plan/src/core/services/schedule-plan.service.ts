@@ -88,7 +88,6 @@ class SchedulePlanService {
             if (typeof existedUser === 'number') {
                 return null;
             }
-            console.log("Existed user: ", existedUser);
             const schedulePlanCache = this.schedulePlanCache.get(InternalCacheConstants.SCHEDULE_PLAN + userId);
             if (!schedulePlanCache) {
                 const schedulePlan = await schedulePlanRepository.findSchedulePlanByUserId(userId);

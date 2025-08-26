@@ -124,7 +124,7 @@ class ScheduleDayUsecase {
             const weekDay: number = new Date().getDay();
             const timeBubbles = await scheduleDayService.inquiryTimeBubbleByUserIdAndWeekday(userId, weekDay);
             const scheduleTasks: ScheduleTaskEntity[] = scheduleTaskMapper.mapDailyTasksToScheduleTasks(dailyTasks);
-            const taggedScheduleTasks = await scheduleTaskUsecase.tagScheduleTask(scheduleTasks);
+            const taggedScheduleTasks = await scheduleTaskUsecase.tagScheduleTask(userId, scheduleTasks);
             if (taggedScheduleTasks === undefined) throw new Error("There's an error when tagged your task to make daily calendar");
             const dailyCalendar = await scheduleDayService.matchScheduleTasksWithTimeBubble(taggedScheduleTasks, timeBubbles);
             runInBackground(() => scheduleDayService.updateDailyCalendar(userId, dailyCalendar));
