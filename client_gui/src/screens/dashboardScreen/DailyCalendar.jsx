@@ -23,43 +23,43 @@ const DailyCalendar = () => {
     const [dailyTasksRequest, setDailyTasksRequest] = useState({ tasks: [] });
     const dailyTaskList = useSelector((state) => state.getDailyTasks);
     const { dailyTasks, loading: loadingTasks, error: errorTasks } = dailyTaskList;
-    const didDailyTaskListRef = useRef();
 
+    const didDailyTaskListRef = useRef(false);
     const fetchDailyTaskList = useCallback(() => {
         if (didDailyTaskListRef.current) return;
         didDailyTaskListRef.current = true;
         dispatch(getDailyTasksAction());
-        setDailyTasksRequest(dailyTasks);
-    }, [dispatch, dailyTasks]);
+    }, [dispatch]);
 
     useEffect(() => {
         fetchDailyTaskList();
     }, [fetchDailyTaskList]);
 
-    if (loadingBubble || loadingTasks) {
-        return <div>Loading...</div>;
-    }
+    useEffect(() => {
+        if (dailyTasks?.tasks) {
+            setDailyTasksRequest(dailyTasks);
+        }
+    }, [dailyTasks]);
 
-    if (errorBubble) {
-        return <div>Error: {errorBubble}</div>;
-    }
-    if (errorTasks) {
-        return <div>Error: {errorTasks}</div>;
-    }
+    if (loadingBubble || loadingTasks) return <div>Loading...</div>;
+    if (errorBubble) return <div>Error: {errorBubble}</div>;
+    if (errorTasks) return <div>Error: {errorTasks}</div>;
 
     const handleDeleteTask = (taskId) => {
         setDailyTasksRequest(prev => ({
             ...prev,
-            tasks: (prev.tasks || []).filter(t => (t.taskId ?? t.id) !== taskId),
+            tasks: (prev?.tasks || []).filter(t => (t.taskId ?? t.id) !== taskId),
         }));
     };
 
     const handleAutoGenerateCalendar = (request) => {
-        if (request === undefined) setDailyTasksRequest(dailyTasks);
-        const payload = { ...dailyTasksRequest };
-        if (!payload.tasks || !payload.tasks.length) return;
-        console.log("Payload: ", payload);
+        const source = request ?? dailyTasks ?? dailyTasksRequest ?? { tasks: [] };
+        const payload = { ...source };
+        if (!payload.tasks?.length) return;
         dispatch(createDailyCalendarAction(payload));
+    };
+
+    const handleRowClick = (taskId) => {
     };
 
     return (
@@ -77,10 +77,7 @@ const DailyCalendar = () => {
                                 <Button
                                     color="indigo"
                                     variant="primary"
-                                    onClick={() => {
-                                        console.log("....Payload: ", dailyTasksRequest);
-                                        handleAutoGenerateCalendar(dailyTasksRequest);
-                                    }}
+                                    onClick={() => handleAutoGenerateCalendar()}
                                 >
                                     Auto generate calendar
                                 </Button>
@@ -99,23 +96,34 @@ const DailyCalendar = () => {
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {dailyTasks.tasks.map((task) => (
-                                            <TableRow key={task.id}
-                                                onClick={() => handleRowClick(task.taskId)}
-                                                className="hover:bg-gray-100 cursor-pointer transition-colors">
+                                        {(dailyTasks?.tasks ?? []).map((task) => (
+                                            <TableRow
+                                                key={task.id ?? task.taskId}
+                                                onClick={() => handleRowClick?.(task.taskId ?? task.id)}
+                                                className="hover:bg-gray-100 cursor-pointer transition-colors"
+                                            >
                                                 <TableCell>{task.title}</TableCell>
                                                 <TableCell>
                                                     <Text>{task.duration} Hours</Text>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Text>
-                                                        {task.priority.map((priority) => (
-                                                            <Badge key={`${task.id}-${priority}`} className="me-1 mt-1" color={priorityColor(priority)}>{priority}</Badge>
+                                                        {(task.priority ?? []).map((p) => (
+                                                            <Badge key={`${task.id ?? task.taskId}-${p}`} className="me-1 mt-1" color={priorityColor(p)}>
+                                                                {p}
+                                                            </Badge>
                                                         ))}
                                                     </Text>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Button color="red" variant="secondary" onClick={() => handleDeleteTask(task.taskId)}>
+                                                    <Button
+                                                        color="red"
+                                                        variant="secondary"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation?.(); // tránh trigger onRowClick
+                                                            handleDeleteTask(task.taskId ?? task.id);
+                                                        }}
+                                                    >
                                                         Delete
                                                     </Button>
                                                 </TableCell>
@@ -132,11 +140,10 @@ const DailyCalendar = () => {
                             You must create a calendar config first to use this feature
                         </Subtitle>
                     </a>
-                )
-                }
-            </Grid >
+                )}
+            </Grid>
         </>
-    )
-}
+    );
+};
 
 export default DailyCalendar;
