@@ -36,4 +36,4 @@ class TagEnum(Enum):
     TRAVEL = "travel",
     SLEEP = "sleep"
 
-TAG_LIST = [TagEnum.WORK, TagEnum.EAT, TagEnum.RELAX, TagEnum.TRAVEL, TagEnum.SLEEP]
+TAG_LIST = ["work", "eat", "sleep", "relax", "travel"]
