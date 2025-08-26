@@ -16,23 +16,25 @@ class AICoreAdapter {
         this.tagTheTasksURL = aiCoreServiceDomain + process.env.AI_CORE_SERVICE_TAG_SCHEDULE_TASK;
     }
 
-    async tagTheTasks(tagTasksRequest: any[]): Promise<any> {
+    async tagTheTasks(userId: number, tagTasksRequest: any[]): Promise<any> {
         try {
+            const body = {
+                userId: userId,
+                tasks: tagTasksRequest
+            } 
             const headers = buildDefaultHeaders({});
             const uri = this.tagTheTasksURL;
-            console.log(`Calling API to AI Core service...`);
-            console.log("Request body: ", tagTasksRequest);
+            console.log(`Calling Tag the tasksAPI to AI Core service...`);
             const response = await fetch(uri, {
                 headers,
                 method: HttpMethod.POST,
-                body: JSON.stringify(tagTasksRequest)
+                body: JSON.stringify(body)
             });
 
             if (response.status !== 200) {
                 return getInternalServiceErrorResponse(response.status);
             }
             const data = await response.json();
-            console.log("Response from AI Core service: ", data);
             return data.data;
         } catch (error: any) {
             console.log("Exception when calling AI Core service");

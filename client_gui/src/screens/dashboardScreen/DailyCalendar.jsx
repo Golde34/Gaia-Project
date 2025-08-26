@@ -1,9 +1,8 @@
 import { Badge, Button, Card, Col, Flex, Grid, Subtitle, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text, Title } from "@tremor/react"
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getDailyTasksAction, getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
+import { createDailyCalendarAction, getDailyTasksAction, getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 import { priorityColor } from "../../kernels/utils/field-utils";
-import { userGenerateDailyCalendarDispatch } from "../../kernels/utils/write-dialog-api-requests";
 
 const DailyCalendar = () => {
     const dispatch = useDispatch();
@@ -21,9 +20,11 @@ const DailyCalendar = () => {
         fetchStatus();
     }, [fetchStatus]);
 
+    const [dailyTasksRequest, setDailyTasksRequest] = useState({ tasks: [] });
     const dailyTaskList = useSelector((state) => state.getDailyTasks);
-    const { dailyTasks: dailyTasks, loading: loadingTasks, error: errorTasks } = dailyTaskList;
-    const didDailyTaskListRef = useRef();
+    const { dailyTasks, loading: loadingTasks, error: errorTasks } = dailyTaskList;
+
+    const didDailyTaskListRef = useRef(false);
     const fetchDailyTaskList = useCallback(() => {
         if (didDailyTaskListRef.current) return;
         didDailyTaskListRef.current = true;
@@ -34,21 +35,32 @@ const DailyCalendar = () => {
         fetchDailyTaskList();
     }, [fetchDailyTaskList]);
 
-    if (loadingBubble || loadingTasks) {
-        return <div>Loading...</div>;
-    }
+    useEffect(() => {
+        if (dailyTasks?.tasks) {
+            setDailyTasksRequest(dailyTasks);
+        }
+    }, [dailyTasks]);
 
-    if (errorBubble) {
-        return <div>Error: {errorBubble}</div>;
-    }
-    if (errorTasks) {
-        return <div>Error: {errorTasks}</div>;
-    }
+    if (loadingBubble || loadingTasks) return <div>Loading...</div>;
+    if (errorBubble) return <div>Error: {errorBubble}</div>;
+    if (errorTasks) return <div>Error: {errorTasks}</div>;
 
-    const handleAutoGenerateCalendar = (dailyTasks) =>{
-        generateDailyCalendar(dailyTasks);
-    }
-    const generateDailyCalendar = userGenerateDailyCalendarDispatch();
+    const handleDeleteTask = (taskId) => {
+        setDailyTasksRequest(prev => ({
+            ...prev,
+            tasks: (prev?.tasks || []).filter(t => (t.taskId ?? t.id) !== taskId),
+        }));
+    };
+
+    const handleAutoGenerateCalendar = (request) => {
+        const source = request ?? dailyTasks ?? dailyTasksRequest ?? { tasks: [] };
+        const payload = { ...source };
+        if (!payload.tasks?.length) return;
+        dispatch(createDailyCalendarAction(payload));
+    };
+
+    const handleRowClick = (taskId) => {
+    };
 
     return (
         <>
@@ -62,7 +74,11 @@ const DailyCalendar = () => {
                     <>
                         <Col numColSpan={6}>
                             <Flex className="justify-end items-center mt-4">
-                                <Button color="indigo" variant="primary" onClick={handleAutoGenerateCalendar(dailyTasks)}>
+                                <Button
+                                    color="indigo"
+                                    variant="primary"
+                                    onClick={() => handleAutoGenerateCalendar()}
+                                >
                                     Auto generate calendar
                                 </Button>
                             </Flex>
@@ -80,23 +96,34 @@ const DailyCalendar = () => {
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {dailyTasks.tasks.map((task) => (
-                                            <TableRow key={task.id}
-                                                onClick={() => handleRowClick(task.taskId)}
-                                                className="hover:bg-gray-100 cursor-pointer transition-colors">
+                                        {(dailyTasks?.tasks ?? []).map((task) => (
+                                            <TableRow
+                                                key={task.id ?? task.taskId}
+                                                onClick={() => handleRowClick?.(task.taskId ?? task.id)}
+                                                className="hover:bg-gray-100 cursor-pointer transition-colors"
+                                            >
                                                 <TableCell>{task.title}</TableCell>
                                                 <TableCell>
                                                     <Text>{task.duration} Hours</Text>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Text>
-                                                        {task.priority.map((priority) => (
-                                                            <Badge key={`${task.id}-${priority}`} className="me-1 mt-1" color={priorityColor(priority)}>{priority}</Badge>
+                                                        {(task.priority ?? []).map((p) => (
+                                                            <Badge key={`${task.id ?? task.taskId}-${p}`} className="me-1 mt-1" color={priorityColor(p)}>
+                                                                {p}
+                                                            </Badge>
                                                         ))}
                                                     </Text>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Button color="red" variant="secondary">
+                                                    <Button
+                                                        color="red"
+                                                        variant="secondary"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation?.(); // tránh trigger onRowClick
+                                                            handleDeleteTask(task.taskId ?? task.id);
+                                                        }}
+                                                    >
                                                         Delete
                                                     </Button>
                                                 </TableCell>
@@ -113,11 +140,10 @@ const DailyCalendar = () => {
                             You must create a calendar config first to use this feature
                         </Subtitle>
                     </a>
-                )
-                }
-            </Grid >
+                )}
+            </Grid>
         </>
-    )
-}
+    );
+};
 
 export default DailyCalendar;

@@ -253,7 +253,7 @@ class ScheduleTaskService {
         this.kafkaHandler.produce(KafkaTopic.OPTIMIZE_TASK, messages);
     }
 
-    async tagScheduleTask(scheduleTasks: ScheduleTaskEntity[]): Promise<void> {
+    async tagScheduleTask(userId: number, scheduleTasks: ScheduleTaskEntity[]): Promise<void> {
         try {
             const tagTaskRequest: any[] = [];
             scheduleTasks.forEach((task) => {
@@ -263,10 +263,10 @@ class ScheduleTaskService {
                     title: task.title,
                 })
             })
-            const response = await this.aiCoreAdapterImpl.tagTheTasks(tagTaskRequest);
+            const response = await this.aiCoreAdapterImpl.tagTheTasks(userId, tagTaskRequest);
 
             response.map(async (task: any) => {
-                await scheduleTaskRepository.updateTagTask(task.id, task.tag);
+                await scheduleTaskRepository.updateTagTask(task.scheduleTaskId, task.tag);
             });
 
             await this.pushUpdateTaskTagKafkaMessage(tagTaskRequest);

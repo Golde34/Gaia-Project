@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, Button, Text, Title, Badge, Metric, Subtitle } from "@tremor/react";
 import { getAllDialogues } from "../../api/store/actions/chat_hub/dialogue.actions";
 import { useNavigate } from "react-router-dom";
+import { ItemRow } from "../../components/subComponents/ItemRow";
 
 const DialogueList = ({
     onNavigate,
@@ -53,19 +54,6 @@ const DialogueList = ({
         if (!dialogues.length && !folders.length) return "No items yet.";
         return null;
     }, [loading, dialogues, folders]);
-
-    const ItemRow = ({ icon, label, onClick, right }) => (
-        <button
-            onClick={onClick}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-100 transition text-left"
-        >
-            <span className="flex items-center gap-2">
-                {icon && <span className="text-lg">{icon}</span>}
-                <Text>{label}</Text>
-            </span>
-            {right}
-        </button>
-    );
 
     return (
         <div className="flex flex-col gap-3">

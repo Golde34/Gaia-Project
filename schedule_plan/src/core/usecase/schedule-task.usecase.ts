@@ -274,7 +274,7 @@ class ScheduleTaskUsecase {
         }
     }
 
-    async tagScheduleTask(scheduleTasks: ScheduleTaskEntity[]): Promise<ScheduleTaskEntity[] | undefined> {
+    async tagScheduleTask(userId: number, scheduleTasks: ScheduleTaskEntity[]): Promise<ScheduleTaskEntity[] | undefined> {
         try {
             if (!Array.isArray(scheduleTasks)) return undefined;
 
@@ -283,7 +283,7 @@ class ScheduleTaskUsecase {
             );
             if (allTagged) return scheduleTasks;
 
-            await scheduleTaskService.tagScheduleTask(scheduleTasks); 
+            await scheduleTaskService.tagScheduleTask(userId, scheduleTasks); 
             const listTaskIds = scheduleTasks.map(task => task.id);
             return await scheduleTaskService.findScheduleTasksByListIds(listTaskIds);
         } catch (error: any) {
