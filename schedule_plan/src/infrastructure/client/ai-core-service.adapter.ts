@@ -25,7 +25,6 @@ class AICoreAdapter {
             const headers = buildDefaultHeaders({});
             const uri = this.tagTheTasksURL;
             console.log(`Calling Tag the tasksAPI to AI Core service...`);
-            console.log("tagTasksRequest: ", JSON.stringify(body));
             const response = await fetch(uri, {
                 headers,
                 method: HttpMethod.POST,
@@ -36,7 +35,6 @@ class AICoreAdapter {
                 return getInternalServiceErrorResponse(response.status);
             }
             const data = await response.json();
-            console.log("Response from AI Core service: ", data);
             return data.data;
         } catch (error: any) {
             console.log("Exception when calling AI Core service");

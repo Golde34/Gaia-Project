@@ -33,13 +33,13 @@ export default class ScheduleDayBubbleEntity extends Model {
         type: DataType.UUID,
         field: "primary_task_id",
     })
-    primaryTaskId: string | null = null;
+    primaryTaskId?: string;
 
     @Column({
         type: DataType.UUID,
         field: "backup_task_id",
     })
-    backupTaskId: string | null = null;
+    backupTaskId?: string;
 
     @Column({
         type: DataType.UUID,

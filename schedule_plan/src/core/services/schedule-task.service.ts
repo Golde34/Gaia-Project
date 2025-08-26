@@ -266,7 +266,7 @@ class ScheduleTaskService {
             const response = await this.aiCoreAdapterImpl.tagTheTasks(userId, tagTaskRequest);
 
             response.map(async (task: any) => {
-                await scheduleTaskRepository.updateTagTask(task.id, task.tag);
+                await scheduleTaskRepository.updateTagTask(task.scheduleTaskId, task.tag);
             });
 
             await this.pushUpdateTaskTagKafkaMessage(tagTaskRequest);

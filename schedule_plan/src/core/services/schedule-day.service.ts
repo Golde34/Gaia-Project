@@ -92,7 +92,6 @@ class ScheduleDayService {
                 const matchedTag = tags.find(tag => bubble.tag === tag) || null;
 
                 if (!matchedTag) {
-                    results.push({ ...bubble, tag: "", primaryTaskId: null, backupTaskId: null });
                     continue;
                 }
 
@@ -100,7 +99,7 @@ class ScheduleDayService {
                 const pointer = taskPointers.get(matchedTag);
 
                 if (!pointer || pointer.index >= tagTasks.length) {
-                    results.push({ ...bubble, tag: matchedTag, primaryTaskId: null, backupTaskId: null });
+                    results.push(this.mappingPointer(bubble, matchedTag, null, null))
                     continue;
                 }
 
@@ -109,15 +108,7 @@ class ScheduleDayService {
                     ? tagTasks[pointer.index + 1]
                     : null;
 
-                results.push({
-                    startTime: bubble.startTime,
-                    endTime: bubble.endTime,
-                    tag: matchedTag,
-                    primaryTaskId: primary.id,
-                    primaryTaskTitle: primary.title,
-                    backupTaskId: backup?.id || null,
-                    backupTaskTitle: backup?.title,
-                });
+                results.push(this.mappingPointer(bubble, matchedTag, primary, backup));
                 // Reduce remaining time of primary task
                 pointer.remaining -= duration
                 if (pointer.remaining <= 0 && backup && typeof backup.duration === "number") {
@@ -141,10 +132,23 @@ class ScheduleDayService {
         }
     }
 
+    private mappingPointer(bubble: any, matchedTag: string, primary: any | null, backup: any | null) {
+        return {
+            startTime: bubble.startTime,
+            endTime: bubble.endTime,
+            tag: matchedTag,
+            primaryTaskId: primary?.id || null,
+            primaryTaskTitle: primary?.title || null,
+            backupTaskId: backup?.id || null,
+            backupTaskTitle: backup?.title || null,
+        }
+    }
+
     async updateDailyCalendar(userId: number, assignedBubbleList: AssignedBubble[]): Promise<void> {
         try {
-            assignedBubbleList.forEach(bubble => {
-                const scheduleDay = scheduleDayRepository.createScheduleDay(bubble);
+            assignedBubbleList.forEach(async (bubble) => {
+                console.log("bubble: ", bubble);
+                const scheduleDay = await scheduleDayRepository.createScheduleDay(userId, bubble);
                 console.log(`Save scheduleday of user ${userId}: ${scheduleDay}`)
             });
         } catch (error: any) {
