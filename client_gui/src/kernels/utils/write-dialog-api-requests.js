@@ -149,13 +149,3 @@ export const useRegisterScheduleCalendarDispatch = () => {
 
     return registerScheduleCalendarDispatch;
 }
-
-export const userGenerateDailyCalendarDispatch = () => {
-    const dispatch = useDispatch();
-    
-    const generateDailyCalendarDispatch = (dailyTasks) => {
-        dispatch(createDailyCalendarAction(dailyTasks));
-    }
-
-    return generateDailyCalendarDispatch;
-}

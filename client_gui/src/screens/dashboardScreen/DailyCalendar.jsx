@@ -1,9 +1,8 @@
 import { Badge, Button, Card, Col, Flex, Grid, Subtitle, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text, Title } from "@tremor/react"
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getDailyTasksAction, getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
+import { createDailyCalendarAction, getDailyTasksAction, getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 import { priorityColor } from "../../kernels/utils/field-utils";
-import { userGenerateDailyCalendarDispatch } from "../../kernels/utils/write-dialog-api-requests";
 
 const DailyCalendar = () => {
     const dispatch = useDispatch();
@@ -21,14 +20,17 @@ const DailyCalendar = () => {
         fetchStatus();
     }, [fetchStatus]);
 
+    const [dailyTasksRequest, setDailyTasksRequest] = useState({ tasks: [] });
     const dailyTaskList = useSelector((state) => state.getDailyTasks);
-    const { dailyTasks: dailyTasks, loading: loadingTasks, error: errorTasks } = dailyTaskList;
+    const { dailyTasks, loading: loadingTasks, error: errorTasks } = dailyTaskList;
     const didDailyTaskListRef = useRef();
+
     const fetchDailyTaskList = useCallback(() => {
         if (didDailyTaskListRef.current) return;
         didDailyTaskListRef.current = true;
         dispatch(getDailyTasksAction());
-    }, [dispatch]);
+        setDailyTasksRequest(dailyTasks);
+    }, [dispatch, dailyTasks]);
 
     useEffect(() => {
         fetchDailyTaskList();
@@ -45,10 +47,20 @@ const DailyCalendar = () => {
         return <div>Error: {errorTasks}</div>;
     }
 
-    const handleAutoGenerateCalendar = (dailyTasks) =>{
-        generateDailyCalendar(dailyTasks);
-    }
-    const generateDailyCalendar = userGenerateDailyCalendarDispatch();
+    const handleDeleteTask = (taskId) => {
+        setDailyTasksRequest(prev => ({
+            ...prev,
+            tasks: (prev.tasks || []).filter(t => (t.taskId ?? t.id) !== taskId),
+        }));
+    };
+
+    const handleAutoGenerateCalendar = (request) => {
+        if (request === undefined) setDailyTasksRequest(dailyTasks);
+        const payload = { ...dailyTasksRequest };
+        if (!payload.tasks || !payload.tasks.length) return;
+        console.log("Payload: ", payload);
+        dispatch(createDailyCalendarAction(payload));
+    };
 
     return (
         <>
@@ -62,7 +74,14 @@ const DailyCalendar = () => {
                     <>
                         <Col numColSpan={6}>
                             <Flex className="justify-end items-center mt-4">
-                                <Button color="indigo" variant="primary" onClick={handleAutoGenerateCalendar(dailyTasks)}>
+                                <Button
+                                    color="indigo"
+                                    variant="primary"
+                                    onClick={() => {
+                                        console.log("....Payload: ", dailyTasksRequest);
+                                        handleAutoGenerateCalendar(dailyTasksRequest);
+                                    }}
+                                >
                                     Auto generate calendar
                                 </Button>
                             </Flex>
@@ -96,7 +115,7 @@ const DailyCalendar = () => {
                                                     </Text>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Button color="red" variant="secondary">
+                                                    <Button color="red" variant="secondary" onClick={() => handleDeleteTask(task.taskId)}>
                                                         Delete
                                                     </Button>
                                                 </TableCell>
