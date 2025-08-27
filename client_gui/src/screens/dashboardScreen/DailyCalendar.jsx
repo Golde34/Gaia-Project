@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createDailyCalendarAction, getDailyTasksAction, getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 import { priorityColor } from "../../kernels/utils/field-utils";
+import { tagColors } from "../../kernels/utils/calendar";
 
 const DailyCalendar = () => {
     const dispatch = useDispatch();
@@ -59,8 +60,7 @@ const DailyCalendar = () => {
         dispatch(createDailyCalendarAction(payload));
     };
 
-    const handleRowClick = (taskId) => {
-    };
+    const handleRowClick = (taskId) => { };
 
     return (
         <>
@@ -83,56 +83,75 @@ const DailyCalendar = () => {
                                 </Button>
                             </Flex>
                         </Col>
-                        <Col numColSpan={12}>
-                            <Card className="mt-4">
-                                <Title>Do you want to include these tasks in your calendar?</Title>
-                                <Table className="mt-5">
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableHeaderCell>Name</TableHeaderCell>
-                                            <TableHeaderCell>Duration</TableHeaderCell>
-                                            <TableHeaderCell>Priority</TableHeaderCell>
-                                            <TableHeaderCell>Delete in daily tasks</TableHeaderCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {(dailyTasks?.tasks ?? []).map((task) => (
-                                            <TableRow
-                                                key={task.id ?? task.taskId}
-                                                onClick={() => handleRowClick?.(task.taskId ?? task.id)}
-                                                className="hover:bg-gray-100 cursor-pointer transition-colors"
-                                            >
-                                                <TableCell>{task.title}</TableCell>
-                                                <TableCell>
-                                                    <Text>{task.duration} Hours</Text>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Text>
-                                                        {(task.priority ?? []).map((p) => (
-                                                            <Badge key={`${task.id ?? task.taskId}-${p}`} className="me-1 mt-1" color={priorityColor(p)}>
-                                                                {p}
-                                                            </Badge>
-                                                        ))}
-                                                    </Text>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Button
-                                                        color="red"
-                                                        variant="secondary"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation?.(); // tránh trigger onRowClick
-                                                            handleDeleteTask(task.taskId ?? task.id);
-                                                        }}
-                                                    >
-                                                        Delete
-                                                    </Button>
-                                                </TableCell>
+                        {dailyTasks?.tasks && dailyTasks?.tasks?.length > 0 && (
+                            <Col numColSpan={12}>
+                                <Card className="mt-4">
+                                    <Table className="mt-5">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableHeaderCell>Name</TableHeaderCell>
+                                                <TableHeaderCell>Duration</TableHeaderCell>
+                                                <TableHeaderCell>Priority</TableHeaderCell>
+                                                <TableHeaderCell>Delete in daily tasks</TableHeaderCell>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </Card>
-                        </Col>
+                                        </TableHead>
+                                        <TableBody>
+                                            {(dailyTasks?.tasks ?? []).map((task) => (
+                                                <TableRow
+                                                    key={task.id ?? task.taskId}
+                                                    onClick={() => handleRowClick?.(task.taskId ?? task.id)}
+                                                    className="hover:bg-gray-100 cursor-pointer transition-colors"
+                                                >
+                                                    <TableCell>{task.title}</TableCell>
+                                                    <TableCell>
+                                                        <Text>{task.duration} Hours</Text>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Text>
+                                                            {(task.priority ?? []).map((p) => (
+                                                                <Badge key={`${task.id ?? task.taskId}-${p}`} className="me-1 mt-1" color={priorityColor(p)}>
+                                                                    {p}
+                                                                </Badge>
+                                                            ))}
+                                                        </Text>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Button
+                                                            color="red"
+                                                            variant="secondary"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation?.(); // tránh trigger onRowClick
+                                                                handleDeleteTask(task.taskId ?? task.id);
+                                                            }}
+                                                        >
+                                                            Delete
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </Card>
+                            </Col>
+                        )}
+                        {
+                            dailyTasks?.dailyCalendar && dailyTasks?.dailyCalendar?.length > 0 && (
+                                <Col numColSpan={12}>
+                                    {(dailyTasks?.dailyCalendar ?? []).map((slot) => (
+                                        <Card key={slot.id} className="flex items-center justify-between p-3 rounded-lg mt-4 hover:cursor-pointer transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-105 duration-300">
+                                            <div className="flex items-center space-x-3">
+                                                <Badge color={tagColors[slot.tag] || 'gray'} size="sm">
+                                                    {slot.tag}
+                                                </Badge>
+                                                <Text>
+                                                    {slot.startTime} - {slot.endTime}
+                                                </Text>
+                                            </div>
+                                        </Card>
+                                    ))}
+                                </Col>
+                            )
+                        }
                     </>
                 ) : (
                     <a href="#">
