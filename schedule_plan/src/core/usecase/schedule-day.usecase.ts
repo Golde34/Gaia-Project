@@ -104,7 +104,7 @@ class ScheduleDayUsecase {
             );
             return msg200({
                 message: "Optimized tasks successfully.",
-                tasks,
+                tasks: tasks,
             });
         }
 
@@ -120,14 +120,14 @@ class ScheduleDayUsecase {
             return msg200({
                 message:
                     "Your optimization settings are set. Do you want to use this optimized list?",
-                tasks,
+                tasks: tasks,
             });
         }
 
         return msg200({
             message:
                 "Tasks are not optimized yet. Please provide your optimization configuration to enable optimization.",
-            tasks,
+            tasks: tasks,
         });
     }
 

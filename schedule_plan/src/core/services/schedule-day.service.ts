@@ -138,9 +138,9 @@ class ScheduleDayService {
             startTime: bubble.startTime,
             endTime: bubble.endTime,
             tag: matchedTag,
-            primaryTaskId: primary?.id || null,
+            primaryTaskId: primary?.taskId|| null,
             primaryTaskTitle: primary?.title || null,
-            backupTaskId: backup?.id || null,
+            backupTaskId: backup?.taskId || null,
             backupTaskTitle: backup?.title || null,
             weekDay: weekDay,
         }
