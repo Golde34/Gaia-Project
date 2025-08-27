@@ -69,8 +69,8 @@ const DailyCalendar = () => {
     const handleAutoGenerateCalendar = (request) => {
         const source = request ?? dailyTasks ?? dailyTasksRequest ?? { tasks: [] };
         const payload = { ...source };
-        if (!payload.tasks?.length) return;
-        dispatch(createDailyCalendarAction(payload));
+        if (!payload.tasks?.length && !payload.dailyCalendar?.length) return;
+        dispatch(createDailyCalendarAction(payload.tasks));
     };
 
     const handleRowClick = (taskId) => { };
@@ -151,25 +151,23 @@ const DailyCalendar = () => {
                             dailyTasks?.dailyCalendar && dailyTasks?.dailyCalendar?.length > 0 && (
                                 <Col numColSpan={12}>
                                     {(dailyTasks?.dailyCalendar ?? []).map((slot) => (
-                                        <Card key={slot.id} className="flex items-center justify-between p-3 rounded-lg mt-4 
-                                                            hover:cursor-pointer transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-105 duration-300">
-                                            <div className="flex items-center space-x-3">
-                                                <Badge color={tagColors[slot.tag] || 'gray'} size="sm">
+                                        <Card key={slot.id} onClick={() => openModal(slot)}
+                                            className="flex items-center justify-between p-3 rounded-lg mt-4 
+                                                hover:cursor-pointer transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-105 duration-300">
+                                            <div className="flex-shrink-0">
+                                                <Badge
+                                                    color={tagColors[slot.tag] || 'gray'} size="sm"
+                                                    className="px-2 py-1 rounded-full text-xs font-medium">
                                                     {slot.tag}
                                                 </Badge>
-                                                <Text>
-                                                    {slot.startTime} - {slot.endTime}
-                                                </Text>
                                             </div>
-                                            <div className="flex items-center space-x-3">
-                                                <a href="#"><Text>{shortenTitle(slot.primaryTaskTitle, 45, 35)}</Text></a>
-                                                <Button
-                                                    color="indigo"
-                                                    variant="secondary"
-                                                    onClick={() => openModal(slot)}
-                                                >
-                                                    Detail
-                                                </Button>
+
+                                            <div className="flex-grow text-center mx-4">
+                                                <Text className="text-sm font-semibold text-white truncate mt-1"> {slot.primaryTaskTitle}</Text>
+                                            </div>
+
+                                            <div className="flex-shrink-0">
+                                                <Text className="text-sm text-gray-400">{slot.startTime} - {slot.endTime}</Text>
                                             </div>
                                         </Card>
                                     ))}
@@ -219,22 +217,27 @@ const DailyCalendar = () => {
                                         Schedule Task Detail
                                     </DialogTitle>
                                     {selectedSlot && (
-                                        <Card className="mt-4">
+                                        <div className="mt-4">
                                             <Text>{selectedSlot.startTime} - {selectedSlot.endTime}</Text>
                                             {
                                                 selectedSlot.primaryTaskId && selectedSlot.backupTaskId && (
                                                     <>
-                                                        <a href={`/client-gui/task/detail/${selectedSlot.primaryTaskId}`}>
-                                                            <Text>{selectedSlot.primaryTaskTitle}</Text>
-                                                        </a>
-                                                        <a href={`/client-gui/task/detail/${selectedSlot.backupTaskId}`}>
-                                                            <Text>{selectedSlot.backupTaskTitle}</Text>
-                                                        </a>
+                                                        <Card className="mt-4 p-4" decoration="left" decorationColor="blue">
+                                                            <a href={`/client-gui/task/detail/${selectedSlot.primaryTaskId}`}>
+                                                                <Subtitle>Main task:</Subtitle>
+                                                                <Text>{selectedSlot.primaryTaskTitle}</Text>
+                                                            </a>
+                                                        </Card>
+                                                        <Card className="mt-4 p-4" decoration="left" decorationColor="red">
+                                                            <a href={`/client-gui/task/detail/${selectedSlot.backupTaskId}`}>
+                                                                <Subtitle>Backup task:</Subtitle>
+                                                                <Text>{selectedSlot.backupTaskTitle}</Text>
+                                                            </a>
+                                                        </Card>
                                                     </>
                                                 )
                                             }
-
-                                        </Card>
+                                        </div>
                                     )}
                                     <div className="mt-4 flex justify-end">
                                         <button
