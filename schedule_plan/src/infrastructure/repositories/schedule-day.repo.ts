@@ -12,6 +12,7 @@ class ScheduleDayRepository {
             tag: assignedBubble.tag,
             startTime: assignedBubble.startTime,
             endTime: assignedBubble.endTime,
+            weekDay: assignedBubble.weekDay,
             primaryTaskId: assignedBubble.primaryTaskId,
             backupTaskId: assignedBubble.backupTaskId,
             primaryTaskTitle: assignedBubble.primaryTaskTitle,
@@ -20,6 +21,14 @@ class ScheduleDayRepository {
             updatedAt: new Date(),
         } 
         return await ScheduleDayBubbleEntity.create(scheduleDay);
+    }
+
+    async deleteScheduleDay(userId: number, weekDay: number): Promise<number> {
+        return await ScheduleDayBubbleEntity.destroy({ where: { userId: userId, weekDay: weekDay }});
+    }
+
+    async findByWeekDay(userId: number, weekDay: number): Promise<ScheduleDayBubbleEntity[]> {
+        return await ScheduleDayBubbleEntity.findAll({ where: { userId: userId, weekDay: weekDay }});
     }
 
     async listScheduleDay(userId: number): Promise<ScheduleDayBubbleEntity[]> {

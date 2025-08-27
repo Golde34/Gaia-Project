@@ -127,7 +127,7 @@ class ScheduleDayUsecase {
             const taggedScheduleTasks = await scheduleTaskUsecase.tagScheduleTask(userId, scheduleTasks);
             if (taggedScheduleTasks === undefined) throw new Error("There's an error when tagged your task to make daily calendar");
             const dailyCalendar = await scheduleDayService.matchScheduleTasksWithTimeBubble(taggedScheduleTasks, timeBubbles);
-            runInBackground(() => scheduleDayService.updateDailyCalendar(userId, dailyCalendar));
+            runInBackground(() => scheduleDayService.updateDailyCalendar(userId, dailyCalendar, weekDay));
 
             return msg200({
                 message: "Daily calendar generated successfully",

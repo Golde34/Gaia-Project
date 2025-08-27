@@ -144,13 +144,17 @@ class ScheduleDayService {
         }
     }
 
-    async updateDailyCalendar(userId: number, assignedBubbleList: AssignedBubble[]): Promise<void> {
+    async updateDailyCalendar(userId: number, assignedBubbleList: AssignedBubble[], weekDay: number): Promise<void> {
         try {
+            const scheduleDayList = await scheduleDayRepository.findByWeekDay(userId, weekDay);
+            if (scheduleDayList.length > 0) {
+                await scheduleDayRepository.deleteScheduleDay(userId, weekDay);
+            }
             assignedBubbleList.forEach(async (bubble) => {
-                console.log("bubble: ", bubble);
                 const scheduleDay = await scheduleDayRepository.createScheduleDay(userId, bubble);
                 console.log(`Save scheduleday of user ${userId}: ${scheduleDay}`)
             });
+            return;
         } catch (error: any) {
             console.error("Error inquiring time bubble by user ID and weekday:", error);
             throw error;
