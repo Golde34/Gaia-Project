@@ -50,3 +50,25 @@ func ReturnTimeBubbleConfigObjectMapper(body map[string]interface{}) *response_d
 	input.EndTime = body["endTime"].(string)
 	return &input
 }
+
+func ReturnDailyCalendarObjectMapper(body map[string]interface{}) *response_dtos.DailyCalendarResponseDTO {
+	var input response_dtos.DailyCalendarResponseDTO
+	input.ID = body["id"].(string)
+	input.UserId = body["userId"].(string)
+	input.StartTime = body["startTime"].(string)
+	input.EndTime = body["endTime"].(string)
+	if body["primaryTaskId"] != nil {
+		input.PrimaryTaskId = body["primaryTaskId"].(string)
+	}
+	if body["backupTaskId"] != nil {
+		input.BackupTaskId = body["backupTaskId"].(string)
+	}
+	if body["primaryTaskTitle"] != nil {
+		input.PrimaryTaskTitle = body["primaryTaskTitle"].(string)
+	}
+	if body["backupTaskTitle"] != nil {
+		input.BackupTaskTitle = body["backupTaskTitle"].(string)
+	}
+	input.Tag = body["tag"].(string)
+	return &input
+}
