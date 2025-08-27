@@ -133,9 +133,20 @@ class ScheduleDayUsecase {
 
     async generateDailyCalendar(userId: number, dailyTasks: any[]): Promise<IResponse | undefined> {
         try {
+            let tasks = [];
+            if (dailyTasks == undefined || dailyTasks == null 
+                || dailyTasks.length === 0 || Array.isArray(dailyTasks)) {
+                const scheduleTasks = await scheduleTaskUsecase.findActiveTaskBatch(userId);
+                if (scheduleTasks == undefined || scheduleTasks?.length == 0) {
+                    return msg400("No active task batch found");
+                }
+                tasks = scheduleTasks;
+            } else {
+                tasks = dailyTasks;
+            }
             const weekDay: number = new Date().getDay();
             const timeBubbles = await scheduleDayService.inquiryTimeBubbleByUserIdAndWeekday(userId, weekDay);
-            const scheduleTasks: ScheduleTaskEntity[] = scheduleTaskMapper.mapDailyTasksToScheduleTasks(dailyTasks);
+            const scheduleTasks: ScheduleTaskEntity[] = scheduleTaskMapper.mapDailyTasksToScheduleTasks(tasks);
             const taggedScheduleTasks = await scheduleTaskUsecase.tagScheduleTask(userId, scheduleTasks);
             if (taggedScheduleTasks === undefined) throw new Error("There's an error when tagged your task to make daily calendar");
             const dailyCalendar = await scheduleDayService.matchScheduleTasksWithTimeBubble(weekDay, taggedScheduleTasks, timeBubbles);

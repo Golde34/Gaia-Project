@@ -257,6 +257,16 @@ class ScheduleTaskUsecase {
     }
 
     async getActiveTaskBatch(userId: number): Promise<IResponse | undefined> {
+        const scheduleTasks = await this.findActiveTaskBatch(userId);
+        if (!scheduleTasks) {
+            return msg400("No active task batch found");
+        }
+        return msg200({
+            activeTaskBatch: scheduleTasks
+        })
+    }
+
+    async findActiveTaskBatch(userId: number): Promise<ScheduleTaskEntity[] | undefined> {
         try {
             const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId);
             if (!schedulePlan) {
@@ -264,12 +274,9 @@ class ScheduleTaskUsecase {
                 throw new Error(`Cannot find schedule plan by user id: ${userId}`);
             }
 
-            const scheduleTasks = await scheduleTaskService.getScheduleTaskByBatchNumber(schedulePlan.id, schedulePlan.activeTaskBatch);
-            return msg200({
-                activeTaskBatch: scheduleTasks
-            })
+            return await scheduleTaskService.getScheduleTaskByBatchNumber(schedulePlan.id, schedulePlan.activeTaskBatch);
         } catch (error) {
-            console.error("Error on getScheduleTasksBatch: ", error);
+            console.error("Error on findActiveTaskBatch: ", error);
             return undefined;
         }
     }
@@ -283,7 +290,7 @@ class ScheduleTaskUsecase {
             );
             if (allTagged) return scheduleTasks;
 
-            await scheduleTaskService.tagScheduleTask(userId, scheduleTasks); 
+            await scheduleTaskService.tagScheduleTask(userId, scheduleTasks);
             const listTaskIds = scheduleTasks.map(task => task.id);
             return await scheduleTaskService.findScheduleTasksByListIds(listTaskIds);
         } catch (error: any) {
