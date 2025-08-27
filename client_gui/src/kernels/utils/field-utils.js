@@ -14,15 +14,15 @@ export const statusColor = (status) => {
 
 export const priorityColor = (priority) => {
     if (priority.toLowerCase() === TaskPriority.LOW) {
-        return ColorConstants.GREEN 
+        return ColorConstants.GREEN
     } else if (priority.toLowerCase() === TaskPriority.MEDIUM) {
-        return ColorConstants.BLUE 
+        return ColorConstants.BLUE
     } else if (priority.toLowerCase() === TaskPriority.HIGH) {
-        return ColorConstants.RED 
+        return ColorConstants.RED
     } else if (priority.toLowerCase() === TaskPriority.STAR) {
-        return ColorConstants.YELLOW 
+        return ColorConstants.YELLOW
     }
-} 
+}
 
 export const pushPriority = (isHighPriority, isMediumPriority, isLowPriority, isStarPriority) => {
     let priority = []
@@ -86,7 +86,7 @@ export const pushRepeat = (isMonday, isTuesday, isWednesday, isThursday, isFrida
     if (isSunday) {
         repeat.push(Weekday.SUNDAY)
     }
-    return repeat 
+    return repeat
 }
 
 export const pullRepeat = (repeats) => {
@@ -118,4 +118,11 @@ export const pullRepeat = (repeats) => {
         }
     }
     return [isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday]
+}
+
+export const shortenTitle = (title, maxLength = 20, condition = 25) => {
+    if (title.length > condition) {
+        return title.substring(0, maxLength) + "...";
+    }
+    return title;
 }

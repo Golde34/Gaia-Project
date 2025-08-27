@@ -45,6 +45,7 @@ export const getDailyTasksAction = () => async (dispatch) => {
     dispatch({ type: GET_DAILY_TASKS_REQUEST });
     try {
         const { data } = await serverRequest('/schedule-calendar/daily-tasks', HttpMethods.GET, portName.middleware);
+        console.log(data);
         dispatch({ type: GET_DAILY_TASKS_SUCCESS, payload: data });
     } catch (error) {
         dispatch({
