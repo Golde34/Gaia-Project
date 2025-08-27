@@ -58,7 +58,7 @@ func (adapter *ScheduleCalendarAdapter) GetUserDailyTasks(userId string) (respon
 			scheduleTasks = append(scheduleTasks, *scheduleTask)
 		}
 	}
-	if bodyResultMap["dailyCalendar"] != nil || len(bodyResultMap["dailyCalendar"].([]interface{})) > 0 {
+	if bodyResultMap["dailyCalendar"] != nil && len(bodyResultMap["dailyCalendar"].([]interface{})) > 0 {
 		for _, scheduleDay := range bodyResultMap["dailyCalendar"].([]interface{}) {
 			calendarComponent := mapper_response.ReturnDailyCalendarObjectMapper(scheduleDay.(map[string]interface{}))
 			dailyCalendar = append(dailyCalendar, *calendarComponent)
