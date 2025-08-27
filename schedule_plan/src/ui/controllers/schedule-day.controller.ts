@@ -29,7 +29,7 @@ class ScheduleDayController {
         try {
             const userId = req.params.userId;
             console.log(`Finding optimized schedule tasks for user: ${userId}`);
-            return await scheduleDayUsecase.findDailyScheduleTasks(Number(userId));
+            return await scheduleDayUsecase.returnDailyCalendar(Number(userId));
         } catch (error) {
             next(error);
         }

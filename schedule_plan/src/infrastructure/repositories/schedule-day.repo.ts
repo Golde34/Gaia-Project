@@ -31,8 +31,10 @@ class ScheduleDayRepository {
         return await ScheduleDayBubbleEntity.findAll({ where: { userId: userId, weekDay: weekDay }});
     }
 
-    async listScheduleDay(userId: number): Promise<ScheduleDayBubbleEntity[]> {
-        return await ScheduleDayBubbleEntity.findAll({ where: { userId: userId }});
+    async listScheduleDay(weekDay: number, userId: number): Promise<ScheduleDayBubbleEntity[]> {
+        console.log("weekday: ", weekDay);
+        console.log("userId: ", userId);
+        return await ScheduleDayBubbleEntity.findAll({ where: { weekDay: weekDay, userId: userId }});
     }
 }
 
