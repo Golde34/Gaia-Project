@@ -1,6 +1,6 @@
 import { Badge, BadgeDelta, Card, Col, Flex, Grid, Metric, Text } from "@tremor/react"
 import { useNavigate } from "react-router-dom";
-import { priorityColor, statusColor } from "../../kernels/utils/field-utils";
+import { priorityColor, shortenTitle, statusColor } from "../../kernels/utils/field-utils";
 
 const CardItem = (props) => {
     const navigate = useNavigate();
@@ -18,13 +18,6 @@ const CardItem = (props) => {
         } else {
             navigate(`/task/detail/${taskId}`);
         }
-    }
-
-    const shortenTitle = (title) => {
-        if (title.length > 25) {
-            return title.substring(0, 20) + "...";
-        }
-        return title;
     }
 
     return (
