@@ -1,4 +1,5 @@
 import { KafkaCommand } from "../../core/domain/enums/kafka.enums";
+import { groupTaskService } from "../../core/services/group-task.service";
 import { taskService } from "../../core/services/task.service";
 
 export const handleUpdateTaskTagMessage = async (message: string) => {

@@ -97,36 +97,6 @@ class UserTagService {
             return msg400(error.message.toString());
         }
     }
-
-    async findTagByProjectId(projectId: string): Promise<IUserTagEntity | null> {
-        try {
-            const tag = await userTagStore.findTagByProjectId(projectId);
-            if (tag === null || tag === undefined) return null;
-            return tag;
-        } catch (error: any) {
-            return null;
-        }
-    }
-
-    async findTagByGroupTaskId(groupId: string): Promise<IUserTagEntity | null> {
-        try {
-            const tag = await userTagStore.findTagByGroupTaskId(groupId);
-            if (tag === null || tag === undefined) return null;
-            return tag;
-        } catch (error: any) {
-            return null;
-        }
-    }
-
-    async findTagByTaskId(taskId: string): Promise<IUserTagEntity | null> {
-        try {
-            const tag = await userTagStore.findTagByTaskId(taskId);
-            if (tag === null || tag === undefined) return null;
-            return tag;
-        } catch (error: any) {
-            return null;
-        }
-    }
 }
 
 export const userTagService = new UserTagService();

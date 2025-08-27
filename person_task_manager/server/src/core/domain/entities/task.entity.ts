@@ -1,5 +1,4 @@
 import { ICommentEntity } from "./comment.entity";
-import { IUserTagEntity } from "./user-tag.entity";
 import { ISubTaskEntity } from "./sub-task.entity";
 import { ActiveStatus } from "../../../core/domain/enums/enums";
 
@@ -19,6 +18,6 @@ export interface ITaskEntity extends Document {
     activeStatus: ActiveStatus;
     groupTaskId: string;
     userId: number;
-    tag: IUserTagEntity 
+    tag: string 
 }
 
