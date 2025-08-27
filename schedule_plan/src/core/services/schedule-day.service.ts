@@ -1,12 +1,13 @@
+import { scheduleDayRepository } from "../../infrastructure/repositories/schedule-day.repo";
 import { timeBubbleRepository } from "../../infrastructure/repositories/time-bubble.repo";
-import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
-import { ActiveStatus, ErrorStatus } from "../domain/enums/enums";
-import { timeBubbleMapper } from "../mapper/time-bubble.mapper";
-import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
-import TimeBubblesEntity from "../domain/entities/time-bubble.entity";
 import { parseTime } from "../../kernel/utils/string-utils";
 import { AssignedBubble } from "../domain/dto/assigned-bubble.dto";
-import { scheduleDayRepository } from "../../infrastructure/repositories/schedule-day.repo";
+import ScheduleDayBubbleEntity from "../domain/entities/schedule-day.entity";
+import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
+import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
+import TimeBubblesEntity from "../domain/entities/time-bubble.entity";
+import { ActiveStatus, ErrorStatus } from "../domain/enums/enums";
+import { timeBubbleMapper } from "../mapper/time-bubble.mapper";
 
 class ScheduleDayService {
     constructor() { }
@@ -63,7 +64,7 @@ class ScheduleDayService {
         }
     }
 
-    async matchScheduleTasksWithTimeBubble(scheduleTasks: ScheduleTaskEntity[], timeBubbles: TimeBubblesEntity[]): Promise<AssignedBubble[]> {
+    async matchScheduleTasksWithTimeBubble(weekDay: number, scheduleTasks: ScheduleTaskEntity[], timeBubbles: TimeBubblesEntity[]): Promise<AssignedBubble[]> {
         try {
             const results: AssignedBubble[] = [];
             const tags = ["work", "relax", "eat", "travel", "sleep"];
@@ -99,7 +100,7 @@ class ScheduleDayService {
                 const pointer = taskPointers.get(matchedTag);
 
                 if (!pointer || pointer.index >= tagTasks.length) {
-                    results.push(this.mappingPointer(bubble, matchedTag, null, null))
+                    results.push(this.mappingPointer(bubble, matchedTag, null, null, weekDay))
                     continue;
                 }
 
@@ -108,7 +109,7 @@ class ScheduleDayService {
                     ? tagTasks[pointer.index + 1]
                     : null;
 
-                results.push(this.mappingPointer(bubble, matchedTag, primary, backup));
+                results.push(this.mappingPointer(bubble, matchedTag, primary, backup, weekDay));
                 // Reduce remaining time of primary task
                 pointer.remaining -= duration
                 if (pointer.remaining <= 0 && backup && typeof backup.duration === "number") {
@@ -132,27 +133,43 @@ class ScheduleDayService {
         }
     }
 
-    private mappingPointer(bubble: any, matchedTag: string, primary: any | null, backup: any | null) {
+    private mappingPointer(bubble: any, matchedTag: string, primary: any | null, backup: any | null, weekDay: number) {
         return {
             startTime: bubble.startTime,
             endTime: bubble.endTime,
             tag: matchedTag,
-            primaryTaskId: primary?.id || null,
+            primaryTaskId: primary?.taskId|| null,
             primaryTaskTitle: primary?.title || null,
-            backupTaskId: backup?.id || null,
+            backupTaskId: backup?.taskId || null,
             backupTaskTitle: backup?.title || null,
+            weekDay: weekDay,
         }
     }
 
-    async updateDailyCalendar(userId: number, assignedBubbleList: AssignedBubble[]): Promise<void> {
+    async updateDailyCalendar(userId: number, assignedBubbleList: AssignedBubble[], weekDay: number): Promise<void> {
         try {
+            const scheduleDayList = await scheduleDayRepository.findByWeekDay(userId, weekDay);
+            console.log("scheduleDayList: ", scheduleDayList);
+            if (scheduleDayList.length > 0) {
+                await scheduleDayRepository.deleteScheduleDay(userId, weekDay);
+            }
             assignedBubbleList.forEach(async (bubble) => {
-                console.log("bubble: ", bubble);
                 const scheduleDay = await scheduleDayRepository.createScheduleDay(userId, bubble);
                 console.log(`Save scheduleday of user ${userId}: ${scheduleDay}`)
             });
+            return;
         } catch (error: any) {
             console.error("Error inquiring time bubble by user ID and weekday:", error);
+            throw error;
+        }
+    }
+
+    async returnDailyCalendar(userId: number): Promise<ScheduleDayBubbleEntity[]> {
+        try {
+            const weekDay: number = new Date().getDay();
+            return await scheduleDayRepository.listScheduleDay(weekDay, userId);
+        } catch (error: any) {
+            console.error("Error returning daily calendar:", error);
             throw error;
         }
     }

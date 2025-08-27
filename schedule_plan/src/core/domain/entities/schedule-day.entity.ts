@@ -12,10 +12,10 @@ export default class ScheduleDayBubbleEntity extends Model {
     id?: string;
 
     @Column({
-        type: DataType. STRING,
+        type: DataType.BIGINT,
         field: "user_id",
     })
-    userId?: string;
+    userId?: number;
 
     @Column({
         type: 'time without time zone',
@@ -58,6 +58,12 @@ export default class ScheduleDayBubbleEntity extends Model {
         field: "tag"
     })
     tag?: string;
+
+    @Column({
+        type: DataType.INTEGER,
+        field: "week_day",
+    })
+    weekDay?: number;
 
     @Column({
         type: DataType.DATE,

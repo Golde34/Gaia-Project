@@ -1,6 +1,5 @@
 import { ActiveStatus, BooleanStatus } from "../../../core/domain/enums/enums";
 import { ITaskEntity } from "./task.entity";
-import { IUserTagEntity } from "./user-tag.entity";
 
 export interface IGroupTaskEntity extends Document {
     _id: string;
@@ -17,5 +16,5 @@ export interface IGroupTaskEntity extends Document {
     activeStatus: ActiveStatus;
     isDefault: BooleanStatus;
     projectId: string;
-    tag: IUserTagEntity;
+    tag: string;
 }

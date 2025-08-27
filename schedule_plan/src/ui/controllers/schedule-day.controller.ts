@@ -8,7 +8,6 @@ class ScheduleDayController {
     async getTimeBubbleConfig(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = req.params.userId;
-            console.log(`Fetching time bubble config for user: ${userId}`);
             return await scheduleDayUsecase.getTimeBubbleConfig(Number(userId));
         } catch (error) {
             next(error);
@@ -18,7 +17,6 @@ class ScheduleDayController {
     async registerScheduleConfig(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = req.body.userId;
-            console.log(`Registering schedule config for user: ${userId}`);
             return await scheduleDayUsecase.registerScheduleConfig(userId);
         } catch (error) {
             next(error);
@@ -28,8 +26,7 @@ class ScheduleDayController {
     async findOptimizedScheduleTasks(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = req.params.userId;
-            console.log(`Finding optimized schedule tasks for user: ${userId}`);
-            return await scheduleDayUsecase.findDailyScheduleTasks(Number(userId));
+            return await scheduleDayUsecase.returnDailyCalendar(Number(userId));
         } catch (error) {
             next(error);
         }

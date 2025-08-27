@@ -64,8 +64,7 @@ export const taskSchema = new mongoose.Schema(
             required: false,
         },
         tag: {
-            type: [Schema.Types.ObjectId],
-            ref: 'Tag',
+            type: String,
             required: false,
         }
     },

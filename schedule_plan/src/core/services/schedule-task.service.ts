@@ -269,7 +269,7 @@ class ScheduleTaskService {
                 await scheduleTaskRepository.updateTagTask(task.scheduleTaskId, task.tag);
             });
 
-            await this.pushUpdateTaskTagKafkaMessage(tagTaskRequest);
+            await this.pushUpdateTaskTagKafkaMessage(response);
             console.log("Tag tasks successfully: ", response);  
         } catch (error: any) {
             console.error("Error on tagScheduleTask: ", error.message);

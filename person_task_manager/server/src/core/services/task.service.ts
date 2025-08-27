@@ -387,6 +387,7 @@ class TaskService {
     async updateTaskTag(taskId: string, tag: string): Promise<void> {
         try {
             await taskStore.updateTask(taskId, { tag: tag });
+            await groupTaskService.updateGroupTaskTag(taskId, tag)
         } catch (error) {
             console.log("Error when update task tag", error);
         }

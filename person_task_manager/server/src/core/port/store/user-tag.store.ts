@@ -39,18 +39,6 @@ class UserTagStore {
         return await userTagRepository.enableTag(tagId);
     }
 
-    async findTagByProjectId(projectId: string): Promise<IUserTagEntity | null> {
-        return await userTagRepository.findTagByProjectId(projectId);
-    }
-
-    async findTagByGroupTaskId(groupTaskId: string): Promise<IUserTagEntity | null> {
-        return await userTagRepository.findTagByGroupTaskId(groupTaskId);
-    }
-
-    async findTagByTaskId(taskId: string): Promise<IUserTagEntity | null> {
-        return await userTagRepository.findTagByTaskId(taskId);
-    }
-
     async findTagByTagId(tagId: string): Promise<IUserTagEntity | null> {
         return await userTagRepository.findTagByTagId(tagId);
     }

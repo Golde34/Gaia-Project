@@ -75,6 +75,18 @@ class ScheduleDayUsecase {
         }
     }
 
+    async returnDailyCalendar(userId: number): Promise<IResponse | undefined> {
+        const dailyCalendar = await scheduleDayService.returnDailyCalendar(userId);
+        if (dailyCalendar.length === 0 || !dailyCalendar) {
+            return this.findDailyScheduleTasks(userId);
+        }
+        
+        return msg200({
+            message: "Daily calendar generated successfully",
+            dailyCalendar: dailyCalendar
+        });
+    }
+
     async findDailyScheduleTasks(userId: number, topK: number = 5): Promise<IResponse> {
         const plan = await schedulePlanService.findSchedulePlanByUserId(userId);
         if (!plan) {
@@ -92,7 +104,7 @@ class ScheduleDayUsecase {
             );
             return msg200({
                 message: "Optimized tasks successfully.",
-                tasks,
+                tasks: tasks,
             });
         }
 
@@ -108,14 +120,14 @@ class ScheduleDayUsecase {
             return msg200({
                 message:
                     "Your optimization settings are set. Do you want to use this optimized list?",
-                tasks,
+                tasks: tasks,
             });
         }
 
         return msg200({
             message:
                 "Tasks are not optimized yet. Please provide your optimization configuration to enable optimization.",
-            tasks,
+            tasks: tasks,
         });
     }
 
@@ -126,8 +138,8 @@ class ScheduleDayUsecase {
             const scheduleTasks: ScheduleTaskEntity[] = scheduleTaskMapper.mapDailyTasksToScheduleTasks(dailyTasks);
             const taggedScheduleTasks = await scheduleTaskUsecase.tagScheduleTask(userId, scheduleTasks);
             if (taggedScheduleTasks === undefined) throw new Error("There's an error when tagged your task to make daily calendar");
-            const dailyCalendar = await scheduleDayService.matchScheduleTasksWithTimeBubble(taggedScheduleTasks, timeBubbles);
-            runInBackground(() => scheduleDayService.updateDailyCalendar(userId, dailyCalendar));
+            const dailyCalendar = await scheduleDayService.matchScheduleTasksWithTimeBubble(weekDay, taggedScheduleTasks, timeBubbles);
+            runInBackground(() => scheduleDayService.updateDailyCalendar(userId, dailyCalendar, weekDay));
 
             return msg200({
                 message: "Daily calendar generated successfully",
