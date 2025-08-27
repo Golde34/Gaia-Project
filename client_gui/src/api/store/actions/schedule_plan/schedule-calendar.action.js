@@ -28,7 +28,7 @@ export const registerCalendarAction = (scheduleCalendar) => async (dispatch) => 
 export const createDailyCalendarAction = (dailyTasks) => async (dispatch) => {
     dispatch({ type: CREATE_DAILY_CALENDAR_REQUEST, payload: dailyTasks });
     try {
-        const body = { tasks: dailyTasks.tasks };
+        const body = { tasks: dailyTasks };
         const { data } = await serverRequest('/schedule-calendar/generate-daily-calendar', HttpMethods.POST, portName.middleware, body);
         dispatch({ type: CREATE_DAILY_CALENDAR_SUCCESS, payload: data });
     } catch (error) {

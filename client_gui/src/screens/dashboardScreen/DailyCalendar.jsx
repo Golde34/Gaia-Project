@@ -69,8 +69,8 @@ const DailyCalendar = () => {
     const handleAutoGenerateCalendar = (request) => {
         const source = request ?? dailyTasks ?? dailyTasksRequest ?? { tasks: [] };
         const payload = { ...source };
-        if (!payload.tasks?.length) return;
-        dispatch(createDailyCalendarAction(payload));
+        if (!payload.tasks?.length && !payload.dailyCalendar?.length) return;
+        dispatch(createDailyCalendarAction(payload.tasks));
     };
 
     const handleRowClick = (taskId) => { };
