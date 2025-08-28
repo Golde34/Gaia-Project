@@ -24,7 +24,7 @@ export const createDailyCalendarReducer = (
         case CREATE_DAILY_CALENDAR_REQUEST:
             return { loading: true };
         case CREATE_DAILY_CALENDAR_SUCCESS:
-            return { loading: false, dailyTasks: action.payload };
+            return { loading: false, dailyCalendarObj: action.payload };
         case CREATE_DAILY_CALENDAR_FAILURE:
             return { loading: false, error: action.payload };
         default:

@@ -2,7 +2,7 @@ import { Badge, Button, Card, Col, Dialog, DialogPanel, Flex, Grid, Subtitle, Ta
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createDailyCalendarAction, getDailyTasksAction, getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
-import { priorityColor, shortenTitle } from "../../kernels/utils/field-utils";
+import { priorityColor } from "../../kernels/utils/field-utils";
 import { tagColors } from "../../kernels/utils/calendar";
 import { DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 
@@ -10,8 +10,6 @@ const DailyCalendar = () => {
     const dispatch = useDispatch();
 
     let [isOpen, setIsOpen] = useState(false);
-    let [selectedSlot, setSelectedSlot] = useState(null);
-
     function closeModal() {
         setIsOpen(false)
     }
@@ -20,6 +18,10 @@ const DailyCalendar = () => {
         setIsOpen(true)
         setSelectedSlot(slot)
     }
+
+    const [dailyTasksRequest, setDailyTasksRequest] = useState({ tasks: [] });
+    const [dailyCalendar, setDailyCalendar] = useState([]);
+    let [selectedSlot, setSelectedSlot] = useState(null);
 
     const timeBubbleConfigList = useSelector((state) => state.getTimeBubbleConfig);
     const { config: timeBubbleConfig, loading: loadingBubble, error: errorBubble } = timeBubbleConfigList;
@@ -34,7 +36,6 @@ const DailyCalendar = () => {
         fetchStatus();
     }, [fetchStatus]);
 
-    const [dailyTasksRequest, setDailyTasksRequest] = useState({ tasks: [] });
     const dailyTaskList = useSelector((state) => state.getDailyTasks);
     const { dailyTasks, loading: loadingTasks, error: errorTasks } = dailyTaskList;
 
@@ -50,8 +51,12 @@ const DailyCalendar = () => {
     }, [fetchDailyTaskList]);
 
     useEffect(() => {
-        if (dailyTasks?.tasks) {
+        if (dailyTasks?.tasks &&
+            (dailyTasks?.dailyCalendar === null || dailyTasks?.dailyCalendar === undefined)) {
             setDailyTasksRequest(dailyTasks);
+        }
+        if (dailyTasks?.dailyCalendar) {
+            setDailyCalendar(dailyTasks.dailyCalendar);
         }
     }, [dailyTasks]);
 
@@ -66,11 +71,18 @@ const DailyCalendar = () => {
         }));
     };
 
-    const handleAutoGenerateCalendar = (request) => {
+    const handleAutoGenerateCalendar = async (request) => {
         const source = request ?? dailyTasks ?? dailyTasksRequest ?? { tasks: [] };
         const payload = { ...source };
         if (!payload.tasks?.length && !payload.dailyCalendar?.length) return;
-        dispatch(createDailyCalendarAction(payload.tasks));
+
+        try {
+            const data = await dispatch(createDailyCalendarAction(payload.tasks));
+            setDailyCalendar(Array.isArray(data?.dailyCalendar) ? [...data.dailyCalendar] : []);
+            setDailyTasksRequest({})
+        } catch (err) {
+            console.error("Error:", err.message);
+        }
     };
 
     const handleRowClick = (taskId) => { };
@@ -96,7 +108,7 @@ const DailyCalendar = () => {
                                 </Button>
                             </Flex>
                         </Col>
-                        {dailyTasks?.tasks && dailyTasks?.tasks?.length > 0 && (
+                        {dailyTasksRequest?.tasks && dailyTasksRequest?.tasks?.length > 0 && (
                             <Col numColSpan={12}>
                                 <Card className="mt-4">
                                     <Table className="mt-5">
@@ -109,7 +121,7 @@ const DailyCalendar = () => {
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                            {(dailyTasks?.tasks ?? []).map((task) => (
+                                            {(dailyTasksRequest?.tasks ?? []).map((task) => (
                                                 <TableRow
                                                     key={task.id ?? task.taskId}
                                                     onClick={() => handleRowClick?.(task.taskId ?? task.id)}
@@ -148,9 +160,9 @@ const DailyCalendar = () => {
                             </Col>
                         )}
                         {
-                            dailyTasks?.dailyCalendar && dailyTasks?.dailyCalendar?.length > 0 && (
-                                <Col numColSpan={12}>
-                                    {(dailyTasks?.dailyCalendar ?? []).map((slot) => (
+                            dailyCalendar && dailyCalendar?.length > 0 && (
+                                dailyCalendar ?? []).map((slot) => (
+                                    <Col numColSpan={12} key={slot.id}>
                                         <Card key={slot.id} onClick={() => openModal(slot)}
                                             className="flex items-center justify-between p-3 rounded-lg mt-4 
                                                 hover:cursor-pointer transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-105 duration-300">
@@ -170,10 +182,8 @@ const DailyCalendar = () => {
                                                 <Text className="text-sm text-gray-400">{slot.startTime} - {slot.endTime}</Text>
                                             </div>
                                         </Card>
-                                    ))}
-                                </Col>
-                            )
-                        }
+                                    </Col>
+                                ))}
                     </>
                 ) : (
                     <a href="#">
