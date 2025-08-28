@@ -154,7 +154,7 @@ class ScheduleDayUsecase {
 
             return msg200({
                 message: "Daily calendar generated successfully",
-                dailyClendar: dailyCalendar
+                dailyCalendar: dailyCalendar
             });
         } catch (error: any) {
             console.error("Error generating daily calendar:", error.message);
