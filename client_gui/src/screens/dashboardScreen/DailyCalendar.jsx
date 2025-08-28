@@ -52,7 +52,7 @@ const DailyCalendar = () => {
 
     useEffect(() => {
         if (dailyTasks?.tasks &&
-            (dailyTasks?.dailyCalendar === null || dailyTasks?.dailyCalendar === undefined)) {
+            (dailyCalendar === null || dailyCalendar === undefined)) {
             setDailyTasksRequest(dailyTasks);
         }
         if (dailyTasks?.dailyCalendar) {
