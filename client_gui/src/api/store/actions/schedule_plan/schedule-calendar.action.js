@@ -25,27 +25,24 @@ export const registerCalendarAction = (scheduleCalendar) => async (dispatch) => 
     }
 }
 
-export const createDailyCalendarAction = (dailyTasks) => async (dispatch) => {
-    dispatch({ type: CREATE_DAILY_CALENDAR_REQUEST, payload: dailyTasks });
+export const createDailyCalendarAction = (tasks) => async (dispatch) => {
+    dispatch({ type: CREATE_DAILY_CALENDAR_REQUEST, payload: tasks });
     try {
-        const body = { tasks: dailyTasks };
+        const body = { tasks };
         const { data } = await serverRequest('/schedule-calendar/generate-daily-calendar', HttpMethods.POST, portName.middleware, body);
         dispatch({ type: CREATE_DAILY_CALENDAR_SUCCESS, payload: data });
+        return data;
     } catch (error) {
-        dispatch({
-            type: CREATE_DAILY_CALENDAR_FAILURE,
-            payload: error.response && error.response.data.message
-                ? error.response.data.message
-                : error.message,
-        });
+        const msg = error.response?.data?.message ?? error.message;
+        dispatch({ type: CREATE_DAILY_CALENDAR_FAILURE, payload: msg });
+        throw new Error(msg);
     }
-}
+};
 
 export const getDailyTasksAction = () => async (dispatch) => {
     dispatch({ type: GET_DAILY_TASKS_REQUEST });
     try {
         const { data } = await serverRequest('/schedule-calendar/daily-tasks', HttpMethods.GET, portName.middleware);
-        console.log(data);
         dispatch({ type: GET_DAILY_TASKS_SUCCESS, payload: data });
     } catch (error) {
         dispatch({
