@@ -26,7 +26,7 @@ interface Configuration {
 
 export const config: Configuration = {
     server: {
-        listenPort: Number(String(process.env.LISTEN_PORT)) ?? 3008,
+        listenPort: Number(String(process.env.LISTEN_PORT)) ?? 3003,
         githubDomain: process.env.GITHUB_DOMAIN ?? 'github.com',
         githubUrl: process.env.GITHUB_URL ?? 'https://api.github.com',
     },
