@@ -1,5 +1,5 @@
 import { Card, Col, Flex, Grid, Metric, Title } from "@tremor/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom";
 import "../../assets/husky.scss";
@@ -30,6 +30,12 @@ const Signup = () => {
         }
         dispatch(signup(email, name, username, password, matchingPassword));
     }
+
+    useEffect(() => {
+        if (userInfo && userInfo.validation !== null) {
+            setErrorMessage(userInfo.validation);
+        }
+    }, [userInfo]);
 
     return (
         <>
@@ -118,7 +124,7 @@ const Signup = () => {
                                     </div>
                                 }
                                 <div className="mt-4 relative">
-                                    {userInfo && (
+                                    {userInfo && userInfo.validation === null && (
                                         <button
                                             type="button"
                                             className="absolute right-0 top-0 z-10 inline-flex rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"

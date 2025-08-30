@@ -384,6 +384,15 @@ class TaskService {
         return null
     }
 
+    async updateTaskTag(taskId: string, tag: string): Promise<void> {
+        try {
+            await taskStore.updateTask(taskId, { tag: tag });
+            await groupTaskService.updateGroupTaskTag(taskId, tag)
+        } catch (error) {
+            console.log("Error when update task tag", error);
+        }
+    }
+
     async getDoneTasks(userId: number, timeUnit: string): Promise<ITaskEntity[] | null> {
         try {
             let doneTasks = this.taskCache.get(InternalCacheConstants.DONE_TASKS + userId);

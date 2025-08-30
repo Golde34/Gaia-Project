@@ -304,6 +304,19 @@ class ProjectService {
             return undefined;
         }
     }
+
+    async updateProjectTag(groupTask: any, tag: string): Promise<void> {
+        try {
+            const updatedProject = await projectStore.updateProjectTag(groupTask._id, tag);
+            if (updatedProject === undefined) {
+                console.log("Project has already had this tag");
+                return;
+            }
+        } catch (error) {
+            console.log("An error occurred white update project tag: ", error);
+            throw error;
+        }
+    }
 }
 
 export const projectService = new ProjectService();

@@ -93,6 +93,14 @@ class ProjectRepository {
         });
         return project?.ownerId ?? 0;
     }
+
+    async updateProjectTag(groupTaskId: string, tag: string): Promise<UpdateWriteOpResult | undefined> {
+        const project = await ProjectEntity.findOne({ groupTasks: groupTaskId });
+        if (project !== null && project.tag.includes(tag)) {
+            return undefined;
+        }
+        return await ProjectEntity.updateOne({ groupTasks: groupTaskId }, { $push: { tag: tag } });
+    }
 }
 
 export const projectRepository = new ProjectRepository();

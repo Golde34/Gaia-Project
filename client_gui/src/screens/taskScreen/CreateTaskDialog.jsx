@@ -5,7 +5,7 @@ import { Button, Col, DatePicker, Grid, TextInput } from "@tremor/react";
 import { Fragment, useState } from "react";
 import RadioButtonIcon from "../../components/icons/RadioButtonIcon";
 import CheckBoxIcon from "../../components/icons/CheckboxIcon";
-import { pushPriority } from "../../kernels/utils/field-utils";
+import { priorityColor, pushPriority } from "../../kernels/utils/field-utils";
 
 export const CreateTaskDialog = (props) => {
     const projectId = props.projectId;
@@ -31,18 +31,16 @@ export const CreateTaskDialog = (props) => {
     const [task] = useState({});
 
     // Priority Checboxes
-    const [isHighPriority, setIsHighPriority] = useState(false);
-    const [isMediumPriority, setIsMediumPriority] = useState(false);
-    const [isLowPriority, setIsLowPriority] = useState(false);
+    const [isPriority, setIsPriority] = useState('');
     const [isStarPriority, setIsStarPriority] = useState(false);
 
     const generateTaskFromScratch = useGenerateTaskFromScratchDispatch();
     const createTask = useCreateTaskDispatch();
 
-    const setObjectTask = (title, description, status, startDate, deadline, duration, isHighPriority, isMediumPriority, isLowPriority, isStarPriority) => {
+    const setObjectTask = (title, description, status, startDate, deadline, duration, isPriority, isStarPriority) => {
         task.title = title;
         task.description = description;
-        task.priority = pushPriority(isHighPriority, isMediumPriority, isLowPriority, isStarPriority);
+        task.priority = pushPriority(isPriority, isStarPriority);
         task.status = status;
         task.deadline = deadline;
         task.startDate = startDate;
@@ -53,7 +51,7 @@ export const CreateTaskDialog = (props) => {
         }
         task.activeStatus = 'ACTIVE';
         initiateTaskDispatch(projectId, task);
-        
+
         window.location.reload();
     }
 
@@ -67,6 +65,15 @@ export const CreateTaskDialog = (props) => {
             generateTaskFromScratch(task);
             localStorage.setItem("activeTab", 'none');
         }
+    }
+
+    const priorityClassName = (priority) => {
+        return `before:content[''] peer relative h-5 w-5 cursor-pointer 
+                appearance-none rounded-full border border-blue-gray-200 transition-all 
+                before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 
+                before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full 
+                before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-${priorityColor(priority)}-500 
+                checked:before:bg-${priorityColor(priority)}-500 hover:before:opacity-10`
     }
 
     return (
@@ -171,7 +178,7 @@ export const CreateTaskDialog = (props) => {
                                             type="number"
                                             value={duration === 0 ? defaultDuration : duration}
                                             onChange={(event) => {
-                                                    setDuration(event.target.value);
+                                                setDuration(event.target.value);
                                             }}
                                             className="mt-1 rounded-md shadow-sm focus:border-blue-500 sm:text-sm"
                                             placeholder="Input working hours"
@@ -184,52 +191,62 @@ export const CreateTaskDialog = (props) => {
                                         <p className="block text-md font-medium text-gray-700 mb-1">Priority</p>
                                         <div className="grid grid-cols-4 m-1">
                                             <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="priority-checkbox-high" data-ripple-dark="true">
+                                                <label className="relative flex cursor-pointer items-center rounded-full p-3"
+                                                    htmlFor="priority-radio-high" data-ripple-dark="true">
                                                     <input
-                                                        id="priority-checkbox-high"
-                                                        type="checkbox"
-                                                        checked={isHighPriority}
-                                                        onChange={() => setIsHighPriority(!isHighPriority)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-red-500 checked:bg-red-500 checked:before:bg-red-500 hover:before:opacity-10"
+                                                        id="priority-radio-high"
+                                                        type="radio"
+                                                        value="HIGH"
+                                                        checked={isPriority === 'HIGH'}
+                                                        onChange={(e) => setIsPriority(e.target.value)}
+                                                        className={priorityClassName(isPriority)}
                                                     />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
+                                                    <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 
+                                                    text-red-500 opacity-0 transition-opacity peer-checked:opacity-100">
+                                                        <RadioButtonIcon />
                                                     </div>
                                                 </label>
-                                                <label className="text-sm text-gray-700">High</label>
+                                                <label className="text-sm text-gray-700" htmlFor="priority-radio-high">
+                                                    HIGH
+                                                </label>
                                             </div>
                                             <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="priority-checkbox-medium" data-ripple-dark="true">
+                                                <label className="relative flex cursor-pointer items-center rounded-full p-3"
+                                                    htmlFor="priority-radio-medium" data-ripple-dark="true">
                                                     <input
-                                                        id="priority-checkbox-medium"
-                                                        type="checkbox"
-                                                        checked={isMediumPriority}
-                                                        onChange={() => setIsMediumPriority(!isMediumPriority)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-pink-500 checked:bg-pink-500 checked:before:bg-pink-500 hover:before:opacity-10"
+                                                        id="priority-radio-medium"
+                                                        type="radio"
+                                                        value="MEDIUM"
+                                                        checked={isPriority === 'MEDIUM'}
+                                                        onChange={(e) => setIsPriority(e.target.value)}
+                                                        className={priorityClassName(isPriority)}
                                                     />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
+                                                    <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-blue-500 opacity-0 transition-opacity peer-checked:opacity-100">
+                                                        <RadioButtonIcon />
                                                     </div>
                                                 </label>
-                                                <label className="text-sm text-gray-700">Medium</label>
+                                                <label className="text-sm text-gray-700" htmlFor="priority-radio-medium">
+                                                    MEDIUM
+                                                </label>
                                             </div>
                                             <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="priority-checkbox-low" data-ripple-dark="true">
+                                                <label className="relative flex cursor-pointer items-center rounded-full p-3"
+                                                    htmlFor="priority-radio-low" data-ripple-dark="true">
                                                     <input
-                                                        id="priority-checkbox-low"
-                                                        type="checkbox"
-                                                        checked={isLowPriority}
-                                                        onChange={() => setIsLowPriority(!isLowPriority)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-green-500 checked:bg-green-500 checked:before:bg-green-500 hover:before:opacity-10"
+                                                        id="priority-radio-low"
+                                                        type="radio"
+                                                        value="LOW"
+                                                        checked={isPriority === 'LOW'}
+                                                        onChange={(e) => setIsPriority(e.target.value)}
+                                                        className={priorityClassName(isPriority)}
                                                     />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
+                                                    <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-green-500 opacity-0 transition-opacity peer-checked:opacity-100">
+                                                        <RadioButtonIcon />
                                                     </div>
                                                 </label>
-                                                <label className="text-sm text-gray-700">Low</label>
+                                                <label className="text-sm text-gray-700" htmlFor="priority-radio-low">
+                                                    LOW
+                                                </label>
                                             </div>
                                             <div className="inline-flex items-center">
                                                 <label className="relative flex items-center p-3 rounded-full cursor-pointer"
@@ -325,7 +342,7 @@ export const CreateTaskDialog = (props) => {
                                             type="button"
                                             className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                             onClick={() => {
-                                                setObjectTask(title, description, status, startDate, deadline, duration, isHighPriority, isMediumPriority, isLowPriority, isStarPriority);
+                                                setObjectTask(title, description, status, startDate, deadline, duration, isPriority, isStarPriority);
                                                 closeModal();
                                             }}
                                         >

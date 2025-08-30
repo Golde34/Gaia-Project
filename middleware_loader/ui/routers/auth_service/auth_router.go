@@ -36,6 +36,9 @@ func NewAuthRouter(authService *services.AuthService, db database_mongo.Database
 		r.Delete("/sign-out", func(w http.ResponseWriter, r *http.Request) {
 			controller.Signout(w, r, authService)
 		})
+		r.Post("/mobile-sign-in", func(w http.ResponseWriter, r *http.Request) {
+			controller.MobileSignin(w, r, authService)
+		})
 	})
 	return &AuthRouter{
 		AuthService: authService,

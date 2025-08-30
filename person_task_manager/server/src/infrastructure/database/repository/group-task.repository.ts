@@ -119,6 +119,11 @@ class GroupTaskRepository {
     async findGroupTaskByTaskId(taskId: string): Promise<IGroupTaskEntity | null> {
         return await GroupTaskEntity.findOne({ tasks: taskId });
     }
+
+    async updateGroupTaskTag(taskId: string, tag: string): Promise<IGroupTaskEntity | null> {
+        await GroupTaskEntity.updateOne({ tasks: taskId }, { $set: { tag: tag } });
+        return await GroupTaskEntity.findOne({ tasks: taskId });
+    }
 }
 
 export const groupTaskRepository = new GroupTaskRepository();

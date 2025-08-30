@@ -4,8 +4,12 @@ import {
 	BellIcon,
 	BookmarkIcon,
 	CalendarIcon,
+	ChartBarIcon,
+	ChatAltIcon,
 	ClipboardCheckIcon,
+	CogIcon,
 	CreditCardIcon,
+	DocumentSearchIcon,
 	ExternalLinkIcon,
 	MailIcon,
 	PencilAltIcon,
@@ -37,7 +41,7 @@ const LinkWrapper = styled.a`
 const Sidebar = () => {
 	return (
 		<>
-			<div className="fixed left-3 sm:left-6 top-[100px] mt-10">
+			<div className="fixed left-3 sm:left-6 top-[20vh] mt-10">
 				<Grid numItems={1}>
 					<Col numColSpan={1}>
 						<LinkWrapper href="/client-gui/dashboard">
@@ -79,16 +83,16 @@ const Sidebar = () => {
 						<LinkWrapper href="/client-gui/note-dashboard">
 							<Button variant="primary" color="indigo"
 								className="p-2 rounded-lg mb-4">
-								<BookmarkIcon width={20} />
+								<PencilAltIcon width={20} />
 							</Button>
 							<Description>Note </Description>
 						</LinkWrapper>
 					</Col>
 					<Col numColSpan={1}>
-						<LinkWrapper href="/client-gui/chat">
+						<LinkWrapper href="/client-gui/chat?dialogueId">
 							<Button variant="primary" color="indigo"
 								className="p-2 rounded-lg mb-4">
-								<PencilAltIcon width={20} />
+								<ChatAltIcon width={20} />
 							</Button>
 							<Description>Chat Bot</Description>
 						</LinkWrapper>
@@ -102,9 +106,18 @@ const Sidebar = () => {
 							<Description>User Profile</Description>
 						</LinkWrapper>
 					</Col>
+					{/* <Col numColSpan={1}>
+						<LinkWrapper href="/client-gui/onboarding">
+							<Button variant="primary" color="indigo"
+								className="p-2 rounded-lg mb-4">
+								<CogIcon width={20} />
+							</Button>
+							<Description>Onboarding </Description>
+						</LinkWrapper>
+					</Col> */}
 				</Grid>
 
-				{/*<ChartBarIcon
+				{/* <ChartBarIcon
 					width={40}
 					className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
 				/>
@@ -116,12 +129,6 @@ const Sidebar = () => {
 					width={40}
 					className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
 				/> */}
-				<a href="/client-gui/scheduling-table">
-					<CreditCardIcon
-						width={40}
-						className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"
-					/>
-				</a> 
 				<BellIcon
 					width={40}
 					className="bg-gray-600 p-2 rounded-lg mb-4 text-gray-300"

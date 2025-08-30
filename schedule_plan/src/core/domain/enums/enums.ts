@@ -7,6 +7,8 @@ export enum TaskStatus {
 export enum ActiveStatus {
     active = "ACTIVE",
     inactive = "INACTIVE",
+    draft = "DRAFT",
+    archived = "ARCHIVED",
 }
 
 export enum Priority {

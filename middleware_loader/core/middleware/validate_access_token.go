@@ -49,28 +49,40 @@ func ValidateAccessToken() func(next http.Handler) http.Handler {
 func validateRefreshToken(r *http.Request, w http.ResponseWriter) bool {
 	refreshCookie, err := r.Cookie("refreshToken")
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusForbidden)
-		return false
+		refreshHeader := r.Header.Get("Refresh-Token")
+		if refreshHeader == "" {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return false
+		}	
+		refreshToken := strings.TrimSpace(refreshHeader)
+		return refreshToken != ""
 	}
 	refreshToken := refreshCookie.Value
 	return refreshToken != ""
 }
 
 func validateAccessToken(r *http.Request, w http.ResponseWriter) (string, context.Context) {
+	accessToken := ""
 	accessCookie, err := r.Cookie("accessToken")
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return "", nil
-	}
-	accessToken := accessCookie.Value
-	if accessToken == "" {
-		w.WriteHeader(http.StatusUnauthorized)
-		return "", nil
+	if err == nil {
+		accessToken = accessCookie.Value
+	} else {
+		accessHeader := r.Header.Get("Access-Token")
+		if accessHeader == "" {
+			http.Error(w, "Unauthorized: Missing Access Token", http.StatusUnauthorized)
+			return "", nil
+		}
+		accessToken = strings.TrimSpace(accessHeader)
+		if accessToken == "" {
+			http.Error(w, "Unauthorized: Empty Access Token", http.StatusUnauthorized)
+			return "", nil
+		}
 	}
 
 	tokenResponse, err := services.NewAuthService().CheckToken(r.Context(), accessToken)
 	if err != nil {
 		log.Println("Error validating token:", err)
+		http.Error(w, "Unauthorized: Invalid Token", http.StatusUnauthorized)
 		return "", nil
 	}
 

@@ -29,7 +29,7 @@ import {
     commentCreateReducer, commentDeleteReducer, commentDetailReducer,
     commentListReducer, commentUpdateReducer
 } from './task_manager/comment.reducers'
-import { microserviceListReducer, screenListReducer } from "./middleware_loader/microservices.reducer";
+import { getOnboardingReducer, microserviceListReducer, screenListReducer } from "./middleware_loader/microservices.reducer";
 import { getAllLLMModelsReducer, updateUserModelReducer, userDetailReducer, userListReducer, userSettingUpdateReducer, userUpdateReducer } from "./auth_service/user.reducer";
 import { roleCreateReducer, roleListReducer } from "./auth_service/role.reducer";
 import { privilegeListReducer } from "./auth_service/privilege.reducer";
@@ -45,7 +45,9 @@ import { getProjectAndRepoRequestReducer } from "./contribution_tracker/project-
 import { compareCommitsReducer, getProjectContributionReducer, getUserContributionsReducer } from "./contribution_tracker/contribution.reducer";
 import { createScheduleGroupReducer, scheduleGroupListReducer } from "./schedule_plan/schedule-group.reducers";
 import { getNotificationJwt } from "../actions/auth_service/auth.actions";
-import { getDailyCalendarReducer } from "./schedule_plan/schedule-calendar.reducers";
+import { createDailyCalendarReducer, getDailyTasksReducer, getTimeBubbleConfigReducer, registerScheduleCalendarReducer } from "./schedule_plan/schedule-calendar.reducers";
+import { chatHistoryReducer } from "./chat_hub/messages.reducer";
+import { getAllDialoguesReducer } from "./chat_hub/dialogue.reducer";
 
 export const reducer = combineReducers({
     // auth service
@@ -113,10 +115,13 @@ export const reducer = combineReducers({
     createScheduleGroup: createScheduleGroupReducer,
     scheduleGroupList: scheduleGroupListReducer,
     activeTaskBatch: activeTaskBatchReducer,
-    getDailyCalendar: getDailyCalendarReducer,
+    getDailyTasks: getDailyTasksReducer,
+    registerScheduleCalendar: registerScheduleCalendarReducer,
+    getTimeBubbleConfig: getTimeBubbleConfigReducer,
     // middleware loader
     microserviceList: microserviceListReducer,
     screenList: screenListReducer,
+    onboarding: getOnboardingReducer,
     // work optimization 
     registerTaskConfig: registerTaskConfigReducer,
     queryTaskConfig: queryTaskConfigReducer,
@@ -125,4 +130,7 @@ export const reducer = combineReducers({
     userContributions: getUserContributionsReducer,
     compareCommits: compareCommitsReducer,
     projectContributions: getProjectContributionReducer,
+    // chat hub
+    chatHistory: chatHistoryReducer,
+    allDialogues: getAllDialoguesReducer,
 })

@@ -8,6 +8,8 @@ export enum KafkaTopic {
     DELETE_TASK = "task-manager.delete-task.topic",
     UPDATE_TASK = "task-manager.update-task.topic",
     SCHEDULE_GROUP_CREATE_TASK = "schedule-plan.schedule-group-create-task.topic",
+    GENERATE_SCHEDULE_CALENDAR = "ai-core.generate-calendar-schedule.topic",
+    UPDATE_SCHEDULE_TASK_TAG = "schedule-plan.update-task-tag.topic"
 }
 
 export enum KafkaCommand {
@@ -15,12 +17,15 @@ export enum KafkaCommand {
     GAIA_CREATE_TASK = "gaiaCreateTask",
     CREATE_SCHEDULE_TASK = "schedulePlanCreateTask",
     OPTIMIZE_CREATING_TASK = "optimizeCreatingTask",
+    OPTIMIZE_TASK_LIST = "optimizeTasks",
     SYNC_SCHEDULE_TASK = "syncScheduleTask",
     OPTIMIZE_SCHEDULE_TASK = "optimizeScheduleTask",
     OPTIMIZE_TASK = "optimizeTask",
     UPDATE_TASK = "updateTask",
+    UPDATE_TASK_TAG = "updateTaskTag",
     DELETE_TASK = "deleteTask",
     SCHEDULE_GROUP_CREATE_TASK = "scheduleGroupCreateTask",
+    GENERATE_SCHEDULE_CALENDAR = "gaiaRegisterCalendar",
 }
 
 export class KafkaMessage {

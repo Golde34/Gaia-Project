@@ -1,3 +1,4 @@
+import { aiCoreServiceAdapter } from "../../infrastructure/client/ai-core-service.adapter";
 import { taskManagerAdapter } from "../../infrastructure/client/task-manager.adapter";
 import { createMessage } from "../../infrastructure/kafka/create-message";
 import { KafkaHandler } from "../../infrastructure/kafka/kafka-handler";
@@ -16,6 +17,7 @@ class ScheduleTaskService {
     constructor(
         public kafkaHandler: KafkaHandler = new KafkaHandler(),
         public taskManagerAdapterImpl = taskManagerAdapter,
+        public aiCoreAdapterImpl = aiCoreServiceAdapter,
     ) { }
 
     async createScheduleTask(scheduleTask: any): Promise<IResponse> {
@@ -60,6 +62,19 @@ class ScheduleTaskService {
             });
         } catch (error: any) {
             return msg400(error.message.toString());
+        }
+    }
+
+    async findScheduleTasksByListIds(scheduleTaskIds: string[]): Promise<ScheduleTaskEntity[]> {
+        try {
+            const scheduleTasks = await scheduleTaskRepository.findScheduleTasksByListIds(scheduleTaskIds);
+            if (scheduleTasks.length === 0) {
+                return [];
+            }
+            return scheduleTasks;
+        } catch (error: any) {
+            console.error("Error finding schedule tasks by IDs:", error.message);
+            throw new Error(`Error finding schedule tasks: ${error.message}`);
         }
     }
 
@@ -135,8 +150,8 @@ class ScheduleTaskService {
         return scheduleTask;
     }
 
-    async findTop10NewestTask(schedulePlanId: string): Promise<ScheduleTaskEntity[]> {
-        return await scheduleTaskRepository.findTop10NewestTask(schedulePlanId);
+    async findTopKNewestTask(schedulePlanId: string, topK: number): Promise<ScheduleTaskEntity[]> {
+        return await scheduleTaskRepository.findTopKNewestTask(schedulePlanId, topK);
     }
 
     async findByTaskBatch(schedulePlanId: string, taskBatch: number): Promise<ScheduleTaskEntity[]> {
@@ -227,77 +242,48 @@ class ScheduleTaskService {
         }
     }
 
-    async findUserDailyTasks(schedulePlanId: string, taskBatch: number, date: Date): Promise<ScheduleTaskEntity[] | null> {
+    async pushOptimizeTaskListKafkaMessage(userId: number): Promise<void> {
+        const data = scheduleTaskMapper.buidlOptimizeTaskListKafkaMessage(userId);
+        const messages = [{
+            value: JSON.stringify(createMessage(
+                KafkaCommand.OPTIMIZE_TASK_LIST, '00', 'Successful', data
+            ))
+        }]
+        console.log("Push Kafka Message: ", messages);
+        this.kafkaHandler.produce(KafkaTopic.OPTIMIZE_TASK, messages);
+    }
+
+    async tagScheduleTask(userId: number, scheduleTasks: ScheduleTaskEntity[]): Promise<void> {
         try {
-            return await scheduleTaskRepository.findUserDailyTasks(schedulePlanId, taskBatch, date);
+            const tagTaskRequest: any[] = [];
+            scheduleTasks.forEach((task) => {
+                tagTaskRequest.push({
+                    taskId: task.taskId,
+                    scheduleTaskId: task.id,
+                    title: task.title,
+                })
+            })
+            const response = await this.aiCoreAdapterImpl.tagTheTasks(userId, tagTaskRequest);
+
+            response.map(async (task: any) => {
+                await scheduleTaskRepository.updateTagTask(task.scheduleTaskId, task.tag);
+            });
+
+            await this.pushUpdateTaskTagKafkaMessage(response);
+            console.log("Tag tasks successfully: ", response);  
         } catch (error: any) {
-            console.error("Error on findUserDailyTasks: ", error);
-            return null;
+            console.error("Error on tagScheduleTask: ", error.message);
         }
     }
 
-    async optimizeDailyTasks(dailyTasks: ScheduleTaskEntity[]): Promise<ScheduleTaskEntity[]> {
-        try {
-            const scheduleGroupTasks = dailyTasks.filter((task) => task.scheduleGroupId !== null);
-            const scheduleTasks = dailyTasks.filter((task) => task.scheduleGroupId === null);
-
-            const startOfDay = new Date();
-            startOfDay.setHours(7, 0, 0, 0); // start of day is 00:00:00
-            // end of day is 23:00:00
-            const endOfDay = new Date();
-            endOfDay.setHours(23, 0, 0, 0); 
-
-            function assignTasksToTimeSlots(tasks: any[], groupTasks: any[], startOfDay: Date, endOfDay: Date, defaultDurationMinutes: number = 60) {
-                const occupiedSlots = groupTasks
-                    .map(task => ({
-                        start: new Date(task.startTime),
-                        end: new Date(task.endTime)
-                    }))
-                    .sort((a, b) => a.start.getTime() - b.start.getTime());
-            
-                const freeSlots = [];
-                let lastEnd = new Date(startOfDay);
-            
-                for (const slot of occupiedSlots) {
-                    if (slot.start > lastEnd) {
-                        freeSlots.push({ start: new Date(lastEnd), end: new Date(slot.start) });
-                    }
-                    lastEnd = slot.end > lastEnd ? slot.end : lastEnd;
-                }
-
-                if (lastEnd < endOfDay) {
-                    freeSlots.push({ start: new Date(lastEnd), end: new Date(endOfDay) });
-                }
-            
-                const nonGroupTasks = tasks
-                    .filter(task => !task.scheduleGroupId)
-                    .sort((a, b) => a.taskOrder - b.taskOrder);
-            
-                let taskIdx = 0;
-                for (const slot of freeSlots) {
-                    let slotTime = new Date(slot.start);
-                    while (
-                        taskIdx < nonGroupTasks.length &&
-                        slotTime.getTime() + defaultDurationMinutes * 60000 <= slot.end.getTime()
-                    ) {
-                        const task = nonGroupTasks[taskIdx];
-                        task.startTime = new Date(slotTime);
-                        task.endTime = new Date(slotTime.getTime() + defaultDurationMinutes * 60000);
-                        slotTime = new Date(task.endTime);
-                        taskIdx++;
-                    }
-                    if (taskIdx >= nonGroupTasks.length) break;
-                }
-            
-                return [...groupTasks, ...nonGroupTasks];
-            }
-
-            const sortedTasks = assignTasksToTimeSlots(scheduleTasks, scheduleGroupTasks, startOfDay, endOfDay);
-            return sortedTasks;
-        } catch (error: any) {
-            console.error("Error on optimizeDailyTasks: ", error);
-            return dailyTasks;
-        }
+    async pushUpdateTaskTagKafkaMessage(tagTaskRequest: any[]): Promise<void> {
+        const messages = [{
+            value: JSON.stringify(createMessage(
+                KafkaCommand.UPDATE_TASK_TAG, '00', 'Successful', tagTaskRequest
+            ))
+        }]
+        console.log("Push Kafka Message: ", messages);
+        this.kafkaHandler.produce(KafkaTopic.UPDATE_SCHEDULE_TASK_TAG, messages);
     }
 }
 

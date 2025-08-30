@@ -13,7 +13,6 @@ import { TASK_LIST_REQUEST, TASK_LIST_SUCCESS, TASK_LIST_FAIL,
 } from '../../constants/task_manager/task.constants';
 
 const portName = {
-    taskManager: 'taskManagerPort',
     middleware: 'middlewarePort'
 }
 

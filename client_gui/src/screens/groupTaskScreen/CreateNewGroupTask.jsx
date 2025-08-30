@@ -1,12 +1,12 @@
 import { Fragment, useState } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import { Dialog, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 import { Input, Textarea } from "@material-tailwind/react";
 import { PlusIcon } from "@heroicons/react/outline";
 import { useParams } from "react-router-dom";
 import { useCreateGroupTaskDispatch } from '../../kernels/utils/write-dialog-api-requests';
 import CheckBoxIcon from "../../components/icons/CheckboxIcon";
 import RadioButtonIcon from "../../components/icons/RadioButtonIcon";
-import { Button } from "@tremor/react";
+import { Button, DialogPanel } from "@tremor/react";
 
 export const CreateNewGroupTask = (props) => {
     const useParam = useParams();
@@ -79,7 +79,7 @@ export const CreateNewGroupTask = (props) => {
 
             <Transition appear show={isOpen} as={Fragment}>
                 <Dialog as="div" className="relative z-10" onClose={closeModal}>
-                    <Transition.Child
+                    <TransitionChild
                         as={Fragment}
                         enter="ease-out duration-300"
                         enterFrom="opacity-0"
@@ -89,11 +89,11 @@ export const CreateNewGroupTask = (props) => {
                         leaveTo="opacity-0"
                     >
                         <div className="fixed inset-0 bg-black/25" />
-                    </Transition.Child>
+                    </TransitionChild>
 
                     <div className="fixed inset-0 overflow-y-auto">
                         <div className="flex min-h-full items-center justify-center p-4 text-center">
-                            <Transition.Child
+                            <TransitionChild
                                 as={Fragment}
                                 enter="ease-out duration-300"
                                 enterFrom="opacity-0 scale-95"
@@ -102,13 +102,13 @@ export const CreateNewGroupTask = (props) => {
                                 leaveFrom="opacity-100 scale-100"
                                 leaveTo="opacity-0 scale-95"
                             >
-                                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                                    <Dialog.Title
+                                <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                                    <DialogTitle
                                         as="h3"
                                         className="text-lg font-medium leading-6 text-gray-900"
                                     >
                                         Create New Group Task
-                                    </Dialog.Title>
+                                    </DialogTitle>
                                     {/* Task Title Input */}
                                     <div className="mt-2">
                                         <label htmlFor="task-title" className="block text-md font-medium text-gray-700 mb-3">Title</label>
@@ -272,8 +272,8 @@ export const CreateNewGroupTask = (props) => {
                                         </button>
                                     </div>
 
-                                </Dialog.Panel>
-                            </Transition.Child>
+                                </DialogPanel>
+                            </TransitionChild>
                         </div>
                     </div>
                 </Dialog>

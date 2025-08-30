@@ -1,5 +1,6 @@
 import { HttpMethods, serverRequest } from "../../../baseAPI";
 import { 
+    GET_ONBOARDING_FAIL, GET_ONBOARDING_REQUEST, GET_ONBOARDING_SUCCESS,
     MICROSERVICE_LIST_FAIL, MICROSERVICE_LIST_REQUEST, MICROSERVICE_LIST_SUCCESS, 
     SCREEN_LIST_FAIL, SCREEN_LIST_REQUEST, SCREEN_LIST_SUCCESS 
 } from "../../constants/middleware_loader/microservices.constants";
@@ -36,5 +37,20 @@ export const getScreenConfiguration = () => async (dispatch) => {
                 ? error.response.data.message
                 : error.message,
         })
+    }
+}
+
+export const getOnboarding = () => async (dispatch) => {
+    dispatch({ type: GET_ONBOARDING_REQUEST });
+    try {
+        const { data } = await serverRequest('/microservice/onboarding', HttpMethods.GET, portName.middlewarePort, null);
+        dispatch({ type: GET_ONBOARDING_SUCCESS, payload: data.data });
+    } catch (error) {
+        dispatch({
+            type: GET_ONBOARDING_FAIL,
+            payload: error.response && error.response.data.message
+                ? error.response.data.message
+                : error.message,
+        });
     }
 }

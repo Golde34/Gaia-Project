@@ -6,6 +6,7 @@ import { cx } from "../../kernels/utils/cx"
 import useScroll from "../../kernels/utils/userScroll"
 import LogoIcon from "../../components/icons/LogoIcon"
 import CalendarRegistration from "./CalendarRegisgtration"
+import FinishOnboarding from "./FinishOnboarding"
 
 const steps = [
   { id: 1, screenLabel: "Gaia Introduction" },
@@ -17,26 +18,21 @@ const StepContent = ({ stepIndex, onPrevious, onNext, onSkip }) => {
   switch (stepIndex) {
     case 1:
       return (
-        <div className="mx-auto mb-20 mt-28 max-w-5xl px-4 md:mt-32 md:px-6">
+        <div className="mx-auto mb-20 mt-10 max-w-7xl px-4 md:mt-20 md:px-6">
           <GaiaIntroduction onNext={onNext} onSkip={onSkip} />
         </div>
       )
     case 2:
       return (
-        <div className="mx-auto mb-20 mt-28 max-w-8xl px-4 md:mt-32 md:px-6">
-          <CalendarRegistration onNext={onNext} onSkip={onSkip} onPrevious={onPrevious}/>
+        <div className="mx-auto mb-20 max-w-9xl px-4 md:mt-20 md:px-6">
+          <CalendarRegistration onNext={onNext} onSkip={onSkip} onPrevious={onPrevious} />
         </div >
       )
     case 3:
       return (
-        <div>
-          <h2>Gaia Task Registration</h2>
-          <p>Register your tasks here...</p>
-          <div className="mt-4 flex gap-2">
-            <Button onClick={onSkip} variant="secondary">Skip</Button>
-            <Button onClick={onNext}>Finish</Button>
-          </div>
-        </div>
+        <div className="mx-auto mb-20 mt-20 max-w-9xl px-4 md:mt-20 md:px-6">
+          <FinishOnboarding onNext={onNext} onSkip={onSkip} onPrevious={onPrevious} />
+        </div >
       )
     default:
       return <p>Onboarding complete!</p>
@@ -49,7 +45,7 @@ const Onboarding = () => {
 
   const handleNext = () => {
     if (stepIndex < steps.length) setStepIndex(stepIndex + 1)
-    else window.location.href = "/dashboard"
+    else window.location.href = "/client-gui/dashboard"
   }
 
   const handleSkip = () => {
@@ -81,13 +77,17 @@ const Onboarding = () => {
           </span>
         </div>
         <StepProgress currentStepIndex={stepIndex - 1} />
-        <Button
-          variant="secondary"
-          className="hidden md:inline-flex"
-        > Skip to Dashboard
-        </Button>
+        <a href="/client-gui/dashboard">
+          <Button
+            variant="secondary"
+            className="hidden md:inline-flex"
+          > Skip to Dashboard
+          </Button>
+        </a>
       </header>
-      <StepContent stepIndex={stepIndex} onNext={handleNext} onSkip={handleSkip} onPrevious={handlePrevious} />
+      <main className={cx(scrolled && "pt-12")}>
+        <StepContent stepIndex={stepIndex} onNext={handleNext} onSkip={handleSkip} onPrevious={handlePrevious} />
+      </main >
     </>
   )
 }

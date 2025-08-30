@@ -156,17 +156,22 @@ func Signup(w http.ResponseWriter, r *http.Request, authService *services.AuthSe
 	}
 
 	input := mapper.SignupRequestDTOMapper(body)
-	result, err := authService.Signup(r.Context(), input)
+	result, validation, err := authService.Signup(r.Context(), input)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	response := map[string]interface{}{
-		"message":  "Signup successfully",
-		"userInfo": result,
+	var response = make(map[string]interface{})
+	if validation != "" {
+		response["validation"] = validation
+		response["message"] = "Signup failed"
+	} else {
+		response["message"] = "Signup successfully"
+		response["userInfo"] = result
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Error encoding response: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -215,3 +220,36 @@ func Signout(w http.ResponseWriter, r *http.Request, authService *services.AuthS
 		return
 	}
 }	
+
+func MobileSignin(w http.ResponseWriter, r *http.Request, authService *services.AuthService) {
+	var body map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var input = authService.SigninInput
+	input = mapper.SigninRequestDTOMapper(body)
+	inputModel := model.SigninInput{
+		Username: input.Username,
+		Password: input.Password,
+	}
+	result, token, err := authService.Signin(r.Context(), inputModel)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	response := map[string]interface{}{
+		"message":  "Login successfully",
+		"userInfo": result,
+		"accessToken": token.AccessToken,
+		"refreshToken": token.RefreshToken,
+	}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}

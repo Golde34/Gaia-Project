@@ -19,6 +19,7 @@ func NewMicroserviceRouter(db database_mongo.Database, r *chi.Mux) *Microservice
 	microserviceConfigurationService := services.NewMicroserviceConfigurationService(microserviceConfigurationStore)
 	screenConfigurationStore := store.NewScreenConfigurationStore(db)
 	screenConfigurationService := services.NewScreenConfigurationService(screenConfigurationStore)
+	onboardingService := services.NewOnboardingService(store.NewOnboardingStore(db))
 	r.Route("/microservice", func(r chi.Router) {
 			r.Get("/status", func(w http.ResponseWriter, r *http.Request) {
 				controller_services.CheckMicroservice(w, r, microserviceConfigurationService)
@@ -37,6 +38,9 @@ func NewMicroserviceRouter(db database_mongo.Database, r *chi.Mux) *Microservice
 			})
 			r.Post("/insert-screen-configuration", func(w http.ResponseWriter, r *http.Request) {
 				controller_services.InsertScreenConfiguration(w, r, screenConfigurationService)
+			})
+			r.Get("/onboarding", func(w http.ResponseWriter, r *http.Request) {
+				controller_services.GetOnboarding(w, r, onboardingService)
 			})
 		})
 	return &MicroserviceRouter{

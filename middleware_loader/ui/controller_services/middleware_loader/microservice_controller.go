@@ -2,7 +2,9 @@ package controller_services
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"middleware_loader/core/middleware"
 	mapper "middleware_loader/core/port/mapper/request"
 	"middleware_loader/core/services/middleware_loader"
 	"middleware_loader/kernel/utils"
@@ -103,6 +105,22 @@ func InsertScreenConfiguration(w http.ResponseWriter, r *http.Request, screenCon
 	}
 
 	result, err := screenConfigurationService.InsertScreen(body)	
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}
+
+func GetOnboarding(w http.ResponseWriter, r *http.Request, onboardingService *services.OnboardingService) {
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	result, err := onboardingService.CheckUserOnboarding(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

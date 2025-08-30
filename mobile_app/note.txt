@@ -1,0 +1,17 @@
+app/
+├── _layout.tsx             # Root layout with <Stack /> and Redux Provider
+├── index.tsx               # Home screen ("/")
+├── counter/                # Route-based UI (e.g., "/counter")
+│   └── index.tsx           # CounterScreen UI
+
+src/
+├── components/             # Reusable UI components (Button, Header, etc.)
+├── constants/              # App-wide constants (colors, spacing, etc.)
+├── features/               # Redux features and slices
+│   └── counter/
+│       ├── counterSlice.ts # Redux slice
+│       └── types.ts        # Types for Counter state (optional)
+├── navigation/             # Custom navigators, if any (optional)
+├── store/                  # Central Redux store config
+│   └── index.ts            # store = configureStore({ reducer })
+├── utils/                  # Helper functions (formatDate, etc.)

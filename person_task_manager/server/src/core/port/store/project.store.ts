@@ -73,6 +73,10 @@ class ProjectStore {
     async getOwnerIdByProjectId(projectId: string): Promise<number> {
         return projectRepository.getOwnerIdByProjectId(projectId);
     }
+
+    async updateProjectTag(groupTaskId: string, tag: string): Promise<UpdateWriteOpResult | undefined> {
+        return projectRepository.updateProjectTag(groupTaskId, tag);
+    }
 }
 
 export const projectStore = new ProjectStore();

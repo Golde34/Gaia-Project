@@ -1,11 +1,12 @@
 import CacheSingleton from "../../infrastructure/cache/internal-cache/cache-singleton";
 import { authServiceAdapter } from "../../infrastructure/client/auth-service.adapter";
+import { workOptimizationAdapter } from "../../infrastructure/client/work-optimization.adapter";
 import { schedulePlanRepository } from "../../infrastructure/repositories/schedule-plan.repo";
 import { returnInternalServiceErrorResponse } from "../../kernel/utils/return-result";
 import { IResponse, msg200, msg400 } from "../common/response";
 import { InternalCacheConstants } from "../domain/constants/constants";
 import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
-import { ActiveStatus } from "../domain/enums/enums";
+import { ActiveStatus, ErrorStatus } from "../domain/enums/enums";
 
 class SchedulePlanService {
     constructor(
@@ -51,7 +52,7 @@ class SchedulePlanService {
 
     async findSchedulePlanById(schedulePlanId: string): Promise<IResponse> {
         try {
-            const schedulePlan = await schedulePlanRepository.findSchedulePlanById(schedulePlanId);
+            const schedulePlan = await this.getSchedulePlanById(schedulePlanId);
             return msg200({
                 schedulePlan: schedulePlan
             });
@@ -87,7 +88,6 @@ class SchedulePlanService {
             if (typeof existedUser === 'number') {
                 return null;
             }
-            console.log("Existed user: ", existedUser);
             const schedulePlanCache = this.schedulePlanCache.get(InternalCacheConstants.SCHEDULE_PLAN + userId);
             if (!schedulePlanCache) {
                 const schedulePlan = await schedulePlanRepository.findSchedulePlanByUserId(userId);
@@ -124,6 +124,30 @@ class SchedulePlanService {
         } catch (error: any) {
             console.log("Cannot find schedule plan by id: ", schedulePlanId)
             return null;
+        }
+    }
+
+    async registerTaskConfig(schedulePlan: any, registerTaskConfig: any): Promise<string> {
+        try {
+            const monday = registerTaskConfig.schedule[1];
+            const startSleepTime = monday.find((item: any) => item.tag === "sleep")?.start;
+            const endSleepTime = monday.find((item: any) => item.tag === "sleep")?.end;
+            const taskConfig = {
+                userId: schedulePlan.userId,
+                sleepDuration: registerTaskConfig.sleep,
+                startSleepTime: startSleepTime,
+                endSleepTime: endSleepTime,
+                relaxTime: registerTaskConfig.relax,
+                eatTime: registerTaskConfig.eat,
+                travelTime: registerTaskConfig.travel,
+                workTime: registerTaskConfig.work
+            };
+            const response = await workOptimizationAdapter.registerTaskConfig(taskConfig);
+            console.log("Task configuration registered successfully: ", response);
+            return ErrorStatus.SUCCESS;
+        } catch (error: any) {
+            console.error("Error registering task configuration: ", error);
+            return error.message.toString();
         }
     }
 }

@@ -10,7 +10,8 @@ class ScheduleTaskRepository {
     }
 
     async updateScheduleTask(scheduleTaskId: string, scheduleTask: any): Promise<ScheduleTaskEntity | null> {
-        const [affectedCount, affectedRows] = await ScheduleTaskEntity.update(scheduleTask, {
+        const plainObj = scheduleTask.get ? scheduleTask.get({ plain: true }) : scheduleTask;
+        const [affectedCount, affectedRows] = await ScheduleTaskEntity.update(plainObj, {
             where: { id: scheduleTaskId },
             returning: true,
         });
@@ -25,6 +26,16 @@ class ScheduleTaskRepository {
 
     async findScheduleTaskById(scheduleTaskId: string): Promise<ScheduleTaskEntity | null> {
         return await ScheduleTaskEntity.findByPk(scheduleTaskId);
+    }
+
+    async findScheduleTasksByListIds(scheduleTaskIds: string[]): Promise<ScheduleTaskEntity[]> {
+        return await ScheduleTaskEntity.findAll({
+            where: {
+                id: { [Op.in]: scheduleTaskIds },
+                activeStatus: ActiveStatus.active
+            },
+            order: [['createdAt', 'DESC']]
+        });
     }
 
     async isTaskSynchronized(taskId: string): Promise<boolean> {
@@ -49,7 +60,7 @@ class ScheduleTaskRepository {
         return await ScheduleTaskEntity.findOne({ where: { taskId: taskId } });
     }
 
-    async findTop10NewestTask(schedulePlanId: string): Promise<ScheduleTaskEntity[]> {
+    async findTopKNewestTask(schedulePlanId: string, topK: number): Promise<ScheduleTaskEntity[]> {
         return await ScheduleTaskEntity.findAll({
             where: {
                 schedulePlanId: schedulePlanId,
@@ -57,7 +68,7 @@ class ScheduleTaskRepository {
                 activeStatus: ActiveStatus.active 
             },
             order: [['createdAt', 'DESC']],
-            limit: 10
+            limit: topK 
         });
     }
 
@@ -89,21 +100,12 @@ class ScheduleTaskRepository {
         return await ScheduleTaskEntity.findAll({ where: { scheduleGroupId: scheduleGroupId } });
     }
 
-    async findUserDailyTasks(schedulePlanId: string, taskBatch: number, date: Date): Promise<ScheduleTaskEntity[]> {
-        const startOfDay = new Date(date);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(date);
-        endOfDay.setHours(23, 59, 59, 999);
-
-        return await ScheduleTaskEntity.findAll({
-            where: {
-                schedulePlanId: schedulePlanId,
-                taskBatch: taskBatch,
-                createdAt: { [Op.between]: [startOfDay, endOfDay] },
-                status: { [Op.ne]: TaskStatus.DONE },
-                activeStatus: ActiveStatus.active 
-            }
+    async updateTagTask(scheduleTaskId: string, tag: string): Promise<ScheduleTaskEntity | null> {
+        const [affectedCount, affectedRows] = await ScheduleTaskEntity.update({ tag: tag }, {
+            where: { id: scheduleTaskId },
+            returning: true,
         });
+        return affectedCount > 0 ? affectedRows[0] : null;
     }
 }
 

@@ -2,6 +2,7 @@ import { CalendarIcon, CheckCircleIcon } from "@heroicons/react/outline";
 import { Card, Flex, Tab, TabGroup, TabList, Title } from "@tremor/react";
 import { useState } from "react";
 import PriorityTasks from "./PriorityTasks";
+import DailyCalendar from "./DailyCalendar";
 
 const DailyTasks = () => {
 
@@ -20,7 +21,7 @@ const DailyTasks = () => {
         </Flex>
         {selectedIndex === 0 ? (
           <>
-            <Title className="mt-8">Daily Calendar</Title>
+            <DailyCalendar />
           </>
         ) : (
           <>

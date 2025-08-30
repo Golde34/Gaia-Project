@@ -1,14 +1,13 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Template from '../../components/template/Template';
 import CardItem from '../../components/subComponents/CardItem';
 import dayjs from 'dayjs';
-import { Button, Card, Col, Dialog, DialogPanel, Flex, Grid, Metric, Subtitle, Text } from '@tremor/react';
+import { Button, Card, Col, Dialog, DialogPanel, Flex, Grid, Metric, Text } from '@tremor/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getScheduleTaskBatchList, getScheduleTaskList } from '../../api/store/actions/schedule_plan/schedule-task.action';
 import MessageBox from '../../components/subComponents/MessageBox';
 import TaskBatchScreen from '../../screens/scheduleTaskScreen/TaskBatchScreen';
 import CalendarChart from '../../screens/scheduleTaskScreen/CalendarChart';
-import { ScheduleGroups } from '../../screens/scheduleTaskScreen/ScheduleGroups';
 
 function ContentArea() {
     const dispatch = useDispatch();
@@ -23,13 +22,12 @@ function ContentArea() {
         dispatch(getScheduleTaskList());
     }, [dispatch]);
 
-    const debounceRef = useRef(null);
+    const debounceRef = useRef();
     useEffect(() => {
-        clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            getListScheduleTasks();
-        }, 200);
-    }, [])
+        if (debounceRef.current) return;
+        getListScheduleTasks();
+        debounceRef.current = true; 
+    }, [getListScheduleTasks]);
 
     let [isOpen, setIsOpen] = useState(false);
     function closeModal() {
@@ -89,9 +87,8 @@ function ContentArea() {
                     <Metric style={{ marginBottom: '30px', marginTop: '30px' }}
                         className="text-2xl font-bold text-gray-800"> Schedule Calendar
                     </Metric>
-                    <ScheduleGroups />
                     <Card className='mt-4'>
-                        <div className="flex gap-10 sm:divide-x justify-center mt-10">
+                        <div className="flex gap-10 sm:divide-x justify-center mt-10 mb-10">
                             <CalendarChart currentDate={currentDate} selectDate={selectDate}
                                 checkEmptyScheduleTaskList={checkEmptyTaskListAndOpenModal}
                             />

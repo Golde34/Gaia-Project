@@ -1,4 +1,5 @@
 import { Column, DataType, Model, Table } from "sequelize-typescript";
+import { Col } from "sequelize/types/utils";
 
 @Table({
     tableName: "schedule_tasks",
@@ -112,6 +113,12 @@ export default class ScheduleTaskEntity extends Model {
         field: "is_notify",
     })
     isNotify!: boolean;
+
+    @Column({
+        type: DataType.STRING,
+        field: "tag",
+    })
+    tag!: string;
 
    @Column({
         type: DataType.DATE,

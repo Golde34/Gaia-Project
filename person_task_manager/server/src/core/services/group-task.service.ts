@@ -376,6 +376,18 @@ class GroupTaskService {
             return null;
         }
     }
+
+    async updateGroupTaskTag(taskId: string, tag: string): Promise<void> {
+        try {
+            const groupTask = await groupTaskStore.updateGroupTaskTag(taskId, tag);
+            if (groupTask !== null) {
+                await projectService.updateProjectTag(groupTask, tag);
+            }
+        } catch (error) {
+            console.log("An error occurred white update group task tag: ", error);
+            throw error;
+        }
+    }
 }
 
 export const groupTaskService = new GroupTaskService();

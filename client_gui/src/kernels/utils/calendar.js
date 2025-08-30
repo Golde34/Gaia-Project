@@ -59,3 +59,21 @@ export const months = [
 	"November",
 	"December",
 ];
+
+export const dayNames = {
+	'0': 'Sunday',
+	'1': 'Monday',
+	'2': 'Tuesday',
+	'3': 'Wednesday',
+	'4': 'Thursday',
+	'5': 'Friday',
+	'6': 'Saturday'
+};
+
+export const tagColors = {
+	'work': 'blue',
+	'eat': 'green',
+	'travel': 'yellow',
+	'relax': 'purple',
+	'sleep': 'gray'
+};
