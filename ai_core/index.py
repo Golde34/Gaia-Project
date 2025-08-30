@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request 
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -13,7 +14,13 @@ from kernel.config.config import session_id_var
 
 load_dotenv()
 
-app = FastAPI(title="Task Information Extraction API")
+# Kafka consumer setup
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    asyncio.create_task(consume())
+    yield
+
+app = FastAPI(title="Task Information Extraction API", lifespan=lifespan)
 
 # Add CORS middleware for SSE
 app.add_middleware(
@@ -36,10 +43,9 @@ async def add_session_id_to_context(request: Request, call_next):
     response = await call_next(request)
     return response
 
-# Kafka consumer setup
-@app.on_event("startup")
-async def startup_event():
-    asyncio.create_task(consume())
+# @app.on_event("startup")
+# async def startup_event():
+#     asyncio.create_task(consume())
 
 if __name__ == "__main__":
     uvicorn.run("index:app", host="0.0.0.0", port=4002, reload=True)

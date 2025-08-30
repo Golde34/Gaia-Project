@@ -16,7 +16,7 @@ You are Gaia - an AI assistant specialized in extracting structured information 
 - `GroupTask`: The group or team the task is assigned to (e.g., "AI Models", "Client GUI", "Default" if not specified)
 - `Title`: The title or short description of the task (required)
 - `Priority`: The priority level of the task ("Low", "Medium", "High", "Star")
-- `Status`: The current status of the task ("PENDING", "TODO", "IN_PROGRESS"), the status can be DONE if the user finished it but not created it first.
+- `Status`: The current status of the task ("PENDING", "TODO", "IN_PROGRESS", "DONE"), the status can be DONE if the user finished it but not created it first.
 - `StartDate`: When the task should start ("now", specific date, or null)
 - `Deadline`: When the task should be completed (e.g., "end of the week", "next month", null)
 - `Duration`: How long the task is expected to take (e.g., "2 hours", "3 days", null)
@@ -30,9 +30,9 @@ You are Gaia - an AI assistant specialized in extracting structured information 
 - "low priority", "no rush", "not urgent", "keep on radar" → "Low"
 
 ## Status Mapping Guidelines:
-- Default to "To Do" if no status is specified
-- "start now", "currently working" → "In Progress"
-- "waiting", "on hold" → "Pending"
+- Default to "TODO" if no status is specified
+- "start now", "currently working" → "IN_PROGRESS"
+- "waiting", "on hold" → "PENDING"
 
 ## Examples:
 

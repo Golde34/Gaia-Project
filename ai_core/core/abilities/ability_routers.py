@@ -24,7 +24,7 @@ ROUTERS = [
     {
         'label': enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value,
         'description': 'Register schedule calendar.',
-        'function': register_schedule_calendar 
+        'function': register_schedule_calendar
     }
 ]
 
@@ -55,8 +55,9 @@ async def select_ability(label_value: str, query: QueryRequest) -> tuple[str, bo
             prompt=prompt, model_name=query.model_name)
 
         print("Classify Response:", classify_response)
-        need_history = need_history(classify_response)
-        return classify_response, need_history 
+        is_need_history = need_history(classify_response)
+        return classify_response, is_need_history
+
 
 def need_history(label_value: str) -> bool:
     """
@@ -71,6 +72,7 @@ def need_history(label_value: str) -> bool:
         if ability['label'] == label_value:
             return ability.get('need_history', False)
     return False
+
 
 async def call_router_function(label_value: str, query: dict, guided_route: str = None) -> dict:
     """
