@@ -41,6 +41,14 @@ class ScheduleDayController {
             next(error);
         }
     }
+
+    async editTimeBubbleConfig(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            // return await scheduleDayUsecase.editTimeBubbleConfig(req.body);
+        } catch (error: any) {
+            next(error);
+        }
+    }
 }
 
 export const scheduleDayController = new ScheduleDayController();
