@@ -1,27 +1,16 @@
-import { Badge, Button, Card, Col, Dialog, DialogPanel, Flex, Grid, Subtitle, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text, Title } from "@tremor/react"
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Badge, Button, Card, Col, Flex, Grid, Subtitle, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Text, Title } from "@tremor/react"
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createDailyCalendarAction, getDailyTasksAction, getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 import { priorityColor } from "../../kernels/utils/field-utils";
-import { tagColors } from "../../kernels/utils/calendar";
-import { DialogTitle, Transition, TransitionChild } from "@headlessui/react";
+import ScheduleDayBubble from "./ScheduleDayBubble";
 
 const DailyCalendar = () => {
     const dispatch = useDispatch();
 
-    let [isOpen, setIsOpen] = useState(false);
-    function closeModal() {
-        setIsOpen(false)
-    }
-
-    function openModal(slot) {
-        setIsOpen(true)
-        setSelectedSlot(slot)
-    }
-
     const [dailyTasksRequest, setDailyTasksRequest] = useState({ tasks: [] });
     const [dailyCalendar, setDailyCalendar] = useState([]);
-    let [selectedSlot, setSelectedSlot] = useState(null);
+    const [updateDailyTaskList, setUpdateDailyTaskList] = useState([]);
 
     const timeBubbleConfigList = useSelector((state) => state.getTimeBubbleConfig);
     const { config: timeBubbleConfig, loading: loadingBubble, error: errorBubble } = timeBubbleConfigList;
@@ -79,6 +68,7 @@ const DailyCalendar = () => {
         try {
             const data = await dispatch(createDailyCalendarAction(payload.tasks));
             setDailyCalendar(Array.isArray(data?.dailyCalendar) ? [...data.dailyCalendar] : []);
+            setUpdateDailyTaskList(Array.isArray(data?.tasks) ? [...data?.tasks] : []);
             setDailyTasksRequest({})
         } catch (err) {
             console.error("Error:", err.message);
@@ -163,25 +153,7 @@ const DailyCalendar = () => {
                             dailyCalendar && dailyCalendar?.length > 0 && (
                                 dailyCalendar ?? []).map((slot) => (
                                     <Col numColSpan={12} key={slot.id}>
-                                        <Card key={slot.id} onClick={() => openModal(slot)}
-                                            className="flex items-center justify-between p-3 rounded-lg mt-4 
-                                                hover:cursor-pointer transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-105 duration-300">
-                                            <div className="flex-shrink-0">
-                                                <Badge
-                                                    color={tagColors[slot.tag] || 'gray'} size="sm"
-                                                    className="px-2 py-1 rounded-full text-xs font-medium">
-                                                    {slot.tag}
-                                                </Badge>
-                                            </div>
-
-                                            <div className="flex-grow text-center mx-4">
-                                                <Text className="text-sm font-semibold text-white truncate mt-1"> {slot.primaryTaskTitle}</Text>
-                                            </div>
-
-                                            <div className="flex-shrink-0">
-                                                <Text className="text-sm text-gray-400">{slot.startTime} - {slot.endTime}</Text>
-                                            </div>
-                                        </Card>
+                                        <ScheduleDayBubble updateDailyTaskList={updateDailyTaskList} slot={slot}/>
                                     </Col>
                                 ))}
                     </>
@@ -194,78 +166,7 @@ const DailyCalendar = () => {
                 )}
             </Grid>
 
-            <Transition appear show={isOpen} as={Fragment}>
-                <Dialog as="div" className="relative z-10" onClose={closeModal}>
-                    <TransitionChild
-                        as={Fragment}
-                        enter="ease-out duration-300"
-                        enterFrom="opacity-0"
-                        enterTo="opacity-100"
-                        leave="ease-in duration-200"
-                        leaveFrom="opacity-100"
-                        leaveTo="opacity-0"
-                    >
-                        <div className="fixed inset-0 bg-black/25" />
-                    </TransitionChild>
-
-                    <div className="fixed inset-0 overflow-y-auto">
-                        <div className="flex min-h-full items-center justify-center p-4 text-center">
-                            <TransitionChild
-                                as={Fragment}
-                                enter="ease-out duration-300"
-                                enterFrom="opacity-0 scale-95"
-                                enterTo="opacity-100 scale-100"
-                                leave="ease-in duration-200"
-                                leaveFrom="opacity-100 scale-100"
-                                leaveTo="opacity-0 scale-95"
-                            >
-                                <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                                    <DialogTitle
-                                        as="h3"
-                                        className="text-lg font-medium leading-6 text-gray-50"
-                                    >
-                                        Schedule Task Detail
-                                    </DialogTitle>
-                                    {selectedSlot && (
-                                        <div className="mt-4">
-                                            <Text>{selectedSlot.startTime} - {selectedSlot.endTime}</Text>
-                                            {
-                                                selectedSlot.primaryTaskId && selectedSlot.backupTaskId && (
-                                                    <>
-                                                        <Card className="mt-4 p-4" decoration="left" decorationColor="blue">
-                                                            <a href={`/client-gui/task/detail/${selectedSlot.primaryTaskId}`}>
-                                                                <Subtitle>Main task:</Subtitle>
-                                                                <Text>{selectedSlot.primaryTaskTitle}</Text>
-                                                            </a>
-                                                        </Card>
-                                                        <Card className="mt-4 p-4" decoration="left" decorationColor="red">
-                                                            <a href={`/client-gui/task/detail/${selectedSlot.backupTaskId}`}>
-                                                                <Subtitle>Backup task:</Subtitle>
-                                                                <Text>{selectedSlot.backupTaskTitle}</Text>
-                                                            </a>
-                                                        </Card>
-                                                    </>
-                                                )
-                                            }
-                                        </div>
-                                    )}
-                                    <div className="mt-4 flex justify-end">
-                                        <button
-                                            type="button"
-                                            className="inline-flex rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                                            onClick={() => {
-                                                closeModal();
-                                            }}
-                                        >
-                                            OK
-                                        </button>
-                                    </div>
-                                </DialogPanel>
-                            </TransitionChild>
-                        </div>
-                    </div>
-                </Dialog>
-            </Transition>
+            
         </>
     );
 };
