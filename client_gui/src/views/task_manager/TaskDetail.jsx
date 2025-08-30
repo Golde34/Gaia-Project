@@ -9,6 +9,7 @@ import RadioButtonIcon from "../../components/icons/RadioButtonIcon";
 import CheckBoxIcon from "../../components/icons/CheckboxIcon";
 import { priorityColor, pullPriority, pushPriority, statusColor } from "../../kernels/utils/field-utils";
 import { useUpdateTaskDispatch } from "../../kernels/utils/write-dialog-api-requests";
+import { TaskPriority } from "../../kernels/constants/constants";
 
 function ContentArea() {
     const dispatch = useDispatch();
@@ -52,24 +53,20 @@ function ContentArea() {
     }
 
     const updateTask = useUpdateTaskDispatch();
-    const setTaskObject = (title, description, startDate, deadline, duration, status, normalPriority, isStarPriority, taskOrder, stopTime) => {
-        const capitalize = (s) => {
-            s = String(s ?? '').trim();
-            return s ? s[0].toUpperCase() + s.slice(1).toLowerCase() : '';
-        };
+    const setTaskObject = (title, description, startDate, deadline, duration, status, 
+        normalPriority, isStarPriority, taskOrder, stopTime) => {
         if (title === null && description === null && startDate === null && deadline === null && duration === null
-            && status === null && normalPriority === null && isStarPriority === null
-            && taskOrder === null && stopTime === null) {
+            && status === null && normalPriority === null && isStarPriority === null && taskOrder === null && stopTime === null) {
             alert("Please update at least one field");
             return;
         }
         if (normalPriority === null) {
-            normalPriority = capitalize(priorities[0].toLowerCase());
+            normalPriority = priorities[0];
         }
         if (isStarPriority === null) {
-            isStarPriority = priorities[1] === null ? false : true;
+            isStarPriority = priorities[1];
         }
-        const priority = pushPriority(capitalize(normalPriority.toLowerCase()), isStarPriority);
+        const priority = pushPriority(normalPriority, isStarPriority);
         const body = {
             taskId: taskId,
             title: title === null ? detail?.title : title,
@@ -84,7 +81,7 @@ function ContentArea() {
             scheduleTaskId: detail?.scheduleTaskId === null ? 0 : detail?.scheduleTaskId,
         }
         updateTask(body);
-        // window.location.reload();
+        window.location.reload();
     }
 
     return (
@@ -222,8 +219,9 @@ function ContentArea() {
                                                 <input
                                                     id="priority-radio-high"
                                                     type="radio"
-                                                    value="HIGH"
-                                                    checked={normalPriority == null ? priorities[0].toUpperCase() === 'HIGH' : normalPriority.toUpperCase() === 'HIGH'}
+                                                    value="High"
+                                                    checked={normalPriority == null ?
+                                                        priorities[0].toLowerCase() === TaskPriority.HIGH : normalPriority.toLowerCase() === TaskPriority.HIGH}
                                                     onChange={(e) => setNormalPriority(e.target.value)}
                                                     className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-full border border-blue-gray-200 text-pink-500 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-red-500 before:opacity-0 before:transition-opacity checked:border-red-500 checked:before:bg-red-500 hover:before:opacity-10"
                                                 />
@@ -239,8 +237,9 @@ function ContentArea() {
                                                 <input
                                                     id="priority-radio-medium"
                                                     type="radio"
-                                                    value="MEDIUM"
-                                                    checked={normalPriority == null ? priorities[0].toUpperCase() === 'MEDIUM' : normalPriority.toUpperCase() === 'MEDIUM'}
+                                                    value="Medium"
+                                                    checked={normalPriority == null ?
+                                                        priorities[0].toLowerCase() === TaskPriority.MEDIUM : normalPriority.toLowerCase() === TaskPriority.MEDIUM}
                                                     onChange={(e) => setNormalPriority(e.target.value)}
                                                     className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-full border border-blue-gray-200 text-pink-500 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-blue-500 checked:before:bg-blue-500 hover:before:opacity-10"
                                                 />
@@ -256,8 +255,9 @@ function ContentArea() {
                                                 <input
                                                     id="priority-radio-low"
                                                     type="radio"
-                                                    value="LOW"
-                                                    checked={normalPriority == null ? priorities[0].toUpperCase() === 'LOW' : normalPriority.toUpperCase() === 'LOW'}
+                                                    value="Low"
+                                                    checked={normalPriority == null ?
+                                                        priorities[0].toLowerCase() === TaskPriority.LOW : normalPriority.toLowerCase() === TaskPriority.LOW}
                                                     onChange={(e) => setNormalPriority(e.target.value)}
                                                     className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-full border border-blue-gray-200 text-green-500 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-green-500 before:opacity-0 before:transition-opacity checked:border-green-500 checked:before:bg-green-500 hover:before:opacity-10"
                                                 />
@@ -273,7 +273,7 @@ function ContentArea() {
                                                 <input
                                                     id="priority-checkbox-star"
                                                     type="checkbox"
-                                                    checked={isStarPriority == null ? priorities[1]: isStarPriority}
+                                                    checked={isStarPriority == null ? priorities[1] : isStarPriority}
                                                     onChange={() => setIsStarPriority(!isStarPriority)}
                                                     className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-yellow-500 checked:bg-yellow-500 checked:before:bg-yellow-500 hover:before:opacity-10"
                                                 />
