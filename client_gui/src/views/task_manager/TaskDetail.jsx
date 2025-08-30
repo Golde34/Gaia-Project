@@ -3,7 +3,7 @@ import Template from "../../components/template/Template"
 import { useNavigate, useParams } from "react-router-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getDetailTask } from "../../api/store/actions/task_manager/task.actions";
-import { Badge, BadgeDelta, Button, Card, Col, DatePicker, Flex, Grid, Metric, Text, Textarea, TextInput } from "@tremor/react";
+import { Badge, BadgeDelta, Button, Card, Col, DatePicker, Flex, Grid, Metric, Subtitle, Text, Textarea, TextInput, Title } from "@tremor/react";
 import MessageBox from "../../components/subComponents/MessageBox";
 import RadioButtonIcon from "../../components/icons/RadioButtonIcon";
 import CheckBoxIcon from "../../components/icons/CheckboxIcon";
@@ -40,9 +40,7 @@ function ContentArea() {
     const [duration, setDuration] = useState(null);
     const [status, setStatus] = useState(null);
     const priorities = pullPriority(detail?.priority);
-    const [isHighPriority, setIsHighPriority] = useState(null);
-    const [isMediumPriority, setIsMediumPriority] = useState(null);
-    const [isLowPriority, setIsLowPriority] = useState(null);
+    const [normalPriority, setNormalPriority] = useState(null);
     const [isStarPriority, setIsStarPriority] = useState(null);
     const [taskBatch, setTaskBatch] = useState(null);
     const [taskOrder, setTaskOrder] = useState(null);
@@ -54,20 +52,24 @@ function ContentArea() {
     }
 
     const updateTask = useUpdateTaskDispatch();
-    const setTaskObject = (title, description, startDate, deadline, duration, status, isHighPriority, isMediumPriority, isLowPriority, isStarPriority, taskOrder, stopTime) => {
+    const setTaskObject = (title, description, startDate, deadline, duration, status, normalPriority, isStarPriority, taskOrder, stopTime) => {
+        const capitalize = (s) => {
+            s = String(s ?? '').trim();
+            return s ? s[0].toUpperCase() + s.slice(1).toLowerCase() : '';
+        };
         if (title === null && description === null && startDate === null && deadline === null && duration === null
-            && status === null && isHighPriority === null && isMediumPriority === null && isLowPriority === null && isStarPriority === null
+            && status === null && normalPriority === null && isStarPriority === null
             && taskOrder === null && stopTime === null) {
             alert("Please update at least one field");
             return;
         }
-        if (isHighPriority === null && isMediumPriority === null && isLowPriority === null && isStarPriority === null) {
-            isHighPriority = priorities[0];
-            isMediumPriority = priorities[1];
-            isLowPriority = priorities[2];
-            isStarPriority = priorities[3];
+        if (normalPriority === null) {
+            normalPriority = capitalize(priorities[0].toLowerCase());
         }
-        const priority = pushPriority(isHighPriority, isMediumPriority, isLowPriority, isStarPriority);
+        if (isStarPriority === null) {
+            isStarPriority = priorities[1] === null ? false : true;
+        }
+        const priority = pushPriority(capitalize(normalPriority.toLowerCase()), isStarPriority);
         const body = {
             taskId: taskId,
             title: title === null ? detail?.title : title,
@@ -82,7 +84,7 @@ function ContentArea() {
             scheduleTaskId: detail?.scheduleTaskId === null ? 0 : detail?.scheduleTaskId,
         }
         updateTask(body);
-        window.location.reload();
+        // window.location.reload();
     }
 
     return (
@@ -215,49 +217,52 @@ function ContentArea() {
                                     <p className="block text-md font-medium text-gray-200 mb-1">Priority</p>
                                     <div className="grid grid-cols-4 m-1">
                                         <div className="inline-flex items-center">
-                                            <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                htmlFor="priority-checkbox-high" data-ripple-dark="true">
+                                            <label className="relative flex cursor-pointer items-center rounded-full p-3"
+                                                htmlFor="priority-radio-high" data-ripple-dark="true">
                                                 <input
-                                                    id="priority-checkbox-high"
-                                                    type="checkbox"
-                                                    checked={isHighPriority == null ? priorities[0] : isHighPriority}
-                                                    onChange={() => setIsHighPriority(!isHighPriority)}
-                                                    className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-red-500 checked:bg-red-500 checked:before:bg-red-500 hover:before:opacity-10"
+                                                    id="priority-radio-high"
+                                                    type="radio"
+                                                    value="HIGH"
+                                                    checked={normalPriority == null ? priorities[0].toUpperCase() === 'HIGH' : normalPriority.toUpperCase() === 'HIGH'}
+                                                    onChange={(e) => setNormalPriority(e.target.value)}
+                                                    className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-full border border-blue-gray-200 text-pink-500 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-red-500 before:opacity-0 before:transition-opacity checked:border-red-500 checked:before:bg-red-500 hover:before:opacity-10"
                                                 />
-                                                <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                    <CheckBoxIcon />
+                                                <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-red-500 opacity-0 transition-opacity peer-checked:opacity-100">
+                                                    <RadioButtonIcon />
                                                 </div>
                                             </label>
                                             <label className="text-sm text-gray-200">High</label>
                                         </div>
                                         <div className="inline-flex items-center">
-                                            <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                htmlFor="priority-checkbox-medium" data-ripple-dark="true">
+                                            <label className="relative flex cursor-pointer items-center rounded-full p-3"
+                                                htmlFor="priority-radio-medium" data-ripple-dark="true">
                                                 <input
-                                                    id="priority-checkbox-medium"
-                                                    type="checkbox"
-                                                    checked={isMediumPriority == null ? priorities[1] : isMediumPriority}
-                                                    onChange={() => setIsMediumPriority(!isMediumPriority)}
-                                                    className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-pink-500 checked:bg-pink-500 checked:before:bg-pink-500 hover:before:opacity-10"
+                                                    id="priority-radio-medium"
+                                                    type="radio"
+                                                    value="MEDIUM"
+                                                    checked={normalPriority == null ? priorities[0].toUpperCase() === 'MEDIUM' : normalPriority.toUpperCase() === 'MEDIUM'}
+                                                    onChange={(e) => setNormalPriority(e.target.value)}
+                                                    className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-full border border-blue-gray-200 text-pink-500 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-blue-500 checked:before:bg-blue-500 hover:before:opacity-10"
                                                 />
-                                                <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                    <CheckBoxIcon />
+                                                <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-blue-500 opacity-0 transition-opacity peer-checked:opacity-100">
+                                                    <RadioButtonIcon />
                                                 </div>
                                             </label>
                                             <label className="text-sm text-gray-200">Medium</label>
                                         </div>
                                         <div className="inline-flex items-center">
-                                            <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                htmlFor="priority-checkbox-low" data-ripple-dark="true">
+                                            <label className="relative flex cursor-pointer items-center rounded-full p-3"
+                                                htmlFor="priority-radio-low" data-ripple-dark="true">
                                                 <input
-                                                    id="priority-checkbox-low"
-                                                    type="checkbox"
-                                                    checked={isLowPriority == null ? priorities[2] : isLowPriority}
-                                                    onChange={() => setIsLowPriority(!isLowPriority)}
-                                                    className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-green-500 checked:bg-green-500 checked:before:bg-green-500 hover:before:opacity-10"
+                                                    id="priority-radio-low"
+                                                    type="radio"
+                                                    value="LOW"
+                                                    checked={normalPriority == null ? priorities[0].toUpperCase() === 'LOW' : normalPriority.toUpperCase() === 'LOW'}
+                                                    onChange={(e) => setNormalPriority(e.target.value)}
+                                                    className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-full border border-blue-gray-200 text-green-500 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-green-500 before:opacity-0 before:transition-opacity checked:border-green-500 checked:before:bg-green-500 hover:before:opacity-10"
                                                 />
-                                                <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                    <CheckBoxIcon />
+                                                <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-green-500 opacity-0 transition-opacity peer-checked:opacity-100">
+                                                    <RadioButtonIcon />
                                                 </div>
                                             </label>
                                             <label className="text-sm text-gray-200">Low</label>
@@ -268,7 +273,7 @@ function ContentArea() {
                                                 <input
                                                     id="priority-checkbox-star"
                                                     type="checkbox"
-                                                    checked={isStarPriority == null ? priorities[3] : isStarPriority}
+                                                    checked={isStarPriority == null ? priorities[1]: isStarPriority}
                                                     onChange={() => setIsStarPriority(!isStarPriority)}
                                                     className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-yellow-500 checked:bg-yellow-500 checked:before:bg-yellow-500 hover:before:opacity-10"
                                                 />
@@ -349,7 +354,7 @@ function ContentArea() {
                                         variant="primary" color="indigo"
                                         onClick={() => {
                                             setTaskObject(title, description, startDate, deadline, duration, status,
-                                                isHighPriority, isMediumPriority, isLowPriority, isStarPriority,
+                                                normalPriority, isStarPriority,
                                                 taskOrder, stopTime);
                                         }
                                         }>
@@ -406,10 +411,11 @@ function ContentArea() {
                                 </div>
                             </Card>
                             <Card className="mt-4">
-                                <div className="mt-5">
-                                    <label htmlFor="new-feature" className="block text-md font-medium text-gray-200 mb-3">New feature</label>
-                                    <p className="text-gray-700">Do you want to check my new feature?</p>
-                                </div>
+                                <label htmlFor="new-feature" className="block text-md font-medium text-gray-200 mb-3">New feature</label>
+                                <Subtitle className="text-gray-700">Do you want to check my new feature?</Subtitle>
+                                <Card className="mt-2">
+                                    <a href="/client-gui/dashboard"><Title>Daily calendar</Title></a>
+                                </Card>
                             </Card>
                         </div>
                     </div>
