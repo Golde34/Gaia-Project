@@ -9,7 +9,6 @@ const ScheduleDayBubble = (props) => {
     const { slot, updatedDailyTaskList } = props;
 
     const [isOpen, setIsOpen] = useState(false);
-    const [selectedSlot, setSelectedSlot] = useState(null);
     const [isEdited, setIsEdited] = useState(false);
 
     const [form, setForm] = useState({
@@ -19,10 +18,10 @@ const ScheduleDayBubble = (props) => {
         primaryTaskTitle: slot.primaryTaskTitle ?? "",
         backupTaskId: slot.backupTaskId ?? "",
         backupTaskTitle: slot.backupTaskTitle ?? "",
+        timeBubbleId: slot.timeBubbleId,
     });
 
     const openModal = (s) => {
-        setSelectedSlot(s);
         setForm({
             startTime: s.startTime ?? "",
             endTime: s.endTime ?? "",
@@ -30,6 +29,7 @@ const ScheduleDayBubble = (props) => {
             primaryTaskTitle: s.primaryTaskTitle ?? "",
             backupTaskId: s.backupTaskId ?? "",
             backupTaskTitle: s.backupTaskTitle ?? "",
+            timeBubbleId: s.timeBubbleId,
         });
         setIsOpen(true);
         setIsEdited(false);
