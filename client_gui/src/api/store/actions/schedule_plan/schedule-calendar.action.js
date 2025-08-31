@@ -3,7 +3,8 @@ import {
     CREATE_DAILY_CALENDAR_FAILURE, CREATE_DAILY_CALENDAR_REQUEST, CREATE_DAILY_CALENDAR_SUCCESS,
     GET_DAILY_TASKS_FAILURE, GET_DAILY_TASKS_REQUEST, GET_DAILY_TASKS_SUCCESS,
     REGISTER_SCHEDULE_CALENDAR_FAILURE, REGISTER_SCHEDULE_CALENDAR_REQUEST, REGISTER_SCHEDULE_CALENDAR_SUCCESS,
-    GET_TIME_BUBBLE_CONFIG_FAILURE, GET_TIME_BUBBLE_CONFIG_REQUEST, GET_TIME_BUBBLE_CONFIG_SUCCESS
+    GET_TIME_BUBBLE_CONFIG_FAILURE, GET_TIME_BUBBLE_CONFIG_REQUEST, GET_TIME_BUBBLE_CONFIG_SUCCESS,
+    UPDATE_TIME_BUBBLE_CONFIG_REQUEST, UPDATE_TIME_BUBBLE_CONFIG_SUCCESS, UPDATE_DAILY_CALENDAR_FAILURE
 } from "../../constants/schedule_plan/schedule-calendar.constants";
 
 const portName = {
@@ -62,6 +63,21 @@ export const getTimeBubbleConfig = () => async (dispatch) => {
     } catch (error) {
         dispatch({
             type: GET_TIME_BUBBLE_CONFIG_FAILURE,
+            payload: error.response && error.response.data.message
+                ? error.response.data.message
+                : error.message,
+        });
+    }
+}
+
+export const editTimeBubble = (timeBubble) => async (dispatch) => {
+    dispatch({ type: UPDATE_TIME_BUBBLE_CONFIG_REQUEST, payload: timeBubble });
+    try {
+        const { data } = await serverRequest(`/schedule-calendar/edit-time-bubble`, HttpMethods.POST, portName.middleware, timeBubble);
+        dispatch({ type: UPDATE_TIME_BUBBLE_CONFIG_SUCCESS, payload: data });
+    } catch (error) {
+        dispatch({
+            type: UPDATE_DAILY_CALENDAR_FAILURE,
             payload: error.response && error.response.data.message
                 ? error.response.data.message
                 : error.message,

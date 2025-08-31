@@ -49,3 +49,14 @@ scheduleDayRouter.post("/generate-daily-calendar",
         }
     }
 )
+
+scheduleDayRouter.post("/edit-time-bubble", 
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const updatedTimeBubble = await scheduleDayController.editTimeBubbleConfig(req, next);
+            return returnResult(updatedTimeBubble, "FAIL", res, next);
+        } catch (error) {
+            next(error);
+        }
+    }
+)

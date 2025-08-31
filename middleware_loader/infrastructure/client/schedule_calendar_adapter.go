@@ -113,3 +113,23 @@ func (adapter *ScheduleCalendarAdapter) GenerateDailyCalendar(userId string, dai
 
 	return bodyResultMap, nil
 }
+
+func (adapter *ScheduleCalendarAdapter) EditTimeBubble(userId string, timeBubble map[string]interface{}) (map[string]interface{}, error) {
+	editedTimeBubbleURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-day/edit-time-bubble"
+	var body = map[string]interface{}{
+		"userId":     userId,
+		"timeBubble": timeBubble,
+	}
+	headers := utils.BuildDefaultHeaders()
+	bodyResult, err := utils.BaseAPI(editedTimeBubbleURL, "POST", body, headers)
+	if err != nil {
+		return nil, err
+	}
+
+	bodyResultMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return nil, nil
+	}
+
+	return bodyResultMap, nil
+}

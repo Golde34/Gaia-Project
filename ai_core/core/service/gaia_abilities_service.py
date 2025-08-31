@@ -22,12 +22,11 @@ async def abilities_handler(query: QueryRequest, guided_route: str) -> str:
             (key for key in FUNCTIONS if key in guided_route), enum.GaiaAbilities.CHITCHAT.value)
         if matched_type == enum.GaiaAbilities.CHITCHAT.value:
             return await chitchat_with_history(query)
+        handler = FUNCTIONS[matched_type]
 
-        handler = await FUNCTIONS[matched_type]
-
-        result = handler(query=query)
-
-        return handle_task_service_response(query, result)        
+        result = await handler(query=query)
+        print("Result: ", result)
+        return handle_task_service_response(matched_type, result)        
     except Exception as e:
         raise e
 

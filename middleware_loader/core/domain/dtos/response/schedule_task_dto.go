@@ -32,18 +32,19 @@ func NewScheduleTaskBatchListResponseDTO() *ScheduleTaskBatchListResponseDTO {
 }
 
 type DailyCalendarResponseDTO struct {
-	ID string `json:"id"`
-	UserId string `json:"userId"`
-	StartTime string `json:"startTime"`
-	EndTime string `json:"endTime"`
-	PrimaryTaskId string `json:"primaryTaskId"`
-	BackupTaskId string `json:"backupTaskId"`
+	ID               string `json:"id"`
+	UserId           string `json:"userId"`
+	TimeBubbleId     string `json:"timeBubbleId"`
+	StartTime        string `json:"startTime"`
+	EndTime          string `json:"endTime"`
+	PrimaryTaskId    string `json:"primaryTaskId"`
+	BackupTaskId     string `json:"backupTaskId"`
 	PrimaryTaskTitle string `json:"primaryTaskTitle"`
-	BackupTaskTitle string `json:"backupTaskTitle"`
-	Tag string `json:"tag"`
-	WeekDay int `json:"weekDay"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
+	BackupTaskTitle  string `json:"backupTaskTitle"`
+	Tag              string `json:"tag"`
+	WeekDay          int    `json:"weekDay"`
+	CreatedAt        string `json:"createdAt"`
+	UpdatedAt        string `json:"updatedAt"`
 }
 
 func NewDailyCalendarResponseDTO() *DailyCalendarResponseDTO {
@@ -67,8 +68,8 @@ func NewScheduleResponseDTO() *ScheduleResponseDTO {
 }
 
 type DailyTasksResponseDTO struct {
-	Message string `json:"message"`
-	Tasks   []ScheduleTaskResponseDTO `json:"tasks"`
+	Message       string                     `json:"message"`
+	Tasks         []ScheduleTaskResponseDTO  `json:"tasks"`
 	DailyCalendar []DailyCalendarResponseDTO `json:"dailyCalendar"`
 }
 
@@ -77,7 +78,7 @@ func NewDailyTasksResponseDTO() *DailyTasksResponseDTO {
 }
 
 type RegisteredCalendarStatusResponseDTO struct {
-	Status string `json:"status"`
+	Status  string `json:"status"`
 	Message string `json:"message"`
 }
 

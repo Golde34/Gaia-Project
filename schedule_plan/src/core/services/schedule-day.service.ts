@@ -143,6 +143,7 @@ class ScheduleDayService {
             backupTaskId: backup?.taskId || null,
             backupTaskTitle: backup?.title || null,
             weekDay: weekDay,
+            timeBubbleId: bubble.id,
         }
     }
 
@@ -170,6 +171,25 @@ class ScheduleDayService {
             return await scheduleDayRepository.listScheduleDay(weekDay, userId);
         } catch (error: any) {
             console.error("Error returning daily calendar:", error);
+            throw error;
+        }
+    }
+
+    async editTimeBubbleConfig(timeBubble: any): Promise<any> {
+        try {
+            return await timeBubbleRepository.updateTimeBubble(timeBubble);
+        } catch (error: any) {
+            console.error("Error when updating time bubble config: ", error);
+            throw error;
+        }
+    }
+
+    async editScheduleDayBubble(timeBubbleId: string, timeBubble: any): Promise<any> {
+        try {
+            if (timeBubbleId!= timeBubble.timeBubbleId) throw Error('Time bubble id was not matched');
+            return await scheduleDayRepository.updateScheduleDay(timeBubble);
+        } catch (error: any) {
+            console.error("Error when updating schedule day bubble: ", error);
             throw error;
         }
     }

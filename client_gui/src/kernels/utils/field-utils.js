@@ -24,43 +24,30 @@ export const priorityColor = (priority) => {
     }
 }
 
-export const pushPriority = (isHighPriority, isMediumPriority, isLowPriority, isStarPriority) => {
+export const pushPriority = (isPriority, isStarPriority) => {
     let priority = []
-    if (isHighPriority) {
-        priority.push(TaskPriority.HIGH_CAMEL)
-    }
-    if (isMediumPriority) {
-        priority.push(TaskPriority.MEDIUM_CAMEL)
-    }
-    if (isLowPriority) {
-        priority.push(TaskPriority.LOW_CAMEL)
-    }
-    if (isStarPriority) {
-        priority.push(TaskPriority.STAR_CAMEL)
-    }
+    priority.push(isPriority)
+    if (isStarPriority) priority.push(TaskPriority.STAR_CAMEL)
     return priority
 }
 
 export const pullPriority = (priorities) => {
-    let isHighPriority = false
-    let isMediumPriority = false
-    let isLowPriority = false
-    let isStarPriority = false
-    if (priorities === undefined || priorities === null) {
-        return [isHighPriority, isMediumPriority, isLowPriority, isStarPriority]
+    let isPriority = '' 
+    let isStarPriority = true 
+    if (priorities === null || priorities === undefined) {
+        return [isPriority, isStarPriority]
     }
     for (let priority of priorities) {
-        if (priority.toLowerCase() === TaskPriority.HIGH) {
-            isHighPriority = true
-        } else if (priority.toLowerCase() === TaskPriority.MEDIUM) {
-            isMediumPriority = true
-        } else if (priority.toLowerCase() === TaskPriority.LOW) {
-            isLowPriority = true
-        } else if (priority.toLowerCase() === TaskPriority.STAR) {
+        if (priority != TaskPriority.STAR_CAMEL) {
+           isPriority = priority; 
+           continue;
+        }
+        if (priority == TaskPriority.STAR) {
             isStarPriority = true
         }
     }
-    return [isHighPriority, isMediumPriority, isLowPriority, isStarPriority]
+
+    return [isPriority, isStarPriority];
 }
 
 export const pushRepeat = (isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday) => {

@@ -57,6 +57,9 @@ func NewScheduleTaskRouter(r *chi.Mux) *ScheduleTaskRouter {
 		r.Get("/daily-tasks", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.GetUserDailyTasks(w, r, scheduleCalendarService)
 		})
+		r.Post("/edit-time-bubble", func(w http.ResponseWriter, r *http.Request) {
+			controller_services.EditTimeBubble(w, r, scheduleCalendarService)
+		})
 	})
 	return &ScheduleTaskRouter{
 		ScheduleTaskService: scheduleTaskService,

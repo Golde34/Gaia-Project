@@ -30,31 +30,31 @@ export default class ScheduleDayBubbleEntity extends Model {
     endTime?: string; // "HH:mm:ss" format
 
     @Column({
-        type: DataType.UUID,
+        type: DataType.STRING,
         field: "primary_task_id",
     })
     primaryTaskId?: string;
 
     @Column({
-        type: DataType.UUID,
+        type: DataType.STRING,
         field: "backup_task_id",
     })
     backupTaskId?: string;
 
     @Column({
-        type: DataType.UUID,
+        type: DataType.STRING,
         field: "primary_task_title",
     })
     primaryTaskTitle?: string;
 
     @Column({
-        type: DataType.UUID,
+        type: DataType.STRING,
         field: "backup_task_title",
     })
     backupTaskTitle?: string;
 
     @Column({
-        type: DataType.UUID,
+        type: DataType.STRING,
         field: "tag"
     })
     tag?: string;
@@ -64,6 +64,12 @@ export default class ScheduleDayBubbleEntity extends Model {
         field: "week_day",
     })
     weekDay?: number;
+
+    @Column({
+        type: DataType.STRING,
+        field: "time_bubble_id"
+    })
+    timeBubbleId!: string;
 
     @Column({
         type: DataType.DATE,

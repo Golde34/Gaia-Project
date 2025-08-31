@@ -22,7 +22,7 @@ export const config: Configuration = {
     },
     kafka: {
         bootstrapServers: process.env.KAFKA_BOOTSTRAP_SERVERS ?? 'localhost:9094',
-        groupId: process.env.KAFKA_GROUP_ID ?? 'task-manager'
+        groupId: process.env.KAFKA_GROUP_ID ?? 'schedule-plan'
     }
 };
 

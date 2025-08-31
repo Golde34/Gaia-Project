@@ -45,3 +45,10 @@ export const calculateDuration = (start, end) => {
 
   return duration;
 };
+
+export const toMin = (t) => {
+        if (!t) return null;
+        const [h, m] = t.split(":").map(Number);
+        if (Number.isNaN(h) || Number.isNaN(m)) return null;
+        return h * 60 + m;
+    };

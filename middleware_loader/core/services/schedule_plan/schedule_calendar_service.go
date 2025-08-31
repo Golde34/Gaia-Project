@@ -65,3 +65,11 @@ func (s *ScheduleCalendarService) GetUserDailyTasks(userId string) (response_dto
 	}
 	return dailyTasks, nil
 }
+
+func (s *ScheduleCalendarService) EditTimeBubble(userId string, timeBubble map[string]interface{}) (map[string]interface{}, error) {
+	updatedTimeBubble, err := client.IScheduleCalendarAdapter(&adapter.ScheduleCalendarAdapter{}).EditTimeBubble(userId, timeBubble)
+	if err != nil {
+		return nil, err
+	}
+	return updatedTimeBubble, nil
+}
