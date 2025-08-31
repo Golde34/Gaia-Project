@@ -70,10 +70,10 @@ export const getTimeBubbleConfig = () => async (dispatch) => {
     }
 }
 
-export const updateTimeBubbleConfig = () => async (dispatch) => {
-    dispatch({ type: UPDATE_TIME_BUBBLE_CONFIG_REQUEST });
+export const editTimeBubble = (timeBubble) => async (dispatch) => {
+    dispatch({ type: UPDATE_TIME_BUBBLE_CONFIG_REQUEST, payload: timeBubble });
     try {
-        const { data } = await serverRequest(`/schedule-calendar/edit-time-bubble`, HttpMethods.POST, portName.middleware);
+        const { data } = await serverRequest(`/schedule-calendar/edit-time-bubble`, HttpMethods.POST, portName.middleware, timeBubble);
         dispatch({ type: UPDATE_TIME_BUBBLE_CONFIG_SUCCESS, payload: data });
     } catch (error) {
         dispatch({

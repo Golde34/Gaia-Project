@@ -61,7 +61,7 @@ export const getTimeBubbleConfigReducer = (state = initialState, action) => {
   }
 };
 
-export const updateTimeBubbleConfigReducer = (
+export const editTimeBubbleReducer = (
     state = { loading: true }, action) => {
     switch (action.type) {
         case UPDATE_TIME_BUBBLE_CONFIG_REQUEST:

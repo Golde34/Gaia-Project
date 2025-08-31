@@ -4,6 +4,7 @@ import { Fragment, useMemo, useState } from "react";
 import { tagColors } from "../../kernels/utils/calendar";
 import { toMin } from "../../kernels/utils/date-picker";
 import { useUpdateTimeBubbleDispatch } from "../../kernels/utils/write-dialog-api-requests";
+import { ColorBadge } from "../../components/subComponents/ColorBadge";
 
 const ScheduleDayBubble = (props) => {
     const { slot, updatedDailyTaskList } = props;
@@ -12,6 +13,7 @@ const ScheduleDayBubble = (props) => {
     const [isEdited, setIsEdited] = useState(false);
 
     const [form, setForm] = useState({
+        id: slot.id,
         startTime: slot.startTime ?? "",
         endTime: slot.endTime ?? "",
         primaryTaskId: slot.primaryTaskId ?? "",
@@ -19,10 +21,12 @@ const ScheduleDayBubble = (props) => {
         backupTaskId: slot.backupTaskId ?? "",
         backupTaskTitle: slot.backupTaskTitle ?? "",
         timeBubbleId: slot.timeBubbleId,
+        tag: slot.tag
     });
 
     const openModal = (s) => {
         setForm({
+            id: s.id,
             startTime: s.startTime ?? "",
             endTime: s.endTime ?? "",
             primaryTaskId: s.primaryTaskId ?? "",
@@ -30,6 +34,7 @@ const ScheduleDayBubble = (props) => {
             backupTaskId: s.backupTaskId ?? "",
             backupTaskTitle: s.backupTaskTitle ?? "",
             timeBubbleId: s.timeBubbleId,
+            tag: s.tag
         });
         setIsOpen(true);
         setIsEdited(false);
@@ -77,10 +82,14 @@ const ScheduleDayBubble = (props) => {
     const clearBackup = () => setForm((p) => ({ ...p, backupTaskId: "", backupTaskTitle: "" }));
 
     const handleEdit = () => setIsEdited(true);
+    const handleTagForm = (value) => {
+        setForm((prev) => ({ ...prev, tag: value }));
+    }
 
     const updateTimeBubble = useUpdateTimeBubbleDispatch();
     const handleSave = () => {
         if (timeError) return;
+        console.log("update form: ", form)
         updateTimeBubble(form)
         closeModal();
     };
@@ -94,13 +103,7 @@ const ScheduleDayBubble = (props) => {
                    hover:cursor-pointer transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-105 duration-300"
             >
                 <div className="flex-shrink-0">
-                    <Badge
-                        color={tagColors[slot.tag] || "gray"}
-                        size="sm"
-                        className="px-2 py-1 rounded-full text-xs font-medium"
-                    >
-                        {slot.tag}
-                    </Badge>
+                    <ColorBadge color={tagColors[slot.tag]} name={slot.tag}></ColorBadge>
                 </div>
 
                 <div className="flex-grow text-center mx-4">
@@ -154,13 +157,7 @@ const ScheduleDayBubble = (props) => {
                                                     <Text className="text-sm">
                                                         {form.startTime || "—"} - {form.endTime || "—"}
                                                     </Text>
-                                                    <Badge
-                                                        color={tagColors[slot.tag] || "gray"}
-                                                        size="sm"
-                                                        className="px-2 py-1 rounded-full text-xs font-medium"
-                                                    >
-                                                        {slot.tag}
-                                                    </Badge>
+                                                    <ColorBadge color={tagColors[slot.tag]} name={slot.tag}></ColorBadge>
                                                 </Flex>
                                                 <Grid numItems={2} className="mt-3">
                                                     <Col numColSpan={1}>
@@ -202,6 +199,25 @@ const ScheduleDayBubble = (props) => {
                                                             value={form.endTime}
                                                             onChange={(e) => handleTimeChange("endTime", e.target.value)}
                                                         />
+                                                    </Col>
+                                                    <Col numColSpanLg={2} numColSpan={1}>
+                                                        <Select defaultValue={form.tag} onValueChange={handleTagForm}>
+                                                            <SelectItem value="work">
+                                                                <ColorBadge color={tagColors["work"]} name={"Work"}></ColorBadge>
+                                                            </SelectItem>
+                                                            <SelectItem value="relax">
+                                                                <ColorBadge color={tagColors["relax"]} name={"Relax"}></ColorBadge>
+                                                            </SelectItem>
+                                                            <SelectItem value="travel">
+                                                                <ColorBadge color={tagColors["travel"]} name={"Travel"}></ColorBadge>
+                                                            </SelectItem>
+                                                            <SelectItem value="eat">
+                                                                <ColorBadge color={tagColors["eat"]} name={"Eat"}></ColorBadge>
+                                                            </SelectItem>
+                                                            <SelectItem value="sleep">
+                                                                <ColorBadge color={tagColors["sleep"]} name={"Sleep"}></ColorBadge>
+                                                            </SelectItem>
+                                                        </Select>
                                                     </Col>
                                                 </Grid>
                                                 {timeError && <Text className="text-red-600 mt-2">{timeError}</Text>}
