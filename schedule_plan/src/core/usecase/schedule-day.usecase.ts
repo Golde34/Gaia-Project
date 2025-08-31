@@ -167,6 +167,21 @@ class ScheduleDayUsecase {
         }
         return [true, tasks];
     }
+
+    async editTimeBubble(userId: number, timeBubble: any): Promise<IResponse | undefined> {
+        try {
+            const schedulePlan = await schedulePlanService.findSchedulePlanByUserId(userId)
+            if (!schedulePlan) return msg400("User is not existed or schedule plan is not created");
+            const editedTimeBubbleConfig = await scheduleDayService.editTimeBubbleConfig(timeBubble);
+            if (!editedTimeBubbleConfig) return msg400("Edit time bubble config failed");
+            const editedScheduleDayBubble = await scheduleDayService.editScheduleDayBubble(editedTimeBubbleConfig.id, timeBubble)
+            return msg200({
+                timeBubble: editedScheduleDayBubble
+            })
+        } catch (error: any) {
+            console.error("Error edit time bubble: ")
+        }
+    }
 }
 
 export const scheduleDayUsecase = new ScheduleDayUsecase();
