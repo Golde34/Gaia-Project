@@ -1,5 +1,5 @@
 import Template from "../../components/template/Template"
-import { CreateScheduleGroupDialog } from "../../screens/scheduleTaskScreen/CreateScheduleGroup";
+import DailyCalendar from "../../screens/dashboardScreen/DailyCalendar";
 
 function ContentArea() {
     return (
@@ -8,7 +8,7 @@ function ContentArea() {
                 <img src="/gaia_logo.png" alt="logo" className="h-10 w-10 inline-block" />
             </h1>
 
-            <CreateScheduleGroupDialog />
+            <DailyCalendar />
         </>
     )
 }

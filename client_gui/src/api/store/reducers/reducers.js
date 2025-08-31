@@ -48,6 +48,7 @@ import { getNotificationJwt } from "../actions/auth_service/auth.actions";
 import { createDailyCalendarReducer, getDailyTasksReducer, getTimeBubbleConfigReducer, registerScheduleCalendarReducer } from "./schedule_plan/schedule-calendar.reducers";
 import { chatHistoryReducer } from "./chat_hub/messages.reducer";
 import { getAllDialoguesReducer } from "./chat_hub/dialogue.reducer";
+import { updateTimeBubbleConfig } from "../actions/schedule_plan/schedule-calendar.action";
 
 export const reducer = combineReducers({
     // auth service
@@ -118,6 +119,7 @@ export const reducer = combineReducers({
     getDailyTasks: getDailyTasksReducer,
     registerScheduleCalendar: registerScheduleCalendarReducer,
     getTimeBubbleConfig: getTimeBubbleConfigReducer,
+    updateTimeBubbleConfig: updateTimeBubbleConfig,
     // middleware loader
     microserviceList: microserviceListReducer,
     screenList: screenListReducer,

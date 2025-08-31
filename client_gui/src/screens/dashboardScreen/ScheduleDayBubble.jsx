@@ -3,9 +3,10 @@ import { Badge, Button, Card, Col, Dialog, DialogPanel, Divider, Flex, Grid, Sel
 import { Fragment, useMemo, useState } from "react";
 import { tagColors } from "../../kernels/utils/calendar";
 import { toMin } from "../../kernels/utils/date-picker";
+import { useUpdateTimeBubbleDispatch } from "../../kernels/utils/write-dialog-api-requests";
 
 const ScheduleDayBubble = (props) => {
-    const { slot, updatedDailyTaskList, onUpdate} = props;
+    const { slot, updatedDailyTaskList } = props;
 
     const [isOpen, setIsOpen] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState(null);
@@ -75,16 +76,14 @@ const ScheduleDayBubble = (props) => {
 
     const clearBackup = () => setForm((p) => ({ ...p, backupTaskId: "", backupTaskTitle: "" }));
 
+    const handleEdit = () => setIsEdited(true);
+
+    const updateTimeBubble = useUpdateTimeBubbleDispatch();
     const handleSave = () => {
         if (timeError) return;
-        onUpdate?.({
-            ...selectedSlot,
-            ...form,
-        });
+        updateTimeBubble(form)
         closeModal();
     };
-
-    const handleEdit = () => setIsEdited(true);
 
     return (
         <>
