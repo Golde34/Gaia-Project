@@ -9,6 +9,7 @@ class ScheduleDayRepository {
         const scheduleDay = {
             id: randomUUID(),
             userId: userId,
+            timeBubbleId: assignedBubble.timeBubbleId,
             tag: assignedBubble.tag,
             startTime: assignedBubble.startTime,
             endTime: assignedBubble.endTime,

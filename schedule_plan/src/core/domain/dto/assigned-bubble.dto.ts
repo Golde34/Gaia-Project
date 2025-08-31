@@ -8,6 +8,7 @@ export class AssignedBubble {
     primaryTaskTitle?: string;
     backupTaskTitle?: string;
     tag?: string;
+    timeBubbleId!: string;
     weekDay?: number;
     createdAt?: Date;
     updatedAt?: Date;

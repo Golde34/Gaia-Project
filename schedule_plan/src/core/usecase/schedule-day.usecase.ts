@@ -80,7 +80,7 @@ class ScheduleDayUsecase {
         if (dailyCalendar.length === 0 || !dailyCalendar) {
             return this.findDailyScheduleTasks(userId);
         }
-        
+
         return msg200({
             message: "Daily calendar generated successfully",
             dailyCalendar: dailyCalendar
@@ -133,33 +133,39 @@ class ScheduleDayUsecase {
 
     async generateDailyCalendar(userId: number, dailyTasks: any[]): Promise<IResponse | undefined> {
         try {
-            let tasks = [];
-            if (dailyTasks == undefined || dailyTasks == null 
-                || dailyTasks.length === 0 || Array.isArray(dailyTasks)) {
-                const scheduleTasks = await scheduleTaskUsecase.findActiveTaskBatch(userId);
-                if (scheduleTasks == undefined || scheduleTasks?.length == 0) {
-                    return msg400("No active task batch found");
-                }
-                tasks = scheduleTasks;
-            } else {
-                tasks = dailyTasks;
-            }
+            const [isValidate, tasks] = await this.getDailyTasks(userId, dailyTasks);
+            if (!isValidate) return tasks; 
             const weekDay: number = new Date().getDay();
             const timeBubbles = await scheduleDayService.inquiryTimeBubbleByUserIdAndWeekday(userId, weekDay);
             const scheduleTasks: ScheduleTaskEntity[] = scheduleTaskMapper.mapDailyTasksToScheduleTasks(tasks);
             const taggedScheduleTasks = await scheduleTaskUsecase.tagScheduleTask(userId, scheduleTasks);
             if (taggedScheduleTasks === undefined) throw new Error("There's an error when tagged your task to make daily calendar");
-            const dailyCalendar = await scheduleDayService.matchScheduleTasksWithTimeBubble(weekDay, taggedScheduleTasks, timeBubbles);
-            runInBackground(() => scheduleDayService.updateDailyCalendar(userId, dailyCalendar, weekDay));
+            const assignedBubbleList = await scheduleDayService.matchScheduleTasksWithTimeBubble(weekDay, taggedScheduleTasks, timeBubbles);
+            runInBackground(() => scheduleDayService.updateDailyCalendar(userId, assignedBubbleList, weekDay));
 
             return msg200({
                 message: "Daily calendar generated successfully",
-                dailyCalendar: dailyCalendar
+                dailyCalendar: assignedBubbleList 
             });
         } catch (error: any) {
             console.error("Error generating daily calendar:", error.message);
             return msg400("Error generating daily calendar");
         }
+    }
+
+    private async getDailyTasks(userId: number, dailyTasks: any[]): Promise<any> {
+        let tasks = [];
+        if (dailyTasks == undefined || dailyTasks == null
+            || dailyTasks.length === 0 || Array.isArray(dailyTasks)) {
+            const scheduleTasks = await scheduleTaskUsecase.findActiveTaskBatch(userId);
+            if (scheduleTasks == undefined || scheduleTasks?.length == 0) {
+                return [false, msg400("No active task batch found")];
+            }
+            tasks = scheduleTasks;
+        } else {
+            tasks = dailyTasks;
+        }
+        return [true, tasks];
     }
 }
 

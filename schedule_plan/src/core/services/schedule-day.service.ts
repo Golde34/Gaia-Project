@@ -143,6 +143,7 @@ class ScheduleDayService {
             backupTaskId: backup?.taskId || null,
             backupTaskTitle: backup?.title || null,
             weekDay: weekDay,
+            timeBubbleId: bubble.id,
         }
     }
 
