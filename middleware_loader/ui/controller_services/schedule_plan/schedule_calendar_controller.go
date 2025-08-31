@@ -85,3 +85,24 @@ func GetUserDailyTasks(w http.ResponseWriter, r *http.Request, scheduleCalendarS
 		return
 	}
 }
+
+func EditTimeBubble(w http.ResponseWriter, r *http.Request, scheduleCalendarService *services.ScheduleCalendarService) {
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	body, err := controller_utils.MappingBody(w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	generatedCalendarStatus, err := scheduleCalendarService.EditTimeBubble(userId, body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(generatedCalendarStatus); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
