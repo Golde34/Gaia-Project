@@ -54,7 +54,7 @@ class GaiaAlgorithmTest {
 
         // We only need sort to trigger tuning and printing of alpha, beta, gamma.
         GaiaAlgorithm gaia = new GaiaAlgorithm(null);
-        List<List<Task>> taskBatch = gaia.sortTaskToBatches(tasks);
+        List<List<Task>> taskBatch = gaia.sortTaskToBatches(13, tasks);
         log.info("Task batch things: {}", taskBatch);
 
         // The tuned parameters are printed by GaiaAlgorithm.sortTaskByPriority via System.out.

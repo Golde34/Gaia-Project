@@ -72,15 +72,22 @@ public class GaiaAlgorithm extends ScheduleService<GaiaAlgorithmDTO, List<Task>>
     // }
 
     @Override
-    public List<List<Task>> sortTaskToBatches(List<Task> tasks) {
+    public List<List<Task>> sortTaskToBatches(double totalTime, List<Task> tasks) {
+        double maxDuration = tasks.stream()
+            .mapToDouble(Task::getDuration).max().orElse(Constants.OptimizeVariables.MAX_DURATION);
         tasks = this.sortTaskByPriority(tasks);
         List<List<Task>> taskBatches = new ArrayList<>();
-        int batchSize = Constants.OptimizeVariables.BATCH_SIZE;
+        int batchSize = calculateUserBatchSize(tasks, totalTime, maxDuration); 
         for (int i = 0; i < tasks.size(); i += batchSize) {
             List<Task> batch = tasks.subList(i, Math.min(i + batchSize, tasks.size()));
             taskBatches.add(new ArrayList<>(batch));
         }
         return taskBatches;
+    }
+
+    private int calculateUserBatchSize(List<Task> tasks, double totalTime, double maxDuration) {
+        int batchSize = (int) Math.floor(totalTime / maxDuration);
+        return Math.max(Math.min(tasks.size(), batchSize), Constants.OptimizeVariables.BATCH_SIZE);
     }
 
     private List<Task> sortTaskByPriority(List<Task> tasks) {

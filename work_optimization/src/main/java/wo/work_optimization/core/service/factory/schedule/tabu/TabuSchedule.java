@@ -29,7 +29,7 @@ public class TabuSchedule extends ScheduleService<GaiaAlgorithmDTO, List<Task>> 
     }
 
     @Override
-    public List<List<Task>> sortTaskToBatches(List<Task> tasks) {
+    public List<List<Task>> sortTaskToBatches(double totalTime, List<Task> tasks) {
         return Collections.singletonList(tasks);
     }
 
