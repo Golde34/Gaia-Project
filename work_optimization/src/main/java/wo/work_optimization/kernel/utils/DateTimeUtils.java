@@ -5,6 +5,7 @@ import lombok.experimental.UtilityClass;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 import io.micrometer.common.util.StringUtils;
@@ -51,5 +52,8 @@ public class DateTimeUtils {
         Instant instant = Instant.parse(dateTime);
         return instant.toEpochMilli();
     }
-}
 
+    public static LocalDateTime convertLongToLocalDateTime(long time) {
+        return Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).toLocalDateTime();
+    }
+}
