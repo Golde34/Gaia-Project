@@ -34,14 +34,14 @@ public class CustomModel {
     private double[] phi;
 
     public CustomModel(double c1, double c2, double c3, double[] effort,
-                       double[] enjoyability, double maximumWorkTime, int taskLength) {
+            double[] enjoyability, double maximumWorkTime, int taskLength) {
         this.c1 = c1;
         this.c2 = c2;
         this.c3 = c3;
         this.effort = convertEffortValues(effort);
         this.enjoyability = convertEnjoyabilityValues(enjoyability);
         this.maximumWorkTime = maximumWorkTime;
-        this.taskLength = taskLength+1;
+        this.taskLength = taskLength + 1;
         this.p0 = this.calculateInitialProductivity(this.effort, this.enjoyability);
         this.k = this.calculateK(this.effort, this.enjoyability);
         this.alpha = this.calculateAlpha(this.effort, this.enjoyability);
@@ -49,13 +49,15 @@ public class CustomModel {
     }
 
     private double[] convertEffortValues(double[] effort) {
-        double[] result = Arrays.copyOf(Arrays.stream(effort).map(v -> v * 4 / 9 + 5f / 9).toArray(), effort.length + 1);
+        double[] result = Arrays.copyOf(Arrays.stream(effort).map(v -> v * 4 / 9 + 5f / 9).toArray(),
+                effort.length + 1);
         result[effort.length] = Constants.OptimizeVariables.EFFORT_BIAS;
         return result;
     }
 
     private double[] convertEnjoyabilityValues(double[] enjoyability) {
-        double[] result = Arrays.copyOf(Arrays.stream(enjoyability).map(v -> v / 9 + 8f / 9).toArray(), enjoyability.length + 1);
+        double[] result = Arrays.copyOf(Arrays.stream(enjoyability).map(v -> v / 9 + 8f / 9).toArray(),
+                enjoyability.length + 1);
         result[enjoyability.length] = Constants.OptimizeVariables.ENJOYABILITY_BIAS;
         return result;
     }
@@ -139,9 +141,7 @@ public class CustomModel {
         List<Double> weights = new ArrayList<>();
         List<Double> averageStopTime = new ArrayList<>();
         double[] initialT = new double[taskLength];
-        for (int i = 0; i < taskLength; i++) {
-            initialT[i] = maximumWorkTime / taskLength;
-        }
+        Arrays.fill(initialT, maximumWorkTime / taskLength);
 
         SimplexOptimizer optimizer = new SimplexOptimizer(1e-6, 1e-6);
         double[] optimizedT = optimizer.optimize(
@@ -167,10 +167,12 @@ public class CustomModel {
                     averageStopTime.add(getMaximumDeepWorkTimePerTask(alpha[index], phi[index]));
                 });
         System.out.println("Sum: " + sum);
-        return new HashMap<>() {{
-            put("weights", weights.subList(0, weights.size() - 1));
-            put("averageStopTime", averageStopTime.subList(0, averageStopTime.size() - 1));
-        }};
+        return new HashMap<>() {
+            {
+                put("weights", weights.subList(0, weights.size() - 1));
+                put("averageStopTime", averageStopTime.subList(0, averageStopTime.size() - 1));
+            }
+        };
     }
 
     private double lagrangeFunction(double p0, double alpha, double k, double t) {
@@ -179,7 +181,7 @@ public class CustomModel {
 
     class ProductivityFunction implements MultivariateFunction {
         double[] p0, a, k;
-        double T = 13; // Con người không thể làm việc quá 13 tiếng một ngày
+        double T = 13; // Man cannot work more than 13 hour a day, try to balance man.
 
         public ProductivityFunction(double[] p0, double[] a, double[] k) {
             this.p0 = p0;
@@ -189,33 +191,32 @@ public class CustomModel {
 
         @Override
         public double value(double[] t) {
-            double sum = 0;
             double lastT = T;
             for (int i = 0; i < t.length - 1; i++) {
                 lastT -= t[i];
             }
             t[t.length - 1] = lastT;
-            for (int i = 0; i < t.length; i++) {
-                double productivity = lagrangeFunction(p0[i], a[i], k[i], t[i]);
-                sum += productivity;
-            }
-            return sum;
+
+            return IntStream.range(0, t.length)
+                    .mapToDouble(i -> lagrangeFunction(p0[i], a[i], k[i], t[i]))
+                    .sum();
         }
     }
 
     public static void main(String[] args) {
-//        double[] effort = {3.408, 2.556, 0.852, 1.331, 1.065, 0.015};
-//        double[] enjoyability = {1.938, 0.831, 0.242, 1.732, 1.23, 0.058};
-//        double[] effort = {8.52, 6.39, 2.13};
-//        double[] enjoyability = {3.876, 1.662, 0.484};
-        double[] effort= {8.520710059171599, 6.390532544378699, 2.1301775147928996, 3.3284023668639056, 2.6627218934911245, 0.07396449704142012};
-        double[] enjoyability= {3.876923076923077, 1.6615384615384619, 0.4846153846153846, 3.4615384615384617, 2.4615384615384617, 0.6923076923076924};
+        // double[] effort = {3.408, 2.556, 0.852, 1.331, 1.065, 0.015};
+        // double[] enjoyability = {1.938, 0.831, 0.242, 1.732, 1.23, 0.058};
+        // double[] effort = {8.52, 6.39, 2.13};
+        // double[] enjoyability = {3.876, 1.662, 0.484};
+        double[] effort = { 8.520710059171599, 6.390532544378699, 2.1301775147928996, 3.3284023668639056,
+                2.6627218934911245, 0.07396449704142012 };
+        double[] enjoyability = { 3.876923076923077, 1.6615384615384619, 0.4846153846153846, 3.4615384615384617,
+                2.4615384615384617, 0.6923076923076924 };
 
-
-//        double[] effort = {7.4976, 5.6232, 1.8744, 2.9282, 2.343, 0.033};
-//        double[] enjoyability = {4.2636, 1.8282, 0.5324, 3.8104, 2.706, 0.1276};
-//        double[] effort = {3, 6, 4, 8}; // Khởi tạo mảng p0
-//         double[] enjoyability = {2, 5, 4, 3};
+        // double[] effort = {7.4976, 5.6232, 1.8744, 2.9282, 2.343, 0.033};
+        // double[] enjoyability = {4.2636, 1.8282, 0.5324, 3.8104, 2.706, 0.1276};
+        // double[] effort = {3, 6, 4, 8}; // Khởi tạo mảng p0
+        // double[] enjoyability = {2, 5, 4, 3};
         double T = 13; // Tổng thời gian có sẵn
         int taskLength = effort.length;
         CustomModel customModel = new CustomModel(0.56, -0.24, 0, effort, enjoyability, T, taskLength);

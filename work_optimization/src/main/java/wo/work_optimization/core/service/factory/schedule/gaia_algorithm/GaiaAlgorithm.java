@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -141,13 +142,10 @@ public class GaiaAlgorithm extends ScheduleService<GaiaAlgorithmDTO, List<Task>>
 
         // Print tuned parameters for visibility in tests
         System.out.printf("Tuned parameters -> alpha=%.6f, beta=%.6f, gamma=%.6f%n", alphaNorm, betaNorm, gammaNorm);
-
-        tasks.sort((task1, task2) -> {
-            double score1 = this.calculatePriorityScore(task1, alphaNorm, betaNorm, gammaNorm);
-            double score2 = this.calculatePriorityScore(task2, alphaNorm, betaNorm, gammaNorm);
-            return Double.compare(score2, score1);
-        });
-        return tasks;
+        return tasks.stream().sorted((task1, task2) -> Double.compare(
+            this.calculatePriorityScore(task1, alphaNorm, betaNorm, gammaNorm),
+            this.calculatePriorityScore(task2, alphaNorm, betaNorm, gammaNorm)
+        )).collect(Collectors.toList());
     }
 
     public double calculatePriorityScore(Task task, double alpha, double beta, double gamma) {
