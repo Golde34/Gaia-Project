@@ -24,7 +24,7 @@ func main() {
 	dbConnection, err := database_postgresql.ConnectDB(dbCfg.Host, dbCfg.Port, dbCfg.Username, dbCfg.Password, dbCfg.Database)
 	if err != nil {
 		defer dbConnection.Close()
-		log.Fatalf("Failed to connect to PostgreSQL database: %w", err);
+		log.Fatalf("Failed to connect to PostgreSQL database: %v", err);
 	}
 	log.Println("Database connected, database name: ", dbCfg.Database)
 
