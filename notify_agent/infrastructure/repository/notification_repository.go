@@ -5,6 +5,7 @@ import (
 	"log"
 	"notify_agent/core/domain/entity"
 	base_repo "notify_agent/infrastructure/repository/base"
+	"notify_agent/infrastructure/repository/mapper"
 	"reflect"
 )
 
@@ -47,18 +48,7 @@ func (repo *NotificationRepository) GetNotificationByNotificationFLowId(notifica
 		return entity.Notification{}, sql.ErrNoRows
 	}
 	row := rows[0]
-	notification := entity.Notification{
-		ID: base_repo.ToStringUUID(row["id"]),
-		MessageID: row["message_id"].(string),
-		Type: row["type"].(string),
-		Content: row["content"].(string),
-		ReceiverID: row["receiver_id"].(string),
-		IsRead: row["is_read"].(bool),
-		Status: row["status"].(string),
-		ErrorStatus: row["error_status"].(string),
-		UserId: row["user_id"].(string),
-		NotificationFlowId: row["notification_flow_id"].(string),
-	}
+	notification := mapper.MapEntityToResult(row) 
 
 	log.Println("Notification retrieved: ", notification)
 	return notification, nil
@@ -81,4 +71,23 @@ func (repo *NotificationRepository) UpdateNotification(notificationId string, no
 	}
 	notification.ID = notificationId
 	return notification, nil
+}
+
+func (repo *NotificationRepository) GetNotificationByUserId(userId string) ([]entity.Notification, error) {
+	where := map[string]interface{}{
+		"user_id": userId,
+	}
+
+	rows, err := repo.base.SelectDB(repo.db, NotificationTable, []string{}, where)
+	if err != nil {
+		return []entity.Notification{}, err
+	}
+	if len(rows) == 0 {
+		return []entity.Notification{}, sql.ErrNoRows
+	}
+	var results []entity.Notification
+	for _, row := range rows {
+		results = append(results, mapper.MapEntityToResult(row))
+	}
+	return results, nil
 }
