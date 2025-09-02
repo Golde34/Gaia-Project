@@ -11,9 +11,6 @@ import (
 
 type ChatInteractionRouter struct {
 	db *sql.DB
-
-	ChatUsecase       *usecases.ChatUsecase
-	ChatHistoryRouter *usecases.ChatHistoryUsecase
 }
 
 func NewChatInteractionRouter(db *sql.DB, r *chi.Mux) *ChatInteractionRouter {
@@ -33,9 +30,5 @@ func NewChatInteractionRouter(db *sql.DB, r *chi.Mux) *ChatInteractionRouter {
 		})
 	})
 
-	return &ChatInteractionRouter{
-		db:                 db,
-		ChatUsecase:       chatUsecase,
-		ChatHistoryRouter: chatHistoryUsecase,
-	}
+	return &ChatInteractionRouter{db: db,}
 }

@@ -11,9 +11,6 @@ import (
 
 type ChatSystemRouter struct {
 	db *sql.DB
-
-	ChatHistoryUsecase *usecases.ChatHistoryUsecase
-	ChatUsecase        *usecases.ChatUsecase
 }
 
 func NewChatSystemRouter(db *sql.DB, r *chi.Mux) *ChatSystemRouter {
@@ -29,9 +26,5 @@ func NewChatSystemRouter(db *sql.DB, r *chi.Mux) *ChatSystemRouter {
 		})
 	})
 
-	return &ChatSystemRouter{
-		db:                 db,
-		ChatHistoryUsecase: chatHistoryUsecase,
-		ChatUsecase:        chatUsecase,
-	}
+	return &ChatSystemRouter{db: db,}
 }
