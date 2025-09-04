@@ -17,6 +17,7 @@ import GitHubCallback from '../context/GithubCallback';
 import ProjectDetail from '../../views/task_manager/ProjectDetail';
 import Test from "../../views/test/Test";
 import Chat from '../../views/chat_hub/Chat';
+import NotificationList from '../../views/notification/NotificationList';
 import GaiaAutoSignin from '../../views/signin/GaiaAutoSignin';
 import Signin from '../../views/signin/Signin';
 import Signup from '../../views/signin/Signup';
@@ -118,6 +119,12 @@ const routeList = [
         path: '/chat',
         key: 'chat',
         element: <Chat />,
+    },
+
+    {
+        path: '/notifications',
+        key: 'notifications',
+        element: <NotificationList />,
     },
 
     {
