@@ -6,7 +6,7 @@ import ScheduleDayBubbleEntity from "../domain/entities/schedule-day.entity";
 import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
 import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
 import TimeBubblesEntity from "../domain/entities/time-bubble.entity";
-import { ActiveStatus, ErrorStatus } from "../domain/enums/enums";
+import { ActiveStatus, ErrorStatus, Tag } from "../domain/enums/enums";
 import { timeBubbleMapper } from "../mapper/time-bubble.mapper";
 
 class ScheduleDayService {
@@ -89,6 +89,9 @@ class ScheduleDayService {
 
             // Main loop
             for (const bubble of timeBubbles) {
+                if (bubble.tag === Tag.WORK) {
+                    console.log("bubble: ", bubble);
+                }
                 const duration = parseTime(bubble.endTime) - parseTime(bubble.startTime);
                 const matchedTag = tags.find(tag => bubble.tag === tag) || null;
 
@@ -96,8 +99,10 @@ class ScheduleDayService {
                     continue;
                 }
 
+                console.log("Tag tasks: ", taskMap.get(matchedTag));
                 const tagTasks = taskMap.get(matchedTag) || [];
                 const pointer = taskPointers.get(matchedTag);
+                console.log("Pointer: ", pointer);
 
                 if (!pointer || pointer.index >= tagTasks.length) {
                     results.push(this.mappingPointer(bubble, matchedTag, null, null, weekDay))
@@ -108,6 +113,8 @@ class ScheduleDayService {
                 const backup = (pointer.index + 1 < tagTasks.length)
                     ? tagTasks[pointer.index + 1]
                     : null;
+                console.log("Primary: ", primary);
+                console.log("Backup: ", backup);
 
                 results.push(this.mappingPointer(bubble, matchedTag, primary, backup, weekDay));
                 // Reduce remaining time of primary task
@@ -116,6 +123,7 @@ class ScheduleDayService {
                     pointer.index++
                     pointer.remaining = backup.duration + pointer.remaining
                 }
+                console.log("Pointer remaining: ", pointer.remaining);
                 // If finished, move to next task
                 if (pointer.remaining <= 0) {
                     pointer.index++;
@@ -124,6 +132,7 @@ class ScheduleDayService {
                         pointer.remaining = tagTasks[pointer.index].duration + pointer.remaining; // carry over excess time
                     }
                 }
+                console.log("Pointer index: ", pointer.index);
             }
 
             return results;
