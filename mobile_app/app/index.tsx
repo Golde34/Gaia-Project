@@ -56,6 +56,9 @@ export default function HomeScreen() {
 					<Text style={homeStyle.title}>
 						Welcome to GAIA, {user?.name}!
 					</Text>
+					<Link href="/projects" style={homeStyle.link}>
+						<Text style={homeStyle.linkText}>View Projects</Text>
+					</Link>
 					<Button
 						title="Logout"
 						onPress={() => {
