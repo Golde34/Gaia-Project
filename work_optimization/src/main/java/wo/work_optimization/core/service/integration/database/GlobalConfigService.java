@@ -41,7 +41,7 @@ public class GlobalConfigService {
                 .refreshAfterWrite(reloadMin, TimeUnit.MINUTES)
                 .build(
                         new CacheLoader<String, String>() {
-                            public String load(String key) { // no checked exception
+                            public String load(@SuppressWarnings("null") String key) { // no checked exception
                                 return findParam(key);
                             }
                         });

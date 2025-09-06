@@ -17,6 +17,7 @@ type Config struct {
 	WorkOptimServicePort           string
 	SchedulePlanServicePort        string
 	ContributionTrackerServicePort string
+	NotifyAgentServicePort 		   string
 
 	FileDisplayWord string
 	Datalake        string
@@ -37,6 +38,8 @@ func (in *Config) LoadEnv() (Config, error) {
 	workOptimServicePort := os.Getenv("WORK_OPTIM_SERVICE_PORT")
 	schedulePlanServicePort := os.Getenv("SCHEDULE_PLAN_SERVICE_PORT")
 	contributionTrackerServicePort := os.Getenv("CONTRIBUTION_TRACKER_SERVICE_PORT")
+	notifyAgentServicePort := os.Getenv("NOTIFY_AGENT_SERVICE_PORT")
+
 	fileDisplayWord := os.Getenv("FILE_DISPLAY_WORD")
 	dataLake := os.Getenv("DATALAKE")
 
@@ -50,6 +53,7 @@ func (in *Config) LoadEnv() (Config, error) {
 		WorkOptimServicePort:           workOptimServicePort,
 		SchedulePlanServicePort:        schedulePlanServicePort,
 		ContributionTrackerServicePort: contributionTrackerServicePort,
+		NotifyAgentServicePort: 		notifyAgentServicePort,
 		FileDisplayWord:                fileDisplayWord,
 		Datalake:                       dataLake,
 	}

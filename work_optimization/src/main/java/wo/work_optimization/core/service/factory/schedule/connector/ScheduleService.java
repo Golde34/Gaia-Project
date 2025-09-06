@@ -29,7 +29,7 @@ public abstract class ScheduleService<R, P> implements ScheduleConnector {
             Map<Integer, String> scheduleResult = new HashMap<>();
 
             TaskRegistration taskRegistration = taskRegistrationService.getTaskRegistrationByUserId(userId);
-            List<List<Task>> taskBatches = sortTaskToBatches(tasks);
+            List<List<Task>> taskBatches = sortTaskToBatches(taskRegistration.getMaxWorkTime(), tasks);
 
             for (int i = 0; i < taskBatches.size(); i++) {
                 List<Task> taskBatch = taskBatches.get(i);
@@ -51,7 +51,7 @@ public abstract class ScheduleService<R, P> implements ScheduleConnector {
         }
     }
 
-    public abstract List<List<Task>> sortTaskToBatches(List<Task> tasks);
+    public abstract List<List<Task>> sortTaskToBatches(double totalTime, List<Task> tasks);
     public abstract P doSchedule(R request);
     public abstract R createRequest(List<Task> tasks, TaskRegistration taskRegistration, int batchIndex);
 

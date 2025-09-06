@@ -35,4 +35,8 @@ public class Task {
     @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
     private ParentTask parentTask;
+
+    public String toString() {
+        return this.title + "-" + this.enjoyability + "-" + this.effort + "-" + this.duration;
+    }
 }

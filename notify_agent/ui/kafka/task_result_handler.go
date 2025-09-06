@@ -1,21 +1,21 @@
 package consumer
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"notify_agent/core/domain/constants"
 	base_dtos "notify_agent/core/domain/dtos/base"
-	database_mongo "notify_agent/kernel/database/mongo"
 )
 
 type TaskResultHandler struct{
-	Database database_mongo.Database
+	db *sql.DB
 }
 
-func NewTaskResultHandler(db database_mongo.Database) *TaskResultHandler {
+func NewTaskResultHandler(db *sql.DB) *TaskResultHandler {
 	return &TaskResultHandler{
-		Database: db,
+		db: db,
 	}
 }
 
@@ -36,12 +36,13 @@ func (handler *TaskResultHandler) HandleMessage(topic string, key, value []byte)
 
 	switch message.Cmd {
 	case constants.TaskResultCmd:
-		TaskResultCmd(key, data, handler.Database)
+		TaskResultCmd(key, data, handler.db)
 	default:
 		log.Println("Message handled successfully, but the cmd does not match to consumer to process")
 	}
 }
-func TaskResultCmd(key []byte, data map[string]interface{}, db database_mongo.Database) {
+
+func TaskResultCmd(key []byte, data map[string]interface{}, db *sql.DB) {
 	messageId := string(key)
 	log.Println("Processing task result for data:", data)
 	userId := data["userId"].(float64)

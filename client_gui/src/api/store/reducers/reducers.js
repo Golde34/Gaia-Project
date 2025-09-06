@@ -30,6 +30,7 @@ import {
     commentListReducer, commentUpdateReducer
 } from './task_manager/comment.reducers'
 import { getOnboardingReducer, microserviceListReducer, screenListReducer } from "./middleware_loader/microservices.reducer";
+import { notificationListReducer } from "./middleware_loader/notification.reducer";
 import { getAllLLMModelsReducer, updateUserModelReducer, userDetailReducer, userListReducer, userSettingUpdateReducer, userUpdateReducer } from "./auth_service/user.reducer";
 import { roleCreateReducer, roleListReducer } from "./auth_service/role.reducer";
 import { privilegeListReducer } from "./auth_service/privilege.reducer";
@@ -122,6 +123,7 @@ export const reducer = combineReducers({
     // middleware loader
     microserviceList: microserviceListReducer,
     screenList: screenListReducer,
+    notificationList: notificationListReducer,
     onboarding: getOnboardingReducer,
     // work optimization 
     registerTaskConfig: registerTaskConfigReducer,

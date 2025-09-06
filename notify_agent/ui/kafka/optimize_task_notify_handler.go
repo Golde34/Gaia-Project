@@ -1,24 +1,23 @@
 package consumer
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"notify_agent/core/domain/constants"
 	base_dtos "notify_agent/core/domain/dtos/base"
 	"notify_agent/core/port/mapper"
-	"notify_agent/core/port/store"
 	"notify_agent/core/usecase"
-	database_mongo "notify_agent/kernel/database/mongo"
 )
 
 type OptimizeTaskNotifyHandler struct {
-	Database database_mongo.Database
+	db *sql.DB
 }
 
-func NewOptimizeTaskNotifyHandler(db database_mongo.Database) *OptimizeTaskNotifyHandler {
+func NewOptimizeTaskNotifyHandler(db *sql.DB) *OptimizeTaskNotifyHandler {
 	return &OptimizeTaskNotifyHandler{
-		Database: db,
+		db: db,
 	}
 }
 
@@ -39,13 +38,13 @@ func (handler *OptimizeTaskNotifyHandler) HandleMessage(topic string, key, value
 
 	switch message.Cmd {
 	case constants.OptimizeTaskCmd:
-		OptimizeTaskCmd(key, data, handler.Database)
+		OptimizeTaskCmd(key, data, handler.db)
 	default:
 		log.Println("Message handled successfully, but the cmd does not match to consumer to process")
 	}
 }
 
-func OptimizeTaskCmd(key []byte, data map[string]interface{}, db database_mongo.Database) {
+func OptimizeTaskCmd(key []byte, data map[string]interface{}, db *sql.DB) {
 	messageId := string(key)
 	userId, optimizeStatus, errorStatus, notificationFlowId := mapper.KafkaOptimizeTaskRequestMapper(data)
 	if userId == "" || optimizeStatus == "" || errorStatus == "" || notificationFlowId == "" {
@@ -53,8 +52,7 @@ func OptimizeTaskCmd(key []byte, data map[string]interface{}, db database_mongo.
 		return
 	}
 		
-	notifyStore := store.NewNotificationStore(db)
-	optimNotify := usecase.NewOptimizeTaskUseCase(notifyStore)
+	optimNotify := usecase.NewOptimizeTaskUseCase(db)
 	result, err := optimNotify.OptimizeTaskNoti(messageId, userId, optimizeStatus, errorStatus, notificationFlowId)
 	if err != nil {
 		fmt.Println("Error initializing optimize task")
