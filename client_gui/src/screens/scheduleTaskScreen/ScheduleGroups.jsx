@@ -8,7 +8,7 @@ import EllipsisMenu from "../../components/EllipsisMenu";
 import Template from "../../components/template/Template";
 import { useNavigate } from "react-router-dom";
 
-export const ScheduleGroups = (props) => {
+const ScheduleGroups = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -79,3 +79,5 @@ export const ScheduleGroups = (props) => {
         </div>
     )
 }
+
+export default ScheduleGroups;
