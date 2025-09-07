@@ -7,7 +7,9 @@ type NotificationService struct {
 }
 
 func NewNotificationService() *NotificationService {
-	return &NotificationService{}
+	return &NotificationService{
+		adapter: client_adapter.NewNotificationAdapter(),
+	}
 }
 
 func (s *NotificationService) GetAllNotification(userId string) ([]map[string]interface{}, error) {
