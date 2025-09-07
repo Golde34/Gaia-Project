@@ -1,16 +1,24 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-CREATE TABLE public.schedule_day_bubbles (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id VARCHAR(50) NOT NULL,
-    schedule_plan_id VARCHAR(50) NOT NULL,
-    start_time TIME WITHOUT TIME ZONE NOT NULL,
-    end_time TIME WITHOUT TIME ZONE NOT NULL,
-    schedule_task_id UUID NULL,
-    created_at TIMESTAMP WITHOUT TIME ZONE NULL,
-    updated_at TIMESTAMP WITHOUT TIME ZONE NULL
-)
+create table schedule_day_bubbles
+(
+    id                 uuid default gen_random_uuid() not null primary key,
+    user_id            bigint                         not null,
+    start_time         time,
+    end_time           time,
+    created_at         timestamp,
+    updated_at         timestamp,
+    primary_task_id    varchar(50),
+    backup_task_id     varchar(50),
+    primary_task_title varchar,
+    backup_task_title  varchar,
+    tag                varchar,
+    week_day           integer,
+    time_bubble_id     varchar
+);
 
-CREATE INDEX idx_schedule_day_bubbles_user_id ON public.schedule_day_bubbles (user_id);
-CREATE INDEX idx_schedule_day_bubbles_schedule_plan_id ON public.schedule_day_bubbles (schedule_plan_id);
-CREATE INDEX idx_schedule_day_bubbles_schedule_task_id ON public.schedule_day_bubbles (schedule_task_id);
+alter table schedule_day_bubbles
+    owner to postgres;
+
+create index idx_schedule_day_bubbles_user_id
+    on schedule_day_bubbles (user_id);

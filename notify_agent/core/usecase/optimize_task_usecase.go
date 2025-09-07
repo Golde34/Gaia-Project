@@ -2,22 +2,27 @@ package usecase
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	request_dtos "notify_agent/core/domain/dtos/request"
 	"notify_agent/core/domain/entity"
 	"notify_agent/core/port/mapper"
-	"notify_agent/core/port/store"
 	websocket_service "notify_agent/core/services/websocket"
+	"notify_agent/infrastructure/repository"
 	"time"
 )
 
 type OptimizeTaskUseCase struct {
-	Store store.NotificationStore
+	db *sql.DB	
+
+	notiRepo *repository.NotificationRepository
 }
 
-func NewOptimizeTaskUseCase(store *store.NotificationStore) *OptimizeTaskUseCase {
+func NewOptimizeTaskUseCase(db *sql.DB) *OptimizeTaskUseCase {
 	return &OptimizeTaskUseCase{
-		Store: *store,
+		db: db,
+
+		notiRepo: repository.NewNotificationRepository(db),
 	}
 }
 
@@ -36,7 +41,7 @@ func (usecase *OptimizeTaskUseCase) OptimizeTaskNoti(messageId, userId, optimize
 func (usecase *OptimizeTaskUseCase) initOptimizeTaskNoti(ctx context.Context, messageId, userId, optimizedStatus, errorStatus, notificationFlowId string) (bool, error) {
 	request := mapper.InsertOptimizeTaskRequestMapper(messageId, userId, optimizedStatus, errorStatus, notificationFlowId)
 	notification := request_dtos.NewInsertNotificationRequestDTO().MapToEntity(request)
-	savedTask, err := usecase.Store.CreateNotification(ctx, notification)
+	savedTask, err := usecase.notiRepo.CreateNotification(notification)
 	if err != nil {
 		log.Println("Error saving notification: ", err)
 		return false, err
@@ -56,7 +61,7 @@ func (usecase *OptimizeTaskUseCase) finalizeOptimizeTaskNoti(ctx context.Context
 	notification := mapper.UpdateOptimizeTaskRequestMapper(messageId, optimizedStatus, errorStatus, noti)
 	log.Println("Mapped Notification for update case: ", notification)
 
-	savedTask, err := usecase.Store.UpdateNotification(ctx, notification.ID, notification)
+	savedTask, err := usecase.notiRepo.UpdateNotification(notification.ID, notification)
 	if err != nil {
 		log.Println("Error updating notification: ", err)
 		websocket_service.NewWebSocketService().HandleOptimizeTask(userId, false)
@@ -77,7 +82,7 @@ func (usecase *OptimizeTaskUseCase) validateUpdateOptimizeTaskNoti(ctx context.C
 		return entity.Notification{}
 	}
 
-	savedNoti, err := usecase.Store.GetNotificationByNotificationFLowId(ctx, notificationFlowId)
+	savedNoti, err := usecase.notiRepo.GetNotificationByNotificationFLowId(notificationFlowId)
 	if err != nil {
 		log.Println("Error retrieving notification: ", err)
 		return entity.Notification{}

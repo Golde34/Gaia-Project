@@ -1,30 +1,35 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-CREATE TABLE public.schedule_tasks (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    task_id VARCHAR(255)        NOT NULL,
-    title   VARCHAR(255)        NOT NULL,
-    priority VARCHAR(255)[]     NOT NULL,
-    status  VARCHAR(255)        NOT NULL,
-    start_date TIMESTAMP WITHOUT TIME ZONE             NOT NULL,
-    deadline   TIMESTAMP WITHOUT TIME ZONE             NOT NULL,
-    duration   INTEGER          NOT NULL,
-    active_status VARCHAR(255)  NOT NULL,
-    preference_level INTEGER     NOT NULL,
-    is_synchronized_with_wo BOOLEAN NOT NULL,
-    task_order   INTEGER         NULL,
-    weight       FLOAT           NULL,
-    stop_time    INTEGER         NULL,
-    task_batch   INTEGER         NULL,
-    schedule_plan_id VARCHAR(255) NOT NULL,
-    is_notify       BOOLEAN       NOT NULL,
-    schedule_group_id VARCHAR(255) NOT NULL,
-    created_at  TIMESTAMP WITHOUT TIME ZONE NULL,
-    updated_at  TIMESTAMP WITHOUT TIME ZONE NULL,
+create table schedule_tasks
+(
+    id                      uuid default gen_random_uuid() not null
+        primary key,
+    task_id                 varchar(255)                   not null,
+    title                   varchar(255),
+    priority                varchar(255)[],
+    status                  varchar(255),
+    start_date              date,
+    deadline                date,
+    duration                integer,
+    active_status           varchar(255),
+    preference_level        integer,
+    is_synchronized_with_wo boolean,
+    task_order              integer,
+    weight                  double precision,
+    stop_time               double precision,
+    task_batch              integer,
+    schedule_plan_id        varchar(255)                   not null,
+    is_notify               boolean,
+    created_at              timestamp,
+    schedule_group_id       varchar(255),
+    updated_at              timestamp,
+    repeat                  varchar,
+    tag                     varchar(50)
 );
 
-CREATE INDEX idx_schedule_tasks_schedule_plan_id
-    ON public.schedule_tasks(schedule_plan_id);
+alter table schedule_tasks
+    owner to postgres;
 
-CREATE INDEX idx_schedule_tasks_schedule_group_id
-    ON public.schedule_tasks(schedule_group_id);
+create index idx_schedule_tasks_schedule_plan_id
+    on schedule_tasks (schedule_plan_id);
+

@@ -6,6 +6,7 @@ import (
 	task_manager "middleware_loader/core/services/task_manager"
 	work_optim "middleware_loader/core/services/work_optimization"
 	contribution_tracker "middleware_loader/core/services/contribution_tracker"
+	notify_agent "middleware_loader/core/services/notify_agent"
 	"middleware_loader/infrastructure/graph"
 	database_mongo "middleware_loader/kernel/database/mongo"
 	auth_router "middleware_loader/ui/routers/auth_service"
@@ -15,6 +16,7 @@ import (
 	work_optim_router "middleware_loader/ui/routers/work_optimization"
 	schedule_plan_router "middleware_loader/ui/routers/schedule_plan"
 	contribution_tracker_router "middleware_loader/ui/routers/contribution_tracker"
+	notification_router "middleware_loader/ui/routers/notify_agent"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -37,6 +39,7 @@ func Setup(router *chi.Mux, db database_mongo.Database) {
 	taskOptimizationService := work_optim.NewTaskOptimizationService()
 	userGithubService := contribution_tracker.NewUserGithubService()
 	contributionService := contribution_tracker.NewContributionService()
+	notificationService := notify_agent.NewNotificationService()
 
 	// GRAPHQL FEDERATION
 	router.Handle("/graphql", playground.Handler("GraphQL playground", "/graphql-query"))
@@ -92,5 +95,9 @@ func Setup(router *chi.Mux, db database_mongo.Database) {
 	router.Group(func (r chi.Router) {
 		contribution_tracker_router.NewUserGithubRouter(userGithubService, router)
 		contribution_tracker_router.NewContributionRouter(contributionService, router)
+	})
+
+	router.Group(func(r chi.Router) {
+		notification_router.NewNotificationRouter(notificationService, router)
 	})
 }

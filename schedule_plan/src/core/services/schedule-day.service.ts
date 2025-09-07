@@ -6,7 +6,7 @@ import ScheduleDayBubbleEntity from "../domain/entities/schedule-day.entity";
 import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
 import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
 import TimeBubblesEntity from "../domain/entities/time-bubble.entity";
-import { ActiveStatus, ErrorStatus } from "../domain/enums/enums";
+import { ActiveStatus, ErrorStatus, Tag } from "../domain/enums/enums";
 import { timeBubbleMapper } from "../mapper/time-bubble.mapper";
 
 class ScheduleDayService {
@@ -82,12 +82,11 @@ class ScheduleDayService {
                 if (tagTasks.length > 0) {
                     taskPointers.set(tag, {
                         index: 0,
-                        remaining: tagTasks[0].duration,
+                        remaining: tagTasks[0].duration * 60 // convert to minute,
                     });
                 }
             }
 
-            // Main loop
             for (const bubble of timeBubbles) {
                 const duration = parseTime(bubble.endTime) - parseTime(bubble.startTime);
                 const matchedTag = tags.find(tag => bubble.tag === tag) || null;
@@ -110,6 +109,7 @@ class ScheduleDayService {
                     : null;
 
                 results.push(this.mappingPointer(bubble, matchedTag, primary, backup, weekDay));
+
                 // Reduce remaining time of primary task
                 pointer.remaining -= duration
                 if (pointer.remaining <= 0 && backup && typeof backup.duration === "number") {

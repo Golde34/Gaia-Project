@@ -7,18 +7,18 @@ const (
 )
 
 type Notification struct {
-	ID                 string `json:"id" bson:"_id"`
-	MessageID          string `json:"message_id" bson:"message_id"`
-	Type               string `json:"type" bson:"type"`
-	Content            string `json:"content" bson:"content"`
-	ReceiverID         string `json:"receiver_id" bson:"receiver_id"`
-	IsRead             bool   `json:"is_read" bson:"is_read"`
-	Status             string `json:"status" bson:"status"`
-	ErrorStatus        string `json:"error_status" bson:"error_status"`
-	CreatedAt          int64  `json:"created_at" bson:"created_at"`
-	UpdatedAt          int64  `json:"updated_at" bson:"updated_at"`
-	UserId             string `json:"user_id" bson:"user_id"`
-	NotificationFlowId string `json:"notification_flow_id" bson:"notification_flow_id"`
+	ID                 string `json:"id" db:"_id"`
+	MessageID          string `json:"message_id" db:"message_id"`
+	Type               string `json:"type" db:"type"`
+	Content            string `json:"content" db:"content"`
+	ReceiverID         string `json:"receiver_id" db:"receiver_id"`
+	IsRead             bool   `json:"is_read" db:"is_read"`
+	Status             string `json:"status" db:"status"`
+	ErrorStatus        string `json:"error_status" db:"error_status"`
+	CreatedAt          int64  `json:"created_at" db:"created_at"`
+	UpdatedAt          int64  `json:"updated_at" db:"updated_at"`
+	UserId             string `json:"user_id" db:"user_id"`
+	NotificationFlowId string `json:"notification_flow_id" db:"notification_flow_id"`
 }
 
 func NewNotification(id, messageID, notificationType, content, receiverID, status, errorStatus string, isRead bool, createdAt, updatedAt int64, userId, notificationFlowId string) *Notification {

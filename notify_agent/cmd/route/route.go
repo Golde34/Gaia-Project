@@ -1,16 +1,14 @@
 package route
 
 import (
-	websocket_services "notify_agent/core/services/websocket"
+	"database/sql"
 	"notify_agent/ui/routers"
 
 	"github.com/go-chi/chi"
 )
 
-func Setup(router *chi.Mux) {
-	websocketService := websocket_services.NewWebSocketService()
-
+func Setup(router *chi.Mux, db *sql.DB) {
 	router.Group(func(r chi.Router) {
-		routers.NewWebSocketRouter(websocketService, router)
+		routers.NewNotificationRouter(db, router)
 	})
 }

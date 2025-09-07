@@ -17,12 +17,13 @@ import GitHubCallback from '../context/GithubCallback';
 import ProjectDetail from '../../views/task_manager/ProjectDetail';
 import Test from "../../views/test/Test";
 import Chat from '../../views/chat_hub/Chat';
+import NotificationList from '../../views/notification/NotificationList';
 import GaiaAutoSignin from '../../views/signin/GaiaAutoSignin';
 import Signin from '../../views/signin/Signin';
 import Signup from '../../views/signin/Signup';
 import TaskRegistration from '../../views/onboarding/TaskRegistration';
 import Onboarding from '../../views/onboarding/Onboarding';
-import { ScheduleGroups } from '../../screens/scheduleTaskScreen/ScheduleGroups';
+import ScheduleGroups from '../../screens/scheduleTaskScreen/ScheduleGroups';
 
 // Guest is public
 // User is protected, only logged in when the Role higher than User
@@ -119,7 +120,11 @@ const routeList = [
         key: 'chat',
         element: <Chat />,
     },
-
+    {
+        path: '/notifications',
+        key: 'notifications',
+        element: <NotificationList />,
+    },
     {
         path: '/microservices',
         key: 'microservices',
