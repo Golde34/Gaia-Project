@@ -21,6 +21,8 @@ type OptimizeTaskUseCase struct {
 func NewOptimizeTaskUseCase(db *sql.DB) *OptimizeTaskUseCase {
 	return &OptimizeTaskUseCase{
 		db: db,
+
+		notiRepo: repository.NewNotificationRepository(db),
 	}
 }
 

@@ -53,11 +53,11 @@ func main() {
 	r.Use(middleware.RedirectSlashes)
 	r.Use(middleware.Timeout(time.Second * 60))
 
+	// Register WebSocket handler
+	r.HandleFunc("/ws", services.NewWebSocketService().HandleWebSocket)
+
 	// Rest Router
 	route.Setup(r, dbConnection)
-
-	// Register WebSocket handler
-	http.HandleFunc("/ws", services.NewWebSocketService().HandleWebSocket)
 
 	log.Printf("connect to http://localhost:%s/", cfg.Port)
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, r))
