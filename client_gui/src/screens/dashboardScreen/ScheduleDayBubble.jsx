@@ -1,10 +1,11 @@
-import { DialogTitle, Transition, TransitionChild } from "@headlessui/react";
+import { Transition, TransitionChild } from "@headlessui/react";
 import { Badge, Button, Card, Col, Dialog, DialogPanel, Divider, Flex, Grid, Select, SelectItem, Subtitle, Text, TextInput, Title } from "@tremor/react";
 import { Fragment, useMemo, useState } from "react";
 import { tagColors } from "../../kernels/utils/calendar";
 import { toMin } from "../../kernels/utils/date-picker";
 import { useUpdateTimeBubbleDispatch } from "../../kernels/utils/write-dialog-api-requests";
 import { ColorBadge } from "../../components/subComponents/ColorBadge";
+import { shortenTitle } from "../../kernels/utils/field-utils";
 
 const ScheduleDayBubble = (props) => {
     const { slot, updatedDailyTaskList } = props;
@@ -145,12 +146,9 @@ const ScheduleDayBubble = (props) => {
                                 leaveTo="opacity-0 scale-95"
                             >
                                 <DialogPanel className="w-full max-w-xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                                    <DialogTitle as="h3" className="text-lg font-medium leading-6 text-gray-50">
-                                        Edit
-                                    </DialogTitle>
                                     <>
                                         {!isEdited ? (
-                                            <Card className="mt-6 p-4">
+                                            <>
                                                 <Title>Preview</Title>
                                                 <Divider></Divider>
                                                 <Flex>
@@ -160,28 +158,31 @@ const ScheduleDayBubble = (props) => {
                                                     <ColorBadge color={tagColors[slot.tag]} name={slot.tag}></ColorBadge>
                                                 </Flex>
                                                 <Grid numItems={2} className="mt-3">
-                                                    <Col numColSpan={1}>
+                                                    <Col numColSpan={1} className="me-3">
                                                         {form.primaryTaskTitle && (
                                                             <a href={`/client-gui/task/detail/${form.primaryTaskId}`}>
-                                                                <Text className="mt-1">
-                                                                    Main: <span className="font-medium">{form.primaryTaskTitle}</span>
-                                                                </Text>
+                                                                <Subtitle className="mb-1">Main task:</Subtitle>
+                                                                <Card decorationColor="red" decoration="top">
+                                                                    <Text className="mt-1">{shortenTitle(form.primaryTaskTitle)}</Text>
+                                                                </Card>
                                                             </a>
                                                         )}
                                                     </Col>
                                                     <Col numColSpan={1}>
                                                         {form.backupTaskTitle && (
                                                             <a href={`/client-gui/task/detail/${form.backupTaskId}`}>
-                                                                <Text className="mt-1">
-                                                                    Backup: <span className="font-medium">{form.backupTaskTitle}</span>
-                                                                </Text>
+                                                                <Subtitle className="mb-1">Backup task:</Subtitle>
+                                                                <Card decorationColor="blue" decoration="top">
+                                                                    <Text className="mt-1">{shortenTitle(form.backupTaskTitle)}</Text>
+                                                                </Card>
                                                             </a>
                                                         )}
                                                     </Col>
                                                 </Grid>
-                                            </Card>
+                                            </>
                                         ) : (
                                             <>
+                                                <Title>Edit Bubble</Title>
                                                 {/* Time */}
                                                 <Grid numItemsLg={2} numItemsSm={1} className="gap-4 mt-4">
                                                     <Col>
@@ -324,7 +325,7 @@ const ScheduleDayBubble = (props) => {
                         </div>
                     </div>
                 </Dialog>
-            </Transition>
+            </Transition >
         </>
     );
 };
