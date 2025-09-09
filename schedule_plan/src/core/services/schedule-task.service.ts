@@ -43,6 +43,10 @@ class ScheduleTaskService {
         }
     }
 
+    async updateScheduleTaskStatus(taskId: string, status: string): Promise<any> {
+        return await scheduleTaskRepository.updateTaskStatus(taskId, status);
+    }
+
     async deleteScheduleTask(scheduleTaskId: string): Promise<IResponse> {
         try {
             const deleteScheduleTask = await scheduleTaskRepository.deleteScheduleTask(scheduleTaskId);
@@ -285,6 +289,8 @@ class ScheduleTaskService {
         console.log("Push Kafka Message: ", messages);
         this.kafkaHandler.produce(KafkaTopic.UPDATE_SCHEDULE_TASK_TAG, messages);
     }
+
+    
 }
 
 export const scheduleTaskService = new ScheduleTaskService();   

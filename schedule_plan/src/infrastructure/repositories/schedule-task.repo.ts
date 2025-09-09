@@ -65,10 +65,10 @@ class ScheduleTaskRepository {
             where: {
                 schedulePlanId: schedulePlanId,
                 status: { [Op.ne]: TaskStatus.DONE },
-                activeStatus: ActiveStatus.active 
+                activeStatus: ActiveStatus.active
             },
             order: [['createdAt', 'DESC']],
-            limit: topK 
+            limit: topK
         });
     }
 
@@ -78,7 +78,7 @@ class ScheduleTaskRepository {
                 schedulePlanId: schedulePlanId,
                 taskBatch: taskBatch,
                 status: { [Op.ne]: TaskStatus.DONE },
-                activeStatus: ActiveStatus.active 
+                activeStatus: ActiveStatus.active
             },
             order: [['taskOrder', 'ASC']]
         });
@@ -103,6 +103,14 @@ class ScheduleTaskRepository {
     async updateTagTask(scheduleTaskId: string, tag: string): Promise<ScheduleTaskEntity | null> {
         const [affectedCount, affectedRows] = await ScheduleTaskEntity.update({ tag: tag }, {
             where: { id: scheduleTaskId },
+            returning: true,
+        });
+        return affectedCount > 0 ? affectedRows[0] : null;
+    }
+
+    async updateTaskStatus(taskId: string, status: string): Promise<ScheduleTaskEntity | null> {
+        const [affectedCount, affectedRows] = await ScheduleTaskEntity.update({ status: status }, {
+            where: { taskId: taskId },
             returning: true,
         });
         return affectedCount > 0 ? affectedRows[0] : null;

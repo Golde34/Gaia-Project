@@ -60,3 +60,14 @@ scheduleDayRouter.post("/edit-time-bubble",
         }
     }
 )
+
+scheduleDayRouter.put("/delete-task-away-schedule",
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const pendingTask = await scheduleDayController.deleteTaskAwaySchedule(req, next);
+            return returnResult(pendingTask, "FAIL", res, next);
+        } catch (error: any) {
+            next(error);
+        }
+    }
+)

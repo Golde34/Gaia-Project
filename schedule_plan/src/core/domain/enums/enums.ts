@@ -2,6 +2,7 @@ export enum TaskStatus {
     DONE = "DONE",
     TODO = "TODO",
     IN_PROGRESS = "IN_PROGRESS",
+    PENDING = "PENDING",
 }
 
 export enum ActiveStatus {

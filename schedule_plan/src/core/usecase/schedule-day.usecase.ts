@@ -1,7 +1,7 @@
 import { runInBackground } from "../../kernel/utils/run-in-background";
 import { IResponse, msg200, msg400 } from "../common/response";
 import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
-import { ActiveStatus, ErrorStatus } from "../domain/enums/enums";
+import { ActiveStatus, ErrorStatus, TaskStatus } from "../domain/enums/enums";
 import { scheduleTaskMapper } from "../mapper/schedule-task.mapper";
 import { scheduleDayService } from "../services/schedule-day.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
@@ -179,7 +179,19 @@ class ScheduleDayUsecase {
                 timeBubble: editedScheduleDayBubble
             })
         } catch (error: any) {
-            console.error("Error edit time bubble: ")
+            console.error("Error edit time bubble: ", error.message)
+        }
+    }
+
+    async deleteTaskAwaySchedule(userId: number, taskId: string): Promise<IResponse | undefined> {
+        try {
+            const updatedScheduleTask = await scheduleTaskService.updateScheduleTaskStatus(taskId, TaskStatus.PENDING);
+            if (!updatedScheduleTask) return msg400("Cannot delete this task away schedule day");
+            // call api to TM to update task status
+            return this.generateDailyCalendar(userId, []);
+        } catch (error: any) {
+            console.error("Error when delete task away schedule: ", error.message);
+            return msg400("Exception when delete task away schedule")
         }
     }
 }
