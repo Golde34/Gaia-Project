@@ -287,10 +287,19 @@ class ScheduleTaskService {
             ))
         }]
         console.log("Push Kafka Message: ", messages);
-        this.kafkaHandler.produce(KafkaTopic.UPDATE_SCHEDULE_TASK_TAG, messages);
+        this.kafkaHandler.produce(KafkaTopic.UPDATE_SCHEDULE_TASK_FIELD, messages);
     }
 
-    
+    async pushUpdateTaskStatusKafkaMessage(userId: number, taskId: string, status: string): Promise<void> {
+        const body = { userId, taskId, status }
+        const messages = [{
+            value: JSON.stringify(createMessage(
+                KafkaCommand.UPDATE_TASK_STATUS, '00', 'Successful', body
+            ))
+        }]
+        console.log("Push Kafka Message: ", messages);
+        this.kafkaHandler.produce(KafkaTopic.UPDATE_SCHEDULE_TASK_FIELD, messages);
+    }
 }
 
 export const scheduleTaskService = new ScheduleTaskService();   

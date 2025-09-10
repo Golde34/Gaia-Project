@@ -187,7 +187,7 @@ class ScheduleDayUsecase {
         try {
             const updatedScheduleTask = await scheduleTaskService.updateScheduleTaskStatus(taskId, TaskStatus.PENDING);
             if (!updatedScheduleTask) return msg400("Cannot delete this task away schedule day");
-            // call api to TM to update task status
+            await scheduleTaskService.pushUpdateTaskStatusKafkaMessage(userId, taskId, TaskStatus.PENDING);
             return this.generateDailyCalendar(userId, []);
         } catch (error: any) {
             console.error("Error when delete task away schedule: ", error.message);
