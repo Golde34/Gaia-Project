@@ -122,6 +122,13 @@ class TaskService {
         });
     }
 
+    async updateTaskStatus(data: any): Promise<any> {
+        const updateTask = await taskStore.updateTaskStatus(data.taskId, data.status);
+        if (!updateTask) throw new Error("Cannot update task status");
+        this.taskServiceUtilsImpl.clearTaskCache(this.taskCache, updateTask.groupTaskId, data.userId);
+        return msg200({ updateTask });
+    }
+
     async updateTaskInDialog(taskId: string, task: UpdateTaskInDialogDTO): Promise<IResponse> {
         try {
             if (await this.taskValidationImpl.checkExistedTaskByTaskId(taskId) === true) {
