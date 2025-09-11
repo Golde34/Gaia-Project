@@ -1,6 +1,7 @@
 package wo.work_optimization.core.service.factory.strategy;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -29,9 +30,11 @@ public class AllTasksStrategy extends StrategyService {
 
     @Override
     public List<Task> doStrategy(OptimizeTaskRestRequestDTO request, List<ParentTask> parentTasks) {
+        final String activeStatus = Constants.ActiveStatus.ACTIVE_STR;
+        final Set<String> excludedStatuses = Set.of(Constants.TaskStatus.DONE, Constants.TaskStatus.PENDING);
         return taskService.getAllTasks(parentTasks).stream()
-                .filter(task -> task.getActiveStatus().equals(Constants.ActiveStatus.ACTIVE_STR))
-                .filter(task -> !task.getStatus().equals(Constants.TaskStatus.DONE))
+                .filter(task -> activeStatus.equals(task.getActiveStatus())
+                        && !excludedStatuses.contains(task.getStatus()))
                 .collect(Collectors.toList());
     }
 
