@@ -64,7 +64,7 @@ class ScheduleTaskRepository {
         return await ScheduleTaskEntity.findAll({
             where: {
                 schedulePlanId: schedulePlanId,
-                status: { [Op.ne]: TaskStatus.DONE },
+                status: { [Op.notIn]: [TaskStatus.DONE, TaskStatus.PENDING] },
                 activeStatus: ActiveStatus.active
             },
             order: [['createdAt', 'DESC']],
@@ -77,7 +77,7 @@ class ScheduleTaskRepository {
             where: {
                 schedulePlanId: schedulePlanId,
                 taskBatch: taskBatch,
-                status: { [Op.ne]: TaskStatus.DONE },
+                status: { [Op.notIn]: [TaskStatus.DONE, TaskStatus.PENDING] },
                 activeStatus: ActiveStatus.active
             },
             order: [['taskOrder', 'ASC']]
@@ -91,7 +91,7 @@ class ScheduleTaskRepository {
     async findDistinctTaskBatch(schedulePlanId: string): Promise<number[]> {
         return await ScheduleTaskEntity.findAll({
             attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('task_batch')), 'taskBatch']],
-            where: { schedulePlanId: schedulePlanId, status: { [Op.ne]: TaskStatus.DONE } },
+            where: { schedulePlanId: schedulePlanId, status: { [Op.notIn]: [TaskStatus.DONE, TaskStatus.PENDING] } },
             raw: true
         }).then(results => results.map(result => result.taskBatch));
     }
