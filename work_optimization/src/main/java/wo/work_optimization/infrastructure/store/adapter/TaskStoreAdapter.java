@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
+import wo.work_optimization.core.domain.constant.Constants;
 import wo.work_optimization.core.domain.entity.ParentTask;
 import wo.work_optimization.core.domain.entity.Task;
 import wo.work_optimization.core.port.store.TaskStore;
@@ -109,7 +110,8 @@ public class TaskStoreAdapter implements TaskStore {
     @Override
     public List<Task> findAllByParentIdAndStartDate(Long parentId, String optimizedDate) throws ParseException {
         long startDate = DateTimeUtils.convertStringDateTime(optimizedDate);
-        return taskRepository.findByParentTaskIdAndStartDate(parentId, startDate);
+        List<String> statuses = List.of(Constants.TaskStatus.DONE, Constants.TaskStatus.PENDING);
+        return taskRepository.findByParentTaskIdAndStartDateAndStatuses(parentId, startDate, statuses);
     }
 
     @Override
