@@ -8,4 +8,5 @@ type IScheduleCalendarAdapter interface {
 	RegisterScheduleCalendar(userId string) (response_dtos.RegisteredCalendarStatusResponseDTO, error)
 	GenerateDailyCalendar(userId string, dailyTasks map[string]interface{}) (map[string]interface{}, error)
 	EditTimeBubble(userId string, timeBubble map[string]interface{}) (map[string]interface{}, error)
+	DeleteTaskAwaySchedule(userId string, taskId string) (map[string]interface{}, error)
 }

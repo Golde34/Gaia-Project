@@ -106,3 +106,25 @@ func EditTimeBubble(w http.ResponseWriter, r *http.Request, scheduleCalendarServ
 		return
 	}
 }
+
+func DeleteTaskAwaySchedule(w http.ResponseWriter, r *http.Request, scheduleCalendarService *services.ScheduleCalendarService) {
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	body, err := controller_utils.MappingBody(w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	taskId := body["taskId"].(string)
+	calendar, err := scheduleCalendarService.DeleteTaskAwaySchedule(userId, taskId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(calendar); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
