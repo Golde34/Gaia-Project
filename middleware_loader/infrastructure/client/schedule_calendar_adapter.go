@@ -141,7 +141,7 @@ func (adapter *ScheduleCalendarAdapter) DeleteTaskAwaySchedule(userId string, ta
 		"taskId": taskId,
 	}
 	headers := utils.BuildDefaultHeaders()
-	bodyResult, err := utils.BaseAPI(editedTimeBubbleURL, "POST", body, headers)
+	bodyResult, err := utils.BaseAPI(editedTimeBubbleURL, "PUT", body, headers)
 	if err != nil {
 		return nil, err
 	}
