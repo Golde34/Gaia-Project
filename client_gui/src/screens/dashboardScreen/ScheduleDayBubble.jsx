@@ -1,9 +1,12 @@
-import { Transition, TransitionChild } from "@headlessui/react";
+import { Transition, TransitionChild, Menu } from "@headlessui/react";
 import { Badge, Button, Card, Col, Dialog, DialogPanel, Divider, Flex, Grid, Select, SelectItem, Subtitle, Text, TextInput, Title } from "@tremor/react";
 import { Fragment, useMemo, useState } from "react";
+import { DotsVerticalIcon } from "@heroicons/react/solid";
+import { useDispatch } from "react-redux";
+import { getDailyTasksAction } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 import { tagColors } from "../../kernels/utils/calendar";
 import { toMin } from "../../kernels/utils/date-picker";
-import { useUpdateTimeBubbleDispatch } from "../../kernels/utils/write-dialog-api-requests";
+import { useUpdateTimeBubbleDispatch, useDeleteTaskAwayScheduleDispatch } from "../../kernels/utils/write-dialog-api-requests";
 import { ColorBadge } from "../../components/subComponents/ColorBadge";
 import { shortenTitle } from "../../kernels/utils/field-utils";
 
@@ -88,11 +91,24 @@ const ScheduleDayBubble = (props) => {
     }
 
     const updateTimeBubble = useUpdateTimeBubbleDispatch();
+    const deleteTaskAwaySchedule = useDeleteTaskAwayScheduleDispatch();
+    const dispatch = useDispatch();
+
     const handleSave = () => {
         if (timeError) return;
-        console.log("update form: ", form)
-        updateTimeBubble(form)
+        console.log("update form: ", form);
+        updateTimeBubble(form);
         closeModal();
+    };
+
+    const handleDeleteTask = async (e) => {
+        e.stopPropagation();
+        try {
+            await deleteTaskAwaySchedule(slot.primaryTaskId);
+            dispatch(getDailyTasksAction());
+        } catch (err) {
+            console.error("Failed to delete task away schedule", err);
+        }
     };
 
     return (
@@ -100,7 +116,7 @@ const ScheduleDayBubble = (props) => {
             <Card
                 key={slot.id}
                 onClick={() => openModal(slot)}
-                className="flex items-center justify-between p-3 rounded-lg mt-4 
+                className="flex items-center justify-between p-3 rounded-lg mt-4
                    hover:cursor-pointer transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-105 duration-300"
             >
                 <div className="flex-shrink-0">
@@ -118,6 +134,36 @@ const ScheduleDayBubble = (props) => {
                         {slot.startTime} - {slot.endTime}
                     </Text>
                 </div>
+
+                <Menu as="div" className="relative flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <Menu.Button className="p-1 rounded-full hover:bg-gray-700">
+                        <DotsVerticalIcon className="h-5 w-5 text-gray-300" />
+                    </Menu.Button>
+                    <Transition
+                        as={Fragment}
+                        enter="transition ease-out duration-100"
+                        enterFrom="transform opacity-0 scale-95"
+                        enterTo="transform opacity-100 scale-100"
+                        leave="transition ease-in duration-75"
+                        leaveFrom="transform opacity-100 scale-100"
+                        leaveTo="transform opacity-0 scale-95"
+                    >
+                        <Menu.Items className="absolute right-0 mt-2 w-36 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                            <div className="py-1">
+                                <Menu.Item>
+                                    {({ active }) => (
+                                        <button
+                                            className={`${active ? 'bg-red-100 text-red-600' : 'text-red-600'} block w-full px-4 py-2 text-sm text-left`}
+                                            onClick={handleDeleteTask}
+                                        >
+                                            Delete
+                                        </button>
+                                    )}
+                                </Menu.Item>
+                            </div>
+                        </Menu.Items>
+                    </Transition>
+                </Menu>
             </Card>
 
             <Transition appear show={isOpen} as={Fragment}>

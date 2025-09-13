@@ -4,7 +4,8 @@ import {
     GET_DAILY_TASKS_FAILURE, GET_DAILY_TASKS_REQUEST, GET_DAILY_TASKS_SUCCESS,
     REGISTER_SCHEDULE_CALENDAR_FAILURE, REGISTER_SCHEDULE_CALENDAR_REQUEST, REGISTER_SCHEDULE_CALENDAR_SUCCESS,
     GET_TIME_BUBBLE_CONFIG_FAILURE, GET_TIME_BUBBLE_CONFIG_REQUEST, GET_TIME_BUBBLE_CONFIG_SUCCESS,
-    UPDATE_TIME_BUBBLE_CONFIG_REQUEST, UPDATE_TIME_BUBBLE_CONFIG_SUCCESS, UPDATE_DAILY_CALENDAR_FAILURE
+    UPDATE_TIME_BUBBLE_CONFIG_REQUEST, UPDATE_TIME_BUBBLE_CONFIG_SUCCESS, UPDATE_DAILY_CALENDAR_FAILURE,
+    DELETE_TASK_AWAY_SCHEDULE_REQUEST, DELETE_TASK_AWAY_SCHEDULE_SUCCESS, DELETE_TASK_AWAY_SCHEDULE_FAILURE
 } from "../../constants/schedule_plan/schedule-calendar.constants";
 
 const portName = {
@@ -82,5 +83,23 @@ export const editTimeBubble = (timeBubble) => async (dispatch) => {
                 ? error.response.data.message
                 : error.message,
         });
+    }
+}
+
+export const deleteTaskAwaySchedule = (taskId) => async (dispatch) => {
+    dispatch({ type: DELETE_TASK_AWAY_SCHEDULE_REQUEST, payload: taskId });
+    try {
+        const body = { taskId };
+        const { data } = await serverRequest(`/schedule-calendar/schedule-day/delete-task-away-schedule`, HttpMethods.PUT, portName.middleware, body);
+        dispatch({ type: DELETE_TASK_AWAY_SCHEDULE_SUCCESS, payload: data });
+        return data;
+    } catch (error) {
+        dispatch({
+            type: DELETE_TASK_AWAY_SCHEDULE_FAILURE,
+            payload: error.response && error.response.data.message
+                ? error.response.data.message
+                : error.message,
+        });
+        throw error;
     }
 }
