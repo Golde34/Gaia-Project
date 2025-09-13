@@ -90,7 +90,7 @@ export const deleteTaskAwaySchedule = (taskId) => async (dispatch) => {
     dispatch({ type: DELETE_TASK_AWAY_SCHEDULE_REQUEST, payload: taskId });
     try {
         const body = { taskId };
-        const { data } = await serverRequest(`/schedule-calendar/schedule-day/delete-task-away-schedule`, HttpMethods.PUT, portName.middleware, body);
+        const { data } = await serverRequest(`/schedule-calendar/delete-task-away-schedule`, HttpMethods.PUT, portName.middleware, body);
         dispatch({ type: DELETE_TASK_AWAY_SCHEDULE_SUCCESS, payload: data });
         return data;
     } catch (error) {

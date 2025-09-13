@@ -10,7 +10,6 @@ const DailyCalendar = () => {
 
     const [dailyTasksRequest, setDailyTasksRequest] = useState({ tasks: [] });
     const [dailyCalendar, setDailyCalendar] = useState([]);
-    const [updateDailyTaskList, setUpdateDailyTaskList] = useState([]);
 
     const timeBubbleConfigList = useSelector((state) => state.getTimeBubbleConfig);
     const { config: timeBubbleConfig, loading: loadingBubble, error: errorBubble } = timeBubbleConfigList;
@@ -74,8 +73,6 @@ const DailyCalendar = () => {
             console.error("Error:", err.message);
         }
     };
-
-    const handleRowClick = (taskId) => { };
 
     return (
         <>
@@ -153,7 +150,7 @@ const DailyCalendar = () => {
                             dailyCalendar && dailyCalendar?.length > 0 && (
                                 dailyCalendar ?? []).map((slot) => (
                                     <Col numColSpan={12} key={slot.id}>
-                                        <ScheduleDayBubble updateDailyTaskList={updateDailyTaskList} slot={slot} />
+                                        <ScheduleDayBubble slot={slot} />
                                     </Col>
                                 ))}
                     </>

@@ -1,20 +1,31 @@
-import { Transition, TransitionChild, Menu } from "@headlessui/react";
-import { Badge, Button, Card, Col, Dialog, DialogPanel, Divider, Flex, Grid, Select, SelectItem, Subtitle, Text, TextInput, Title } from "@tremor/react";
-import { Fragment, useMemo, useState } from "react";
-import { DotsVerticalIcon } from "@heroicons/react/solid";
-import { useDispatch } from "react-redux";
+import { Menu, MenuButton, MenuItem, MenuItems, Transition, TransitionChild } from "@headlessui/react";
+import { Button, Card, Col, Dialog, DialogPanel, Divider, Flex, Grid, Select, SelectItem, Subtitle, Text, TextInput, Title } from "@tremor/react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { getDailyTasksAction } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
+import { DotsVerticalIcon } from "@heroicons/react/solid";
 import { tagColors } from "../../kernels/utils/calendar";
 import { toMin } from "../../kernels/utils/date-picker";
 import { useUpdateTimeBubbleDispatch, useDeleteTaskAwayScheduleDispatch } from "../../kernels/utils/write-dialog-api-requests";
 import { ColorBadge } from "../../components/subComponents/ColorBadge";
 import { shortenTitle } from "../../kernels/utils/field-utils";
+import { getActiveTaskBatch } from "../../api/store/actions/schedule_plan/schedule-task.action";
 
 const ScheduleDayBubble = (props) => {
-    const { slot, updatedDailyTaskList } = props;
+    const slot = props.slot;
+
+    const dispatch = useDispatch();
 
     const [isOpen, setIsOpen] = useState(false);
     const [isEdited, setIsEdited] = useState(false);
+
+    const { loading, error, activeTaskBatch } = useSelector((state) => state.activeTaskBatch);
+    const didActiveTaskBatch = useRef();
+    useEffect(() => {
+        if (didActiveTaskBatch.current) return;
+        dispatch(getActiveTaskBatch());
+        didActiveTaskBatch.current = true;
+    }, [dispatch]);
 
     const [form, setForm] = useState({
         id: slot.id,
@@ -49,9 +60,9 @@ const ScheduleDayBubble = (props) => {
     // Helpers
     const byId = useMemo(() => {
         const map = new Map();
-        (updatedDailyTaskList ?? []).forEach((t) => map.set(String(t.id), t));
+        (activeTaskBatch ?? []).forEach((t) => map.set(String(t.id), t));
         return map;
-    }, [updatedDailyTaskList]);
+    }, [activeTaskBatch]);
 
     const timeError = (() => {
         const s = toMin(form.startTime);
@@ -92,7 +103,6 @@ const ScheduleDayBubble = (props) => {
 
     const updateTimeBubble = useUpdateTimeBubbleDispatch();
     const deleteTaskAwaySchedule = useDeleteTaskAwayScheduleDispatch();
-    const dispatch = useDispatch();
 
     const handleSave = () => {
         if (timeError) return;
@@ -110,6 +120,50 @@ const ScheduleDayBubble = (props) => {
             console.error("Failed to delete task away schedule", err);
         }
     };
+
+    const taskMenu = (taskId) => (
+        <Menu as="div" className="relative flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+            <MenuButton className="p-1 rounded-full hover:bg-gray-700">
+                <DotsVerticalIcon className="h-5 w-5 text-gray-300" />
+            </MenuButton>
+            <Transition
+                as={Fragment}
+                enter="transition ease-out duration-100"
+                enterFrom="transform opacity-0 scale-95"
+                enterTo="transform opacity-100 scale-100"
+                leave="transition ease-in duration-75"
+                leaveFrom="transform opacity-100 scale-100"
+                leaveTo="transform opacity-0 scale-95"
+            >
+                <MenuItems className="absolute right-0 mt-2 w-36 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                    <div className="py-1">
+                        <MenuItem>
+                            {taskId && (
+                                <a href={`/client-gui/task/detail/${taskId}`}>
+                                    <button
+                                        className='text-gray-600 block w-full px-4 py-2 text-sm text-left'
+                                        onClick={handleDeleteTask}
+                                    >
+                                        Open detail
+                                    </button>
+                                </a>
+                            )}
+                        </MenuItem>
+                        <MenuItem>
+                            {() => (
+                                <button
+                                    className='text-red-600 block w-full px-4 py-2 text-sm text-left'
+                                    onClick={handleDeleteTask}
+                                >
+                                    Delete away from schedule
+                                </button>
+                            )}
+                        </MenuItem>
+                    </div>
+                </MenuItems>
+            </Transition>
+        </Menu>
+    )
 
     return (
         <>
@@ -134,36 +188,6 @@ const ScheduleDayBubble = (props) => {
                         {slot.startTime} - {slot.endTime}
                     </Text>
                 </div>
-
-                <Menu as="div" className="relative flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                    <Menu.Button className="p-1 rounded-full hover:bg-gray-700">
-                        <DotsVerticalIcon className="h-5 w-5 text-gray-300" />
-                    </Menu.Button>
-                    <Transition
-                        as={Fragment}
-                        enter="transition ease-out duration-100"
-                        enterFrom="transform opacity-0 scale-95"
-                        enterTo="transform opacity-100 scale-100"
-                        leave="transition ease-in duration-75"
-                        leaveFrom="transform opacity-100 scale-100"
-                        leaveTo="transform opacity-0 scale-95"
-                    >
-                        <Menu.Items className="absolute right-0 mt-2 w-36 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                            <div className="py-1">
-                                <Menu.Item>
-                                    {({ active }) => (
-                                        <button
-                                            className={`${active ? 'bg-red-100 text-red-600' : 'text-red-600'} block w-full px-4 py-2 text-sm text-left`}
-                                            onClick={handleDeleteTask}
-                                        >
-                                            Delete
-                                        </button>
-                                    )}
-                                </Menu.Item>
-                            </div>
-                        </Menu.Items>
-                    </Transition>
-                </Menu>
             </Card>
 
             <Transition appear show={isOpen} as={Fragment}>
@@ -207,7 +231,7 @@ const ScheduleDayBubble = (props) => {
                                                     <Col numColSpan={1} className="me-3">
                                                         {form.primaryTaskTitle && (
                                                             <a href={`/client-gui/task/detail/${form.primaryTaskId}`}>
-                                                                <Subtitle className="mb-1">Main task:</Subtitle>
+                                                                <Subtitle className="mb-3">Main task:</Subtitle>
                                                                 <Card decorationColor="red" decoration="top">
                                                                     <Text className="mt-1">{shortenTitle(form.primaryTaskTitle)}</Text>
                                                                 </Card>
@@ -217,7 +241,7 @@ const ScheduleDayBubble = (props) => {
                                                     <Col numColSpan={1}>
                                                         {form.backupTaskTitle && (
                                                             <a href={`/client-gui/task/detail/${form.backupTaskId}`}>
-                                                                <Subtitle className="mb-1">Backup task:</Subtitle>
+                                                                <Subtitle className="mb-3">Backup task:</Subtitle>
                                                                 <Card decorationColor="blue" decoration="top">
                                                                     <Text className="mt-1">{shortenTitle(form.backupTaskTitle)}</Text>
                                                                 </Card>
@@ -272,79 +296,59 @@ const ScheduleDayBubble = (props) => {
                                                 {/* Primary task */}
                                                 <Card decoration="left" decorationColor="blue" className="mt-6 p-4">
                                                     <Flex justifyContent="between" alignItems="center">
-                                                        <Subtitle>Main task</Subtitle>
-                                                        {form.primaryTaskId && (
-                                                            <a
-                                                                href={`/client-gui/task/detail/${form.primaryTaskId}`}
-                                                                className="underline"
-                                                            >
-                                                                <Text>Open detail</Text>
-                                                            </a>
-                                                        )}
+                                                        <Subtitle className="mb-2">
+                                                            {form.primaryTaskTitle && (
+                                                                <span className="font-medium">{form.primaryTaskTitle}</span>
+                                                            )}
+                                                        </Subtitle>
+                                                        {taskMenu(form.primaryTaskId)}
                                                     </Flex>
 
-                                                    <Text className="mt-2 mb-1">Choose primary task</Text>
                                                     <Select
                                                         value={form.primaryTaskId || ""}
                                                         onValueChange={handlePrimarySelect}
-                                                        placeholder="Select a task…"
+                                                        placeholder="Change a task…"
                                                     >
-                                                        {(updatedDailyTaskList ?? []).map((t) => (
+                                                        {(activeTaskBatch ?? []).map((t) => (
                                                             <SelectItem key={t.id} value={String(t.id)}>
                                                                 {t.title}
                                                             </SelectItem>
                                                         ))}
                                                     </Select>
 
-                                                    {form.primaryTaskTitle && (
-                                                        <Text className="mt-2 text-gray-600">
-                                                            Selected: <span className="font-medium">{form.primaryTaskTitle}</span>
-                                                        </Text>
-                                                    )}
+
                                                 </Card>
 
                                                 {/* Backup task */}
                                                 <Card decoration="left" decorationColor="red" className="mt-4 p-4">
-                                                    <Flex justifyContent="between" alignItems="center">
-                                                        <Subtitle>Backup task</Subtitle>
-                                                        <div className="flex items-center gap-3">
-                                                            {form.backupTaskId && (
-                                                                <a
-                                                                    href={`/client-gui/task/detail/${form.backupTaskId}`}
-                                                                    className="underline"
-                                                                >
-                                                                    <Text>Open detail</Text>
-                                                                </a>
-                                                            )}
-                                                            <Button variant="secondary" size="sm" onClick={clearBackup}>
-                                                                Clear
-                                                            </Button>
+                                                    <Flex justifyContent="between" alignItems="center" className="mb-2">
+                                                        <Subtitle>{form.backupTaskTitle}</Subtitle>
+                                                        <div>
+                                                            {taskMenu(form.backupTaskId)}
+
                                                         </div>
                                                     </Flex>
 
-                                                    <Text className="mt-2 mb-1">Choose backup task (optional)</Text>
-                                                    <Select
-                                                        value={form.backupTaskId || ""}
-                                                        onValueChange={handleBackupSelect}
-                                                        placeholder="Select a backup task…"
-                                                    >
-                                                        <SelectItem key="__none" value="">
-                                                            — None —
-                                                        </SelectItem>
-                                                        {(updatedDailyTaskList ?? []).map((t) => (
-                                                            <SelectItem key={t.id} value={String(t.id)}>
-                                                                {t.title}
+                                                    <Flex justifyContent="between" alignItems="center" className="mb-2">
+                                                        <Select
+                                                            className="me-2"
+                                                            value={form.backupTaskId || ""}
+                                                            onValueChange={handleBackupSelect}
+                                                            placeholder="Select a backup task…"
+                                                        >
+                                                            <SelectItem key="__none" value="">
+                                                                — None —
                                                             </SelectItem>
-                                                        ))}
-                                                    </Select>
-
-                                                    {form.backupTaskTitle ? (
-                                                        <Text className="mt-2 text-gray-600">
-                                                            Selected: <span className="font-medium">{form.backupTaskTitle}</span>
-                                                        </Text>
-                                                    ) : (
-                                                        <Text className="mt-2 text-gray-500">No backup selected</Text>
-                                                    )}
+                                                            {(activeTaskBatch ?? []).map((t) => (
+                                                                <SelectItem key={t.id} value={String(t.id)}>
+                                                                    {t.title}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </Select>
+                                                        <Button variant="secondary" size="sm" onClick={clearBackup}>
+                                                            Clear option
+                                                        </Button>
+                                                    </Flex>
                                                 </Card>
                                             </>
                                         )}
