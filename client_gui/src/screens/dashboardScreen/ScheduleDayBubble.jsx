@@ -1,13 +1,14 @@
-import { DialogTitle, Transition, TransitionChild } from "@headlessui/react";
-import { Badge, Button, Card, Col, Dialog, DialogPanel, Divider, Flex, Grid, Select, SelectItem, Subtitle, Text, TextInput, Title } from "@tremor/react";
+import { DialogTitle, Transition, TransitionChild, Menu } from "@headlessui/react";
+import { Button, Card, Col, Dialog, DialogPanel, Divider, Flex, Grid, Select, SelectItem, Subtitle, Text, TextInput, Title } from "@tremor/react";
 import { Fragment, useMemo, useState } from "react";
 import { tagColors } from "../../kernels/utils/calendar";
 import { toMin } from "../../kernels/utils/date-picker";
-import { useUpdateTimeBubbleDispatch } from "../../kernels/utils/write-dialog-api-requests";
+import { useUpdateTimeBubbleDispatch, useDeleteTaskAwayScheduleDispatch } from "../../kernels/utils/write-dialog-api-requests";
 import { ColorBadge } from "../../components/subComponents/ColorBadge";
+import EllipsisIcon from "../../components/icons/EllipsisIcon";
 
 const ScheduleDayBubble = (props) => {
-    const { slot, updatedDailyTaskList } = props;
+    const { slot, updatedDailyTaskList, onCalendarChange } = props;
 
     const [isOpen, setIsOpen] = useState(false);
     const [isEdited, setIsEdited] = useState(false);
@@ -87,11 +88,22 @@ const ScheduleDayBubble = (props) => {
     }
 
     const updateTimeBubble = useUpdateTimeBubbleDispatch();
+    const deleteTaskAwaySchedule = useDeleteTaskAwayScheduleDispatch();
     const handleSave = () => {
         if (timeError) return;
         console.log("update form: ", form)
         updateTimeBubble(form)
         closeModal();
+    };
+
+    const handleDelete = async (e) => {
+        e.stopPropagation?.();
+        try {
+            const data = await deleteTaskAwaySchedule({ id: slot.id });
+            onCalendarChange?.(data?.dailyCalendar ?? data);
+        } catch (err) {
+            console.error("Failed to delete task from schedule", err);
+        }
     };
 
     return (
@@ -112,10 +124,27 @@ const ScheduleDayBubble = (props) => {
                     </Text>
                 </div>
 
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 flex items-center gap-2">
                     <Text className="text-sm text-gray-400">
                         {slot.startTime} - {slot.endTime}
                     </Text>
+                    <Menu as="div" className="relative inline-block text-left">
+                        <Menu.Button onClick={(e) => e.stopPropagation()} className="p-1 text-gray-400 hover:text-gray-600">
+                            <EllipsisIcon />
+                        </Menu.Button>
+                        <Menu.Items className="absolute right-0 mt-2 w-32 origin-top-right bg-white divide-y divide-gray-100 rounded-md shadow-lg focus:outline-none z-10">
+                            <Menu.Item>
+                                {({ active }) => (
+                                    <button
+                                        onClick={handleDelete}
+                                        className={`${active ? 'bg-gray-100' : ''} text-red-600 block w-full px-4 py-2 text-left text-sm`}
+                                    >
+                                        Delete
+                                    </button>
+                                )}
+                            </Menu.Item>
+                        </Menu.Items>
+                    </Menu>
                 </div>
             </Card>
 

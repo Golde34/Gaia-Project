@@ -1,8 +1,9 @@
 import { CREATE_DAILY_CALENDAR_FAILURE, CREATE_DAILY_CALENDAR_REQUEST, CREATE_DAILY_CALENDAR_SUCCESS, 
     GET_DAILY_TASKS_FAILURE, GET_DAILY_TASKS_REQUEST, GET_DAILY_TASKS_SUCCESS,
-    GET_TIME_BUBBLE_CONFIG_FAILURE,  GET_TIME_BUBBLE_CONFIG_REQUEST, GET_TIME_BUBBLE_CONFIG_SUCCESS, 
+    GET_TIME_BUBBLE_CONFIG_FAILURE,  GET_TIME_BUBBLE_CONFIG_REQUEST, GET_TIME_BUBBLE_CONFIG_SUCCESS,
     REGISTER_SCHEDULE_CALENDAR_FAILURE, REGISTER_SCHEDULE_CALENDAR_REQUEST, REGISTER_SCHEDULE_CALENDAR_SUCCESS,
-    UPDATE_TIME_BUBBLE_CONFIG_FAILURE, UPDATE_TIME_BUBBLE_CONFIG_REQUEST, UPDATE_TIME_BUBBLE_CONFIG_SUCCESS
+    UPDATE_TIME_BUBBLE_CONFIG_FAILURE, UPDATE_TIME_BUBBLE_CONFIG_REQUEST, UPDATE_TIME_BUBBLE_CONFIG_SUCCESS,
+    DELETE_TASK_AWAY_SCHEDULE_FAILURE, DELETE_TASK_AWAY_SCHEDULE_REQUEST, DELETE_TASK_AWAY_SCHEDULE_SUCCESS
 } from "../../constants/schedule_plan/schedule-calendar.constants";
 
 export const registerScheduleCalendarReducer = (
@@ -69,6 +70,20 @@ export const editTimeBubbleReducer = (
         case UPDATE_TIME_BUBBLE_CONFIG_SUCCESS:
             return { loading: false, dailyTask: action.payload };
         case UPDATE_TIME_BUBBLE_CONFIG_FAILURE:
+            return { loading: false, error: action.payload };
+        default:
+            return state;
+    }
+}
+
+export const deleteTaskAwayScheduleReducer = (
+    state = { loading: true }, action) => {
+    switch (action.type) {
+        case DELETE_TASK_AWAY_SCHEDULE_REQUEST:
+            return { loading: true };
+        case DELETE_TASK_AWAY_SCHEDULE_SUCCESS:
+            return { loading: false, dailyCalendar: action.payload };
+        case DELETE_TASK_AWAY_SCHEDULE_FAILURE:
             return { loading: false, error: action.payload };
         default:
             return state;

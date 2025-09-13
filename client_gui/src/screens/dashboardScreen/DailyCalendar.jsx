@@ -153,7 +153,11 @@ const DailyCalendar = () => {
                             dailyCalendar && dailyCalendar?.length > 0 && (
                                 dailyCalendar ?? []).map((slot) => (
                                     <Col numColSpan={12} key={slot.id}>
-                                        <ScheduleDayBubble updateDailyTaskList={updateDailyTaskList} slot={slot} />
+                                        <ScheduleDayBubble
+                                            updateDailyTaskList={updateDailyTaskList}
+                                            slot={slot}
+                                            onCalendarChange={setDailyCalendar}
+                                        />
                                     </Col>
                                 ))}
                     </>
