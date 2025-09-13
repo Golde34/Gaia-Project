@@ -73,3 +73,8 @@ export enum Tag {
     TRAVEL = "TRAVEL",
     RELAX = "RELAX",
 }
+
+export enum CacheType {
+    ALL = 'all',
+    BATCH = 'batch',
+}
