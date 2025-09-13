@@ -1,10 +1,12 @@
 import { DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 import { Badge, Button, Card, Col, Dialog, DialogPanel, Divider, Flex, Grid, Select, SelectItem, Subtitle, Text, TextInput, Title } from "@tremor/react";
+import { Menu, MenuHandler, MenuItem, MenuList } from "@material-tailwind/react";
 import { Fragment, useMemo, useState } from "react";
 import { tagColors } from "../../kernels/utils/calendar";
 import { toMin } from "../../kernels/utils/date-picker";
-import { useUpdateTimeBubbleDispatch } from "../../kernels/utils/write-dialog-api-requests";
+import { useUpdateTimeBubbleDispatch, useDeleteTaskAwayScheduleDispatch } from "../../kernels/utils/write-dialog-api-requests";
 import { ColorBadge } from "../../components/subComponents/ColorBadge";
+import EllipsisIcon from "../../components/icons/EllipsisIcon";
 
 const ScheduleDayBubble = (props) => {
     const { slot, updatedDailyTaskList } = props;
@@ -87,12 +89,17 @@ const ScheduleDayBubble = (props) => {
     }
 
     const updateTimeBubble = useUpdateTimeBubbleDispatch();
+    const deleteTaskAwaySchedule = useDeleteTaskAwayScheduleDispatch();
     const handleSave = () => {
         if (timeError) return;
         console.log("update form: ", form)
         updateTimeBubble(form)
         closeModal();
     };
+    const handleDelete = (e) => {
+        e?.stopPropagation?.();
+        deleteTaskAwaySchedule({ timeBubbleId: slot.timeBubbleId });
+    }
 
     return (
         <>
@@ -112,10 +119,20 @@ const ScheduleDayBubble = (props) => {
                     </Text>
                 </div>
 
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 flex items-center gap-2">
                     <Text className="text-sm text-gray-400">
                         {slot.startTime} - {slot.endTime}
                     </Text>
+                    <Menu placement="bottom-end">
+                        <MenuHandler>
+                            <div onClick={(e) => e.stopPropagation()} className="rounded p-1 hover:bg-gray-700">
+                                <EllipsisIcon />
+                            </div>
+                        </MenuHandler>
+                        <MenuList>
+                            <MenuItem onClick={handleDelete}>Delete from schedule</MenuItem>
+                        </MenuList>
+                    </Menu>
                 </div>
             </Card>
 
