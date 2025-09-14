@@ -70,5 +70,6 @@ func ReturnDailyCalendarObjectMapper(body map[string]interface{}) *response_dtos
 		input.BackupTaskTitle = body["backupTaskTitle"].(string)
 	}
 	input.Tag = body["tag"].(string)
+	input.TimeBubbleId = body["timeBubbleId"].(string)
 	return &input
 }
