@@ -9,23 +9,14 @@ import { toMin } from "../../kernels/utils/date-picker";
 import { useUpdateTimeBubbleDispatch, useDeleteTaskAwayScheduleDispatch } from "../../kernels/utils/write-dialog-api-requests";
 import { ColorBadge } from "../../components/subComponents/ColorBadge";
 import { shortenTitle } from "../../kernels/utils/field-utils";
-import { getActiveTaskBatch } from "../../api/store/actions/schedule_plan/schedule-task.action";
 
 const ScheduleDayBubble = (props) => {
-    const slot = props.slot;
+    const {slot, scheduleTaskList } = props;
 
     const dispatch = useDispatch();
 
     const [isOpen, setIsOpen] = useState(false);
     const [isEdited, setIsEdited] = useState(false);
-
-    const { loading, error, activeTaskBatch } = useSelector((state) => state.activeTaskBatch);
-    const didActiveTaskBatch = useRef();
-    useEffect(() => {
-        if (didActiveTaskBatch.current) return;
-        dispatch(getActiveTaskBatch());
-        didActiveTaskBatch.current = true;
-    }, [dispatch]);
 
     const [form, setForm] = useState({
         id: slot.id,
@@ -60,9 +51,9 @@ const ScheduleDayBubble = (props) => {
     // Helpers
     const byId = useMemo(() => {
         const map = new Map();
-        (activeTaskBatch ?? []).forEach((t) => map.set(String(t.id), t));
+        (scheduleTaskList ?? []).forEach((t) => map.set(String(t.id), t));
         return map;
-    }, [activeTaskBatch]);
+    }, [scheduleTaskList]);
 
     const timeError = (() => {
         const s = toMin(form.startTime);
@@ -309,7 +300,7 @@ const ScheduleDayBubble = (props) => {
                                                         onValueChange={handlePrimarySelect}
                                                         placeholder="Change a task…"
                                                     >
-                                                        {(activeTaskBatch ?? []).map((t) => (
+                                                        {(scheduleTaskList ?? []).map((t) => (
                                                             <SelectItem key={t.id} value={String(t.id)}>
                                                                 {t.title}
                                                             </SelectItem>
@@ -323,10 +314,7 @@ const ScheduleDayBubble = (props) => {
                                                 <Card decoration="left" decorationColor="red" className="mt-4 p-4">
                                                     <Flex justifyContent="between" alignItems="center" className="mb-2">
                                                         <Subtitle>{form.backupTaskTitle}</Subtitle>
-                                                        <div>
-                                                            {taskMenu(form.backupTaskId)}
-
-                                                        </div>
+                                                        {taskMenu(form.backupTaskId)}
                                                     </Flex>
 
                                                     <Flex justifyContent="between" alignItems="center" className="mb-2">
@@ -339,7 +327,7 @@ const ScheduleDayBubble = (props) => {
                                                             <SelectItem key="__none" value="">
                                                                 — None —
                                                             </SelectItem>
-                                                            {(activeTaskBatch ?? []).map((t) => (
+                                                            {(scheduleTaskList ?? []).map((t) => (
                                                                 <SelectItem key={t.id} value={String(t.id)}>
                                                                     {t.title}
                                                                 </SelectItem>

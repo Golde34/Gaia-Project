@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { createDailyCalendarAction, getDailyTasksAction, getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 import { priorityColor } from "../../kernels/utils/field-utils";
 import ScheduleDayBubble from "./ScheduleDayBubble";
+import { getActiveTaskBatch } from "../../api/store/actions/schedule_plan/schedule-task.action";
 
 const DailyCalendar = () => {
     const dispatch = useDispatch();
@@ -18,6 +19,14 @@ const DailyCalendar = () => {
         if (didFetch.current) return;
         didFetch.current = true;
         dispatch(getTimeBubbleConfig());
+    }, [dispatch]);
+
+    const { loading: loadingActiveBatch, error: errorActiveBatch, activeTaskBatch } = useSelector((state) => state.activeTaskBatch);
+    const didActiveTaskBatch = useRef();
+    useEffect(() => {
+        if (didActiveTaskBatch.current) return;
+        dispatch(getActiveTaskBatch());
+        didActiveTaskBatch.current = true;
     }, [dispatch]);
 
     useEffect(() => {
@@ -67,7 +76,6 @@ const DailyCalendar = () => {
         try {
             const data = await dispatch(createDailyCalendarAction(payload.tasks));
             setDailyCalendar(Array.isArray(data?.dailyCalendar) ? [...data.dailyCalendar] : []);
-            setUpdateDailyTaskList(Array.isArray(data?.tasks) ? [...data?.tasks] : []);
             setDailyTasksRequest({})
         } catch (err) {
             console.error("Error:", err.message);
@@ -150,7 +158,7 @@ const DailyCalendar = () => {
                             dailyCalendar && dailyCalendar?.length > 0 && (
                                 dailyCalendar ?? []).map((slot) => (
                                     <Col numColSpan={12} key={slot.id}>
-                                        <ScheduleDayBubble slot={slot} />
+                                        <ScheduleDayBubble slot={slot} scheduleTaskList={activeTaskBatch}/>
                                     </Col>
                                 ))}
                     </>
