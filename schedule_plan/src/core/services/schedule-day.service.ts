@@ -97,6 +97,7 @@ class ScheduleDayService {
 
                 const tagTasks = taskMap.get(matchedTag) || [];
                 const pointer = taskPointers.get(matchedTag);
+                console.log("pointer: ", pointer, " for tag: ", matchedTag);
 
                 if (!pointer || pointer.index >= tagTasks.length) {
                     results.push(this.mappingPointer(bubble, matchedTag, null, null, weekDay))

@@ -205,16 +205,16 @@ class ScheduleTaskService {
     }
 
     async getScheduleTaskByBatchNumber(schedulePlanId: string, batchNumber: number): Promise<ScheduleTaskEntity[]> {
-        const redisCache = await this.redisClient;
+        // const redisCache = await this.redisClient;
         try {
-            const redisKey = buildRedisCacheKey(CacheConstants.SCHEDULE_TASK_BY_BATCH + schedulePlanId + "." + batchNumber);
-            const cachedRepos = await redisCache.get(redisKey);
-            if (cachedRepos !== undefined && cachedRepos !== null) {
-                console.log("Returning cached user repos");
-                return cachedRepos ? JSON.parse(cachedRepos) : [];
-            }
+            // const redisKey = buildRedisCacheKey(CacheConstants.SCHEDULE_TASK_BY_BATCH + schedulePlanId + "." + batchNumber);
+            // const cachedRepos = await redisCache.get(redisKey);
+            // if (cachedRepos !== undefined && cachedRepos !== null) {
+            //     console.log("Returning cached user repos");
+            //     return cachedRepos ? JSON.parse(cachedRepos) : [];
+            // }
             const scheduleTasks = await scheduleTaskRepository.findByTaskBatch(schedulePlanId, batchNumber);
-            await redisCache.set(redisKey, JSON.stringify(scheduleTasks), { expiration: { type: "EX", value: 3600 } }); // Cache for 1 hour
+            // await redisCache.set(redisKey, JSON.stringify(scheduleTasks), { expiration: { type: "EX", value: 3600 } }); // Cache for 1 hour
             return scheduleTasks;
         } catch (error) {
             console.error("Error on getScheduleBatchTask: ", error);
