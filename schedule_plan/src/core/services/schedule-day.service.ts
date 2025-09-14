@@ -114,8 +114,8 @@ class ScheduleDayService {
                 pointer.remaining -= duration
                 if (pointer.remaining <= 0 && backup && typeof backup.duration === "number") {
                     pointer.index++
-                    pointer.remaining = backup.duration + pointer.remaining
-                }
+                    pointer.remaining = backup.duration * 60 + pointer.remaining
+                } 
                 // If finished, move to next task
                 if (pointer.remaining <= 0) {
                     pointer.index++;
@@ -138,7 +138,7 @@ class ScheduleDayService {
             startTime: bubble.startTime,
             endTime: bubble.endTime,
             tag: matchedTag,
-            primaryTaskId: primary?.taskId|| null,
+            primaryTaskId: primary?.taskId || null,
             primaryTaskTitle: primary?.title || null,
             backupTaskId: backup?.taskId || null,
             backupTaskTitle: backup?.title || null,
@@ -147,23 +147,28 @@ class ScheduleDayService {
         }
     }
 
-    async updateDailyCalendar(userId: number, assignedBubbleList: AssignedBubble[], weekDay: number): Promise<void> {
+    async updateDailyCalendar(userId: number, assignedBubbleList: AssignedBubble[], weekDay: number): Promise<any[]> {
         try {
             const scheduleDayList = await scheduleDayRepository.findByWeekDay(userId, weekDay);
-            console.log("scheduleDayList: ", scheduleDayList);
             if (scheduleDayList.length > 0) {
                 await scheduleDayRepository.deleteScheduleDay(userId, weekDay);
             }
-            assignedBubbleList.forEach(async (bubble) => {
-                const scheduleDay = await scheduleDayRepository.createScheduleDay(userId, bubble);
-                console.log(`Save scheduleday of user ${userId}: ${scheduleDay}`)
-            });
-            return;
+
+            const scheduleList = await Promise.all(
+                assignedBubbleList.map(async (bubble) => {
+                    const scheduleDay = await scheduleDayRepository.createScheduleDay(userId, bubble);
+                    console.log(`Save scheduleday of user ${userId}: ${scheduleDay}`);
+                    return scheduleDay;
+                })
+            );
+
+            return scheduleList;
         } catch (error: any) {
             console.error("Error inquiring time bubble by user ID and weekday:", error);
             throw error;
         }
     }
+
 
     async returnDailyCalendar(userId: number): Promise<ScheduleDayBubbleEntity[]> {
         try {
@@ -186,7 +191,7 @@ class ScheduleDayService {
 
     async editScheduleDayBubble(timeBubbleId: string, timeBubble: any): Promise<any> {
         try {
-            if (timeBubbleId!= timeBubble.timeBubbleId) throw Error('Time bubble id was not matched');
+            if (timeBubbleId != timeBubble.timeBubbleId) throw Error('Time bubble id was not matched');
             return await scheduleDayRepository.updateScheduleDay(timeBubble);
         } catch (error: any) {
             console.error("Error when updating schedule day bubble: ", error);

@@ -51,6 +51,16 @@ class ScheduleDayController {
             next(error);
         }
     }
+
+    async deleteTaskAwaySchedule(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const userId = Number(req.body.userId);
+            const taskId = req.body.taskId;
+            return await scheduleDayUsecase.deleteTaskAwaySchedule(userId, taskId);
+        } catch (error: any) {
+            next(error);
+        }
+    }
 }
 
 export const scheduleDayController = new ScheduleDayController();

@@ -54,7 +54,9 @@ public class TopicConstants {
     @UtilityClass
     public class UpdateTaskCommand {
         public static final String TOPIC = "task-manager.update-task.topic";
+        public static final String UPDATE_TASK_FIELD_TOPIC = "schedule-plan.update-task-field.topic";
 
         public static final String UPDATE_TASK = "updateTask";
+        public static final String UPDATE_TASK_STATUS = "updateTaskStatus";
     }
 }

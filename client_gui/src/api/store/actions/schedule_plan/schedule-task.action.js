@@ -52,7 +52,6 @@ export const getScheduleTaskBatchList = () => {
     }
 }
 
-
 export const chooseTaskBatch = (batchNumber) => async (dispatch) => {
     dispatch({ type: CHOOSE_TASK_BATCH_REQUEST, payload: batchNumber });
     try {
@@ -69,7 +68,6 @@ export const chooseTaskBatch = (batchNumber) => async (dispatch) => {
                 : error.message,
         });
     }
-
 }
 
 export const getActiveTaskBatch = () => async (dispatch) => {

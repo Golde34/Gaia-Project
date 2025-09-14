@@ -133,3 +133,23 @@ func (adapter *ScheduleCalendarAdapter) EditTimeBubble(userId string, timeBubble
 
 	return bodyResultMap, nil
 }
+
+func (adapter *ScheduleCalendarAdapter) DeleteTaskAwaySchedule(userId string, taskId string) (map[string]interface{}, error) {
+	editedTimeBubbleURL := base.SchedulePlanServiceURL + "/schedule-plan/schedule-day/delete-task-away-schedule"
+	var body = map[string]interface{}{
+		"userId":     userId,
+		"taskId": taskId,
+	}
+	headers := utils.BuildDefaultHeaders()
+	bodyResult, err := utils.BaseAPI(editedTimeBubbleURL, "PUT", body, headers)
+	if err != nil {
+		return nil, err
+	}
+
+	bodyResultMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return nil, nil
+	}
+
+	return bodyResultMap, nil
+}

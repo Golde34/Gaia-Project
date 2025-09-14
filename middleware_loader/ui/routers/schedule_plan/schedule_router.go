@@ -60,6 +60,9 @@ func NewScheduleTaskRouter(r *chi.Mux) *ScheduleTaskRouter {
 		r.Post("/edit-time-bubble", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.EditTimeBubble(w, r, scheduleCalendarService)
 		})
+		r.Put("/delete-task-away-schedule", func(w http.ResponseWriter, r *http.Request) {
+			controller_services.DeleteTaskAwaySchedule(w, r, scheduleCalendarService)
+		})
 	})
 	return &ScheduleTaskRouter{
 		ScheduleTaskService: scheduleTaskService,

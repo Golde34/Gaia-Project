@@ -73,3 +73,11 @@ func (s *ScheduleCalendarService) EditTimeBubble(userId string, timeBubble map[s
 	}
 	return updatedTimeBubble, nil
 }
+
+func (s *ScheduleCalendarService) DeleteTaskAwaySchedule(userId string, taskId string) (map[string]interface{}, error) {
+	calendar, err := client.IScheduleCalendarAdapter(&adapter.ScheduleCalendarAdapter{}).DeleteTaskAwaySchedule(userId, taskId)
+	if err != nil {
+		return nil, err
+	}
+	return calendar, nil
+}

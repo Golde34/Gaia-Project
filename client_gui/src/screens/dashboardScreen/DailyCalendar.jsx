@@ -4,13 +4,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { createDailyCalendarAction, getDailyTasksAction, getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 import { priorityColor } from "../../kernels/utils/field-utils";
 import ScheduleDayBubble from "./ScheduleDayBubble";
+import { getActiveTaskBatch } from "../../api/store/actions/schedule_plan/schedule-task.action";
 
 const DailyCalendar = () => {
     const dispatch = useDispatch();
 
     const [dailyTasksRequest, setDailyTasksRequest] = useState({ tasks: [] });
     const [dailyCalendar, setDailyCalendar] = useState([]);
-    const [updateDailyTaskList, setUpdateDailyTaskList] = useState([]);
+    const [reload, setReload] = useState(false);
 
     const timeBubbleConfigList = useSelector((state) => state.getTimeBubbleConfig);
     const { config: timeBubbleConfig, loading: loadingBubble, error: errorBubble } = timeBubbleConfigList;
@@ -19,6 +20,14 @@ const DailyCalendar = () => {
         if (didFetch.current) return;
         didFetch.current = true;
         dispatch(getTimeBubbleConfig());
+    }, [dispatch]);
+
+    const { loading: loadingActiveBatch, error: errorActiveBatch, activeTaskBatch } = useSelector((state) => state.activeTaskBatch);
+    const didActiveTaskBatch = useRef();
+    useEffect(() => {
+        if (didActiveTaskBatch.current) return;
+        dispatch(getActiveTaskBatch());
+        didActiveTaskBatch.current = true;
     }, [dispatch]);
 
     useEffect(() => {
@@ -38,6 +47,14 @@ const DailyCalendar = () => {
     useEffect(() => {
         fetchDailyTaskList();
     }, [fetchDailyTaskList]);
+
+    useEffect(() => {
+        console.log("Reloading daily tasks...: ", reload);
+        if (reload) {
+            dispatch(getDailyTasksAction());
+            setReload(false);
+        }
+    }, [reload, dispatch]);
 
     useEffect(() => {
         if (dailyTasks?.tasks &&
@@ -68,14 +85,11 @@ const DailyCalendar = () => {
         try {
             const data = await dispatch(createDailyCalendarAction(payload.tasks));
             setDailyCalendar(Array.isArray(data?.dailyCalendar) ? [...data.dailyCalendar] : []);
-            setUpdateDailyTaskList(Array.isArray(data?.tasks) ? [...data?.tasks] : []);
             setDailyTasksRequest({})
         } catch (err) {
             console.error("Error:", err.message);
         }
     };
-
-    const handleRowClick = (taskId) => { };
 
     return (
         <>
@@ -153,7 +167,11 @@ const DailyCalendar = () => {
                             dailyCalendar && dailyCalendar?.length > 0 && (
                                 dailyCalendar ?? []).map((slot) => (
                                     <Col numColSpan={12} key={slot.id}>
-                                        <ScheduleDayBubble updateDailyTaskList={updateDailyTaskList} slot={slot} />
+                                        <ScheduleDayBubble
+                                            slot={slot}
+                                            scheduleTaskList={activeTaskBatch}
+                                            onReload={() => setReload(true)}
+                                        />
                                     </Col>
                                 ))}
                     </>

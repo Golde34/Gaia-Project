@@ -1,7 +1,6 @@
-import { runInBackground } from "../../kernel/utils/run-in-background";
 import { IResponse, msg200, msg400 } from "../common/response";
 import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
-import { ActiveStatus, ErrorStatus } from "../domain/enums/enums";
+import { ActiveStatus, ErrorStatus, TaskStatus } from "../domain/enums/enums";
 import { scheduleTaskMapper } from "../mapper/schedule-task.mapper";
 import { scheduleDayService } from "../services/schedule-day.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
@@ -134,18 +133,18 @@ class ScheduleDayUsecase {
     async generateDailyCalendar(userId: number, dailyTasks: any[]): Promise<IResponse | undefined> {
         try {
             const [isValidate, tasks] = await this.getDailyTasks(userId, dailyTasks);
-            if (!isValidate) return tasks; 
+            if (!isValidate) return tasks;
             const weekDay: number = new Date().getDay();
             const timeBubbles = await scheduleDayService.inquiryTimeBubbleByUserIdAndWeekday(userId, weekDay);
             const scheduleTasks: ScheduleTaskEntity[] = scheduleTaskMapper.mapDailyTasksToScheduleTasks(tasks);
             const taggedScheduleTasks = await scheduleTaskUsecase.tagScheduleTask(userId, scheduleTasks);
             if (taggedScheduleTasks === undefined) throw new Error("There's an error when tagged your task to make daily calendar");
             const assignedBubbleList = await scheduleDayService.matchScheduleTasksWithTimeBubble(weekDay, taggedScheduleTasks, timeBubbles);
-            runInBackground(() => scheduleDayService.updateDailyCalendar(userId, assignedBubbleList, weekDay));
+            const updatedList = await scheduleDayService.updateDailyCalendar(userId, assignedBubbleList, weekDay);
 
             return msg200({
                 message: "Daily calendar generated successfully",
-                dailyCalendar: assignedBubbleList 
+                dailyCalendar: updatedList
             });
         } catch (error: any) {
             console.error("Error generating daily calendar:", error.message);
@@ -179,7 +178,19 @@ class ScheduleDayUsecase {
                 timeBubble: editedScheduleDayBubble
             })
         } catch (error: any) {
-            console.error("Error edit time bubble: ")
+            console.error("Error edit time bubble: ", error.message)
+        }
+    }
+
+    async deleteTaskAwaySchedule(userId: number, taskId: string): Promise<IResponse | undefined> {
+        try {
+            const updatedScheduleTask = await scheduleTaskService.updateScheduleTaskStatus(taskId, TaskStatus.PENDING);
+            if (!updatedScheduleTask) return msg400("Cannot delete this task away schedule day");
+            await scheduleTaskService.pushUpdateTaskStatusKafkaMessage(userId, taskId, TaskStatus.PENDING);
+            return this.generateDailyCalendar(userId, []);
+        } catch (error: any) {
+            console.error("Error when delete task away schedule: ", error.message);
+            return msg400("Exception when delete task away schedule")
         }
     }
 }

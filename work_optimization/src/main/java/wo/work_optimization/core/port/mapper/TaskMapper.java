@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import wo.work_optimization.core.domain.dto.request.OptimizeTaskRequestDTO;
 import wo.work_optimization.core.domain.dto.request.OptimizeTaskRestRequestDTO;
 import wo.work_optimization.core.domain.dto.request.TaskObjRequestDTO;
+import wo.work_optimization.core.domain.dto.request.UpdateTaskStatusRequestDTO;
 import wo.work_optimization.core.domain.dto.response.OriginalTaskResponseDTO;
 import wo.work_optimization.core.domain.entity.Task;
 import wo.work_optimization.core.domain.enums.TaskPriorityEnum;
@@ -100,5 +101,9 @@ public class TaskMapper {
 
     public OptimizeTaskRestRequestDTO toOptimizeTaskRestRequestDTO(Object kafkaMessage) {
         return modelMapper().map(kafkaMessage, OptimizeTaskRestRequestDTO.class);
+    }
+
+    public UpdateTaskStatusRequestDTO mapUpdateTaskStatus(Object kafkaObject) {
+        return modelMapper().map(kafkaObject, UpdateTaskStatusRequestDTO.class);
     }
 }

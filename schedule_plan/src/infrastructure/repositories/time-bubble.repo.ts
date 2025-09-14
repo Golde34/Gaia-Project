@@ -34,9 +34,10 @@ class TimeBubbleRepository {
 
     async updateTimeBubble(timeBubble: any): Promise<TimeBubblesEntity | null> {
         try {
-            const plainObj = timeBubble.get ? timeBubble.get({ plain: true }) : timeBubble;
+            const plainObj = timeBubble.get ? timeBubble.get({ plain: true }) : { ...timeBubble };
+            plainObj.id = plainObj.timeBubbleId;
             const [affectedCount, affectedRows] = await TimeBubblesEntity.update(plainObj, {
-                where: { id: timeBubble.timeBubbleId },
+                where: { id: plainObj.timeBubbleId },
                 returning: true,
             });
             return affectedCount > 0 ? affectedRows[0] : null;
@@ -63,7 +64,8 @@ class TimeBubbleRepository {
                 where: {
                     userId: userId,
                     dayOfWeek: weekDay
-                }
+                },
+                order: [['start_time', 'ASC']]
             });
         } catch (error: any) {
             console.error("Error finding time bubble by user ID and weekday:", error.message);

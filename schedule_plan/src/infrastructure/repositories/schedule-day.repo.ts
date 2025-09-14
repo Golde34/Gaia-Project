@@ -1,7 +1,6 @@
 import { AssignedBubble } from "../../core/domain/dto/assigned-bubble.dto";
 import ScheduleDayBubbleEntity from "../../core/domain/entities/schedule-day.entity";
 import { randomUUID } from "crypto";
-import ScheduleTaskEntity from "../../core/domain/entities/schedule-task.entity";
 
 class ScheduleDayRepository {
     constructor() { }
@@ -36,7 +35,7 @@ class ScheduleDayRepository {
     async listScheduleDay(weekDay: number, userId: number): Promise<ScheduleDayBubbleEntity[]> {
         return await ScheduleDayBubbleEntity.findAll({
             where: { weekDay: weekDay, userId: userId },
-            order: [['startTime', 'ASC']]
+            order: [['start_time', 'ASC']]
         })
     }
 

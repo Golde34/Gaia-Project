@@ -91,6 +91,10 @@ class TaskRepository {
             }
         });
     }
+
+    async updateTaskStatus(taskId: string, status: string): Promise<UpdateWriteOpResult> {
+        return await TaskEntity.updateOne({ _id: taskId }, { status: status });
+    }
 }
 
 export const taskRepository = new TaskRepository();

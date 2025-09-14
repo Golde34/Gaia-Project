@@ -1,3 +1,4 @@
+import RedisClient from "../../infrastructure/cache/redis/redis-cache";
 import { aiCoreServiceAdapter } from "../../infrastructure/client/ai-core-service.adapter";
 import { taskManagerAdapter } from "../../infrastructure/client/task-manager.adapter";
 import { createMessage } from "../../infrastructure/kafka/create-message";
@@ -6,9 +7,10 @@ import { scheduleTaskRepository } from "../../infrastructure/repositories/schedu
 import { convertErrorCodeToBoolean } from "../../kernel/utils/convert-fields";
 import { isStringEmpty } from "../../kernel/utils/string-utils";
 import { IResponse, msg200, msg400, msg500 } from "../common/response";
+import { buildRedisCacheKey, CacheConstants } from "../domain/constants/constants";
 import ScheduleGroupEntity from "../domain/entities/schedule-group.entity";
 import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
-import { ErrorStatus } from "../domain/enums/enums";
+import { CacheType, ErrorStatus } from "../domain/enums/enums";
 import { KafkaCommand, KafkaTopic } from "../domain/enums/kafka.enum";
 import { SyncScheduleTaskRequest } from "../domain/request/task.dto";
 import { scheduleTaskMapper } from "../mapper/schedule-task.mapper";
@@ -18,6 +20,7 @@ class ScheduleTaskService {
         public kafkaHandler: KafkaHandler = new KafkaHandler(),
         public taskManagerAdapterImpl = taskManagerAdapter,
         public aiCoreAdapterImpl = aiCoreServiceAdapter,
+        private redisClient = RedisClient.getInstance()
     ) { }
 
     async createScheduleTask(scheduleTask: any): Promise<IResponse> {
@@ -35,6 +38,7 @@ class ScheduleTaskService {
     async updateScheduleTask(scheduleTaskId: string, scheduleTask: any): Promise<IResponse> {
         try {
             const updateScheduleTask = await scheduleTaskRepository.updateScheduleTask(scheduleTaskId, scheduleTask);
+            await this.clearScheduleTaskCache(CacheType.ALL, {});
             return msg200({
                 message: (updateScheduleTask as any)
             });
@@ -43,9 +47,22 @@ class ScheduleTaskService {
         }
     }
 
+    async updateScheduleTaskStatus(taskId: string, status: string): Promise<any> {
+        try {
+            const updatedScheduleTask = await scheduleTaskRepository.updateTaskStatus(taskId, status);
+            await this.clearScheduleTaskCache(CacheType.BATCH,
+                { schedulePlanId: updatedScheduleTask?.schedulePlanId, batchNumber: updatedScheduleTask?.taskBatch });
+            return updatedScheduleTask;
+        } catch (error: any) {
+            console.error("Error updating schedule task status:", error.message);
+            return null;
+        }
+    }
+
     async deleteScheduleTask(scheduleTaskId: string): Promise<IResponse> {
         try {
             const deleteScheduleTask = await scheduleTaskRepository.deleteScheduleTask(scheduleTaskId);
+            await this.clearScheduleTaskCache(CacheType.ALL, {});
             return msg200({
                 message: (deleteScheduleTask as any)
             });
@@ -131,6 +148,7 @@ class ScheduleTaskService {
                 if (task) {
                     const newTask = scheduleTaskMapper.buildOptimizeScheduleTaskMapper(scheduleTask, task);
                     await scheduleTaskRepository.updateScheduleTask(scheduleTask.scheduleTaskId, newTask);
+                    await this.clearScheduleTaskCache(CacheType.ALL, {});
                 }
             }
             ));
@@ -187,11 +205,53 @@ class ScheduleTaskService {
     }
 
     async getScheduleTaskByBatchNumber(schedulePlanId: string, batchNumber: number): Promise<ScheduleTaskEntity[]> {
+        // const redisCache = await this.redisClient;
         try {
-            return await scheduleTaskRepository.findByTaskBatch(schedulePlanId, batchNumber);
+            // const redisKey = buildRedisCacheKey(CacheConstants.SCHEDULE_TASK_BY_BATCH + schedulePlanId + "." + batchNumber);
+            // const cachedRepos = await redisCache.get(redisKey);
+            // if (cachedRepos !== undefined && cachedRepos !== null) {
+            //     console.log("Returning cached user repos");
+            //     return cachedRepos ? JSON.parse(cachedRepos) : [];
+            // }
+            const scheduleTasks = await scheduleTaskRepository.findByTaskBatch(schedulePlanId, batchNumber);
+            // await redisCache.set(redisKey, JSON.stringify(scheduleTasks), { expiration: { type: "EX", value: 3600 } }); // Cache for 1 hour
+            return scheduleTasks;
         } catch (error) {
             console.error("Error on getScheduleBatchTask: ", error);
             return [];
+        }
+    }
+
+    async clearScheduleTaskCache(
+        type: string, _args: { schedulePlanId?: string, batchNumber?: number }
+    ): Promise<void> {
+        const redisCache = await this.redisClient;
+        try {
+            switch (type) {
+                case CacheType.ALL:
+                    // delete all schedule-plan. cache keys
+                    const pattern = CacheConstants.CACHE_PREFIX;
+                    const result = await redisCache.hKeys(`${pattern}*`);
+                    if (result && Array.isArray(result) && result.length > 0) {
+                        await Promise.all(result.map(async (key: string) => {
+                            try {
+                                await redisCache.del(key);
+                            } catch (delError) {
+                                console.error(`Failed to delete key ${key}: `, delError);
+                            }
+                        }));
+                        console.log(`Cleared ${result.length} cache keys with pattern ${pattern}*`);
+                    }
+                    return;
+                case 'batch':
+                    const { schedulePlanId, batchNumber } = _args;
+                    const getScheduleTaskByBatchNumberKey = buildRedisCacheKey(CacheConstants.SCHEDULE_TASK_BY_BATCH + schedulePlanId + "." + batchNumber);
+                    await redisCache.del(getScheduleTaskByBatchNumberKey);
+                    return;
+            }
+        }
+        catch (error) {
+            console.error("Error clearing cache: ", error);
         }
     }
 
@@ -214,6 +274,7 @@ class ScheduleTaskService {
                 console.error("Failed to create schedule task from schedule group");
                 return null;
             }
+            await this.clearScheduleTaskCache(CacheType.ALL, {});
             return createdScheduleTask;
         } catch (error) {
             console.error("Error on createTaskFromScheduleGroup: ", error);
@@ -270,7 +331,7 @@ class ScheduleTaskService {
             });
 
             await this.pushUpdateTaskTagKafkaMessage(response);
-            console.log("Tag tasks successfully: ", response);  
+            console.log("Tag tasks successfully: ", response);
         } catch (error: any) {
             console.error("Error on tagScheduleTask: ", error.message);
         }
@@ -283,7 +344,18 @@ class ScheduleTaskService {
             ))
         }]
         console.log("Push Kafka Message: ", messages);
-        this.kafkaHandler.produce(KafkaTopic.UPDATE_SCHEDULE_TASK_TAG, messages);
+        this.kafkaHandler.produce(KafkaTopic.UPDATE_SCHEDULE_TASK_FIELD, messages);
+    }
+
+    async pushUpdateTaskStatusKafkaMessage(userId: number, taskId: string, status: string): Promise<void> {
+        const body = { userId, taskId, status }
+        const messages = [{
+            value: JSON.stringify(createMessage(
+                KafkaCommand.UPDATE_TASK_STATUS, '00', 'Successful', body
+            ))
+        }]
+        console.log("Push Kafka Message: ", messages);
+        this.kafkaHandler.produce(KafkaTopic.UPDATE_SCHEDULE_TASK_FIELD, messages);
     }
 }
 

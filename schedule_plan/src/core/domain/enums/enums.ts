@@ -2,6 +2,7 @@ export enum TaskStatus {
     DONE = "DONE",
     TODO = "TODO",
     IN_PROGRESS = "IN_PROGRESS",
+    PENDING = "PENDING",
 }
 
 export enum ActiveStatus {
@@ -71,4 +72,9 @@ export enum Tag {
     SLEEP = "SLEEP",
     TRAVEL = "TRAVEL",
     RELAX = "RELAX",
+}
+
+export enum CacheType {
+    ALL = 'all',
+    BATCH = 'batch',
 }

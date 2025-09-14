@@ -8,7 +8,7 @@ import { registerTaskConfig } from '../../api/store/actions/onboarding/task-regi
 import { createNote } from '../../api/store/actions/task_manager/note.actions';
 import { chooseTaskBatch } from '../../api/store/actions/schedule_plan/schedule-task.action';
 import { createScheduleGroupAction } from '../../api/store/actions/schedule_plan/schedule-group.action';
-import { editTimeBubble, registerCalendarAction } from '../../api/store/actions/schedule_plan/schedule-calendar.action';
+import { editTimeBubble, registerCalendarAction, deleteTaskAwaySchedule } from '../../api/store/actions/schedule_plan/schedule-calendar.action';
 
 export const useCreateGroupTaskDispatch = () => {
     const dispatch = useDispatch();
@@ -154,8 +154,18 @@ export const useUpdateTimeBubbleDispatch = () => {
     const dispatch = useDispatch();
 
     const updateTimeBubbleDispatch = (scheduleDayBubble) => {
-        dispatch(editTimeBubble(scheduleDayBubble));
+        return dispatch(editTimeBubble(scheduleDayBubble));
     }
 
     return updateTimeBubbleDispatch;
+}
+
+export const useDeleteTaskAwayScheduleDispatch = () => {
+    const dispatch = useDispatch();
+
+    const deleteTaskAwayScheduleDispatch = (taskId) => {
+        return dispatch(deleteTaskAwaySchedule(taskId));
+    };
+
+    return deleteTaskAwayScheduleDispatch;
 }

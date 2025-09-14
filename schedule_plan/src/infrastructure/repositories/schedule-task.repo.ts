@@ -64,11 +64,11 @@ class ScheduleTaskRepository {
         return await ScheduleTaskEntity.findAll({
             where: {
                 schedulePlanId: schedulePlanId,
-                status: { [Op.ne]: TaskStatus.DONE },
-                activeStatus: ActiveStatus.active 
+                status: { [Op.notIn]: [TaskStatus.DONE, TaskStatus.PENDING] },
+                activeStatus: ActiveStatus.active
             },
             order: [['createdAt', 'DESC']],
-            limit: topK 
+            limit: topK
         });
     }
 
@@ -77,8 +77,8 @@ class ScheduleTaskRepository {
             where: {
                 schedulePlanId: schedulePlanId,
                 taskBatch: taskBatch,
-                status: { [Op.ne]: TaskStatus.DONE },
-                activeStatus: ActiveStatus.active 
+                status: { [Op.notIn]: [TaskStatus.DONE, TaskStatus.PENDING] },
+                activeStatus: ActiveStatus.active
             },
             order: [['taskOrder', 'ASC']]
         });
@@ -91,7 +91,7 @@ class ScheduleTaskRepository {
     async findDistinctTaskBatch(schedulePlanId: string): Promise<number[]> {
         return await ScheduleTaskEntity.findAll({
             attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('task_batch')), 'taskBatch']],
-            where: { schedulePlanId: schedulePlanId, status: { [Op.ne]: TaskStatus.DONE } },
+            where: { schedulePlanId: schedulePlanId, status: { [Op.notIn]: [TaskStatus.DONE, TaskStatus.PENDING] } },
             raw: true
         }).then(results => results.map(result => result.taskBatch));
     }
@@ -103,6 +103,14 @@ class ScheduleTaskRepository {
     async updateTagTask(scheduleTaskId: string, tag: string): Promise<ScheduleTaskEntity | null> {
         const [affectedCount, affectedRows] = await ScheduleTaskEntity.update({ tag: tag }, {
             where: { id: scheduleTaskId },
+            returning: true,
+        });
+        return affectedCount > 0 ? affectedRows[0] : null;
+    }
+
+    async updateTaskStatus(taskId: string, status: string): Promise<ScheduleTaskEntity | null> {
+        const [affectedCount, affectedRows] = await ScheduleTaskEntity.update({ status: status }, {
+            where: { taskId: taskId },
             returning: true,
         });
         return affectedCount > 0 ? affectedRows[0] : null;

@@ -15,6 +15,7 @@ import wo.work_optimization.kernel.utils.DataUtils;
 
 import java.text.ParseException;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -59,12 +60,15 @@ public class TaskService {
     }
 
     public List<Task> getTasksInDay(List<ParentTask> parentTasks, String date) {
+        final String activeStatus = Constants.ActiveStatus.ACTIVE_STR;
+        final Set<String> excludedStatuses = Set.of(Constants.TaskStatus.DONE,
+                Constants.TaskStatus.PENDING);
         List<Task> tasksStartInDay = parentTasks.stream()
                 .flatMap(parentTask -> {
                     try {
                         return taskStore.findAllByParentIdAndStartDate(parentTask.getId(), date).stream()
-                                .filter(task -> task.getActiveStatus().equals(Constants.ActiveStatus.ACTIVE_STR))
-                                .filter(task -> !task.getStatus().equals(Constants.TaskStatus.DONE));
+                                .filter(task -> activeStatus.equals(task.getActiveStatus())
+                                        && !excludedStatuses.contains(task.getStatus()));
                     } catch (ParseException e) {
                         log.error("Error when get tasks start in day: {}", e.getMessage());
                         e.printStackTrace();

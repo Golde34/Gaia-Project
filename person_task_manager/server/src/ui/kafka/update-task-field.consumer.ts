@@ -1,8 +1,7 @@
 import { KafkaCommand } from "../../core/domain/enums/kafka.enums";
-import { groupTaskService } from "../../core/services/group-task.service";
 import { taskService } from "../../core/services/task.service";
 
-export const handleUpdateTaskTagMessage = async (message: string) => {
+export const handleUpdateTaskFieldMessage = async (message: string) => {
     const data = JSON.parse(message);
     console.log("Received message: ", data);
     const cmd = data.cmd;
@@ -18,6 +17,9 @@ export const handleUpdateTaskTagMessage = async (message: string) => {
                     }
                 }
             }
+            break;
+        case KafkaCommand.UPDATE_TASK_STATUS:
+            await taskService.updateTaskStatus(data.data);
             break;
         default:
             console.warn("No handler for command: ", cmd);

@@ -9,7 +9,7 @@ export enum KafkaTopic {
     // Consumer
     CREATE_SCHEDULE_TASK = "schedule-plan.create-schedule-task.topic",
     GAIA_CREATE_TASK = "chat-hub.create-task.topic",
-    UPDATE_TASK_TAG = "schedule-plan.update-task-tag.topic",
+    UPDATE_TASK_FIELD = "schedule-plan.update-task-field.topic",
 }
 
 export enum KafkaCommand {
@@ -18,6 +18,7 @@ export enum KafkaCommand {
     UPLOAD_UPDATED_FILE = 'uploadUpdatedFile',
     UPDATE_TASK = 'updateTask',
     UPDATE_TASK_TAG = 'updateTaskTag',
+    UPDATE_TASK_STATUS = 'updateTaskStatus',
     DELETE_TASK = 'deleteTask',
     CREATE_COMMIT = 'createCommit',
     CREATE_SCHEDULE_TASK = 'scheduleGroupCreateTask',
