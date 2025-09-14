@@ -64,7 +64,8 @@ class TimeBubbleRepository {
                 where: {
                     userId: userId,
                     dayOfWeek: weekDay
-                }
+                },
+                order: [['start_time', 'ASC']]
             });
         } catch (error: any) {
             console.error("Error finding time bubble by user ID and weekday:", error.message);

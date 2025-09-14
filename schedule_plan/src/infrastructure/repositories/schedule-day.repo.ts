@@ -41,7 +41,6 @@ class ScheduleDayRepository {
 
     async updateScheduleDay(timeBubble: any): Promise<ScheduleDayBubbleEntity | null> {
         try {
-            console.log("time bubble: ", timeBubble);
             const scheduleDayBubble = {
                 startTime: timeBubble.startTime,
                 endTime: timeBubble.endTime,
@@ -54,9 +53,6 @@ class ScheduleDayRepository {
             const [affectedCount, affectedRows] = await ScheduleDayBubbleEntity.update(scheduleDayBubble, {
                 where: { id: timeBubble.id }, returning: true,
             });
-            console.log("Affected rows: ", affectedRows);
-            console.log("Affected count: ", affectedCount);
-            console.log("Affected rows[0]: ", affectedRows[0]);
             return affectedCount > 0 ? affectedRows[0] : null;
         } catch (error: any) {
             console.error("Error update schedule day: ", error);

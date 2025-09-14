@@ -1,4 +1,3 @@
-import { runInBackground } from "../../kernel/utils/run-in-background";
 import { IResponse, msg200, msg400 } from "../common/response";
 import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
 import { ActiveStatus, ErrorStatus, TaskStatus } from "../domain/enums/enums";
