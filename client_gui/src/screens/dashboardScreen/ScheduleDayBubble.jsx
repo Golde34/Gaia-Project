@@ -11,7 +11,7 @@ import { ColorBadge } from "../../components/subComponents/ColorBadge";
 import { shortenTitle } from "../../kernels/utils/field-utils";
 
 const ScheduleDayBubble = (props) => {
-    const {slot, scheduleTaskList } = props;
+    const {slot, scheduleTaskList, onReload } = props;
 
     const dispatch = useDispatch();
 
@@ -100,6 +100,7 @@ const ScheduleDayBubble = (props) => {
         console.log("update form: ", form);
         updateTimeBubble(form);
         closeModal();
+        onReload?.();
     };
 
     const handleDeleteTask = async (e) => {
