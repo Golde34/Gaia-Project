@@ -154,7 +154,7 @@ export const useUpdateTimeBubbleDispatch = () => {
     const dispatch = useDispatch();
 
     const updateTimeBubbleDispatch = (scheduleDayBubble) => {
-        dispatch(editTimeBubble(scheduleDayBubble));
+        return dispatch(editTimeBubble(scheduleDayBubble));
     }
 
     return updateTimeBubbleDispatch;

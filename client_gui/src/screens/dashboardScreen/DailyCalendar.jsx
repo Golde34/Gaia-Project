@@ -49,6 +49,7 @@ const DailyCalendar = () => {
     }, [fetchDailyTaskList]);
 
     useEffect(() => {
+        console.log("Reloading daily tasks...: ", reload);
         if (reload) {
             dispatch(getDailyTasksAction());
             setReload(false);

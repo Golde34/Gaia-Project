@@ -1,7 +1,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems, Transition, TransitionChild } from "@headlessui/react";
 import { Button, Card, Col, Dialog, DialogPanel, Divider, Flex, Grid, Select, SelectItem, Subtitle, Text, TextInput, Title } from "@tremor/react";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { Fragment, useMemo, useState } from "react";
+import { useDispatch } from "react-redux";
 import { getDailyTasksAction } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 import { DotsVerticalIcon } from "@heroicons/react/solid";
 import { tagColors } from "../../kernels/utils/calendar";
@@ -11,7 +11,7 @@ import { ColorBadge } from "../../components/subComponents/ColorBadge";
 import { shortenTitle } from "../../kernels/utils/field-utils";
 
 const ScheduleDayBubble = (props) => {
-    const {slot, scheduleTaskList, onReload } = props;
+    const { slot, scheduleTaskList, onReload } = props;
 
     const dispatch = useDispatch();
 
@@ -95,12 +95,19 @@ const ScheduleDayBubble = (props) => {
     const updateTimeBubble = useUpdateTimeBubbleDispatch();
     const deleteTaskAwaySchedule = useDeleteTaskAwayScheduleDispatch();
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (timeError) return;
         console.log("update form: ", form);
         updateTimeBubble(form);
         closeModal();
-        onReload?.();
+        try {
+            await updateTimeBubble(form);
+            onReload?.();
+        } catch (err) {
+            console.error("Failed to update time bubble", err);
+        } finally {
+            closeModal();
+        }
     };
 
     const handleDeleteTask = async (e) => {
