@@ -1,7 +1,6 @@
 import { AssignedBubble } from "../../core/domain/dto/assigned-bubble.dto";
 import ScheduleDayBubbleEntity from "../../core/domain/entities/schedule-day.entity";
 import { randomUUID } from "crypto";
-import ScheduleTaskEntity from "../../core/domain/entities/schedule-task.entity";
 
 class ScheduleDayRepository {
     constructor() { }
@@ -36,12 +35,13 @@ class ScheduleDayRepository {
     async listScheduleDay(weekDay: number, userId: number): Promise<ScheduleDayBubbleEntity[]> {
         return await ScheduleDayBubbleEntity.findAll({
             where: { weekDay: weekDay, userId: userId },
-            order: [['startTime', 'ASC']]
+            order: [['start_time', 'ASC']]
         })
     }
 
     async updateScheduleDay(timeBubble: any): Promise<ScheduleDayBubbleEntity | null> {
         try {
+            console.log("time bubble: ", timeBubble);
             const scheduleDayBubble = {
                 startTime: timeBubble.startTime,
                 endTime: timeBubble.endTime,
@@ -54,6 +54,9 @@ class ScheduleDayRepository {
             const [affectedCount, affectedRows] = await ScheduleDayBubbleEntity.update(scheduleDayBubble, {
                 where: { id: timeBubble.id }, returning: true,
             });
+            console.log("Affected rows: ", affectedRows);
+            console.log("Affected count: ", affectedCount);
+            console.log("Affected rows[0]: ", affectedRows[0]);
             return affectedCount > 0 ? affectedRows[0] : null;
         } catch (error: any) {
             console.error("Error update schedule day: ", error);

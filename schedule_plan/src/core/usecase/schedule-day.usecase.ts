@@ -134,18 +134,18 @@ class ScheduleDayUsecase {
     async generateDailyCalendar(userId: number, dailyTasks: any[]): Promise<IResponse | undefined> {
         try {
             const [isValidate, tasks] = await this.getDailyTasks(userId, dailyTasks);
-            if (!isValidate) return tasks; 
+            if (!isValidate) return tasks;
             const weekDay: number = new Date().getDay();
             const timeBubbles = await scheduleDayService.inquiryTimeBubbleByUserIdAndWeekday(userId, weekDay);
             const scheduleTasks: ScheduleTaskEntity[] = scheduleTaskMapper.mapDailyTasksToScheduleTasks(tasks);
             const taggedScheduleTasks = await scheduleTaskUsecase.tagScheduleTask(userId, scheduleTasks);
             if (taggedScheduleTasks === undefined) throw new Error("There's an error when tagged your task to make daily calendar");
             const assignedBubbleList = await scheduleDayService.matchScheduleTasksWithTimeBubble(weekDay, taggedScheduleTasks, timeBubbles);
-            runInBackground(() => scheduleDayService.updateDailyCalendar(userId, assignedBubbleList, weekDay));
+            const updatedList = await scheduleDayService.updateDailyCalendar(userId, assignedBubbleList, weekDay);
 
             return msg200({
                 message: "Daily calendar generated successfully",
-                dailyCalendar: assignedBubbleList 
+                dailyCalendar: updatedList
             });
         } catch (error: any) {
             console.error("Error generating daily calendar:", error.message);

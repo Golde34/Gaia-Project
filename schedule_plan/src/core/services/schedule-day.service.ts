@@ -97,7 +97,6 @@ class ScheduleDayService {
 
                 const tagTasks = taskMap.get(matchedTag) || [];
                 const pointer = taskPointers.get(matchedTag);
-                console.log("pointer: ", pointer, " for tag: ", matchedTag);
 
                 if (!pointer || pointer.index >= tagTasks.length) {
                     results.push(this.mappingPointer(bubble, matchedTag, null, null, weekDay))
@@ -148,23 +147,28 @@ class ScheduleDayService {
         }
     }
 
-    async updateDailyCalendar(userId: number, assignedBubbleList: AssignedBubble[], weekDay: number): Promise<void> {
-        try {
-            const scheduleDayList = await scheduleDayRepository.findByWeekDay(userId, weekDay);
-            console.log("scheduleDayList: ", scheduleDayList);
-            if (scheduleDayList.length > 0) {
-                await scheduleDayRepository.deleteScheduleDay(userId, weekDay);
-            }
-            assignedBubbleList.forEach(async (bubble) => {
-                const scheduleDay = await scheduleDayRepository.createScheduleDay(userId, bubble);
-                console.log(`Save scheduleday of user ${userId}: ${scheduleDay}`)
-            });
-            return;
-        } catch (error: any) {
-            console.error("Error inquiring time bubble by user ID and weekday:", error);
-            throw error;
+    async updateDailyCalendar(userId: number, assignedBubbleList: AssignedBubble[], weekDay: number): Promise<any[]> {
+    try {
+        const scheduleDayList = await scheduleDayRepository.findByWeekDay(userId, weekDay);
+        if (scheduleDayList.length > 0) {
+            await scheduleDayRepository.deleteScheduleDay(userId, weekDay);
         }
+        
+        const scheduleList = await Promise.all(
+            assignedBubbleList.map(async (bubble) => {
+                const scheduleDay = await scheduleDayRepository.createScheduleDay(userId, bubble);
+                console.log(`Save scheduleday of user ${userId}: ${scheduleDay}`);
+                return scheduleDay;
+            })
+        );
+        
+        return scheduleList;
+    } catch (error: any) {
+        console.error("Error inquiring time bubble by user ID and weekday:", error);
+        throw error;
     }
+}
+
 
     async returnDailyCalendar(userId: number): Promise<ScheduleDayBubbleEntity[]> {
         try {
