@@ -11,6 +11,7 @@ const DailyCalendar = () => {
 
     const [dailyTasksRequest, setDailyTasksRequest] = useState({ tasks: [] });
     const [dailyCalendar, setDailyCalendar] = useState([]);
+    const [reload, setReload] = useState(false);
 
     const timeBubbleConfigList = useSelector((state) => state.getTimeBubbleConfig);
     const { config: timeBubbleConfig, loading: loadingBubble, error: errorBubble } = timeBubbleConfigList;
@@ -46,6 +47,13 @@ const DailyCalendar = () => {
     useEffect(() => {
         fetchDailyTaskList();
     }, [fetchDailyTaskList]);
+
+    useEffect(() => {
+        if (reload) {
+            dispatch(getDailyTasksAction());
+            setReload(false);
+        }
+    }, [reload, dispatch]);
 
     useEffect(() => {
         if (dailyTasks?.tasks &&
@@ -158,7 +166,11 @@ const DailyCalendar = () => {
                             dailyCalendar && dailyCalendar?.length > 0 && (
                                 dailyCalendar ?? []).map((slot) => (
                                     <Col numColSpan={12} key={slot.id}>
-                                        <ScheduleDayBubble slot={slot} scheduleTaskList={activeTaskBatch}/>
+                                        <ScheduleDayBubble
+                                            slot={slot}
+                                            scheduleTaskList={activeTaskBatch}
+                                            onReload={() => setReload(true)}
+                                        />
                                     </Col>
                                 ))}
                     </>
