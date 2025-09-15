@@ -27,3 +27,8 @@ token.json
 commits.json
 
 *\volumes
+
+*\graphdb\data
+*\graphdb\import
+*\graphdb\logs
+*\graphdb\plugins
