@@ -1,16 +1,24 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI 
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 
+from infrastructure.graphdb.graphdb_connection import GraphDBConnection 
+from kernel.config.config import Config
 import uvicorn
 
 
-load_dotenv()
 
 # Kafka consumer setup
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Loading config
+    config = Config()
+    # Connect to GraphDB
+    app.graphdb = GraphDBConnection(
+        uri=config.GRAPHDB_URI,
+        user=config.GRAPHDB_USER,
+        password=config.GRAPHDB_PASSWORD
+    )
     # asyncio.create_task(consume())
     yield
 
