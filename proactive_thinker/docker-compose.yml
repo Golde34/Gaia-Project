@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  proactive-thinker:
+    image: proactive-thinker 
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4005:4005" # Expose port to localhost
+    network_mode: host #Allow the container to access the host network
