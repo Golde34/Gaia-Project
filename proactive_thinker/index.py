@@ -1,26 +1,33 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI 
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-from infrastructure.graphdb.graphdb_connection import GraphDBConnection 
-from kernel.config.config import Config
 import uvicorn
 
+from infrastructure.graphdb.graphdb_connection import get_neo4j_driver, close_neo4j_driver
+from ui.controller import graphdb_controller
 
 
 # Kafka consumer setup
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Loading config
-    config = Config()
     # Connect to GraphDB
-    app.graphdb = GraphDBConnection(
-        uri=config.GRAPHDB_URI,
-        user=config.GRAPHDB_USER,
-        password=config.GRAPHDB_PASSWORD
-    )
+    driver = get_neo4j_driver()
+    try:
+        await driver.verify_connectivity()
+        print("Connected to Neo4j database successfully.")
+    except Exception as e:
+        print(f"Failed to connect to Neo4j database: {e}")
+
     # asyncio.create_task(consume())
+
     yield
+
+    try:
+        driver = get_neo4j_driver()
+        await close_neo4j_driver(driver)
+        print("Disconnected from Neo4j database.")
+    except Exception as e:
+        print(f"Failed to close Neo4j database connection: {e}")
 
 app = FastAPI(title="Task Information Extraction API", lifespan=lifespan)
 
@@ -32,6 +39,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(graphdb_controller.GraphDBRouter)
 
 if __name__ == "__main__":
     uvicorn.run("index:app", host="0.0.0.0", port=4005, reload=True)
