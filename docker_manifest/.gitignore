@@ -14,6 +14,7 @@
 *\.vs
 *\obj
 *\bin
+*\.log
 
 .ipynb_checkpoints
 __config__.py
@@ -28,7 +29,4 @@ commits.json
 
 *\volumes
 
-*\graphdb\data
-*\graphdb\import
-*\graphdb\logs
-*\graphdb\plugins
+*\graphdb/data
