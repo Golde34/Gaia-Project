@@ -13,7 +13,7 @@ services:
       - ./import:/var/lib/neo4j/import # For importing data
       - ./plugins:/plugins # For Neo4j plugins (e.g., APOC)
     environment:
-      - NEO4J_AUTH=neo4j/gaia # Set your desired username and password
+      - NEO4J_AUTH=neo4j/Gegterss03042001@ # Set your desired username and password
       # - NEO4J_dbms_memory_heap_initial__size=512m # Example for memory configuration
       # - NEO4J_dbms_memory_heap_max__size=1G
     restart: unless-stopped # Restart policy
