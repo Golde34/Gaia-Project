@@ -11,8 +11,10 @@ from ui.controller import graphdb_controller
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Connect to GraphDB
-    driver = get_neo4j_driver()
+    driver_initialized = False
     try:
+        driver = get_neo4j_driver()
+        driver_initialized = True
         await driver.verify_connectivity()
         print("Connected to Neo4j database successfully.")
     except Exception as e:
@@ -22,12 +24,12 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    try:
-        driver = get_neo4j_driver()
-        await close_neo4j_driver(driver)
-        print("Disconnected from Neo4j database.")
-    except Exception as e:
-        print(f"Failed to close Neo4j database connection: {e}")
+    if driver_initialized:
+        try:
+            await close_neo4j_driver()
+            print("Disconnected from Neo4j database.")
+        except Exception as e:
+            print(f"Failed to close Neo4j database connection: {e}")
 
 app = FastAPI(title="Task Information Extraction API", lifespan=lifespan)
 
