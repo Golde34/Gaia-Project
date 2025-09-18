@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-from infrastructure.graphdb.graphdb_connection import get_neo4j_driver, close_neo4j_driver
+from kernel.connection.graphdb_connection import get_neo4j_driver, close_neo4j_driver
 from ui.controller import graphdb_controller
 
 
