@@ -1,8 +1,7 @@
-from neo4j import AsyncSession
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
-from infrastructure.graphdb.graphdb_connection import get_db_session
+from core.service.graphdb_service import test_create_user_info
 
 
 GraphDBRouter = APIRouter(
@@ -15,16 +14,9 @@ class LabelRequestBody(BaseModel):
     obj: str
 
 @GraphDBRouter.post("/add-label", status_code=status.HTTP_201_CREATED)
-async def add_label(body: LabelRequestBody, session: AsyncSession = Depends(get_db_session)):
-    query = """
-        CREATE (u:User {name: $name, email: $email})
-        RETURN u
-    """
+async def add_label(body: LabelRequestBody):
     try:
-        result = await session.run(query, name=body.label, email=body.obj)
-        record = await result.single()
-        if not record:
-            raise RuntimeError("No result returned from Neo4j")
+        record = await test_create_user_info(body.label, body.obj)
         return {"message": "User created successfully", "user": record["u"]}
     except Exception as e:
         raise HTTPException(
