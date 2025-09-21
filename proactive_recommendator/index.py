@@ -1,8 +1,10 @@
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
+from infrastructure.kafka.consumer import consume
 from kernel.connection.graphdb_connection import get_neo4j_driver, close_neo4j_driver
 from ui.controller import graphdb_controller
 
@@ -20,7 +22,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Failed to connect to Neo4j database: {e}")
 
-    # asyncio.create_task(consume())
+    asyncio.create_task(consume())
 
     yield
 
