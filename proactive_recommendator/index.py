@@ -6,7 +6,7 @@ import uvicorn
 
 from infrastructure.kafka.consumer import consume
 from kernel.connection.graphdb_connection import get_neo4j_driver, close_neo4j_driver
-from ui.controller import graphdb_controller
+from ui.controller import graphdb_controller, vectordb_controller
 
 
 # Kafka consumer setup
@@ -45,6 +45,7 @@ app.add_middleware(
 )
 
 app.include_router(graphdb_controller.GraphDBRouter)
+app.include_router(vectordb_controller.VectorDBRouter)
 
 if __name__ == "__main__":
     uvicorn.run("index:app", host="0.0.0.0", port=4005, reload=True)
