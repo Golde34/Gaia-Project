@@ -21,17 +21,18 @@ class BaseEmbedding:
     def __init__(self):
         if self._initialized:
             return
-            
+
         self.config = embedding_config.EmbeddingConfig()
         self.base_url = self.config.url
         self.model_name = self.config.model_name
 
         self.endpoint = f"http://{self.base_url}/embeddings"
-        self.model_mode = self.config.model_mode 
+        self.model_mode = self.config.model_mode
         self._initialized = True
 
-    async def get_embeddings(self, texts: List[str], logger = None) -> Dict[str, Any]:
-        print(f"Getting embeddings for texts: {texts} using model mode: {self.model_mode}")
+    async def get_embeddings(self, texts: List[str], logger=None) -> Dict[str, Any]:
+        print(
+            f"Getting embeddings for texts: {texts} using model mode: {self.model_mode}")
         if self.model_mode == ModelMode.LOCAL.value:
             return await self._get_embedding_from_model(texts, logger)
         elif self.model_mode == ModelMode.VLLM.value:
@@ -39,7 +40,7 @@ class BaseEmbedding:
         elif self.model_mode == ModelMode.CLOUD.value:
             return await self._get_embedding_from_cloud(texts, logger)
 
-    async def _get_embedding_api(self, texts: List[str], logger = None):
+    async def _get_embedding_api(self, texts: List[str], logger=None):
         payload = {
             "model": self.model_name,
             "input": texts
@@ -47,16 +48,18 @@ class BaseEmbedding:
 
         embedding_list = []
         try:
-            print(f"Calling embedding service at {self.endpoint} with payload: {payload}")
+            print(
+                f"Calling embedding service at {self.endpoint} with payload: {payload}")
             async with aiohttp.ClientSession() as session:
                 async with session.post(self.endpoint, json=payload) as response:
                     result = await response.json()
                     if response.status != 200:
                         error_message = await response.text()
-                        raise Exception(f"Embedding service returned error: {error_message}") 
-              
+                        raise Exception(
+                            f"Embedding service returned error: {error_message}")
+
                     try:
-                        embedding_response = VllmEmbeddingResponse(**result)  
+                        embedding_response = VllmEmbeddingResponse(**result)
                     except Exception as e:
                         print(f"Error parsing response JSON: {e}")
                         raise
@@ -74,32 +77,33 @@ class BaseEmbedding:
             from sentence_transformers import SentenceTransformer
             BaseEmbedding._model = SentenceTransformer(self.model_name)
             print(f"Loaded model: {self.model_name} for embedding")
-        
+
         print(f"Using cached model: {self.model_name} for embedding")
         embeding_list = []
         for text in texts:
             try:
                 if logger:
-                    logger.add_log(f"Start embedding text: {text} at {time.perf_counter()}")
-                embedding = BaseEmbedding._model.encode(text, convert_to_tensor=True)
-                print(f"Generated embedding of shape: {embedding.shape} for text: {text}")
+                    logger.add_log(
+                        f"Start embedding text: {text} at {time.perf_counter()}")
+                embedding = BaseEmbedding._model.encode(
+                    text, convert_to_tensor=True)
+                print(
+                    f"Generated embedding of shape: {embedding.shape} for text: {text}")
                 if logger:
-                    logger.add_log(f"Finished embedding text: {text} at {time.perf_counter()}")
+                    logger.add_log(
+                        f"Finished embedding text: {text} at {time.perf_counter()}")
                 embeding_list.append(embedding)
             except Exception as e:
                 stack_trace = traceback.format_exc()
                 if logger:
-                    logger.add_log(f"Error embedding text: {text} - {stack_trace}", "ERROR")
+                    logger.add_log(
+                        f"Error embedding text: {text} - {stack_trace}", "ERROR")
                 raise
         return embeding_list
 
     async def _get_embedding_from_cloud(self, text: str, logger: None):
-        """
-        Placeholder for cloud embedding logic
-        """
         raise NotImplementedError("Cloud embedding logic not implemented yet")
 
 
 # Global instance for easy access across modules
 embedding_model = BaseEmbedding()
-

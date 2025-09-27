@@ -232,17 +232,14 @@ class MilvusDB:
                     params={"nlist": self.index_params["params"]["nlist"]}
                 )
 
-                index_params.add_index(
-                    field_name="sparse_vector",
-                    index_type="SPARE_INVERTED_INDEX",
-                )
-
                 self.client.create_index(
                     collection_name=collection_name,
                     index_params=index_params
                 )
                 print(
                     f"Collection {collection_name} created successfully.")
+
+                self.client.load_collection(collection_name=collection_name)
             else:
                 print(
                     f"Collection {collection_name} already exists.")
@@ -318,17 +315,6 @@ class MilvusDB:
         except Exception as e:
             print(f"Error during hybrid search: {e}")
             return []
-
-    def add_entity_to_collection(self, collection_name: str, label_data: any):
-        """
-        Add a label to a specific collection.
-        """
-        try:
-            self.client.insert(
-                collection_name=collection_name, data=label_data)
-            print(f"Label added to collection '{collection_name}'.")
-        except Exception as e:
-            print(f"Error adding label to collection: {e}")
 
     def close(self):
         try:

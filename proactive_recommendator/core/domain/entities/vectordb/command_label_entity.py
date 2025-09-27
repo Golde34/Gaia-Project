@@ -26,7 +26,6 @@ class CommandLabel:
                     auto_id=True, enable_dynamic_field=True) 
         schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
         schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim=1024)
-        schema.add_field(field_name="spare_vector", datatype=DataType.SPARSE_FLOAT_VECTOR)
         schema.add_field(field_name="label", datatype=DataType.VARCHAR, max_length=65535)
         schema.add_field(field_name="name", datatype=DataType.VARCHAR, max_length=65535)
         schema.add_field(field_name="keywords", datatype=DataType.VARCHAR, max_length=65535)
