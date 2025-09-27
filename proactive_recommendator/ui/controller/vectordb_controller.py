@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 
 from core.service import command_label_service
-from core.domain.entities.vectordb.command_label_entity import CommandLabelRequest
+from core.domain.request.command_label_request import CommandLabelRequest
 
 
 VectorDBRouter = APIRouter(

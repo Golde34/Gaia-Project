@@ -1,4 +1,3 @@
-from re import I
 from typing import List
 from core.domain.entities.vectordb.command_label_entity import CommandLabel
 from infrastructure.embedding.base_embedding import embedding_model
