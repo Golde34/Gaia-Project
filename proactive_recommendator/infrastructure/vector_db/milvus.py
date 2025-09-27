@@ -406,6 +406,31 @@ class MilvusDB:
 
         return [fused_results]
 
+    def search_by_fields(
+        self,
+        collection_name: str,
+        filter_query: str,
+        output_fields: Optional[List[str]] = None,
+        limit: int = 100
+    ) -> List[dict]:
+        """
+        Search by specific fields with a filter query.
+        """
+        try:
+            results = self.client.query(
+                collection_name=collection_name,
+                filter_query=filter_query,
+                output_fields=output_fields,
+                limit=limit
+            )
+            print(
+                f"Search by fields in collection '{collection_name}' with filter '{filter_query}' returned {len(results)} results.")
+            return results
+        except Exception as e:
+            print(f"Error searching by fields: {e}")
+            traceback.print_exc()
+            raise e
+
     def close(self):
         try:
             self.client.close()

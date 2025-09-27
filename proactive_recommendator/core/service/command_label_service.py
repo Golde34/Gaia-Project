@@ -48,7 +48,7 @@ async def insert_command_label():
     return entity
 
 
-async def get_command_label(query: str) -> CommandLabel:
+async def query(query: str) -> CommandLabel:
     dense_vec_list = await embedding_model.get_embeddings([query])
     dense_vec = dense_vec_list[0] if isinstance(
         dense_vec_list, list) else dense_vec_list
@@ -73,3 +73,29 @@ async def get_command_label(query: str) -> CommandLabel:
         description=chosen.get("description", "")
     )
     
+async def get_command_label(command_label: CommandLabel) -> List[CommandLabel] | None:
+    query_parts = []
+    if command_label.label:
+        query_parts.append(f'label == "{command_label.label}"')
+    if command_label.name:
+        query_parts.append(f'name == "{command_label.name}"')
+    if command_label.description:
+        query_parts.append(f'description == "{command_label.description}"')
+    if command_label.keywords:
+        for kw in command_label.keywords:
+            query_parts.append(f'keywords == "{kw}"')
+    if command_label.example:
+        for ex in command_label.example:
+            query_parts.append(f'example == "{ex}"')
+
+    filter_query = " and ".join(query_parts) if query_parts else None
+
+    results = milvus_db.search_by_fields(
+        collection_name=command_label.connection_name,
+        filter_query=filter_query,
+        output_fields=["label", "name", "keywords", "description", "example"])
+
+    if not results:
+        return None
+
+    return results 
