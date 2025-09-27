@@ -5,25 +5,9 @@ from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.vector_db.milvus import milvus_db
 
 
-async def insert_command_label():
-    entity = CommandLabel(
-        label="list_task",
-        name="List Task",
-        keywords=["list task", "show tasks", "view tasks", "display tasks", "get tasks", "fetch tasks", "retrieve tasks"],
-        example=[
-            "list all tasks",
-            "show me my tasks",
-            "display tasks for today",
-            "get tasks assigned to me",
-            "fetch tasks due this week",
-            "retrieve all pending tasks",
-            "list tasks with high priority",
-            "show tasks created by John",
-            "display completed tasks",
-            "get tasks in project Gaia"
-        ],
-        description="This command is used to list all tasks assigned to the user or within a specific project."
-    )
+empty_command_label = CommandLabel(label="", name="", keywords=[], example=[], description="")
+
+async def insert_command_label(entity: CommandLabel = None) -> CommandLabel: 
     command_label_schema = entity.schema_fields()
 
     milvus_db.create_collection_if_not_exists(
@@ -54,7 +38,7 @@ async def query(query: str) -> CommandLabel:
         dense_vec_list, list) else dense_vec_list
 
     results = milvus_db.hybrid_search(
-        collection_name=CommandLabel(label="", name="", keywords=[], example=[], description="").connection_name,
+        collection_name=empty_command_label.connection_name,
         query_vector=dense_vec,
         query_text=query,
         top_k=5,
@@ -73,25 +57,13 @@ async def query(query: str) -> CommandLabel:
         description=chosen.get("description", "")
     )
     
-async def get_command_label(command_label: CommandLabel) -> List[CommandLabel] | None:
+async def get_command_label(label: str) -> List[CommandLabel] | None:
     query_parts = []
-    if command_label.label:
-        query_parts.append(f'label == "{command_label.label}"')
-    if command_label.name:
-        query_parts.append(f'name == "{command_label.name}"')
-    if command_label.description:
-        query_parts.append(f'description == "{command_label.description}"')
-    if command_label.keywords:
-        for kw in command_label.keywords:
-            query_parts.append(f'keywords == "{kw}"')
-    if command_label.example:
-        for ex in command_label.example:
-            query_parts.append(f'example == "{ex}"')
-
+    query_parts.append(f'label == "{label}"')
     filter_query = " and ".join(query_parts) if query_parts else None
 
     results = milvus_db.search_by_fields(
-        collection_name=command_label.connection_name,
+        collection_name=empty_command_label.connection_name,
         filter_query=filter_query,
         output_fields=["label", "name", "keywords", "description", "example"])
 

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 
 from core.service import command_label_service
-from core.domain.entities.vectordb.command_label_entity import CommandLabel
+from core.domain.entities.vectordb.command_label_entity import CommandLabelRequest
 
 
 VectorDBRouter = APIRouter(
@@ -11,9 +11,9 @@ VectorDBRouter = APIRouter(
 
 
 @VectorDBRouter.post("/add-command-label", status_code=status.HTTP_201_CREATED)
-async def add_command_label():
+async def add_command_label(entity: CommandLabelRequest):
     try:
-        await command_label_service.insert_command_label()
+        await command_label_service.insert_command_label(entity)
         return {"message": "Command label added successfully"}
     except Exception as e:
         raise HTTPException(
@@ -35,16 +35,9 @@ async def query_command_label(query: str = None):
 
 
 @VectorDBRouter.get("/get-command-label", status_code=status.HTTP_200_OK)
-async def get_command_label(label: str = None, keywords: str = None, name: str = None, description: str = None, query: str = None):
+async def get_command_label(label: str):
     try:
-        command_label = CommandLabel(
-            label=label,
-            name=name if name else "",
-            description=description if description else "",
-            keywords=keywords.split(", ") if keywords else [],
-            example=[query] if query else []
-        )
-        commands = await command_label_service.get_command_label(command_label)
+        commands = await command_label_service.get_command_label(label)
         return {"message": "Command label retrieved successfully", "commands": commands}
     except Exception as e:
         raise HTTPException(
