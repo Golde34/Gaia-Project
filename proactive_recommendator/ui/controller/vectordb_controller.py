@@ -11,7 +11,7 @@ VectorDBRouter = APIRouter(
 @VectorDBRouter.post("/add-command-label", status_code=status.HTTP_201_CREATED)
 async def add_command_label():
     try:
-        insert_command_label()
+        await insert_command_label()
         return {"message": "Command label added successfully"}
     except Exception as e:
         raise HTTPException(

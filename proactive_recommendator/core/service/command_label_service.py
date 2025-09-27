@@ -1,13 +1,13 @@
 from core.domain.entities.vectordb.command_label_entity import CommandLabel
+from infrastructure.embedding.base_embedding import embedding_model 
 from infrastructure.vector_db.milvus import milvus_db
 
 
-def insert_command_label():
+async def insert_command_label():
     entity = CommandLabel(
-        connection_name="command_label_connection",
         label="create_task",
         name="Create Task",
-        keywords=["create task", "generate task" "insert task", "task creation", "job creation", "add task", "todo", "add job", "create todo"],
+        keywords=["create task", "generate task", "insert task", "task creation", "job creation", "add task", "todo", "add job", "create todo"],
         example=[
             "Create a task to complete the project report by next Monday.",
             "Generate a new task for the team to review the budget proposal.",
@@ -23,6 +23,21 @@ def insert_command_label():
     command_label_schema = entity.schema_fields()
 
     milvus_db.create_collection_if_not_exists(entity.connection_name, schema=command_label_schema)
-    milvus_db.add_entity_to_collection(entity.connection_name, [entity.to_dict()])
+
+    texts_to_embed = entity.keywords + entity.example
+    embeddings = await embedding_model.get_embeddings(texts_to_embed)
+
+    data_to_insert = []
+    for i, text in enumerate(texts_to_embed):
+        data_to_insert.append({
+            "vector": embeddings[i],
+            "label": entity.label,
+            "name": entity.name,
+            "keywords": ", ".join(entity.keywords),
+            "example": text,
+            "description": entity.description,
+        })
+
+    milvus_db.insert_data(entity.connection_name, data_to_insert)
 
     return entity

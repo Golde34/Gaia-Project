@@ -99,6 +99,7 @@ class BaseEmbedding:
         """
         raise NotImplementedError("Cloud embedding logic not implemented yet")
 
+
 # Global instance for easy access across modules
 embedding_model = BaseEmbedding()
 

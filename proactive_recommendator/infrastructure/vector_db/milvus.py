@@ -92,6 +92,11 @@ class MilvusDB:
                     params={"nlist": self.index_params["params"]["nlist"]}
                 )
 
+                index_params.add_index(
+                    field_name="sparse_vector",
+                    index_type="SPARE_INVERTED_INDEX",
+                )
+
                 self.client.create_index(
                     collection_name=self.config.root_memory_collection,
                     index_params=index_params
@@ -106,7 +111,7 @@ class MilvusDB:
             traceback.print_exc()
             raise e
 
-    def _create_partition(self, partition_name: str):
+    def _create_default_partition(self, partition_name: str):
         try:
             if not self.client.has_partition(
                 collection_name=self.config.root_memory_collection,
@@ -140,7 +145,7 @@ class MilvusDB:
             ]
 
             if partition_name:
-                self._create_partition(partition_name)
+                self._create_default_partition(partition_name)
 
             result = self.client.insert(
                 collection_name=self.config.root_memory_collection,
@@ -227,6 +232,11 @@ class MilvusDB:
                     params={"nlist": self.index_params["params"]["nlist"]}
                 )
 
+                index_params.add_index(
+                    field_name="sparse_vector",
+                    index_type="SPARE_INVERTED_INDEX",
+                )
+
                 self.client.create_index(
                     collection_name=collection_name,
                     index_params=index_params
@@ -239,16 +249,37 @@ class MilvusDB:
         except Exception as e:
             print(f"Collection '{collection_name}' error.")
 
-    def insert_data(self, collection_name: str, entities: List[Dict[str, Any]]):
+    def insert_data(self, collection_name: str, entities: List[Dict[str, Any]], partition_name: str = None):
         """
         Insert data into the collection
         """
         try:
-            self.client.insert(
-                collection_name=collection_name, records=entities)
-            print(f"Data inserted into collection '{collection_name}'.")
+            if partition_name:
+                self._create_partition(partition_name)
+
+            result = self.client.insert(
+                collection_name=collection_name, data=entities, partition_name=partition_name)
+            print(f"Data inserted into collection '{collection_name}' with result: {result}.")
         except Exception as e:
             print(f"Error inserting data: {e}")
+
+    def _create_partition(self, collection_name:str,  partition_name: str):
+        try:
+            if not self.client.has_partition(
+                collection_name=collection_name,
+                partition_name=partition_name
+            ):
+                self.client.create_partition(
+                    collection_name=collection_name,
+                    partition_name=partition_name
+                )
+                print(f"Partition {partition_name} created successfully.")
+            else:
+                pass
+        except Exception as e:
+            print(f"Error creating partition {partition_name}: {e}")
+            traceback.print_exc()
+            raise e
 
     def update_data(self, collection_name: str, entity_id: int, updated_values: Dict[str, Any]):
         """
@@ -288,13 +319,13 @@ class MilvusDB:
             print(f"Error during hybrid search: {e}")
             return []
 
-    def add_entity_to_collection(self, collection_name: str, label_data: Dict[str, Any]):
+    def add_entity_to_collection(self, collection_name: str, label_data: any):
         """
         Add a label to a specific collection.
         """
         try:
             self.client.insert(
-                collection_name=collection_name, records=[label_data])
+                collection_name=collection_name, data=label_data)
             print(f"Label added to collection '{collection_name}'.")
         except Exception as e:
             print(f"Error adding label to collection: {e}")
