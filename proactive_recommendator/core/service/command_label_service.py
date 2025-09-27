@@ -1,28 +1,33 @@
+from re import I
+from typing import List
 from core.domain.entities.vectordb.command_label_entity import CommandLabel
-from infrastructure.embedding.base_embedding import embedding_model 
+from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.vector_db.milvus import milvus_db
 
 
 async def insert_command_label():
     entity = CommandLabel(
-        label="create_task",
-        name="Create Task",
-        keywords=["create task", "generate task", "insert task", "task creation", "job creation", "add task", "todo", "add job", "create todo"],
+        label="list_task",
+        name="List Task",
+        keywords=["list task", "show tasks", "view tasks", "display tasks", "get tasks", "fetch tasks", "retrieve tasks"],
         example=[
-            "Create a task to complete the project report by next Monday.",
-            "Generate a new task for the team to review the budget proposal.",
-            "Insert a task in my to-do list to call the client tomorrow.",
-            "Add a task to schedule a meeting with the marketing team.",
-            "Create a task for the development team to fix the login bug.",
-            "Generate a task to update the website content by the end of the week.",
-            "Insert a task to prepare the presentation for the upcoming conference.",
-            "Add a task to follow up with the supplier about the order status.",
+            "list all tasks",
+            "show me my tasks",
+            "display tasks for today",
+            "get tasks assigned to me",
+            "fetch tasks due this week",
+            "retrieve all pending tasks",
+            "list tasks with high priority",
+            "show tasks created by John",
+            "display completed tasks",
+            "get tasks in project Gaia"
         ],
-        description="This command is used to create a new task in the task management system."
+        description="This command is used to list all tasks assigned to the user or within a specific project."
     )
     command_label_schema = entity.schema_fields()
 
-    milvus_db.create_collection_if_not_exists(entity.connection_name, schema=command_label_schema)
+    milvus_db.create_collection_if_not_exists(
+        entity.connection_name, schema=command_label_schema)
 
     texts_to_embed = entity.keywords + entity.example
     embeddings = await embedding_model.get_embeddings(texts_to_embed)
@@ -41,3 +46,30 @@ async def insert_command_label():
     milvus_db.insert_data(entity.connection_name, data_to_insert)
 
     return entity
+
+
+async def get_command_label(query: str) -> CommandLabel:
+    dense_vec_list = await embedding_model.get_embeddings([query])
+    dense_vec = dense_vec_list[0] if isinstance(
+        dense_vec_list, list) else dense_vec_list
+
+    results = milvus_db.hybrid_search(
+        collection_name=CommandLabel(label="", name="", keywords=[], example=[], description="").connection_name,
+        query_vector=dense_vec,
+        query_text=query,
+        top_k=5,
+        candidate_k=50,
+        anns_field="vector",
+        output_fields=["label", "name", "keywords", "description", "example"],
+        alpha=0.6,
+    )
+
+    chosen = results[0][0]
+    return CommandLabel(
+        label=chosen.get("label", ""),
+        name=chosen.get("name", ""),
+        keywords=(chosen.get("keywords", "") or "").split(", "),
+        example=[chosen.get("example", "")],
+        description=chosen.get("description", "")
+    )
+    

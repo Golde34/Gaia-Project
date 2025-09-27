@@ -36,11 +36,11 @@ class BaseEmbedding:
         if self.model_mode == ModelMode.LOCAL.value:
             return await self._get_embedding_from_model(texts, logger)
         elif self.model_mode == ModelMode.VLLM.value:
-            return await self._get_embedding_api(texts, logger)
+            return await self._get_embedding_api(texts)
         elif self.model_mode == ModelMode.CLOUD.value:
             return await self._get_embedding_from_cloud(texts, logger)
 
-    async def _get_embedding_api(self, texts: List[str], logger=None):
+    async def _get_embedding_api(self, texts: List[str]):
         payload = {
             "model": self.model_name,
             "input": texts

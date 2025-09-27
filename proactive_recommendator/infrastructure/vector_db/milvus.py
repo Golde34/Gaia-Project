@@ -1,6 +1,8 @@
 from pymilvus import CollectionSchema, MilvusClient, DataType
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 import traceback
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
 
 from infrastructure.vector_db.milvus_config import MilvusConfig
 
@@ -256,11 +258,12 @@ class MilvusDB:
 
             result = self.client.insert(
                 collection_name=collection_name, data=entities, partition_name=partition_name)
-            print(f"Data inserted into collection '{collection_name}' with result: {result}.")
+            print(
+                f"Data inserted into collection '{collection_name}' with result: {result}.")
         except Exception as e:
             print(f"Error inserting data: {e}")
 
-    def _create_partition(self, collection_name:str,  partition_name: str):
+    def _create_partition(self, collection_name: str,  partition_name: str):
         try:
             if not self.client.has_partition(
                 collection_name=collection_name,
@@ -303,18 +306,105 @@ class MilvusDB:
         except Exception as e:
             print(f"Error deleting data: {e}")
 
-    def hybrid_search(self, collection_name: str, query_vector: List[float], top_k: int, search_params: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _normalize(self, scores: List[float]) -> List[float]:
+        if not scores:
+            return scores
+        mn, mx = min(scores), max(scores)
+        if mx - mn < 1e-12:
+            return [0.0 for _ in scores]
+        return [(s - mn) / (mx - mn) for s in scores]
+
+    def _build_doc_text(self, row: dict) -> str:
+        parts = [
+            row.get("label", ""),
+            row.get("name", ""),
+            row.get("keywords", ""),
+            row.get("description", ""),
+            row.get("example", ""),
+        ]
+        return " ".join([p for p in parts if p])
+
+    def hybrid_search(
+        self,
+        collection_name: str,
+        query_vector: List[float],
+        query_text: str,
+        top_k: int = 5,
+        candidate_k: int = 50,
+        anns_field: str = "vector",
+        output_fields: Optional[List[str]] = None,
+        alpha: float = 0.6,  # trọng số cho dense
+    ) -> List[List[dict]]:
         """
-        Perform hybrid search (vector + textual search) on the collection.
+        Hybrid (app-side): dense ANN (Milvus) + lexical TF-IDF (local) + weighted fusion.
         """
-        try:
-            # You can combine vector search with keyword-based search using the 'bool' query
-            results = self.client.search(
-                collection_name=collection_name, query_vector=query_vector, top_k=top_k, params=search_params)
-            return results
-        except Exception as e:
-            print(f"Error during hybrid search: {e}")
-            return []
+        conn = self.client
+
+        res = conn.search(
+            collection_name=collection_name,
+            data=[query_vector],
+            anns_field=anns_field,
+            limit=candidate_k,
+            output_fields=output_fields,
+        )
+        if not res or not res[0]:
+            return [[]]
+
+        hits = res[0] # list of candidates
+        rows: List[dict] = []
+        dense_scores: List[float] = []
+        for h in hits:
+            if hasattr(h, "entity"):
+                ent = h.entity
+                row = {
+                    "id": getattr(ent, "id", None),
+                    "label": getattr(ent, "label", None),
+                    "name": getattr(ent, "name", None),
+                    "keywords": getattr(ent, "keywords", None),
+                    "description": getattr(ent, "description", None),
+                    "example": getattr(ent, "example", None),
+                    "distance": getattr(h, "distance", getattr(h, "score", None)),
+                }
+            else:
+                ent = h
+                row = {
+                    "id": ent.get("id"),
+                    "label": ent.get("label"),
+                    "name": ent.get("name"),
+                    "keywords": ent.get("keywords"),
+                    "description": ent.get("description"),
+                    "example": ent.get("example"),
+                    "distance": ent.get("distance", ent.get("score")),
+                }
+            rows.append(row)
+            dense_scores.append(float(row["distance"]))
+
+        # Với metric IP, điểm cao là tốt; nếu bạn dùng L2 cần đảo dấu.
+        dense_norm = self._normalize(dense_scores)
+
+        # 2) Lexical TF-IDF on candidates 
+        doc_texts = [self._build_doc_text(r) for r in rows]
+        vectorizer = TfidfVectorizer(lowercase=True, ngram_range=(1, 2), max_features=100_000)
+        tfidf = vectorizer.fit_transform([query_text] + doc_texts)  # shape: (1+N, V)
+        q_vec = tfidf[0:1]
+        d_mat = tfidf[1:]
+        sim = linear_kernel(q_vec, d_mat).ravel().tolist()
+        text_norm = self._normalize(sim)
+
+        # 3) Fusion
+        fused = [alpha * d + (1 - alpha) * t for d, t in zip(dense_norm, text_norm)]
+        order = sorted(range(len(rows)), key=lambda i: fused[i], reverse=True)
+        top_idx = order[:top_k]
+
+        fused_results: List[dict] = []
+        for i in top_idx:
+            r = rows[i].copy()
+            r["fused_score"] = fused[i]
+            r["dense_score_norm"] = dense_norm[i]
+            r["text_score_norm"] = text_norm[i]
+            fused_results.append(r)
+
+        return [fused_results]
 
     def close(self):
         try:
