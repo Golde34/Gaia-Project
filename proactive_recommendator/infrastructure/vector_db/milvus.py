@@ -1,11 +1,10 @@
+from collections import defaultdict
+import math
 from pymilvus import CollectionSchema, MilvusClient, DataType
 from typing import Any, Dict, List, Optional
 import traceback
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import linear_kernel
 
 from infrastructure.vector_db.milvus_config import MilvusConfig
-from proactive_recommendator.core.service.command_label_service import search_top_n
 
 
 class MilvusDB:
@@ -164,7 +163,7 @@ class MilvusDB:
             print(f"Error inserting data: {e}")
 
     def search_top_n_default(self, query_embeddings: List[List[float]], top_k: int = 5, partition_name: str = None) -> List[dict]:
-        return search_top_n(
+        return self.search_top_n(
             collection_name=self.config.root_memory_collection,
             query_embeddings=query_embeddings,
             output_fields=["content", "metadata"],
@@ -429,6 +428,188 @@ class MilvusDB:
             print(f"Error searching by fields: {e}")
             traceback.print_exc()
             raise e
+    
+    def rank_labels_hybrid(
+        self,
+        collection_name: str,
+        query_vector: List[float],
+        query_text: str,
+        top_k: int = 5,
+        candidate_k: int = 200,               # nên lớn hơn tổng record mỗi label
+        anns_field: str = "vector",
+        output_fields: Optional[List[str]] = None,
+        alpha: float = 0.6,
+        partition_name: Optional[str] = None,
+        search_params: Optional[dict] = None,
+        agg: str = "max",                     # "max" | "mean" | "softmax_mean"
+        return_per_label: int = 3,            # trả thêm k record đại diện cho mỗi label
+    ) -> List[Dict[str, Any]]:
+        """
+        Trả về top-k label DISTINCT gần query nhất (hybrid ANN + TF-IDF + weighted fusion).
+        Mỗi item gồm: label, similarity (0..1), distance_norm (1-sim), count, top_records (đại diện).
+        """
+        conn = self.client
+
+        # 1) Bảo đảm lấy đủ text fields cho TF-IDF
+        if output_fields is None:
+            output_fields = ["id", "label", "name", "keywords", "description", "example"]
+
+        # 2) Đồng bộ search_params như search_top_n
+        if search_params is None:
+            metric = (self.index_params.get("metric_type", "IP") or "IP").upper()
+            nlist = int(self.index_params.get("params", {}).get("nlist", 1024) or 1024)
+            search_params = {"metric_type": metric, "params": {"nprobe": max(1, nlist // 4)}}
+        else:
+            metric = (search_params.get("metric_type", "IP") or "IP").upper()
+
+        # 3) ANN lấy candidates (không cắt top_k ở đây)
+        res = conn.search(
+            collection_name=collection_name,
+            data=[query_vector],
+            anns_field=anns_field,
+            limit=candidate_k,
+            output_fields=output_fields,
+            search_params=search_params,
+            partition_names=[partition_name] if partition_name else None,
+        )
+        if not res or not res[0]:
+            return []
+
+        hits = res[0]
+
+        # ---- helpers chuyển distance -> similarity ----
+        def _raw_score(hit):
+            v = getattr(hit, "score", None)
+            if v is None:
+                v = getattr(hit, "distance", None)
+            return float(v) if v is not None else 0.0
+
+        def _distance_to_similarity(v: float, metric: str) -> float:
+            m = metric.upper()
+            if m in ("IP", "INNER_PRODUCT"):
+                return v                        # lớn hơn tốt hơn
+            if m in ("L2", "EUCLIDEAN"):
+                return -v                       # nhỏ hơn tốt hơn -> đảo dấu
+            if m == "COSINE":
+                if 0.0 <= v <= 2.0:
+                    return 1.0 - v              # thường Milvus trả 1 - cos_sim
+                return -v
+            return -v
+
+        # 4) Chuẩn hóa dense và build rows
+        rows, dense_sims = [], []
+        for h in hits:
+            ent = getattr(h, "entity", None)
+            if ent is not None:
+                row = {
+                    "id": getattr(ent, "id", None),
+                    "label": getattr(ent, "label", None),
+                    "name": getattr(ent, "name", None),
+                    "keywords": getattr(ent, "keywords", None),
+                    "description": getattr(ent, "description", None),
+                    "example": getattr(ent, "example", None),
+                }
+            else:
+                row = {
+                    "id": getattr(h, "id", None) or h.get("id"),
+                    "label": h.get("label"),
+                    "name": h.get("name"),
+                    "keywords": h.get("keywords"),
+                    "description": h.get("description"),
+                    "example": h.get("example"),
+                }
+            sim_dense = _distance_to_similarity(_raw_score(h), metric)
+            row["dense_raw"] = sim_dense
+            rows.append(row)
+            dense_sims.append(sim_dense)
+
+        dense_norm = self._normalize(dense_sims)  # 0..1
+
+        # 5) TF-IDF
+        def _stringify(x) -> str:
+            if x is None: return ""
+            if isinstance(x, (list, tuple, set)): return " ".join(str(t) for t in x)
+            if isinstance(x, dict): return " ".join(f"{k} {v}" for k, v in x.items())
+            return str(x)
+
+        doc_texts = [
+            " ".join([
+                _stringify(r.get("label")),
+                _stringify(r.get("name")),
+                _stringify(r.get("keywords")),
+                _stringify(r.get("description")),
+                _stringify(r.get("example")),
+            ]).strip()
+            for r in rows
+        ]
+
+        # Nếu không có text => coi như TF-IDF = 0
+        text_norm = [0.0] * len(rows)
+        if any(doc_texts):
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            from sklearn.metrics.pairwise import linear_kernel
+            vectorizer = TfidfVectorizer(lowercase=True, ngram_range=(1, 2), max_features=100_000)
+            tfidf = vectorizer.fit_transform([query_text] + doc_texts)
+            q_vec = tfidf[0:1]
+            d_mat = tfidf[1:]
+            sim_text = linear_kernel(q_vec, d_mat).ravel().tolist()
+            text_norm = self._normalize(sim_text)
+
+        # 6) Fusion cho từng record
+        for i, r in enumerate(rows):
+            r["dense_score_norm"] = dense_norm[i]
+            r["text_score_norm"] = text_norm[i]
+            r["fused_score"] = alpha * dense_norm[i] + (1 - alpha) * text_norm[i]
+
+        # 7) Gom theo label và gộp điểm
+        buckets = defaultdict(list)
+        for r in rows:
+            label = r.get("label") or "_unknown"
+            buckets[label].append(r)
+
+        def _aggregate(scores: List[float], mode: str) -> float:
+            if not scores: return 0.0
+            if mode == "max":
+                return max(scores)
+            if mode == "mean":
+                return sum(scores) / len(scores)
+            if mode == "softmax_mean":
+                # softmax(weight) rồi tính kỳ vọng: sum(softmax * score)
+                m = max(scores)
+                exps = [math.exp(s - m) for s in scores]
+                Z = sum(exps) or 1.0
+                soft = [e / Z for e in exps]
+                return sum(s * w for s, w in zip(scores, soft))
+            # default
+            return max(scores)
+
+        label_items = []
+        for label, items in buckets.items():
+            scores = [it["fused_score"] for it in items]
+            label_sim = _aggregate(scores, agg)
+            # chọn các record đại diện tốt nhất trong label
+            representatives = sorted(items, key=lambda x: x["fused_score"], reverse=True)[:max(0, return_per_label)]
+            label_items.append({
+                "label": label,
+                "similarity": label_sim,                # 0..1, lớn hơn tốt hơn
+                "distance_norm": max(0.0, 1.0 - label_sim),  # 0..1, nhỏ hơn tốt hơn
+                "count": len(items),
+                "top_records": [
+                    {
+                        "id": it.get("id"),
+                        "name": it.get("name"),
+                        "keywords": it.get("keywords"),
+                        "example": it.get("example"),
+                        "fused_score": it.get("fused_score"),
+                        "dense_score_norm": it.get("dense_score_norm"),
+                        "text_score_norm": it.get("text_score_norm"),
+                    } for it in representatives
+                ]
+            })
+
+        # 8) Xếp hạng theo similarity và cắt top_k label
+        label_items.sort(key=lambda x: x["similarity"], reverse=True)
+        return label_items[:top_k]
         
     def update_data(self, collection_name: str, entity_id: int, updated_values: Dict[str, Any]):
         """
