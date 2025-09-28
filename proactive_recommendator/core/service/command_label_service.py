@@ -2,13 +2,16 @@ from typing import List
 from core.domain.entities.vectordb.command_label_entity import CommandLabel
 from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.vector_db.milvus import milvus_db
+from core.domain.request.command_label_request import CommandLabelRequest
+from core.mapper import command_label_mapper
 
 
 empty_command_label = CommandLabel(
     label="", name="", keywords=[], example=[], description="")
 
 
-async def insert_command_label(entity: CommandLabel = None) -> CommandLabel:
+async def insert_command_label(request: CommandLabelRequest = None) -> CommandLabel:
+    entity = command_label_mapper.map(request)
     command_label_schema = entity.schema_fields()
 
     milvus_db.create_collection_if_not_exists(
@@ -28,8 +31,7 @@ async def insert_command_label(entity: CommandLabel = None) -> CommandLabel:
             "description": entity.description,
         })
 
-    milvus_db.insert_data(entity.connection_name,
-                          data_to_insert, partition_name="default_partition")
+    milvus_db.insert_data(entity.connection_name, data_to_insert)
 
     return entity
 
