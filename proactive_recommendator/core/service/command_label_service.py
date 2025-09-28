@@ -26,12 +26,12 @@ async def insert_command_label(entity: CommandLabel = None) -> CommandLabel:
             "description": entity.description,
         })
 
-    milvus_db.insert_data(entity.connection_name, data_to_insert)
+    milvus_db.insert_data(entity.connection_name, data_to_insert, partition_name="default_partition")
 
     return entity
 
 
-async def query(query: str) -> CommandLabel:
+async def query(query: str) -> List[CommandLabel] | None:
     dense_vec_list = await embedding_model.get_embeddings([query])
     dense_vec = dense_vec_list[0] if isinstance(
         dense_vec_list, list) else dense_vec_list
@@ -47,14 +47,21 @@ async def query(query: str) -> CommandLabel:
         alpha=0.6,
     )
 
-    chosen = results[0][0]
-    return CommandLabel(
-        label=chosen.get("label", ""),
-        name=chosen.get("name", ""),
-        keywords=(chosen.get("keywords", "") or "").split(", "),
-        example=[chosen.get("example", "")],
-        description=chosen.get("description", "")
+    return results 
+
+async def query2(query: str) -> List[CommandLabel] | None:
+    dense_vec_list = await embedding_model.get_embeddings([query])
+    dense_vec = dense_vec_list[0] if isinstance(
+        dense_vec_list, list) else dense_vec_list
+
+    results = milvus_db.search_top_n(
+        collection_name=empty_command_label.connection_name,
+        query_embeddings=[dense_vec],
+        output_fields=["label", "name", "keywords", "description", "example"],
+        top_k=5
     )
+
+    return results
     
 async def get_command_label(label: str) -> List[CommandLabel] | None:
     query_parts = []

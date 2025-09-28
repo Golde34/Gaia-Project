@@ -26,7 +26,19 @@ async def add_command_label(entity: CommandLabelRequest):
 async def query_command_label(query: str = None):
     try:
         command = await command_label_service.query(query)
-        return {"message": "Command label retrieved successfully", "command": command}
+        return {"message": "Command label retrieved successfully", "commands": command}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve command label: {e}"
+        )
+
+
+@VectorDBRouter.get("/query", status_code=status.HTTP_200_OK)
+async def query_command_label(query: str = None):
+    try:
+        command = await command_label_service.query2(query)
+        return {"message": "Command label retrieved successfully", "commands": command}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

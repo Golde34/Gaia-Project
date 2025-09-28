@@ -306,6 +306,155 @@ class MilvusDB:
         except Exception as e:
             print(f"Error deleting data: {e}")
 
+    def hybrid_search(
+        self,
+        collection_name: str,
+        query_vector: List[float],
+        query_text: str,
+        output_fields: List[str],
+        top_k: int = 5,
+        candidate_k: int = 50,
+        anns_field: str = "vector",
+        alpha: float = 0.6,
+        partition_name: Optional[str] = None,
+        search_params: Optional[dict] = None,
+    ) -> List[List[dict]]:
+        conn = self.client
+
+        # 2) Đồng bộ search_params với search_top_n
+        if search_params is None:
+            metric = (self.index_params.get("metric_type", "IP") or "IP").upper()
+            nlist = int(self.index_params.get(
+                "params", {}).get("nlist", 1024) or 1024)
+            search_params = {"metric_type": metric,
+                            "params": {"nprobe": max(1, nlist // 4)}}
+        else:
+            metric = (search_params.get("metric_type", "IP") or "IP").upper()
+
+        # 3) ANN để lấy candidates
+        res = conn.search(
+            collection_name=collection_name,
+            data=[query_vector],
+            anns_field=anns_field,
+            limit=candidate_k,
+            output_fields=output_fields,
+            search_params=search_params,
+            partition_names=[partition_name] if partition_name else None,
+        )
+        if not res or not res[0]:
+            return [[]]
+
+        hits = res[0]
+
+        # 4) Chuyển distance -> similarity theo metric (điểm càng lớn càng tốt)
+        def _raw_score(hit):
+            v = getattr(hit, "score", None)
+            if v is None:
+                v = getattr(hit, "distance", None)
+            return float(v) if v is not None else 0.0
+
+        def _distance_to_similarity(v: float, metric: str) -> float:
+            m = metric.upper()
+            if m in ("IP", "INNER_PRODUCT"):
+                # IP: lớn hơn tốt hơn
+                return v
+            if m in ("L2", "EUCLIDEAN"):
+                # L2: nhỏ hơn tốt hơn -> đảo dấu (hoặc 1/(1+v))
+                return -v
+            if m in ("COSINE",):
+                # Milvus thường trả 'distance' ~ (1 - cosine_sim) hoặc tương tự -> nhỏ hơn tốt hơn
+                # Để robust, cứ đảo chiều bằng cách lấy (1 - v) nếu trong [0,2], else -v.
+                if 0.0 <= v <= 2.0:
+                    return 1.0 - v
+                return -v
+            # Mặc định: coi như distance -> đảo chiều
+            return -v
+
+        rows, dense_sims = [], []
+        for h in hits:
+            ent = getattr(h, "entity", None)
+            if ent is not None:
+                row = {
+                    "id": getattr(ent, "id", None),
+                    "label": getattr(ent, "label", None),
+                    "name": getattr(ent, "name", None),
+                    "keywords": getattr(ent, "keywords", None),
+                    "description": getattr(ent, "description", None),
+                    "example": getattr(ent, "example", None),
+                }
+            else:
+                row = {
+                    "id": getattr(h, "id", None) or h.get("id"),
+                    "label": h.get("label"),
+                    "name": h.get("name"),
+                    "keywords": h.get("keywords"),
+                    "description": h.get("description"),
+                    "example": h.get("example"),
+                }
+            raw = _raw_score(h)
+            sim = _distance_to_similarity(raw, metric)
+            row["dense_raw"] = sim
+            rows.append(row)
+            dense_sims.append(sim)
+
+        dense_norm = self._normalize(dense_sims)  # [0,1], lớn hơn tốt hơn
+
+        # 5) TF-IDF (robust stringify)
+        def _stringify(x) -> str:
+            if x is None:
+                return ""
+            if isinstance(x, (list, tuple, set)):
+                return " ".join(str(t) for t in x)
+            if isinstance(x, dict):
+                return " ".join(f"{k} {v}" for k, v in x.items())
+            return str(x)
+
+        doc_texts = [
+            " ".join([
+                _stringify(r.get("label")),
+                _stringify(r.get("name")),
+                _stringify(r.get("keywords")),
+                _stringify(r.get("description")),
+                _stringify(r.get("example")),
+            ]).strip()
+            for r in rows
+        ]
+
+        # Nếu vì lý do nào đó doc_texts toàn rỗng → tránh fit lỗi
+        if not any(doc_texts):
+            # Không có text để TF-IDF, trả theo dense luôn
+            order = sorted(range(len(rows)),
+                        key=lambda i: dense_norm[i], reverse=True)[:top_k]
+            return [[{**rows[i], "fused_score": dense_norm[i], "dense_score_norm": dense_norm[i],
+                    "text_score_norm": 0.0} for i in order]]
+
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.metrics.pairwise import linear_kernel
+
+        vectorizer = TfidfVectorizer(
+            lowercase=True, ngram_range=(1, 2), max_features=100_000)
+        tfidf = vectorizer.fit_transform([query_text] + doc_texts)
+        q_vec = tfidf[0:1]
+        d_mat = tfidf[1:]
+        sim = linear_kernel(q_vec, d_mat).ravel().tolist()  # lớn hơn tốt hơn
+        text_norm = self._normalize(sim)
+
+        # 6) Fusion
+        fused = [alpha * d + (1 - alpha) * t for d,
+                t in zip(dense_norm, text_norm)]
+        order = sorted(range(len(rows)),
+                    key=lambda i: fused[i], reverse=True)[:top_k]
+
+        fused_results = []
+        for i in order:
+            r = rows[i].copy()
+            r["fused_score"] = fused[i]
+            r["dense_score_norm"] = dense_norm[i]
+            r["text_score_norm"] = text_norm[i]
+            fused_results.append(r)
+
+        return [fused_results]
+
     def _normalize(self, scores: List[float]) -> List[float]:
         if not scores:
             return scores
@@ -324,87 +473,49 @@ class MilvusDB:
         ]
         return " ".join([p for p in parts if p])
 
-    def hybrid_search(
-        self,
-        collection_name: str,
-        query_vector: List[float],
-        query_text: str,
-        top_k: int = 5,
-        candidate_k: int = 50,
-        anns_field: str = "vector",
-        output_fields: Optional[List[str]] = None,
-        alpha: float = 0.6,  # trọng số cho dense
-    ) -> List[List[dict]]:
-        """
-        Hybrid (app-side): dense ANN (Milvus) + lexical TF-IDF (local) + weighted fusion.
-        """
-        conn = self.client
+    def search_top_n(self, collection_name: str,
+                     query_embeddings: List[List[float]],
+                     output_fields: List[str],
+                     top_k: int = 5,
+                     partition_name: str = None) -> List[dict]:
+        try:
+            if collection_name is None or collection_name.strip() == "":
+                collection_name = "_default"
+            if not self.client.has_partition(
+                collection_name=collection_name,
+                partition_name=partition_name
+            ):
+                return []
 
-        res = conn.search(
-            collection_name=collection_name,
-            data=[query_vector],
-            anns_field=anns_field,
-            limit=candidate_k,
-            output_fields=output_fields,
-        )
-        if not res or not res[0]:
-            return [[]]
-
-        hits = res[0] # list of candidates
-        rows: List[dict] = []
-        dense_scores: List[float] = []
-        for h in hits:
-            if hasattr(h, "entity"):
-                ent = h.entity
-                row = {
-                    "id": getattr(ent, "id", None),
-                    "label": getattr(ent, "label", None),
-                    "name": getattr(ent, "name", None),
-                    "keywords": getattr(ent, "keywords", None),
-                    "description": getattr(ent, "description", None),
-                    "example": getattr(ent, "example", None),
-                    "distance": getattr(h, "distance", getattr(h, "score", None)),
+            search_params = {
+                "metric_type": self.index_params["metric_type"],
+                "params": {
+                    "nprobe": self.index_params["params"]["nlist"] // 4
                 }
-            else:
-                ent = h
-                row = {
-                    "id": ent.get("id"),
-                    "label": ent.get("label"),
-                    "name": ent.get("name"),
-                    "keywords": ent.get("keywords"),
-                    "description": ent.get("description"),
-                    "example": ent.get("example"),
-                    "distance": ent.get("distance", ent.get("score")),
-                }
-            rows.append(row)
-            dense_scores.append(float(row["distance"]))
+            }
 
-        # Với metric IP, điểm cao là tốt; nếu bạn dùng L2 cần đảo dấu.
-        dense_norm = self._normalize(dense_scores)
+            search_results = self.client.search(
+                collection_name=collection_name,
+                data=query_embeddings,
+                output_fields=output_fields,
+                field_name="vector",
+                search_params=search_params,
+                limit=top_k,
+                partition_names=[partition_name] if partition_name else None
+            )
 
-        # 2) Lexical TF-IDF on candidates 
-        doc_texts = [self._build_doc_text(r) for r in rows]
-        vectorizer = TfidfVectorizer(lowercase=True, ngram_range=(1, 2), max_features=100_000)
-        tfidf = vectorizer.fit_transform([query_text] + doc_texts)  # shape: (1+N, V)
-        q_vec = tfidf[0:1]
-        d_mat = tfidf[1:]
-        sim = linear_kernel(q_vec, d_mat).ravel().tolist()
-        text_norm = self._normalize(sim)
+            formatted_results = []
+            for hits in search_results:
+                matches = []
+                for hit in hits:
+                    matches.append(hit)
+                formatted_results.append(matches)
 
-        # 3) Fusion
-        fused = [alpha * d + (1 - alpha) * t for d, t in zip(dense_norm, text_norm)]
-        order = sorted(range(len(rows)), key=lambda i: fused[i], reverse=True)
-        top_idx = order[:top_k]
-
-        fused_results: List[dict] = []
-        for i in top_idx:
-            r = rows[i].copy()
-            r["fused_score"] = fused[i]
-            r["dense_score_norm"] = dense_norm[i]
-            r["text_score_norm"] = text_norm[i]
-            fused_results.append(r)
-
-        return [fused_results]
+            return formatted_results
+        except Exception as e:
+            print(f"Error in search_top_n: {e}")
+            traceback.print_exc()
+            raise e
 
     def search_by_fields(
         self,
