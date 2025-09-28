@@ -1,6 +1,8 @@
 import math
 from typing import Any, Dict, List, Optional
 
+from core.domain.enums.enum import AggregateMode
+
 
 def raw_score(hit):
     v = getattr(hit, "score", None)
@@ -12,11 +14,11 @@ def raw_score(hit):
 def aggregate(scores: List[float], mode: str) -> float:
     if not scores:
         return 0.0
-    if mode == "max":
+    if mode == AggregateMode.MAX.value:
         return max(scores)
-    if mode == "mean":
+    if mode == AggregateMode.MEAN.value:
         return sum(scores) / len(scores)
-    if mode == "softmax_mean":
+    if mode == AggregateMode.SOFTMAX_MEAN.value:
         m = max(scores)
         exps = [math.exp(s - m) for s in scores]
         Z = sum(exps) or 1.0

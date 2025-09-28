@@ -49,8 +49,8 @@ async def get_command_label(label: str):
 @VectorDBRouter.get("/rank-command-label", status_code=status.HTTP_200_OK)
 async def rank_command_label(query: str):
     try:
-        commands = await command_label_usecase.rank_labels_by_relevance(query)
-        return {"message": "Command label ranked successfully", "commands": commands}
+        results, _, _= await command_label_usecase.rank_labels_by_relevance(query)
+        return {"message": "Command label ranked successfully", "commands": results}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

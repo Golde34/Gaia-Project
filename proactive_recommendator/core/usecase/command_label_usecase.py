@@ -1,6 +1,4 @@
-from ast import List
 from core.service import command_label_service
-from core.domain.entities.vectordb.command_label_entity import CommandLabel
 from core.domain.enums.enum import SearchMode
 
 

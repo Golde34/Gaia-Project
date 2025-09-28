@@ -31,7 +31,7 @@ async def insert_command_label(request: CommandLabelRequest = None) -> CommandLa
             "description": entity.description,
         })
 
-    milvus_db.insert_data(entity.connection_name, data_to_insert)
+    milvus_db.insert_data(entity.connection_name,data_to_insert)
 
     return entity
 
@@ -94,10 +94,11 @@ async def rank_labels_by_relevance(query: str) -> List[CommandLabel]:
         collection_name=empty_command_label.connection_name,
         query_vector=dense_vec,
         query_text=query,
-        top_k=3,
+        top_k=5,
         candidate_k=300,  # >= 17 + 16 + margin
         alpha=0.6,
         agg="max",  # tunning agg to softmax_mean or mean
         return_per_label=2
     )
-    return results
+    first, *rest = results
+    return results, first, rest
