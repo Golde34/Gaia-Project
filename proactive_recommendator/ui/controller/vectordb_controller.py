@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from core.service import command_label_service
 from core.domain.request.command_label_request import CommandLabelRequest
+from core.usecase import command_label_usecase
 
 
 VectorDBRouter = APIRouter(
@@ -23,21 +24,9 @@ async def add_command_label(entity: CommandLabelRequest):
 
 
 @VectorDBRouter.get("/query-command-label", status_code=status.HTTP_200_OK)
-async def query_command_label(query: str = None):
+async def query_command_label(query: str = None, type: str = "vector"):
     try:
-        command = await command_label_service.query(query)
-        return {"message": "Command label retrieved successfully", "commands": command}
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve command label: {e}"
-        )
-
-
-@VectorDBRouter.get("/query", status_code=status.HTTP_200_OK)
-async def query_command_label(query: str = None):
-    try:
-        command = await command_label_service.query2(query)
+        command = await command_label_usecase.search_command_label(query, type)
         return {"message": "Command label retrieved successfully", "commands": command}
     except Exception as e:
         raise HTTPException(

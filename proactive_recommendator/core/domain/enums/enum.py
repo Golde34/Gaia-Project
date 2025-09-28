@@ -5,3 +5,8 @@ class ModelMode(Enum):
     LOCAL = "local"
     VLLM = "vllm"
     CLOUD = "cloud"
+
+class SearchMode(Enum):
+    VECTOR = "vector"
+    # KEYWORD = "keyword"
+    HYBRID = "hybrid"

@@ -31,7 +31,7 @@ async def insert_command_label(entity: CommandLabel = None) -> CommandLabel:
     return entity
 
 
-async def query(query: str) -> List[CommandLabel] | None:
+async def hybrid_search(query: str) -> List[CommandLabel] | None:
     dense_vec_list = await embedding_model.get_embeddings([query])
     dense_vec = dense_vec_list[0] if isinstance(
         dense_vec_list, list) else dense_vec_list
@@ -49,7 +49,7 @@ async def query(query: str) -> List[CommandLabel] | None:
 
     return results 
 
-async def query2(query: str) -> List[CommandLabel] | None:
+async def search_top_n(query: str) -> List[CommandLabel] | None:
     dense_vec_list = await embedding_model.get_embeddings([query])
     dense_vec = dense_vec_list[0] if isinstance(
         dense_vec_list, list) else dense_vec_list
