@@ -1,10 +1,10 @@
 from collections import defaultdict
-import math
 from pymilvus import CollectionSchema, MilvusClient, DataType
 from typing import Any, Dict, List, Optional
 import traceback
 
 from infrastructure.vector_db.milvus_config import MilvusConfig
+from kernel.utils.vectordb_search_common import aggregate, build_doc_text, distance_to_similarity, extract_from_hit, raw_score
 
 
 class MilvusDB:
@@ -258,30 +258,6 @@ class MilvusDB:
 
         hits = res[0]
 
-        # 3) Score helpers: convert returned score/distance to "higher is better"
-        def _raw_score(hit):
-            v = getattr(hit, "score", None)
-            if v is None:
-                v = getattr(hit, "distance", None)
-            return float(v) if v is not None else 0.0
-
-        def _distance_to_similarity(v: float, metric_: str) -> float:
-            m = metric_.upper()
-            if m in ("IP", "INNER_PRODUCT"):
-                # Inner product: larger is better
-                return v
-            if m in ("L2", "EUCLIDEAN"):
-                # L2: smaller is better -> invert
-                return -v
-            if m in ("COSINE",):
-                # Milvus often returns distance ~ (1 - cosine_sim); smaller is better
-                # Robust conversion:
-                if 0.0 <= v <= 2.0:
-                    return 1.0 - v
-                return -v
-            # Default: treat as distance -> invert
-            return -v
-
         # 4) Build rows dynamically from output_fields (no hard-coded schema)
         def _extract_from_hit(h, fields: List[str]) -> Dict[str, Any]:
             ent = getattr(h, "entity", None)
@@ -304,8 +280,8 @@ class MilvusDB:
         rows, dense_sims = [], []
         for h in hits:
             row = _extract_from_hit(h, output_fields)
-            raw = _raw_score(h)
-            sim = _distance_to_similarity(raw, metric)
+            raw = raw_score(h)
+            sim = distance_to_similarity(raw, metric)
             # keep raw dense similarity before normalization
             row["dense_raw"] = sim
             rows.append(row)
@@ -314,30 +290,11 @@ class MilvusDB:
         dense_norm = self._normalize(dense_sims)  # [0,1], higher is better
 
         # 5) Text features (TF-IDF) with robust stringify and configurable fields
-        def _stringify(x) -> str:
-            if x is None:
-                return ""
-            if isinstance(x, (list, tuple, set)):
-                return " ".join(str(t) for t in x)
-            if isinstance(x, dict):
-                return " ".join(f"{k} {v}" for k, v in x.items())
-            return str(x)
-
-        # which fields to concatenate for TF-IDF
         text_fields = doc_fields if doc_fields is not None else list(
             output_fields)
 
-        def _build_doc_text(row: dict, fields: Optional[List[str]] = None) -> str:
-            use_fields = fields if fields is not None else [
-                k for k in row.keys()
-                if k not in {"dense_raw", "dense_score_norm", "text_score_norm", "fused_score"}
-            ]
-            parts = [_stringify(row.get(f)) for f in use_fields]
-            return " ".join([p for p in parts if p]).strip()
+        doc_texts = [build_doc_text(r, text_fields) for r in rows]
 
-        doc_texts = [_build_doc_text(r, text_fields) for r in rows]
-
-        # If there is no text at all for TF-IDF, fall back to dense only
         if not any(doc_texts):
             order = sorted(range(len(rows)),
                            key=lambda i: dense_norm[i], reverse=True)[:top_k]
@@ -383,27 +340,6 @@ class MilvusDB:
             return [0.0 for _ in scores]
         return [(s - mn) / (mx - mn) for s in scores]
 
-    def _build_doc_text(self, row: dict, fields: Optional[List[str]] = None) -> str:
-        """
-        Build a document string from selected fields (no hard-coded keys).
-        If `fields` is None, use all keys except internal scoring keys.
-        """
-        def _stringify(x) -> str:
-            if x is None:
-                return ""
-            if isinstance(x, (list, tuple, set)):
-                return " ".join(str(t) for t in x)
-            if isinstance(x, dict):
-                return " ".join(f"{k} {v}" for k, v in x.items())
-            return str(x)
-
-        use_fields = fields if fields is not None else [
-            k for k in row.keys()
-            if k not in {"dense_raw", "dense_score_norm", "text_score_norm", "fused_score"}
-        ]
-        parts = [_stringify(row.get(f)) for f in use_fields]
-        return " ".join([p for p in parts if p]).strip()
-
     def search_by_fields(
         self,
         collection_name: str,
@@ -435,26 +371,38 @@ class MilvusDB:
         query_vector: List[float],
         query_text: str,
         top_k: int = 5,
-        candidate_k: int = 200,               # nên lớn hơn tổng record mỗi label
+        candidate_k: int = 200,                # should be >= total records across groups to avoid truncation
         anns_field: str = "vector",
         output_fields: Optional[List[str]] = None,
         alpha: float = 0.6,
         partition_name: Optional[str] = None,
         search_params: Optional[dict] = None,
-        agg: str = "max",                     # "max" | "mean" | "softmax_mean"
-        return_per_label: int = 3,            # trả thêm k record đại diện cho mỗi label
+        agg: str = "max",                      # "max" | "mean" | "softmax_mean"
+        return_per_label: int = 3,             # number of representative records to include per group
+        *,
+        group_by_field: str = "label",
+        doc_fields: Optional[List[str]] = None,
+        representative_fields: Optional[List[str]] = None,
+        id_field: str = "id",
     ) -> List[Dict[str, Any]]:
         """
-        Trả về top-k label DISTINCT gần query nhất (hybrid ANN + TF-IDF + weighted fusion).
-        Mỗi item gồm: label, similarity (0..1), distance_norm (1-sim), count, top_records (đại diện).
+        Return the top-k DISTINCT groups (e.g., labels) nearest to the query using hybrid ANN + TF-IDF + weighted fusion.
+        This implementation is schema-agnostic: no field names are hard-coded.
+
+        Each item includes:
+        - group_key           (value of `group_by_field`)
+        - similarity          (0..1, higher is better; normalized fusion score via aggregation)
+        - distance_norm       (1 - similarity, clipped to [0,1])
+        - count               (#records within the group among retrieved candidates)
+        - top_records         (up to `return_per_label` representative records, fields controlled by `representative_fields`)
         """
         conn = self.client
 
-        # 1) Bảo đảm lấy đủ text fields cho TF-IDF
+        # Ensure we have fields to fetch; if not provided, we’ll still work but TF-IDF may have no text.
         if output_fields is None:
-            output_fields = ["id", "label", "name", "keywords", "description", "example"]
+            output_fields = [id_field, group_by_field]
 
-        # 2) Đồng bộ search_params như search_top_n
+        # Align/prepare search params (metric + nprobe defaults)
         if search_params is None:
             metric = (self.index_params.get("metric_type", "IP") or "IP").upper()
             nlist = int(self.index_params.get("params", {}).get("nlist", 1024) or 1024)
@@ -462,7 +410,7 @@ class MilvusDB:
         else:
             metric = (search_params.get("metric_type", "IP") or "IP").upper()
 
-        # 3) ANN lấy candidates (không cắt top_k ở đây)
+        # 1) Dense ANN to get candidates (do not cut to top_k here)
         res = conn.search(
             collection_name=collection_name,
             data=[query_vector],
@@ -477,73 +425,23 @@ class MilvusDB:
 
         hits = res[0]
 
-        # ---- helpers chuyển distance -> similarity ----
-        def _raw_score(hit):
-            v = getattr(hit, "score", None)
-            if v is None:
-                v = getattr(hit, "distance", None)
-            return float(v) if v is not None else 0.0
-
-        def _distance_to_similarity(v: float, metric: str) -> float:
-            m = metric.upper()
-            if m in ("IP", "INNER_PRODUCT"):
-                return v                        # lớn hơn tốt hơn
-            if m in ("L2", "EUCLIDEAN"):
-                return -v                       # nhỏ hơn tốt hơn -> đảo dấu
-            if m == "COSINE":
-                if 0.0 <= v <= 2.0:
-                    return 1.0 - v              # thường Milvus trả 1 - cos_sim
-                return -v
-            return -v
-
-        # 4) Chuẩn hóa dense và build rows
         rows, dense_sims = [], []
         for h in hits:
-            ent = getattr(h, "entity", None)
-            if ent is not None:
-                row = {
-                    "id": getattr(ent, "id", None),
-                    "label": getattr(ent, "label", None),
-                    "name": getattr(ent, "name", None),
-                    "keywords": getattr(ent, "keywords", None),
-                    "description": getattr(ent, "description", None),
-                    "example": getattr(ent, "example", None),
-                }
-            else:
-                row = {
-                    "id": getattr(h, "id", None) or h.get("id"),
-                    "label": h.get("label"),
-                    "name": h.get("name"),
-                    "keywords": h.get("keywords"),
-                    "description": h.get("description"),
-                    "example": h.get("example"),
-                }
-            sim_dense = _distance_to_similarity(_raw_score(h), metric)
+            row = extract_from_hit(h, output_fields, id_field)
+            sim_dense = distance_to_similarity(raw_score(h), metric)
             row["dense_raw"] = sim_dense
             rows.append(row)
             dense_sims.append(sim_dense)
 
-        dense_norm = self._normalize(dense_sims)  # 0..1
+        dense_norm = self._normalize(dense_sims)  # [0,1]
 
-        # 5) TF-IDF
-        def _stringify(x) -> str:
-            if x is None: return ""
-            if isinstance(x, (list, tuple, set)): return " ".join(str(t) for t in x)
-            if isinstance(x, dict): return " ".join(f"{k} {v}" for k, v in x.items())
-            return str(x)
+        # ---- TF-IDF text features (schema-agnostic) ----
+        # Which fields to concatenate as the document for TF-IDF
+        text_fields = doc_fields if doc_fields is not None else list(output_fields)
 
-        doc_texts = [
-            " ".join([
-                _stringify(r.get("label")),
-                _stringify(r.get("name")),
-                _stringify(r.get("keywords")),
-                _stringify(r.get("description")),
-                _stringify(r.get("example")),
-            ]).strip()
-            for r in rows
-        ]
+        doc_texts = [build_doc_text(r, text_fields) for r in rows]
 
-        # Nếu không có text => coi như TF-IDF = 0
+        # If no text available, treat TF-IDF as zeros
         text_norm = [0.0] * len(rows)
         if any(doc_texts):
             from sklearn.feature_extraction.text import TfidfVectorizer
@@ -555,59 +453,50 @@ class MilvusDB:
             sim_text = linear_kernel(q_vec, d_mat).ravel().tolist()
             text_norm = self._normalize(sim_text)
 
-        # 6) Fusion cho từng record
+        # ---- Fusion per record ----
         for i, r in enumerate(rows):
             r["dense_score_norm"] = dense_norm[i]
             r["text_score_norm"] = text_norm[i]
             r["fused_score"] = alpha * dense_norm[i] + (1 - alpha) * text_norm[i]
 
-        # 7) Gom theo label và gộp điểm
+        # ---- Group by `group_by_field` and aggregate scores ----
         buckets = defaultdict(list)
         for r in rows:
-            label = r.get("label") or "_unknown"
-            buckets[label].append(r)
+            key = r.get(group_by_field)
+            if key is None:
+                key = "_unknown"
+            buckets[key].append(r)
 
-        def _aggregate(scores: List[float], mode: str) -> float:
-            if not scores: return 0.0
-            if mode == "max":
-                return max(scores)
-            if mode == "mean":
-                return sum(scores) / len(scores)
-            if mode == "softmax_mean":
-                # softmax(weight) rồi tính kỳ vọng: sum(softmax * score)
-                m = max(scores)
-                exps = [math.exp(s - m) for s in scores]
-                Z = sum(exps) or 1.0
-                soft = [e / Z for e in exps]
-                return sum(s * w for s, w in zip(scores, soft))
-            # default
-            return max(scores)
+        # Determine which fields to keep in representatives (schema-agnostic)
+        if representative_fields is None:
+            # sensible default: keep everything we fetched (plus scoring)
+            representative_fields = list(output_fields)
 
         label_items = []
-        for label, items in buckets.items():
+        for key, items in buckets.items():
             scores = [it["fused_score"] for it in items]
-            label_sim = _aggregate(scores, agg)
-            # chọn các record đại diện tốt nhất trong label
-            representatives = sorted(items, key=lambda x: x["fused_score"], reverse=True)[:max(0, return_per_label)]
+            group_sim = aggregate(scores, agg)
+
+            # choose top-N representatives by fused score
+            reps = sorted(items, key=lambda x: x["fused_score"], reverse=True)[:max(0, return_per_label)]
+            rep_payload = []
+            for it in reps:
+                payload = {f: it.get(f) for f in representative_fields}
+                payload[id_field] = it.get(id_field)  # ensure id is present
+                payload["fused_score"] = it.get("fused_score")
+                payload["dense_score_norm"] = it.get("dense_score_norm")
+                payload["text_score_norm"] = it.get("text_score_norm")
+                rep_payload.append(payload)
+
             label_items.append({
-                "label": label,
-                "similarity": label_sim,                # 0..1, lớn hơn tốt hơn
-                "distance_norm": max(0.0, 1.0 - label_sim),  # 0..1, nhỏ hơn tốt hơn
+                "group_key": key,                                   # value of `group_by_field`
+                "similarity": group_sim,                            # 0..1, higher is better
+                "distance_norm": max(0.0, 1.0 - group_sim),         # 0..1, lower is better
                 "count": len(items),
-                "top_records": [
-                    {
-                        "id": it.get("id"),
-                        "name": it.get("name"),
-                        "keywords": it.get("keywords"),
-                        "example": it.get("example"),
-                        "fused_score": it.get("fused_score"),
-                        "dense_score_norm": it.get("dense_score_norm"),
-                        "text_score_norm": it.get("text_score_norm"),
-                    } for it in representatives
-                ]
+                "top_records": rep_payload,
             })
 
-        # 8) Xếp hạng theo similarity và cắt top_k label
+        # ---- Rank groups by similarity and cut to top_k ----
         label_items.sort(key=lambda x: x["similarity"], reverse=True)
         return label_items[:top_k]
         
