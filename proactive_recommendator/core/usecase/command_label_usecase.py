@@ -1,4 +1,4 @@
-from core.service import command_label_service
+from core.service.vectordb import command_label_service
 from core.domain.enums.enum import SearchMode
 
 

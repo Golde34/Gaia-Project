@@ -1,7 +1,6 @@
 from core.domain.request.recommendation_request import RecommendationRequest
 from core.domain.response.base_response import return_success_response
-from core.usecase import command_label_usecase
-from proactive_recommendator.core.usecase import user_information_usecase
+from core.usecase import command_label_usecase, user_information_usecase
 
 
 async def recommend(body: RecommendationRequest) -> str:

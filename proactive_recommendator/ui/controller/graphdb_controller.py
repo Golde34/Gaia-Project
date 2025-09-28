@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
-from core.service.graphdb_service import test_create_user_info
+from core.service.graphdb_service import create_user_information
 
 
 GraphDBRouter = APIRouter(
@@ -10,13 +10,12 @@ GraphDBRouter = APIRouter(
 )
 
 class LabelRequestBody(BaseModel):
-    label: str
-    obj: str
+    user_id: str
 
-@GraphDBRouter.post("/add-label", status_code=status.HTTP_201_CREATED)
+@GraphDBRouter.post("/create-user-information", status_code=status.HTTP_201_CREATED)
 async def add_label(body: LabelRequestBody):
     try:
-        record = await test_create_user_info(body.label, body.obj)
+        record = await create_user_information(body.user_id)
         return {"message": "User created successfully", "user": record["u"]}
     except Exception as e:
         raise HTTPException(
