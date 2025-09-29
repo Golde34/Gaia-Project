@@ -2,7 +2,6 @@ import json
 from core.domain.response.base_response import BaseResponse, return_response
 from kernel.config.config import Config as config
 from kernel.utils import aiohttp_utils
-from kernel.utils.build_header import build_authorization_headers
 
 
 class TaskManagerClient:
@@ -13,17 +12,24 @@ class TaskManagerClient:
 
     def __init__(self):
         self.base_url = config.TASK_MANAGER_URL
-    
+
     async def get_done_tasks(self, user_id: int) -> BaseResponse:
         try:
-            endpoint = f"{self.base_url}/dashboard/done-tasks/"+str(user_id)
-            result = await aiohttp_utils.get(endpoint=endpoint)
-            return self._client_return(result) 
-            
+            endpoint = f"{self.base_url}/task/done-tasks"
+            params = {
+                "userId": user_id,
+                "timeUnit": "weeks"
+            }
+            result = await aiohttp_utils.get(
+                endpoint=endpoint,
+                params=params
+            )
+            return self._client_return(result)
+
         except Exception as e:
             print(e)
             return None
-    
+
     def _client_return(self, result: any):
         if not result:
             print("??? user does not exist or what? --> logging tracker")
@@ -52,10 +58,17 @@ class TaskManagerClient:
 
     async def get_not_done_tasks(self, user_id: int) -> BaseResponse:
         try:
-            endpoint = f"{self.base_url}/dashboard/not-done-tasks/"+str(user_id)
-            result = await aiohttp_utils.get(endpoint=endpoint)
-            return self._client_return(result) 
-            
+            endpoint = f"{self.base_url}/task/not-done-tasks"
+            params = {
+                "userId": user_id,
+                "timeUnit": "weeks"
+            }
+            result = await aiohttp_utils.get(
+                endpoint=endpoint,
+                params=params
+            )
+            return self._client_return(result)
+
         except Exception as e:
             print(e)
             return None
