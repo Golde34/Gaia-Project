@@ -223,7 +223,7 @@ class TaskUsecase {
         }
     }
 
-    async getDoneTasks(userId: number): Promise<IResponse> {
+    async getDoneTasksOverview(userId: number): Promise<IResponse> {
         try {
             const timeUnit = TimeUnit.WEEK;
             const doneTasks = await taskService.getDoneTasks(userId, timeUnit);
@@ -236,6 +236,30 @@ class TaskUsecase {
                 return msg400(BAD_REQUEST)
             }
             return msg200({data: result});  
+        } catch (err: any) {
+            return msg400(err.message.toString());
+        }
+    }
+
+    async getDoneTasks(userId: number, timeUnit: string): Promise<IResponse> {
+        try {
+            const doneTasks = await taskService.getDoneTasks(userId, timeUnit);
+            if (doneTasks === null) {
+                return msg400(TASK_NOT_FOUND)
+            }
+            return msg200({data: doneTasks});  
+        } catch (err: any) {
+            return msg400(err.message.toString());
+        }
+    }
+
+    async getNotDoneTasks(userId: number, timeUnit: string): Promise<IResponse> {
+        try {
+            const notDoneTasks = await taskService.getNotDoneTasks(userId, timeUnit);
+            if (notDoneTasks === null) {
+                return msg400(TASK_NOT_FOUND)
+            }
+            return msg200({data: notDoneTasks});  
         } catch (err: any) {
             return msg400(err.message.toString());
         }

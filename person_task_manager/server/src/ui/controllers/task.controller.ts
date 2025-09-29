@@ -268,6 +268,27 @@ class TaskController {
             next(err);
         }
     }
+
+    async getDoneTasks(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const userId: number = Number(req.params.userId);
+            const timeUnit: string = String(req.query.timeUnit);
+            return await taskUsecase.getDoneTasks(userId, timeUnit);
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+
+    async getNotDoneTasks(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const userId: number = Number(req.query.id);
+            const timeUnit: string = String(req.query.timeUnit); 
+            return await taskUsecase.getNotDoneTasks(userId, timeUnit);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 export const taskController = new TaskController();

@@ -4,7 +4,7 @@ import { Permission } from "../../core/domain/enums/enums";
 import { RequestValidator } from "../../core/common/error-handler";
 import { GenerateTaskFromScratchRequestDTO, TaskRequestDto, UpdateTaskInDialogDTO, UpdateTaskRequestDto } from "../../core/domain/dtos/task.dto";
 import { taskController } from "../controllers/task.controller";
-import { ARCHIVE_TASK_FAILED, COMMENT_NOT_FOUND, CREATE_TASK_FAILED, DELETE_TASK_FAILED, ENABLE_TASK_FAILED, GROUPTASK_AND_PROJECT_NOT_FOUND, SUB_TASK_NOT_FOUND, TASK_NOT_FOUND, UPDATE_TASK_FAILED } from "../../core/domain/constants/error.constant";
+import { ARCHIVE_TASK_FAILED, COMMENT_NOT_FOUND, CREATE_TASK_FAILED, DELETE_TASK_FAILED, ENABLE_TASK_FAILED, GROUPTASK_AND_PROJECT_NOT_FOUND, SUB_TASK_NOT_FOUND, TASK_NO_RECORDS, TASK_NOT_FOUND, UPDATE_TASK_FAILED } from "../../core/domain/constants/error.constant";
 import { returnResult } from "../../kernel/util/return-result";
 
 export const taskRouter = Router();
@@ -215,6 +215,30 @@ taskRouter.get("/:id/project", async (req: Request, res: Response, next: NextFun
         next(err);
     }
 });
+
+taskRouter.get("/done-tasks",
+    async (res: Request, req: Response, next: NextFunction): Promise<void> => {
+        try {
+            const dashboardResult = await taskController.getDoneTasks(res, next);
+            returnResult(dashboardResult, TASK_NO_RECORDS, req, next);
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+)
+
+taskRouter.get("/not-done-tasks",
+    async (res: Request, req: Response, next: NextFunction): Promise<void> => {
+        try {
+            const dashboardResult = await taskController.getNotDoneTasks(res, next);
+            returnResult(dashboardResult, TASK_NO_RECORDS, req, next);
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+)
 
 // create subtask
 

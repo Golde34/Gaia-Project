@@ -92,6 +92,18 @@ class TaskRepository {
         });
     }
 
+    async getNotDoneTasksFromDateToDate(userId: number, fromDate: Date, toDate: Date): Promise<ITaskEntity[]> {
+        return await TaskEntity.find({
+            userId: userId,
+            status: [Status.todo, Status.inProgress],
+            activeStatus: ActiveStatus.active,
+            updatedAt: {
+                $gte: fromDate,
+                $lte: toDate
+            }
+        });
+    }
+
     async updateTaskStatus(taskId: string, status: string): Promise<UpdateWriteOpResult> {
         return await TaskEntity.updateOne({ _id: taskId }, { status: status });
     }

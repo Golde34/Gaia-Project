@@ -31,12 +31,10 @@ class DashboardController {
         }
     }
     
-    async getDoneTasks(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+    async getDoneTasksOverview(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId: number = Number(req.params.userId);
-            const taskResult = await taskUsecase.getDoneTasks(userId);
-
-            return taskResult;
+            return await taskUsecase.getDoneTasksOverview(userId);
         }
         catch (err) {
             next(err);

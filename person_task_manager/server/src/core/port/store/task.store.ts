@@ -71,6 +71,10 @@ class TaskStore {
         return await taskRepository.getDoneTasksFromDateToDate(userId, fromDate, toDate);
     }
 
+    async getNotDoneTasksFromDateToDate(userId: number, fromDate:Date, toDate: Date): Promise<ITaskEntity[]> {
+        return await taskRepository.getNotDoneTasksFromDateToDate(userId, fromDate, toDate);
+    }
+
     async updateTaskStatus(taskId: string, status: string): Promise<ITaskEntity | null> {
         await taskRepository.updateTaskStatus(taskId, status);
         return this.findTaskById(taskId);
