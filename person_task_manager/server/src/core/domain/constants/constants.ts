@@ -18,4 +18,5 @@ export class InternalCacheConstants {
     public static TASK_LIST = `task-list.`;
     public static DONE_TASKS = `done-tasks.`;
     public static GROUP_TASK = `group-task.`;
+    public static NOT_DONE_TASK = `not-done-tasks.`;
 }

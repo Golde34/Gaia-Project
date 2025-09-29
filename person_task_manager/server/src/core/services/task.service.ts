@@ -416,6 +416,21 @@ class TaskService {
         }
     }
 
+    async getNotDoneTasks(userId: number, timeUnit: string): Promise<ITaskEntity[] | null> {
+        try {
+            let notDoneTasks = this.taskCache.get(InternalCacheConstants.NOT_DONE_TASK + userId);
+            if (!notDoneTasks) {
+                const startDate = calculdateDaysBetweenDates(new Date(), timeUnit);
+                notDoneTasks = await taskStore.getNotDoneTasksFromDateToDate(userId, startDate, new Date());
+                this.taskCache.set(InternalCacheConstants.NOT_DONE_TASK + userId, notDoneTasks);
+            }
+            return notDoneTasks;
+        } catch (error) {
+            console.log("Exception when get done tasks, ", error);
+            return null;
+        }
+    }
+
     // add subTask
 
 }

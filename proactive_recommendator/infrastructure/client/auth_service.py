@@ -7,7 +7,7 @@ from kernel.utils.build_header import build_authorization_headers
 
 class AuthServiceClient:
     """
-    Client for interacting with the Chat Hub Service.
+    Client for interacting with the Auth Service.
     This service provides access to chat history and other related functionalities.
     """
 
@@ -20,7 +20,6 @@ class AuthServiceClient:
             endpoint = f"{self.base_url}/user/get-user-by-id?id="+str(user_id)
             result = await aiohttp_utils.get(
                 endpoint=endpoint,
-                params={"userId": user_id},
                 header=headers
             )
             print("Result: ", result)
