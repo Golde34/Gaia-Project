@@ -3,12 +3,13 @@ from core.domain.response.base_response import BaseResponse, return_response
 from kernel.config.config import Config as config
 from kernel.utils import aiohttp_utils
 from kernel.utils.build_header import build_authorization_headers
+from kernel.utils.return_http_response import client_return
 
 
 class AuthServiceClient:
     """
     Client for interacting with the Auth Service.
-    This service provides access to chat history and other related functionalities.
+    This service provides access to user's information and other related functionalities.
     """
 
     def __init__(self):
@@ -23,30 +24,7 @@ class AuthServiceClient:
                 header=headers
             )
             print("Result: ", result)
-            if not result:
-                print("??? user does not exist or what? --> logging tracker")
-                return None
-            if isinstance(result, str):
-                try:
-                    response = json.loads(result)
-                except json.JSONDecodeError:
-                    return return_response(
-                        status="error",
-                        status_message="Invalid JSON response",
-                        error_code=500,
-                        error_message="Could not decode response from service",
-                        data={}
-                    )
-            else:
-                response = result
-
-            return BaseResponse(
-                status=response.get("status", "error"),
-                status_message=response.get("statusMessage", ""),
-                error_code=response.get("errorCode", 500),
-                error_message=response.get("errorMessage", "Unknown error"),
-                data=response.get("data", {})
-            )
+            return client_return(result=result) 
 
         except Exception as e:
             print("Tracking error when get user information: ", e)

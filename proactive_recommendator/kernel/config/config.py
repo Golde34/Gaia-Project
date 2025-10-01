@@ -24,4 +24,5 @@ class Config:
     RERANKING_API = EMBEDDING_RERANKING_HOST + f":{EMBEDDING_RERANKING_PORT}"
     
     AUTH_SERVICE_URL = os.getenv('AUTH_SERVICE_URL', 'http://localhost:4001')
-    TASK_MANAGER_URL = os.getenv('TASK_MANAGER_URL', 'http://localhost:3002')
+    TASK_MANAGER_URL = os.getenv('TASK_MANAGER_URL', 'http://localhost:3000')
+    SCHEDULE_PLAN_URL = os.getenv('SCHEDULE_PLAN_URL', 'http://localhost:3002')
