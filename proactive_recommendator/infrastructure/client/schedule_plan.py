@@ -30,3 +30,5 @@ class SchedulePlanClient:
         except Exception as e:
             print(e)
             return None
+
+schedule_plan_client = SchedulePlanClient()

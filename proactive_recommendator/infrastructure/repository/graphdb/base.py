@@ -8,3 +8,12 @@ async def run_session(query: str, parameters: dict[str, any] | None = None, **kw
         if not record:
             return None 
         return record
+
+async def clear_database():
+    try:
+        query = "MATCH (n) DETACH DELETE n"
+        result = await run_session(query=query, parameters={})
+        if result is None: return "Already deleted"
+        return result["u"]
+    except Exception as e:
+        return "ok"
