@@ -6,4 +6,5 @@ class RedisEnum(str, Enum):
 
     USER_INFORMATION = PREFIX + "user_information:"
     PRIORITY_TASKS = PREFIX + "priority_tasks:"
+    DAILY_CALENDAR = PREFIX + "daily_calendar:"
     

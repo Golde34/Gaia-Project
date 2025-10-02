@@ -6,6 +6,7 @@ from infrastructure.cache.redis import get_key, set_key
 from infrastructure.client.auth_service import auth_service_client
 from infrastructure.repository.graphdb import user_information_repo
 
+
 async def get_user_information(user_id: int):
     # Get from Redis
     redis_key = RedisEnum.USER_INFORMATION + str(user_id)
@@ -32,6 +33,3 @@ async def create_user_information(user_id: int, redis_key: str):
     set_key(key=redis_key, value=json.dumps(
         dict(result)), ttl=60*60*24)
     return result
-
-def get_user_task_list(query: str):
-    pass
