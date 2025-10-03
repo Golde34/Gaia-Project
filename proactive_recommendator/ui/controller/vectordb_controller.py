@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
-from core.service.vectordb import command_label_service
+from proactive_recommendator.core.service import command_label_service
 from core.domain.request.command_label_request import CommandLabelRequest
 from core.usecase import command_label_usecase
 

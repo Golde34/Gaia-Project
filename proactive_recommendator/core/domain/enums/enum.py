@@ -18,3 +18,9 @@ class AggregateMode(Enum):
     SUM = "sum"
     MIN = "min"
     NONE = "none"
+
+class GaiaAbilities(Enum):
+    CREATE_TASK = "create_task"
+    LIST_TASK = "list_task"
+    LIST_CALENDAR = "list_calendar"
+    SEARCH_INFOR = "search_info"

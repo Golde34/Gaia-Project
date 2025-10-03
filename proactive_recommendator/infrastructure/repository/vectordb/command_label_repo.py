@@ -1,9 +1,9 @@
 from typing import List
 from core.domain.entities.vectordb.command_label_entity import CommandLabel
-from infrastructure.embedding.base_embedding import embedding_model
-from infrastructure.vector_db.milvus import milvus_db
 from core.domain.request.command_label_request import CommandLabelRequest
 from core.mapper import command_label_mapper
+from infrastructure.embedding.base_embedding import embedding_model
+from infrastructure.vector_db.milvus import milvus_db
 
 
 empty_command_label = CommandLabel(
