@@ -19,13 +19,12 @@ services:
       - VALKEY_PASSWORD=bitnami
       - VALKEY_NODES=valkey-node-0 valkey-node-1 valkey-node-2 valkey-node-3 valkey-node-4 valkey-node-5
       - VALKEY_CLUSTER_ANNOUNCE_IP=host.docker.internal
-      - VALKEY_CLUSTER_ANNOUNCE_PORT=7000
-      - VALKEY_CLUSTER_ANNOUNCE_BUS_PORT=17000
+      - VALKEY_CLUSTER_ANNOUNCE_PORT=7006
+      - VALKEY_CLUSTER_ANNOUNCE_BUS_PORT=17006
     ports:
       - "7006:6379"
-      - "17000:16379"
-    networks:
-      - valkey-cluster-network
+      - "17006:16379"
+    networks: [valkey-cluster-network]
 
   valkey-node-1:
     image: docker.io/bitnami/valkey-cluster:8.0
@@ -39,8 +38,7 @@ services:
     ports:
       - "7001:6379"
       - "17001:16379"
-    networks:
-      - valkey-cluster-network
+    networks: [valkey-cluster-network]
 
   valkey-node-2:
     image: docker.io/bitnami/valkey-cluster:8.0
@@ -54,8 +52,7 @@ services:
     ports:
       - "7002:6379"
       - "17002:16379"
-    networks:
-      - valkey-cluster-network
+    networks: [valkey-cluster-network]
 
   valkey-node-3:
     image: docker.io/bitnami/valkey-cluster:8.0
@@ -69,8 +66,7 @@ services:
     ports:
       - "7003:6379"
       - "17003:16379"
-    networks:
-      - valkey-cluster-network
+    networks: [valkey-cluster-network]
 
   valkey-node-4:
     image: docker.io/bitnami/valkey-cluster:8.0
@@ -84,8 +80,7 @@ services:
     ports:
       - "7004:6379"
       - "17004:16379"
-    networks:
-      - valkey-cluster-network
+    networks: [valkey-cluster-network]
 
   valkey-node-5:
     image: docker.io/bitnami/valkey-cluster:8.0
@@ -103,8 +98,8 @@ services:
       - VALKEY_CLUSTER_CREATOR=yes
       - VALKEY_NODES=valkey-node-0 valkey-node-1 valkey-node-2 valkey-node-3 valkey-node-4 valkey-node-5
       - VALKEY_CLUSTER_ANNOUNCE_IP=host.docker.internal
-      - VALKEY_CLUSTER_ANNOUNCE_PORT=7005
-      - VALKEY_CLUSTER_ANNOUNCE_BUS_PORT=17005
+      - VALKEY_CLUSTER_ANNOUNCE_PORT=6379
+      - VALKEY_CLUSTER_ANNOUNCE_BUS_PORT=16379
     ports:
       - "6379:6379"
       - "16379:16379"
