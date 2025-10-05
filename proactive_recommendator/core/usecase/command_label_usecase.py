@@ -15,6 +15,4 @@ def search_command_label(query: str, type: str):
         raise ValueError(f"Unsupported search type: {type}")
 
 async def rank_labels_by_relevance(query: str):
-    results, _, _ = await command_label_repo.rank_labels_by_relevance(query)
-    
-    return data
+    return await command_label_repo.rank_labels_by_relevance(query, None)

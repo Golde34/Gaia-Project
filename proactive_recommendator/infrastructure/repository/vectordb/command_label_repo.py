@@ -88,12 +88,13 @@ async def get_command_label(label: str) -> List[CommandLabel] | None:
     return results
 
 
-async def rank_labels_by_relevance(query: str) -> List[CommandLabel]:
+async def rank_labels_by_relevance(query: str, query_vecs: List[List[float]] | None) -> List[CommandLabel]:
     data = []
-    dense_vec = await embedding_of_texts(query)
+    if query_vecs is None:
+        query_vecs = await embedding_of_texts(query)
     results = milvus_db.rank_labels_hybrid(
         collection_name=empty_command_label.connection_name,
-        query_vector=dense_vec,
+        query_vector=query_vecs,
         query_text=query,
         top_k=5,
         candidate_k=300,  # >= 17 + 16 + margin
@@ -106,4 +107,4 @@ async def rank_labels_by_relevance(query: str) -> List[CommandLabel]:
             'label': r['group_key'],
             'similarity': r['similarity']
         })
-    return results
+    return data 
