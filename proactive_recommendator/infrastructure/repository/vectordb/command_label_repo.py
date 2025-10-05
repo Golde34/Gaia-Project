@@ -101,4 +101,10 @@ async def rank_labels_by_relevance(query: str) -> List[CommandLabel]:
         return_per_label=2
     )
     first, *rest = results
+    data = []
+    for r in results:
+        data.append({
+            'label': r['group_key'],
+            'similarity': r['similarity']
+        }) 
     return results, first, rest
