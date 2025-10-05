@@ -1,6 +1,10 @@
 from core.domain.enums.enum import SearchMode
+from core.domain.request.command_label_request import CommandLabelRequest
 from infrastructure.repository.vectordb import command_label_repo
 
+
+def insert_command_label(request:CommandLabelRequest):
+    return command_label_repo.insert_command_label(request=request)
 
 def search_command_label(query: str, type: str):
     if type == SearchMode.VECTOR.value:
@@ -10,5 +14,7 @@ def search_command_label(query: str, type: str):
     else:
         raise ValueError(f"Unsupported search type: {type}")
 
-def rank_labels_by_relevance(query: str):
-    return command_label_repo.rank_labels_by_relevance(query)
+async def rank_labels_by_relevance(query: str):
+    results, _, _ = await command_label_repo.rank_labels_by_relevance(query)
+    
+    return data

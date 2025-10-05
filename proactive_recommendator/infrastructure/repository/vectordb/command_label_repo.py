@@ -89,6 +89,7 @@ async def get_command_label(label: str) -> List[CommandLabel] | None:
 
 
 async def rank_labels_by_relevance(query: str) -> List[CommandLabel]:
+    data = []
     dense_vec = await embedding_of_texts(query)
     results = milvus_db.rank_labels_hybrid(
         collection_name=empty_command_label.connection_name,
@@ -100,11 +101,9 @@ async def rank_labels_by_relevance(query: str) -> List[CommandLabel]:
         agg="max",  # tunning agg to softmax_mean or mean
         return_per_label=2
     )
-    first, *rest = results
-    data = []
     for r in results:
         data.append({
             'label': r['group_key'],
             'similarity': r['similarity']
-        }) 
-    return results, first, rest
+        })
+    return results
