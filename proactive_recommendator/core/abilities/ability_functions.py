@@ -1,6 +1,5 @@
 from core.domain.enums import enum
-from proactive_recommendator.core.service.abilities_service import daily_calendar, priority_tasks
-
+from core.service.abilities_service import daily_calendar, priority_tasks
 
 
 ABILITIES = {
