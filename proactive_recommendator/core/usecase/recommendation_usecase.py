@@ -9,6 +9,13 @@ from infrastructure.repository.vectordb import command_label_repo
 
 
 async def recommend(body: RecommendationRequest) -> str:
+    """
+    [Query -> seed labels] 
+    -> [Graph Expander]: Expanded Labels (+weight, relations)
+    -> [Fetch Planner]: Label-driven providers with needs/ provides
+    -> [Build Bundle]: JSON feature store, running providers in layers
+    -> [Scoring/Policy]: Compat + Signals from bundle
+    """
     try:
         ## Validate user information
         user_information = user_information_service.get_user_information(body.user_id) 
