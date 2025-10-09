@@ -1,10 +1,11 @@
-from typing import List
+from typing import Any, Dict, List
 
 from core.abilities.ability_functions import ABILITIES
 from core.domain.dto.recommendation_dto import RecommendationEvent, SimilarityLabel
 from core.domain.request.recommendation_request import RecommendationRequest
 from core.domain.response.base_response import return_success_response
 from core.service import user_information_service
+from infrastructure.repository.graphdb.graph_expander import expand_labels, providers_for_labels
 from infrastructure.repository.vectordb import command_label_repo
 
 
@@ -27,20 +28,12 @@ async def recommend(body: RecommendationRequest) -> str:
          
         ## Get the main label
         results = await command_label_repo.rank_labels_by_relevance(body.query, query_vecs=query_vecs)
+        seed_labels = [r.name for r in results]
 
-        candidates: List[SimilarityLabel] = []
-        for r in results:
-            name = getattr(r, "label", None) or r.get("label")
-            score = getattr(r, "similarity", None) or r.get("similarity")
-            candidates.append(SimilarityLabel(name=name, score=float(score)))
+        expanded = await expand_labels(seed_labels=seed_labels)
+        expanded_labels = [l for (l, _, _) in expanded]
 
-        event = RecommendationEvent(
-            context_id=getattr(body, "context_id", "ctx-"+body.user_id),
-            user_id=body.user_id,
-            query=body.query,
-            candidates=candidates,
-            query_vecs=query_vecs
-        )
+        bundle = await _build_bundle(body.user_id, expanded_labels)
 
         ## Parallel Fan-in
         # load_user_context(tasks, calendar, prefs) in cache
@@ -58,6 +51,24 @@ async def recommend(body: RecommendationRequest) -> str:
         ## ...
     except Exception as e:
         return "Error: " + e 
+
+
+async def _build_bundle(user_id: str, labels: List[str]) -> Dict[str, Any]:
+    provider_rows = await providers_for_labels(labels)
+    bundle: Dict[str, Any] = {}
+
+    for p in provider_rows:
+        pname = p["name"]
+        if pname not in ABILITIES:
+            continue
+        fn = ABILITIES[pname]
+        try:
+            result = await fn(user_id=user_id, label=p["label"])
+            bundle[pname] = result
+        except Exception as e:
+            bundle[pname] = {"error": str(e)}
+
+    return bundle
 
 # async def _validate_labels_information(user_id: int, results: List[str], first: str):
 #     if ABILITIES[first]['is_sync'] == True:
