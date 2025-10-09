@@ -1,0 +1,104 @@
+version: 1
+
+labels:
+  - name: "create task"
+    type: "intent"
+    aliases: ["add task", "new task"]
+    description: "Create a new task for the user"
+    metadata: { color: "#2E86AB" }
+
+  - name: "list task"
+    type: "intent"
+    aliases: ["show tasks", "task list"]
+    description: "List existing tasks"
+    metadata: { color: "#6C8EBF" }
+
+  - name: "daily calendar"
+    type: "context"
+    aliases: ["schedule", "calendar", "today schedule"]
+    description: "Daily schedule context"
+    metadata: { color: "#9B59B6" }
+
+  - name: "attach to calendar"
+    type: "action"
+    aliases: ["attach calendar", "add to calendar"]
+    description: "Attach a task into a free time block"
+
+  - name: "reschedule suggest"
+    type: "action"
+    aliases: ["move to slot", "suggest time"]
+    description: "Suggest better time slots for the task"
+
+  - name: "show backlog"
+    type: "action"
+    aliases: ["review backlog", "check backlog"]
+    description: "Show current overdue / due-soon tasks"
+
+  - name: "decompose task"
+    type: "action"
+    aliases: ["split task", "subtasks suggest"]
+    description: "Decompose a task into standard subtasks"
+
+  - name: "review conflicts"
+    type: "action"
+    aliases: ["check conflicts"]
+    description: "Detect calendar conflicts"
+
+  - name: "reminder policy"
+    type: "feature"
+    aliases: ["auto reminders"]
+    description: "Reminder cadence / follow-up policy"
+
+  - name: "user health"
+    type: "context"
+    aliases: ["health", "wellness"]
+    description: "Health context and routines"
+    metadata: { color: "#27AE60" }
+
+providers:
+  - name: "TaskStatsProvider"
+    description: "Fetch task stats (overdue, dueSoon, unfinished, byTopic)"
+  - name: "CalendarDayProvider"
+    description: "Fetch calendar busy/free blocks"
+  - name: "HealthSummaryProvider"
+    description: "Fetch user health snapshot"
+  - name: "ConflictScanProvider"
+    description: "Scan conflicts on target day"
+  - name: "FreeSlotFinderProvider"
+    description: "Find best free slots for a duration"
+  - name: "BacklogAggProvider"
+    description: "Aggregate backlog for summary card"
+  - name: "DecomposeTemplateProvider"
+    description: "Suggest subtasks by template (project-setup, etc.)"
+
+requires:
+  - { src: "attach to calendar", dst: "daily calendar", w: 1.0 }
+  - { src: "reschedule suggest", dst: "daily calendar", w: 1.0 }
+  - { src: "review conflicts",  dst: "daily calendar", w: 1.0 }
+
+excludes:
+  - { a: "user health", b: "review conflicts", w: 1.0 }   # giữ demo 1 ví dụ
+
+co_occur:
+  - { src: "create task", dst: "list task", pmi: 0.9,  w: 0.75 }
+  - { src: "create task", dst: "daily calendar", pmi: 0.8, w: 0.70 }
+  - { src: "reschedule suggest", dst: "show backlog", pmi: 0.7, w: 0.6 }
+  - { src: "attach to calendar", dst: "review conflicts", pmi: 0.6, w: 0.55 }
+  - { src: "decompose task", dst: "create task", pmi: 0.65, w: 0.58 }
+
+similar_to:
+  - { src: "daily calendar", dst: "schedule", sim: 0.95 } # alias minh hoạ
+  - { src: "attach to calendar", dst: "reschedule suggest", sim: 0.75 }
+  - { src: "show backlog", dst: "list task", sim: 0.8 }
+
+handles:
+  - { provider: "TaskStatsProvider",        label: "list task",          priority: 0 }
+  - { provider: "TaskStatsProvider",        label: "show backlog",       priority: 0 }
+  - { provider: "CalendarDayProvider",      label: "daily calendar",     priority: 0 }
+  - { provider: "CalendarDayProvider",      label: "review conflicts",   priority: 0 }
+  - { provider: "FreeSlotFinderProvider",   label: "attach to calendar", priority: 0 }
+  - { provider: "FreeSlotFinderProvider",   label: "reschedule suggest", priority: 0 }
+  - { provider: "ConflictScanProvider",     label: "review conflicts",   priority: 0 }
+  - { provider: "BacklogAggProvider",       label: "show backlog",       priority: 0 }
+  - { provider: "DecomposeTemplateProvider",label: "decompose task",     priority: 0 }
+  - { provider: "HealthSummaryProvider",    label: "user health",        priority: 0 }

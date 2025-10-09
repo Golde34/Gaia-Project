@@ -24,3 +24,11 @@ class GaiaAbilities(Enum):
     LIST_TASK = "list_task"
     LIST_CALENDAR = "list_calendar"
     SEARCH_INFOR = "search_info"
+
+class LabelNodeType(Enum):
+    INTENT = "intent"
+    CONTEXT = "context"
+    ENTITY = "entity"
+    ACTION = "action"
+    FEATURE = "feature"
+    FLOW_TAG = "flow-tag"
