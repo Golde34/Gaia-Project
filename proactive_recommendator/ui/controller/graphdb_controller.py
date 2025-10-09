@@ -32,3 +32,5 @@ async def delete_all():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete all: {e}"
         )
+
+## Create Router to upsert graph node label

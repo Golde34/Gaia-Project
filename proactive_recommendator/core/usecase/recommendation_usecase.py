@@ -1,7 +1,6 @@
 from typing import Any, Dict, List
 
 from core.abilities.ability_functions import ABILITIES
-from core.domain.dto.recommendation_dto import RecommendationEvent, SimilarityLabel
 from core.domain.request.recommendation_request import RecommendationRequest
 from core.domain.response.base_response import return_success_response
 from core.service import user_information_service
