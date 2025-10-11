@@ -4,7 +4,7 @@ from core.abilities.ability_functions import ABILITIES
 from core.domain.request.recommendation_request import RecommendationRequest
 from core.domain.response.base_response import return_success_response
 from core.service import user_information_service
-from infrastructure.repository.graphdb.graph_expander import expand_labels, providers_for_labels
+from infrastructure.repository.graphdb import graph_expander
 from infrastructure.repository.vectordb import command_label_repo
 
 
@@ -18,7 +18,7 @@ async def recommend(body: RecommendationRequest) -> str:
     """
     try:
         ## Validate user information
-        user_information = user_information_service.get_user_information(body.user_id) 
+        user_information = await user_information_service.get_user_information(body.user_id)
         if not user_information:
             return "Error: user not found"
 
@@ -27,10 +27,13 @@ async def recommend(body: RecommendationRequest) -> str:
          
         ## Get the main label
         results = await command_label_repo.rank_labels_by_relevance(body.query, query_vecs=query_vecs)
-        seed_labels = [r.name for r in results]
+        seed_labels = [r['label'] for r in results]
+        print("Seed labels: ", seed_labels)
 
-        expanded = await expand_labels(seed_labels=seed_labels)
+        expanded = await graph_expander.expand_labels(seed_labels=seed_labels)
+        print("Expanded: ",  expanded)
         expanded_labels = [l for (l, _, _) in expanded]
+        print("expaned labels:", expanded_labels)
 
         bundle = await _build_bundle(body.user_id, expanded_labels)
 
@@ -53,7 +56,7 @@ async def recommend(body: RecommendationRequest) -> str:
 
 
 async def _build_bundle(user_id: str, labels: List[str]) -> Dict[str, Any]:
-    provider_rows = await providers_for_labels(labels)
+    provider_rows = await graph_expander.providers_for_labels(labels)
     bundle: Dict[str, Any] = {}
 
     for p in provider_rows:

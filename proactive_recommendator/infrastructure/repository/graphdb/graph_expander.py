@@ -1,46 +1,46 @@
 from __future__ import annotations
-from typing import List, Tuple, Dict, Any
-from neo4j import AsyncGraphDatabase
-import os
 
-from kernel.config.config import Config as config
+import os
+from typing import Any, Dict, List, Tuple
+
+from kernel.connection.graphdb_connection import close_neo4j_driver, get_db_session
 
 USE_GDS = os.getenv("USE_GDS", "true").lower() in ("1", "true", "yes")
 
 
 class LabelGraph:
-    def __init__(self, uri=config.NEO4J_URI, user=config.NEO4J_USER, password=config.NEO4J_PASSWORD):
-        self._driver = AsyncGraphDatabase.driver(uri, auth=(user, password))
-
-    async def close(self):
-        await self._driver.close()
-
     async def canonicalize(self, seeds: List[str]) -> List[str]:
         """Map alias -> canonical name; nếu không tìm thấy thì giữ nguyên."""
         if not seeds:
             return []
-        async with self._driver.session() as s:
-            # chạy từng seed để tránh IN quá dài, vẫn đủ nhanh
+
+        async for session in get_db_session():
             out: List[str] = []
-            for x in seeds:
-                rec = await s.run("""
+            for seed in seeds:
+                result = await session.run(
+                    """
                     MATCH (l:Label)
-                    WHERE l.name = $x OR (exists(l.aliases) AND $x IN l.aliases)
+                    WHERE l.name = $seed or (l.aliases is not null and $seed in l.aliases)
                     RETURN l.name AS name
                     LIMIT 1
-                """, x=x)
-                r = await rec.single()
-                out.append(r["name"] if r else x)
+                    """,
+                    {"seed": seed},
+                )
+                record = await result.single()
+                out.append(record["name"] if record else seed)
             return out
+        return []
 
-    async def expand_neighbors(self, canonical: List[str], limit: int = 30) -> List[Tuple[str, float, Dict[str, Any]]]:
-        """
-        Láng giềng 1 bậc với trọng số edge; loại trừ EXCLUDES với seeds.
-        """
+    async def expand_neighbors(
+        self, canonical: List[str], limit: int = 30
+    ) -> List[Tuple[str, float, Dict[str, Any]]]:
+        """Láng giềng 1 bậc với trọng số edge; loại trừ EXCLUDES với seeds."""
         if not canonical:
             return []
-        async with self._driver.session() as s:
-            rec = await s.run("""
+
+        async for session in get_db_session():
+            result = await session.run(
+                """
                 UNWIND $seeds AS sname
                 MATCH (s:Label {name:sname})
                 MATCH (s)-[r:REQUIRES|CO_OCCUR|SIMILAR_TO]->(n:Label)
@@ -58,19 +58,30 @@ class LabelGraph:
                 RETURN n.name AS label, score, rels
                 ORDER BY score DESC
                 LIMIT $limit
-            """, seeds=canonical, limit=limit)
-            rows = await rec.to_list()
-            return [(r["label"], float(r["score"]), {"src": "NEIGHBOR", "rels": r["rels"]}) for r in rows]
+                """,
+                {"seeds": canonical, "limit": limit},
+            )
+            rows = await result.data()
+            return [
+                (
+                    row["label"],
+                    float(row["score"]),
+                    {"src": "NEIGHBOR", "rels": row["rels"]},
+                )
+                for row in rows
+            ]
+        return []
 
-    async def expand_ppr(self, canonical: List[str], limit: int = 30) -> List[Tuple[str, float, Dict[str, Any]]]:
-        """
-        Personalized PageRank bằng GDS (cần projection 'labelGraph').
-        """
+    async def expand_ppr(
+        self, canonical: List[str], limit: int = 30
+    ) -> List[Tuple[str, float, Dict[str, Any]]]:
         if not canonical:
             return []
-        async with self._driver.session() as s:
-            # Dùng vector hóa personalization từ danh sách seeds
-            rec = await s.run("""
+
+        print(canonical)
+        async for session in get_db_session():
+            result = await session.run(
+                """
                 CALL gds.pageRank.stream($graph, {
                   maxIterations: 20,
                   dampingFactor: 0.85,
@@ -85,11 +96,43 @@ class LabelGraph:
                 RETURN n.name AS label, score
                 ORDER BY score DESC
                 LIMIT $limit
-            """, graph="labelGraph", seeds=canonical, limit=limit)
-            rows = await rec.to_list()
-            return [(r["label"], float(r["score"]), {"src": "PPR"}) for r in rows]
+                """,
+                {"graph": "labelGraph", "seeds": canonical, "limit": limit},
+            )
+            print("====================== ", result)
+            rows = await result.data()
+            return [
+                (row["label"], float(row["score"]), {"src": "PPR"}) for row in rows
+            ]
+        return []
 
-# =============== public API ===============
+    async def get_providers_for_labels(self, labels: List[str]) -> List[Dict[str, Any]]:
+        if not labels:
+            return []
+
+        canonical = await self.canonicalize(labels)
+        if not canonical:
+            return []
+
+        async for session in get_db_session():
+            result = await session.run(
+                """
+                MATCH (p:Provider)-[r:HANDLES]->(l:Label)
+                WHERE l.name IN $labels
+                RETURN DISTINCT p.name AS name, l.name AS label, r.priority AS priority
+                ORDER BY priority ASC, name ASC
+                """,
+                {"labels": canonical},
+            )
+            rows = await result.data()
+            return [
+                {"name": row["name"], "label": row["label"], "priority": row["priority"]}
+                for row in rows
+            ]
+        return []
+
+    async def close(self) -> None:
+        await close_neo4j_driver()
 
 
 async def expand_labels(seed_labels: List[str]) -> List[Tuple[str, float, Dict[str, Any]]]:
@@ -104,58 +147,41 @@ async def expand_labels(seed_labels: List[str]) -> List[Tuple[str, float, Dict[s
     """
     lg = LabelGraph()
     try:
-        # 1) alias → canonical
         canonical = await lg.canonicalize(seed_labels)
+        if not canonical:
+            return []
 
-        # 2) query neighbors / PPR
         if USE_GDS:
+            print("GDS")
             expanded = await lg.expand_ppr(canonical, limit=30)
         else:
+            print("NONE GDS")
             expanded = await lg.expand_neighbors(canonical, limit=30)
+        print("expanded: ", expanded)
 
-        # 3) merge + ensure seeds present
         merged: Dict[str, Dict[str, Any]] = {}
-        # thêm seeds vào kết quả với score=0, src='seed'
-        for s in canonical:
-            merged[s] = {"score": 0.0, "meta": {"src": "seed"}}
+        for seed in canonical:
+            merged[seed] = {"score": 0.0, "meta": {"src": "seed"}}
 
-        # gộp kết quả expansion (nhiều quan hệ/seeds -> lấy max)
         for label, score, meta in expanded:
-            prev = merged.get(label, {"score": 0.0, "meta": {}})
+            previous = merged.get(label, {"score": 0.0, "meta": {}})
             merged[label] = {
-                "score": max(prev["score"], float(score)),
-                "meta": {**prev["meta"], **meta}
+                "score": max(previous["score"], float(score)),
+                "meta": {**previous["meta"], **meta},
             }
 
-        # 4) sort desc, bỏ qua các seed nếu bạn muốn chỉ trả expanded (ở đây giữ cả seed)
-        out = sorted(
-            [(k, v["score"], v["meta"]) for k, v in merged.items()],
-            key=lambda x: x[1],
-            reverse=True
+        return sorted(
+            [(name, data["score"], data["meta"]) for name, data in merged.items()],
+            key=lambda item: item[1],
+            reverse=True,
         )
-        return out
     finally:
         await lg.close()
 
 
 async def providers_for_labels(labels: List[str]) -> List[Dict[str, Any]]:
-    """
-    Trả về danh sách provider tương ứng với các label.
-    Output: [{"name": "TaskStatsProvider", "label": "list task", "priority": 0}, ...]
-    """
-    if not labels:
-        return []
     lg = LabelGraph()
     try:
-        canon = await lg.canonicalize(labels)
-        async with lg._driver.session() as s:
-            rec = await s.run("""
-                MATCH (p:Provider)-[r:HANDLES]->(l:Label)
-                WHERE l.name IN $labels
-                RETURN DISTINCT p.name AS name, l.name AS label, r.priority AS priority
-                ORDER BY priority ASC, name ASC
-            """, labels=canon)
-            rows = await rec.to_list()
-            return [{"name": r["name"], "label": r["label"], "priority": r["priority"]} for r in rows]
+        return await lg.get_providers_for_labels(labels)
     finally:
         await lg.close()

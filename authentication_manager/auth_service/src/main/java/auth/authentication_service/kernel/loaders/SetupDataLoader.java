@@ -70,11 +70,11 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
         final LLMModel unslothModel = createLLMModelIfNotFound("unsloth");
 
         // == create initial user
-        createUserIfNotFound("nguyendongducviet2001@gmail.com", "Nguyen Dong Duc Viet", "golde", "483777",
+        createUserIfNotFound("nguyendongducviet2001@gmail.com", "Nguyen Dong Duc Viet", "golde", "123456",
                 new ArrayList<>(Arrays.asList(bossRole)), new ArrayList<>(Arrays.asList(geminiModel )));
         createUserIfNotFound("test@test.com", "Test", "Test", "test", new ArrayList<>(Arrays.asList(adminRole)),
                 new ArrayList<>(Arrays.asList(unslothModel)));
-        createUserIfNotFound("user@test.com", "User", "usertest", "483777", new ArrayList<>(Arrays.asList(userTestRole)),
+        createUserIfNotFound("user@test.com", "User", "usertest", "123456", new ArrayList<>(Arrays.asList(userTestRole)),
                 new ArrayList<>(Arrays.asList(unslothModel)));
         alreadySetup = true;
     }
