@@ -41,4 +41,4 @@ application.conf
 *\data_lake
 *\chroma_db
 *\volumes
-*\docker_manifest/graphdb/data
+*\docker_manifest

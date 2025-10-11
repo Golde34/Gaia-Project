@@ -20,7 +20,7 @@ class LabelGraph:
                 result = await session.run(
                     """
                     MATCH (l:Label)
-                    WHERE l.name = $seed OR (exists(l.aliases) AND $seed IN l.aliases)
+                    WHERE l.name = $seed or (l.aliases is not null and $seed in l.aliases)
                     RETURN l.name AS name
                     LIMIT 1
                     """,
@@ -75,10 +75,10 @@ class LabelGraph:
     async def expand_ppr(
         self, canonical: List[str], limit: int = 30
     ) -> List[Tuple[str, float, Dict[str, Any]]]:
-        """Personalized PageRank bằng GDS (cần projection 'labelGraph')."""
         if not canonical:
             return []
 
+        print(canonical)
         async for session in get_db_session():
             result = await session.run(
                 """
@@ -99,6 +99,7 @@ class LabelGraph:
                 """,
                 {"graph": "labelGraph", "seeds": canonical, "limit": limit},
             )
+            print("====================== ", result)
             rows = await result.data()
             return [
                 (row["label"], float(row["score"]), {"src": "PPR"}) for row in rows
@@ -106,7 +107,6 @@ class LabelGraph:
         return []
 
     async def get_providers_for_labels(self, labels: List[str]) -> List[Dict[str, Any]]:
-        """Trả về danh sách provider tương ứng với các label."""
         if not labels:
             return []
 
@@ -152,9 +152,12 @@ async def expand_labels(seed_labels: List[str]) -> List[Tuple[str, float, Dict[s
             return []
 
         if USE_GDS:
+            print("GDS")
             expanded = await lg.expand_ppr(canonical, limit=30)
         else:
+            print("NONE GDS")
             expanded = await lg.expand_neighbors(canonical, limit=30)
+        print("expanded: ", expanded)
 
         merged: Dict[str, Dict[str, Any]] = {}
         for seed in canonical:
@@ -177,7 +180,6 @@ async def expand_labels(seed_labels: List[str]) -> List[Tuple[str, float, Dict[s
 
 
 async def providers_for_labels(labels: List[str]) -> List[Dict[str, Any]]:
-    """Trả về danh sách provider tương ứng với các label."""
     lg = LabelGraph()
     try:
         return await lg.get_providers_for_labels(labels)

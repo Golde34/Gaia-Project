@@ -41,7 +41,7 @@ AI_MODEL_LOCATION = {
 USER_PROFILE = {
     'username': 'golde',
     'name': 'Nguyen Dong Duc Viet',
-    'password': '483777',
+    'password': '',
     'email': 'nguyendongducviet2001@gmail.com',
-    'email_password': 'Gegterss03042001@'
+    'email_password': ''
 }

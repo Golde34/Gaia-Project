@@ -21,7 +21,6 @@ SET r.w=coalesce(E2.w,1.0), r.version=1, r.source='seed';
 UNWIND [
  {src:'create_task', dst:'list_task', pmi:0.9, w:0.75},
  {src:'create_task', dst:'daily_calendar', pmi:0.8, w:0.70},
- {src:'list_task', dst:'daily_calendar'}
  {src:'reschedule_suggest', dst:'show_backlog', pmi:0.7, w:0.6},
  {src:'attach_to_calendar', dst:'review_conflicts', pmi:0.6, w:0.55},
  {src:'decompose_task', dst:'create_task', pmi:0.65, w:0.58}
