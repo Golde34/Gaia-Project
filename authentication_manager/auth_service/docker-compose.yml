@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  auth_service:
+    image: server-authentication-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4001:4001"
+    network_mode: "host"
+    environment:
+      - DB_HOST=127.0.0.1
+      - DB_PORT=3306
+      - DB_USER=golde
+      - DB_PASSWORD=483777
+      - DB_NAME=authentication_service
