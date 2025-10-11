@@ -4,7 +4,6 @@ from core.domain.enums.redis_enum import RedisEnum
 from core.domain.response.base_response import BaseResponse
 from infrastructure.cache.redis import get_key, set_key
 from infrastructure.client.schedule_plan import schedule_plan_client
-from infrastructure.repository.graphdb import task_list_repo
 
 
 async def priority_tasks(user_id: int):
@@ -13,12 +12,12 @@ async def priority_tasks(user_id: int):
     if redis_task_list is not None:
         return json.loads(redis_task_list)
 
-    graph_task_list = await task_list_repo.get_priority_tasks(user_id)
-    if graph_task_list is not None:
-        set_key(key=redis_key, value=json.dumps(
-            dict(graph_task_list["t"])
-        ), ttl=60*60)
-        return graph_task_list["t"]
+    # graph_task_list = await task_list_repo.get_priority_tasks(user_id)
+    # if graph_task_list is not None:
+    #     set_key(key=redis_key, value=json.dumps(
+    #         dict(graph_task_list["t"])
+    #     ), ttl=60*60)
+    #     return graph_task_list["t"]
     return await _create_priority_tasks(user_id, redis_key)
 
 
@@ -42,12 +41,12 @@ async def daily_calendar(user_id: int):
     if redis_task_list is not None:
         return json.loads(redis_task_list)
 
-    graph_task_list = await task_list_repo.get_calendar(user_id)
-    if graph_task_list is not None:
-        set_key(key=redis_key, value=json.dumps(
-            dict(graph_task_list["t"])
-        ), ttl=60*60)
-        return graph_task_list["t"]
+    # graph_task_list = await task_list_repo.get_calendar(user_id)
+    # if graph_task_list is not None:
+    #     set_key(key=redis_key, value=json.dumps(
+    #         dict(graph_task_list["t"])
+    #     ), ttl=60*60)
+    #     return graph_task_list["t"]
     return await _create_daily_calendar(user_id, redis_key)
 
 

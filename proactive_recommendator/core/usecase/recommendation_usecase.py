@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from core.abilities.ability_functions import ABILITIES
+from core.abilities.ability_functions import ABILITIES, PROVIDER_REGISTRY
 from core.domain.request.recommendation_request import RecommendationRequest
 from core.domain.response.base_response import return_success_response
 from core.service import user_information_service
@@ -30,24 +30,15 @@ async def recommend(body: RecommendationRequest) -> str:
         seed_labels = [r['label'] for r in results]
         print("Seed labels: ", seed_labels)
 
-        expanded = await graph_expander.expand_labels(seed_labels=seed_labels)
-        print("Expanded: ",  expanded)
-        expanded_labels = [l for (l, _, _) in expanded]
-        print("expaned labels:", expanded_labels)
-
-        bundle = await _build_bundle(body.user_id, expanded_labels)
-
-        ## Parallel Fan-in
-        # load_user_context(tasks, calendar, prefs) in cache
-        # get_label_embeddings(from catalog)
-        # -> combine: signals -> compat -> actions -> card
-
-        # ctx = await get_user_context
-
-        # recommendation_information = await _validate_labels_information(results)
-        ## Get the data from graphDB 
-        # Generate GraphDB query from LLM Model
         # After get the labels's relationships, usering PPR to compare
+        expanded = await graph_expander.expand_labels(seed_labels=seed_labels, limit=5)
+        expanded_labels = [l for (l, _, _) in expanded]
+        print("expanded labels:", expanded_labels)
+
+        # Build bundle of information to input LLM prompt 
+        bundle = await _build_bundle(body.user_id, expanded_labels)
+        print(f"Bundle: {bundle}")
+
         ## Generate response using LLM model + do something before user needs, like, generate calendar, ... 
         return return_success_response("get the label when analyze query", results) 
         ## ...
@@ -61,11 +52,11 @@ async def _build_bundle(user_id: str, labels: List[str]) -> Dict[str, Any]:
 
     for p in provider_rows:
         pname = p["name"]
-        if pname not in ABILITIES:
+        if pname not in PROVIDER_REGISTRY:
             continue
-        fn = ABILITIES[pname]
+        fn = PROVIDER_REGISTRY[pname]
         try:
-            result = await fn(user_id=user_id, label=p["label"])
+            result = await fn(user_id=user_id)
             bundle[pname] = result
         except Exception as e:
             bundle[pname] = {"error": str(e)}

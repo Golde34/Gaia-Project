@@ -78,33 +78,55 @@ class LabelGraph:
         if not canonical:
             return []
 
-        print(canonical)
         async for session in get_db_session():
-            result = await session.run(
-                """
+            rec = await session.run("""
+                MATCH (l:Label) WHERE l.name IN $seeds RETURN l.name as name, id(l) as nodeId
+            """, seeds=canonical)
+            nodes = await rec.data()
+
+            node_ids = {r["name"]: r["nodeId"] for r in nodes}
+            source_nodes = [[node_ids[name], 1.0]
+                            for name in canonical if name in node_ids]
+            if not source_nodes:
+                return []
+
+            label_graph = await self.find_and_create_projection('LabelGraph')
+
+            rec = await session.run("""
                 CALL gds.pageRank.stream($graph, {
-                  maxIterations: 20,
-                  dampingFactor: 0.85,
-                  personalization: gds.alpha.similarity.asVector($seeds, 1.0)
+                    maxIterations: 20,
+                    dampingFactor: 0.85,
+                    sourceNodes: $sourceNodes
                 })
                 YIELD nodeId, score
-                WITH gds.util.asNode(nodeId) AS n, score
-                WHERE NOT EXISTS {
-                  MATCH (n)-[:EXCLUDES]-(m:Label)
-                  WHERE m.name IN $seeds
-                }
-                RETURN n.name AS label, score
+                RETURN gds.util.asNode(nodeId).name AS label, score
                 ORDER BY score DESC
                 LIMIT $limit
-                """,
-                {"graph": "labelGraph", "seeds": canonical, "limit": limit},
-            )
-            print("====================== ", result)
-            rows = await result.data()
-            return [
-                (row["label"], float(row["score"]), {"src": "PPR"}) for row in rows
-            ]
+            """, graph=label_graph, sourceNodes=source_nodes, limit=limit)
+            result = await rec.data()
+            return result
         return []
+
+    async def find_and_create_projection(self, projection_name: str) -> str:
+        async for session in get_db_session():
+            result = await session.run("""
+                CALL gds.graph.list()
+                YIELD graphName
+                WHERE graphName = $projection_name
+                RETURN graphName
+            """, projection_name=projection_name)
+            rows = await result.data()
+            if rows is None or len(rows) == 0:
+                result = await session.run("""
+                    CALL gds.graph.project(
+                        $projection_name, 'Label', ['REQUIRES', 'CO_OCCUR', 'SIMILAR_TO'])
+                    YIELD graphName, nodeCount, relationshipCount
+                    RETURN graphName, nodeCount, relationshipCount;
+            """, projection_name=projection_name)
+                data = await result.data()
+                return data[0]["graphName"]
+            else:
+                return rows[0]["graphName"]
 
     async def get_providers_for_labels(self, labels: List[str]) -> List[Dict[str, Any]]:
         if not labels:
@@ -126,7 +148,8 @@ class LabelGraph:
             )
             rows = await result.data()
             return [
-                {"name": row["name"], "label": row["label"], "priority": row["priority"]}
+                {"name": row["name"], "label": row["label"],
+                    "priority": row["priority"]}
                 for row in rows
             ]
         return []
@@ -135,7 +158,7 @@ class LabelGraph:
         await close_neo4j_driver()
 
 
-async def expand_labels(seed_labels: List[str]) -> List[Tuple[str, float, Dict[str, Any]]]:
+async def expand_labels(seed_labels: List[str], limit: int = 5) -> List[Tuple[str, float, Dict[str, Any]]]:
     """
     Input: seed labels from semantic router
     Output: [(label, score, meta)]
@@ -153,17 +176,17 @@ async def expand_labels(seed_labels: List[str]) -> List[Tuple[str, float, Dict[s
 
         if USE_GDS:
             print("GDS")
-            expanded = await lg.expand_ppr(canonical, limit=30)
+            expanded = await lg.expand_ppr(canonical, limit=limit)
         else:
             print("NONE GDS")
-            expanded = await lg.expand_neighbors(canonical, limit=30)
-        print("expanded: ", expanded)
+            expanded = await lg.expand_neighbors(canonical, limit=limit)
 
         merged: Dict[str, Dict[str, Any]] = {}
         for seed in canonical:
             merged[seed] = {"score": 0.0, "meta": {"src": "seed"}}
 
-        for label, score, meta in expanded:
+        for element in expanded:
+            label, score, meta = element['label'], element['score'], element.get('meta', {})
             previous = merged.get(label, {"score": 0.0, "meta": {}})
             merged[label] = {
                 "score": max(previous["score"], float(score)),
@@ -171,7 +194,8 @@ async def expand_labels(seed_labels: List[str]) -> List[Tuple[str, float, Dict[s
             }
 
         return sorted(
-            [(name, data["score"], data["meta"]) for name, data in merged.items()],
+            [(name, data["score"], data["meta"])
+             for name, data in merged.items()],
             key=lambda item: item[1],
             reverse=True,
         )

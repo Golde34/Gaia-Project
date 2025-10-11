@@ -23,3 +23,9 @@ ABILITIES = {
         'is_sync': True,
     }
 }
+
+PROVIDER_REGISTRY = {
+    'TaskStatsProvider': priority_tasks,
+    'CalendarDayProvider': daily_calendar,
+    # 'FreeSlotFinderProvider'
+}
