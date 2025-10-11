@@ -17,4 +17,4 @@ services:
       DATABASE_PORT: 27017
       DATABASE_NAME: schedule_plan
       DATABASE_USERNAME: golde
-      DATABASE_PASSWORD: 483777
+      DATABASE_PASSWORD: 
