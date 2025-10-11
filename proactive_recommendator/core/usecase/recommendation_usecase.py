@@ -31,7 +31,6 @@ async def recommend(body: RecommendationRequest) -> str:
         print("Seed labels: ", seed_labels)
 
         expanded = await graph_expander.expand_labels(seed_labels=seed_labels)
-        print("Expanded: ",  expanded)
         expanded_labels = [l for (l, _, _) in expanded]
         print("expaned labels:", expanded_labels)
 
