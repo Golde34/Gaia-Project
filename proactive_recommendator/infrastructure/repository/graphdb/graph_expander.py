@@ -87,12 +87,10 @@ class LabelGraph:
             node_ids = {r["name"]: r["nodeId"] for r in nodes}
             source_nodes = [[node_ids[name], 1.0]
                             for name in canonical if name in node_ids]
-            print("Source nodes: ", source_nodes)
             if not source_nodes:
                 return []
 
             label_graph = await self.find_and_create_projection('LabelGraph')
-            print("Label graph: ", label_graph)
 
             rec = await session.run("""
                 CALL gds.pageRank.stream($graph, {
@@ -160,7 +158,7 @@ class LabelGraph:
         await close_neo4j_driver()
 
 
-async def expand_labels(seed_labels: List[str]) -> List[Tuple[str, float, Dict[str, Any]]]:
+async def expand_labels(seed_labels: List[str], limit: int = 5) -> List[Tuple[str, float, Dict[str, Any]]]:
     """
     Input: seed labels from semantic router
     Output: [(label, score, meta)]
@@ -178,17 +176,17 @@ async def expand_labels(seed_labels: List[str]) -> List[Tuple[str, float, Dict[s
 
         if USE_GDS:
             print("GDS")
-            expanded = await lg.expand_ppr(canonical, limit=30)
+            expanded = await lg.expand_ppr(canonical, limit=limit)
         else:
             print("NONE GDS")
-            expanded = await lg.expand_neighbors(canonical, limit=30)
+            expanded = await lg.expand_neighbors(canonical, limit=limit)
 
         merged: Dict[str, Dict[str, Any]] = {}
         for seed in canonical:
             merged[seed] = {"score": 0.0, "meta": {"src": "seed"}}
 
         for element in expanded:
-            label, score, meta = element['label'], element['score'], element.get('meta', {}) 
+            label, score, meta = element['label'], element['score'], element.get('meta', {})
             previous = merged.get(label, {"score": 0.0, "meta": {}})
             merged[label] = {
                 "score": max(previous["score"], float(score)),
