@@ -1,7 +1,7 @@
 show task_managger
 db.createUser({
     user: "Golde",
-    pwd: "483777",
+    pwd: "",
     roles: ["readWrite"]
 })
 

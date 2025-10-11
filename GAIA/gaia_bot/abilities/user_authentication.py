@@ -128,7 +128,7 @@ class AuthenticationCommand():
         pass
 
     def username_password_method(self):
-        return "Golde", "483777"
+        return USER_PROFILE.get("username"), USER_PROFILE.get("password")
     
     async def _login_to_get_token(self, username, password):
         wait = await MicroserviceConnection().wait_microservice(AcronymsEnum.AS._value_)
