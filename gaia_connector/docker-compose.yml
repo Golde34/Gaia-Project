@@ -16,4 +16,4 @@ services:
       - DATABASE_PORT=3306
       - DATABASE_NAME=gaia_connector
       - DATABASE_USERNAME=golde
-      - DATABASE_PASSWORD=483777
+      - DATABASE_PASSWORD=

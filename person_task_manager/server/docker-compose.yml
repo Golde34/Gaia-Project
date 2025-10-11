@@ -15,4 +15,4 @@ services:
       DATABASE_PORT: 27017
       DATABASE_NAME: task_manager
       DATABASE_USERNAME: golde
-      DATABASE_PASSWORD: 483777
+      DATABASE_PASSWORD: 
