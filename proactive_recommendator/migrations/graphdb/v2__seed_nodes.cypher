@@ -1,15 +1,15 @@
 // Labels
 UNWIND [
- {name:'create task',    type:'intent',  aliases:['add task','new task'], description:'Create a new task'},
- {name:'list task',      type:'intent',  aliases:['show tasks','task list']},
- {name:'daily calendar', type:'context', aliases:['schedule','calendar']},
- {name:'attach to calendar', type:'action', aliases:['attach calendar','add to calendar']},
- {name:'reschedule suggest', type:'action', aliases:['suggest time','move to slot']},
- {name:'show backlog',   type:'action',  aliases:['review backlog','check backlog']},
- {name:'decompose task', type:'action',  aliases:['split task','subtasks suggest']},
- {name:'review conflicts', type:'action', aliases:['check conflicts']},
- {name:'reminder policy', type:'feature', aliases:['auto reminders']},
- {name:'user health',    type:'context', aliases:['health','wellness']}
+ {name:'create_task',    type:'intent',  aliases:['add task','new task'], description:'Create a new task'},
+ {name:'list_task',      type:'intent',  aliases:['show tasks','task list']},
+ {name:'daily_calendar', type:'context', aliases:['schedule','calendar']},
+ {name:'attach_to_calendar', type:'action', aliases:['attach calendar','add to calendar']},
+ {name:'reschedule_suggest', type:'action', aliases:['suggest time','move to slot']},
+ {name:'show_backlog',   type:'action',  aliases:['review backlog','check backlog']},
+ {name:'decompose_task', type:'action',  aliases:['split task','subtasks suggest']},
+ {name:'review_conflicts', type:'action', aliases:['check conflicts']},
+ {name:'reminder_policy', type:'feature', aliases:['auto reminders']},
+ {name:'user_health',    type:'context', aliases:['health','wellness']}
 ] AS L
 MERGE (x:Label {name:L.name})
 SET x.type=L.type, x.aliases=coalesce(L.aliases,[]), x.description=coalesce(L.description,''), x.version=1, x.active=true;
@@ -36,6 +36,6 @@ MERGE (f:Flow {name:F.name})
 SET f.description=F.description, f.active=true;
 
 // Map labels to flows (optional)
-MATCH (l:Label {name:'create task'}), (f:Flow {name:'tasking'}) MERGE (l)-[:BELONGS_TO_FLOW {role:'core'}]->(f);
-MATCH (l:Label {name:'list task'}),   (f:Flow {name:'tasking'}) MERGE (l)-[:BELONGS_TO_FLOW]->(f);
-MATCH (l:Label {name:'daily calendar'}), (f:Flow {name:'calendar'}) MERGE (l)-[:BELONGS_TO_FLOW]->(f);
+MATCH (l:Label {name:'create_task'}), (f:Flow {name:'tasking'}) MERGE (l)-[:BELONGS_TO_FLOW {role:'core'}]->(f);
+MATCH (l:Label {name:'list_task'}),   (f:Flow {name:'tasking'}) MERGE (l)-[:BELONGS_TO_FLOW]->(f);
+MATCH (l:Label {name:'daily_calendar'}), (f:Flow {name:'calendar'}) MERGE (l)-[:BELONGS_TO_FLOW]->(f);
