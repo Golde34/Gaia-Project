@@ -42,3 +42,4 @@ application.conf
 *\chroma_db
 *\volumes
 *\docker_manifest
+*\migrate
