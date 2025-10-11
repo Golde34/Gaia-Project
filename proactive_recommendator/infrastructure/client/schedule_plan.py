@@ -15,7 +15,7 @@ class SchedulePlanClient:
 
     async def get_calendar(self, user_id: int) -> BaseResponse:
         try:
-            endpoint = f"{self.base_url}/schedule-day/daily-schedule-tasks/"+str(user_id) 
+            endpoint = f"{self.base_url}/schedule-plan/schedule-day/daily-schedule-tasks/"+str(user_id) 
             result = await aiohttp_utils.get(endpoint=endpoint)
             return client_return(result=result)
         except Exception as e:
