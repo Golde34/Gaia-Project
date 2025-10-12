@@ -10,13 +10,13 @@ class NodeDescriptor(BaseModel):
     label: Optional[LabelNode] = None
     provider: Optional[ProviderNode] = None
 
-    @field_validator(NodeBundleKind.LABEL.value, always=True)
+    @field_validator(NodeBundleKind.LABEL.value)
     def _val_label(cls, v, values):
         if values.get(NodeBundleKind.KIND_FIELD.value) == NodeBundleKind.LABEL.value and v is None:
             raise ValueError("label must be provided when kind is 'label'")
         return v
 
-    @field_validator(NodeBundleKind.PROVIDER.value, always=True)
+    @field_validator(NodeBundleKind.PROVIDER.value)
     def _val_provider(cls, v, values):
         if values.get(NodeBundleKind.KIND_FIELD.value) == NodeBundleKind.PROVIDER.value and v is None:
             raise ValueError(

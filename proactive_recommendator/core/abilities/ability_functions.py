@@ -38,5 +38,6 @@ PROVIDER_REGISTRY = {
 }
 
 PROMPT_CATEGORY = {
-    enum.GaiaService.SP: get_task_information.TASKS_INFORMATION_PROMPT
+    enum.GaiaService.SP: lambda bundle: get_task_information.TASKS_INFORMATION_PROMPT.format(
+        bundle="" if bundle is None else str(bundle))
 }

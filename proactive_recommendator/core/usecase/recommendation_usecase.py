@@ -42,7 +42,7 @@ async def recommend(body: RecommendationRequest) -> str:
         function = await get_model_generate_content()
         response = function(prompt=prompt_template) 
 
-        return return_success_response("Generate recommendation successfully", response) 
+        return return_success_response("Generate recommendation successfully", {"message": response}) 
     except Exception as e:
         return "Error: " + e 
 
