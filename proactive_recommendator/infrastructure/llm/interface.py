@@ -6,7 +6,7 @@ MODEL_INTERFACE = {
 }
 
 
-async def get_model_generate_content(model_name: str) -> str:
+async def get_model_generate_content(model_name: str = "gemini-2.0-flash") -> str:
     if model_name not in MODEL_INTERFACE:
         raise ValueError(f"Model {model_name} not supported")
     return MODEL_INTERFACE.get(model_name, "gemini-2.0-flash")

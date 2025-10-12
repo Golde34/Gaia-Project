@@ -1,4 +1,5 @@
 from core.domain.enums import enum
+from core.prompt import get_task_information
 from core.service.abilities_service import daily_calendar, priority_tasks
 
 
@@ -34,4 +35,8 @@ PROVIDER_REGISTRY = {
         'llm_type': enum.GaiaService.SP
     },
     # 'FreeSlotFinderProvider'
+}
+
+PROMPT_CATEGORY = {
+    enum.GaiaService.SP: get_task_information.TASKS_INFORMATION_PROMPT
 }

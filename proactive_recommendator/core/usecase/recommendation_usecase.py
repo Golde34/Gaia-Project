@@ -1,9 +1,10 @@
 from typing import Any, Dict, List
 
-from core.abilities.ability_functions import ABILITIES, PROVIDER_REGISTRY
+from core.abilities.ability_functions import PROVIDER_REGISTRY, PROMPT_CATEGORY
 from core.domain.request.recommendation_request import RecommendationRequest
 from core.domain.response.base_response import return_success_response
 from core.service import user_information_service
+from infrastructure.llm.interface import get_model_generate_content
 from infrastructure.repository.graphdb import graph_expander
 from infrastructure.repository.vectordb import command_label_repo
 
@@ -22,10 +23,7 @@ async def recommend(body: RecommendationRequest) -> str:
         if not user_information:
             return "Error: user not found"
 
-        ## Get embedding vector of query
         query_vecs = await command_label_repo.embedding_of_texts(body.query)
-         
-        ## Get the main label
         results = await command_label_repo.rank_labels_by_relevance(body.query, query_vecs=query_vecs)
         seed_labels = [r['label'] for r in results]
         print("Seed labels: ", seed_labels)
@@ -35,13 +33,16 @@ async def recommend(body: RecommendationRequest) -> str:
         expanded_labels = [l for (l, _, _) in expanded]
         print("expanded labels:", expanded_labels)
 
-        # Build bundle of information to input LLM prompt 
         bundle, llm_type = await _build_bundle(body.user_id, expanded_labels)
         print(f"Bundle: {bundle}")
+        if llm_type not in PROMPT_CATEGORY:
+            raise ValueError(f"LLM type {llm_type} not supported")
 
-        ## Generate response using LLM model + do something before user needs, like, generate calendar, ... 
-        return return_success_response("get the label when analyze query", results) 
-        ## ...
+        prompt_template = PROMPT_CATEGORY[llm_type](bundle=str(bundle))
+        function = await get_model_generate_content()
+        response = function(prompt=prompt_template) 
+
+        return return_success_response("Generate recommendation successfully", response) 
     except Exception as e:
         return "Error: " + e 
 
