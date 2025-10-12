@@ -32,3 +32,8 @@ class LabelNodeType(Enum):
     ACTION = "action"
     FEATURE = "feature"
     FLOW_TAG = "flow-tag"
+
+class NodeBundleKind(Enum):
+    KIND_FIELD = "kind"
+    LABEL = "label"
+    PROVIDER = "provider"

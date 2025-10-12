@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, status
 
+from core.domain.request.node_bundle_request import NodeBundle
 from core.service import user_information_service
+from core.usecase import label_usecase 
 from infrastructure.repository.graphdb import base
 
 
@@ -34,3 +36,12 @@ async def delete_all():
         )
 
 ## Create Router to upsert graph node label
+@GraphDBRouter.post("/upsert-node-bundle", status_code=status.HTTP_201_CREATED)
+async def upsert_node_bundle(payload: NodeBundle):
+    try:
+        return await label_usecase.upsert_label_node(payload)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upsert node bundle: {e}"
+        )

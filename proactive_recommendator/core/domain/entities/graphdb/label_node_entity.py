@@ -1,8 +1,7 @@
 from typing import Dict, List, Optional
-
 from pydantic import BaseModel, Field
 
-from proactive_recommendator.core.domain.enums.enum import LabelNodeType
+from core.domain.enums.enum import LabelNodeType
 
 class LabelNode(BaseModel):
     name: str

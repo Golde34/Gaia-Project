@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Literal, List
 
-from core.domain.dto.label_node_dto import LabelNode, ProviderNode
+from core.domain.entities.graphdb.label_node_entity import LabelNode, ProviderNode
 from core.domain.enums.enum import NodeBundleKind
 
 
