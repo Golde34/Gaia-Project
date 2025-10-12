@@ -1,4 +1,5 @@
 from core.domain.enums import enum
+from core.prompt import get_task_information
 from core.service.abilities_service import daily_calendar, priority_tasks
 
 
@@ -25,7 +26,18 @@ ABILITIES = {
 }
 
 PROVIDER_REGISTRY = {
-    'TaskStatsProvider': priority_tasks,
-    'CalendarDayProvider': daily_calendar,
+    'TaskStatsProvider': {
+        'function': priority_tasks,
+        'llm_type': enum.GaiaService.SP
+    },
+    'CalendarDayProvider': {
+        'function': daily_calendar,
+        'llm_type': enum.GaiaService.SP
+    },
     # 'FreeSlotFinderProvider'
+}
+
+PROMPT_CATEGORY = {
+    enum.GaiaService.SP: lambda bundle: get_task_information.TASKS_INFORMATION_PROMPT.format(
+        bundle="" if bundle is None else str(bundle))
 }

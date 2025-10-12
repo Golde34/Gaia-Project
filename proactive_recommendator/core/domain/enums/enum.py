@@ -32,3 +32,20 @@ class LabelNodeType(Enum):
     ACTION = "action"
     FEATURE = "feature"
     FLOW_TAG = "flow-tag"
+
+class NodeBundleKind(Enum):
+    KIND_FIELD = "kind"
+    LABEL = "label"
+    PROVIDER = "provider"
+
+class GaiaService(Enum):
+    CLG = 'client_gui'
+    ML = 'middleware_loader'
+    AS = 'authentication_service'
+    TM = 'task_manager'
+    SP = 'schedule_plan'
+    WO = 'work_optimization'
+    CH = "chat_hub"
+    NA = "notify_agent"
+    CT = "contribution_tracker"
+    
