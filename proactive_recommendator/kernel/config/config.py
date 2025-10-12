@@ -26,3 +26,6 @@ class Config:
     AUTH_SERVICE_URL = os.getenv('AUTH_SERVICE_URL', 'http://localhost:4001')
     TASK_MANAGER_URL = os.getenv('TASK_MANAGER_URL', 'http://localhost:3000')
     SCHEDULE_PLAN_URL = os.getenv('SCHEDULE_PLAN_URL', 'http://localhost:3002')
+
+    SYSTEM_API_KEY = os.getenv('GEMINI_API_KEY', '')
+    

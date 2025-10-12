@@ -36,7 +36,7 @@ async def recommend(body: RecommendationRequest) -> str:
         print("expanded labels:", expanded_labels)
 
         # Build bundle of information to input LLM prompt 
-        bundle = await _build_bundle(body.user_id, expanded_labels)
+        bundle, llm_type = await _build_bundle(body.user_id, expanded_labels)
         print(f"Bundle: {bundle}")
 
         ## Generate response using LLM model + do something before user needs, like, generate calendar, ... 
@@ -54,14 +54,14 @@ async def _build_bundle(user_id: str, labels: List[str]) -> Dict[str, Any]:
         pname = p["name"]
         if pname not in PROVIDER_REGISTRY:
             continue
-        fn = PROVIDER_REGISTRY[pname]
+        fn = PROVIDER_REGISTRY[pname]['function']
         try:
             result = await fn(user_id=user_id)
             bundle[pname] = result
         except Exception as e:
             bundle[pname] = {"error": str(e)}
 
-    return bundle
+    return bundle, PROVIDER_REGISTRY[pname]['llm_type']
 
 # async def _validate_labels_information(user_id: int, results: List[str], first: str):
 #     if ABILITIES[first]['is_sync'] == True:

@@ -25,7 +25,13 @@ ABILITIES = {
 }
 
 PROVIDER_REGISTRY = {
-    'TaskStatsProvider': priority_tasks,
-    'CalendarDayProvider': daily_calendar,
+    'TaskStatsProvider': {
+        'function': priority_tasks,
+        'llm_type': enum.GaiaService.SP
+    },
+    'CalendarDayProvider': {
+        'function': daily_calendar,
+        'llm_type': enum.GaiaService.SP
+    },
     # 'FreeSlotFinderProvider'
 }
