@@ -1,12 +1,16 @@
 import asyncio
 import copy
+import hashlib
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from core.abilities.function_handlers import FUNCTIONS
 from core.domain.request.query_request import QueryRequest
 from infrastructure.client.recommendation_service_client import (
     recommendation_service_client,
+)
+from infrastructure.storage.recommendation_history import (
+    recommendation_history_store,
 )
 
 
@@ -44,9 +48,19 @@ class OrchestratorService:
             results.append(self._build_task_result(task, result))
 
         recommendation_snapshot = [copy.deepcopy(item) for item in results]
-        recommendation_future = asyncio.create_task(
-            self._call_recommendation(query, recommendation_snapshot)
-        )
+        fingerprint = self._compose_fingerprint(query, recommendation_snapshot)
+        recommendation_future: Optional[asyncio.Task[str]] = None
+        if await recommendation_history_store.should_recommend(
+            user_id=query.user_id,
+            fingerprint=fingerprint,
+        ):
+            recommendation_future = asyncio.create_task(
+                self._call_recommendation(
+                    query,
+                    recommendation_snapshot,
+                    fingerprint,
+                )
+            )
 
         if parallel_tasks:
             parallel_futures = [
@@ -64,7 +78,9 @@ class OrchestratorService:
                     continue
                 results.append(self._build_task_result(task, result))
 
-        recommend_message = await recommendation_future
+        recommend_message = ""
+        if recommendation_future:
+            recommend_message = await recommendation_future
         primary = results[0] if results else None
         return {"primary": primary, "tasks": results, "recommend": recommend_message}
 
@@ -75,18 +91,36 @@ class OrchestratorService:
         return await handler(query=query)
 
     async def _call_recommendation(
-        self, query: QueryRequest, task_results: List[Dict[str, Any]]
+        self,
+        query: QueryRequest,
+        task_results: List[Dict[str, Any]],
+        fingerprint: str,
     ) -> str:
         try:
             context = self._compose_recommendation_context(query, task_results)
-            return await recommendation_service_client.recommend(
+            recommendation = await recommendation_service_client.recommend(
                 query=context,
                 user_id=query.user_id,
                 context_id=query.dialogue_id,
+                fingerprint=fingerprint,
             )
+            if recommendation:
+                await recommendation_history_store.register(
+                    user_id=query.user_id,
+                    fingerprint=fingerprint,
+                    recommendation=recommendation,
+                )
+            return recommendation
         except Exception as exc:
             print(f"Recommendation call failed: {exc}")
             return ""
+
+    def _compose_fingerprint(
+        self, query: QueryRequest, task_results: List[Dict[str, Any]]
+    ) -> str:
+        context = self._compose_recommendation_context(query, task_results)
+        digest = hashlib.sha256(context.encode("utf-8")).hexdigest()
+        return digest
 
     def _compose_recommendation_context(
         self, query: QueryRequest, task_results: List[Dict[str, Any]]

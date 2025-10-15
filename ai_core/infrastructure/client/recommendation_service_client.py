@@ -11,7 +11,12 @@ class RecommendationServiceClient:
         self.base_url = config.RECOMMENDATION_SERVICE_URL
 
     async def recommend(
-        self, *, query: str, user_id: str, context_id: Optional[str] = None
+        self,
+        *,
+        query: str,
+        user_id: str,
+        context_id: Optional[str] = None,
+        fingerprint: Optional[str] = None,
     ) -> str:
         payload = {
             "query": query,
@@ -19,11 +24,16 @@ class RecommendationServiceClient:
         }
         if context_id:
             payload["context_id"] = context_id
+        if fingerprint:
+            payload["fingerprint"] = fingerprint
 
         endpoint = f"{self.base_url}/recommend"
         try:
             response = await aiohttp_utils.post(endpoint=endpoint, payload=payload)
-            return response.get("data", {}).get("message", "")
+            data = response.get("data", {})
+            if data.get("skip"):
+                return ""
+            return data.get("message", "")
         except Exception as exc:
             print(f"Failed to fetch recommendation: {exc}")
             return ""
