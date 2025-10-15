@@ -19,10 +19,8 @@ async def abilities_handler(query: QueryRequest, guided_route: str) -> str:
     print("Abilities Handler called with query:", query)
     try:
         tasks = orchestrator_service.resolve_tasks(guided_route)
-        if not tasks and enum.GaiaAbilities.CHITCHAT.value in guided_route:
+        if not tasks:
             return await chitchat_with_history(query)
-        elif not tasks:
-            return await chitchat(query)
 
         orchestration_result = await orchestrator_service.execute(query=query, tasks=tasks)
         primary = orchestration_result.get("primary")
@@ -36,7 +34,9 @@ async def abilities_handler(query: QueryRequest, guided_route: str) -> str:
             orchestrator_service.format_task_payload(task)
             for task in orchestration_result.get("tasks", [])
         ]
-        response_payload.setdefault("data", {})["tasks"] = formatted_tasks
+        if "data" not in response_payload:
+            response_payload["data"] = {}
+        response_payload["data"]["tasks"] = formatted_tasks
         response_payload["recommend"] = orchestration_result.get("recommend", "")
 
         print("Result: ", response_payload)

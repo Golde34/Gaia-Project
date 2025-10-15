@@ -9,8 +9,8 @@ from core.domain.request.query_request import QueryRequest
 from infrastructure.client.recommendation_service_client import (
     recommendation_service_client,
 )
-from infrastructure.storage.recommendation_history import (
-    recommendation_history_store,
+from infrastructure.repository.recommendation_history_repo import (
+    recommendation_history_repo,
 )
 
 
@@ -50,7 +50,7 @@ class OrchestratorService:
         recommendation_snapshot = [copy.deepcopy(item) for item in results]
         fingerprint = self._compose_fingerprint(query, recommendation_snapshot)
         recommendation_future: Optional[asyncio.Task[str]] = None
-        if await recommendation_history_store.should_recommend(
+        if await recommendation_history_repo.should_recommend(
             user_id=query.user_id,
             fingerprint=fingerprint,
         ):
@@ -105,7 +105,7 @@ class OrchestratorService:
                 fingerprint=fingerprint,
             )
             if recommendation:
-                await recommendation_history_store.register(
+                await recommendation_history_repo.register(
                     user_id=query.user_id,
                     fingerprint=fingerprint,
                     recommendation=recommendation,
