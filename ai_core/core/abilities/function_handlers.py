@@ -3,6 +3,12 @@ from core.service.task_service import create_task, create_task_result
 
 
 FUNCTIONS = {
-    enum.GaiaAbilities.CREATE_TASK.value: create_task,
-    enum.GaiaAbilities.CREATE_TASK_RESULT.value: create_task_result,
+    enum.GaiaAbilities.CREATE_TASK.value: {
+        "handler": create_task,
+        "is_sequential": True,
+    },
+    enum.GaiaAbilities.CREATE_TASK_RESULT.value: {
+        "handler": create_task_result,
+        "is_sequential": True,
+    },
 }
