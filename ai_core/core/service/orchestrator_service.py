@@ -101,7 +101,7 @@ class OrchestratorService:
             recommendation = await recommendation_service_client.recommend(
                 query=context,
                 user_id=query.user_id,
-                context_id=query.dialogue_id,
+                dialogue_id=query.dialogue_id,
                 fingerprint=fingerprint,
             )
             if recommendation:

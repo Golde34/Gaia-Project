@@ -15,15 +15,15 @@ class RecommendationServiceClient:
         *,
         query: str,
         user_id: str,
-        context_id: Optional[str] = None,
+        dialogue_id: Optional[str] = None,
         fingerprint: Optional[str] = None,
     ) -> str:
         payload = {
             "query": query,
             "user_id": self._parse_user_id(user_id),
         }
-        if context_id:
-            payload["context_id"] = context_id
+        if dialogue_id:
+            payload["dialogue_id"] = dialogue_id 
         if fingerprint:
             payload["fingerprint"] = fingerprint
 
