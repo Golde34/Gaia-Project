@@ -1,8 +1,8 @@
-from core.abilities.function_handlers import FUNCTIONS
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
 from core.prompts.abilities_prompt import CHITCHAT_PROMPT, CHITCHAT_WITH_HISTORY_PROMPT
 from core.service import chat_service
+from core.service.orchestrator_service import orchestrator_service
 from core.service.task_service import handle_task_service_response
 from kernel.config import llm_models, config
 
@@ -18,15 +18,29 @@ async def abilities_handler(query: QueryRequest, guided_route: str) -> str:
     """
     print("Abilities Handler called with query:", query)
     try:
-        matched_type = next(
-            (key for key in FUNCTIONS if key in guided_route), enum.GaiaAbilities.CHITCHAT.value)
-        if matched_type == enum.GaiaAbilities.CHITCHAT.value:
+        tasks = orchestrator_service.resolve_tasks(guided_route)
+        if not tasks:
             return await chitchat_with_history(query)
-        handler = FUNCTIONS[matched_type]
 
-        result = await handler(query=query)
-        print("Result: ", result)
-        return handle_task_service_response(matched_type, result)        
+        orchestration_result = await orchestrator_service.execute(query=query, tasks=tasks)
+        primary = orchestration_result.get("primary")
+        if not primary:
+            return handle_task_service_response(enum.GaiaAbilities.CHITCHAT.value, "")
+
+        primary_type = primary.get("type") or enum.GaiaAbilities.CHITCHAT.value
+        primary_result = primary.get("result") or {"response": ""}
+        response_payload = handle_task_service_response(primary_type, primary_result)
+        formatted_tasks = [
+            orchestrator_service.format_task_payload(task)
+            for task in orchestration_result.get("tasks", [])
+        ]
+        if "data" not in response_payload:
+            response_payload["data"] = {}
+        response_payload["data"]["tasks"] = formatted_tasks
+        response_payload["recommend"] = orchestration_result.get("recommend", "")
+
+        print("Result: ", response_payload)
+        return response_payload
     except Exception as e:
         raise e
 
