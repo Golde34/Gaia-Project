@@ -1,5 +1,5 @@
 import Template from "../../components/template/Template"
-import { Metric } from "@tremor/react";
+import { Card, Col, Grid, Metric, Tab, TabGroup, TabList, TabPanel, TabPanels } from "@tremor/react";
 import { useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { userProfile } from "../../api/store/actions/auth_service/user.actions";
@@ -35,32 +35,39 @@ function ContentArea() {
                 <>
                     <Metric style={{ marginBottom: '30px', marginTop: '30px' }}
                         className='text-2xl font-bold text-gray-800'>User Profile</Metric>
-                    <div className="grid md:grid-cols-5 grid-cols-1 w-full">
-                        <div className="col-span-2">
-                            <div className="w-full flex flex-col justify-between p-2">
-                                <div className="flex-auto w-full">
+                    <TabGroup>
+                        <TabList className="mt-4" variant="solid">
+                            <Tab>Profile</Tab>
+                            <Tab>LLM Model Settings</Tab>
+                            <Tab>Github Settings</Tab>
+                        </TabList>
+                        <TabPanels>
+                            <TabPanel>
+                                <Grid numItems={7} className="mt-4">
+                                    <Col numColSpan={3}>
+                                <div className="flex-auto w-full p-2" >
                                     <UserProfileInfoScreen user={user} />
                                 </div>
-
-                            </div>
-                        </div>
-
-                        <div className="col-span-3 w-full">
-                            <div className='w-full p-2'>
-                                <UserSettingScreen user={user} />
-                            </div>
-                            <div className="w-full p-2 mt-2">
-                                <LLMModelSettingScreen user={user} model={user.llmModels[0].modelName}/> 
-                            </div>
-                        </div>
-                        <div className="col-span-5">
-                            <div className="w-full flex flex-col justify-between p-2">
-                                <div className="flex-auto w-full">
+                                </Col>
+                                <Col numColSpan={4}>
+                                <div className='w-full p-2'>
+                                    <UserSettingScreen user={user} />
+                                </div>
+                                </Col>
+                                </Grid>
+                            </TabPanel>
+                            <TabPanel>
+                                <div className="w-full p-2 mt-2">
+                                    <LLMModelSettingScreen user={user} model={user.llmModels[0].modelName} />
+                                </div>
+                            </TabPanel>
+                            <TabPanel>
+                                <div className="flex-auto w-full p-2">
                                     <UserGithubScreen user={user} />
                                 </div>
-                            </div>
-                        </div>
-                    </div>
+                            </TabPanel>
+                        </TabPanels>
+                    </TabGroup>
                 </>
             )}
         </div >
