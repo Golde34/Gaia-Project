@@ -16,7 +16,7 @@ class ValidateAccessTokenMiddleware(BaseHTTPMiddleware):
         if not validate_refresh_token(request):
             raise HTTPException(status_code=403, detail="Unauthorized")
 
-        # Validate access token
+        # Validate access token and set context
         access_token, ctx_with_user = await validate_access_token(request)
         if not access_token or not ctx_with_user:
             raise HTTPException(status_code=401, detail="Unauthorized")

@@ -1,8 +1,5 @@
 import traceback
-from fastapi import APIRouter, Depends, HTTPException, Request
-from typing import Optional
-
-from core.middleware import validate_access_token
+from fastapi import APIRouter, HTTPException, Request
 
 
 ChatInteractionRouter = APIRouter(
@@ -11,9 +8,13 @@ ChatInteractionRouter = APIRouter(
 )
 
 @ChatInteractionRouter.post("/initiate-chat")
-async def initiate_chat(request: Request, user_info: Optional[dict] = Depends(validate_access_token)):
+async def initiate_chat(request: Request):
     try:
-        return None
+        user_info = getattr(request.state, "user", None)
+        if not user_info:
+            raise HTTPException(status_code=401, detail="Unauthorized: User info missing")
+        user_id = user_info["user_id"]
+        ## now initiate chat logic here
     except Exception as e:
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)

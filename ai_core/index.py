@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request 
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
@@ -8,12 +8,16 @@ import uuid
 import uvicorn
 
 from core.middleware.validate_access_token import ValidateAccessTokenMiddleware
-from ui.controller import auth_controller, chat_controller, chat_interaction_controller, onboarding_controller, rag_controller, llm_business_handler_controller
+from ui.controller import (
+    auth_controller, chat_controller, chat_interaction_controller,
+    onboarding_controller, rag_controller, llm_business_handler_controller
+)
 from infrastructure.kafka.consumer import consume
 from kernel.config.config import session_id_var
 
 
 load_dotenv()
+
 
 # Kafka consumer setup
 @asynccontextmanager
