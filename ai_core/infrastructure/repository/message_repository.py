@@ -15,7 +15,6 @@ class MessageRepository(BaseRepository[Message]):
             default_order_by="created_at DESC",
         )
 
-    # --- CreateMessage ---
     async def create_message(self, message: Message) -> str:
         """
         Create a new message and return its ID.
@@ -23,7 +22,8 @@ class MessageRepository(BaseRepository[Message]):
         message.id = uuid.uuid4()
         ret = await self.insert(
             message,
-            returning=("id", "user_id", "dialogue_id", "sender_type", "content", "metadata", "created_at"),
+            returning=("id", "user_id", "dialogue_id", "user_message_id", "message_type", 
+                       "sender_type", "content", "metadata", "created_at", "updated_at"),
             auto_timestamps=True,
         )
         return ret["id"]
@@ -101,4 +101,4 @@ class MessageRepository(BaseRepository[Message]):
 
         return messages, has_more
 
-    
+message_repository = MessageRepository() 

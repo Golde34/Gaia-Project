@@ -75,3 +75,5 @@ class UserDialogueRepository(BaseRepository[UserDialogue]):
             rows = rows[:size]
 
         return rows, has_more
+
+user_dialogue_repository = UserDialogueRepository()
