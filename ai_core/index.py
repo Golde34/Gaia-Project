@@ -7,7 +7,8 @@ import asyncio
 import uuid
 import uvicorn
 
-from ui.controller import chat_controller, onboarding_controller, rag_controller, llm_business_handler_controller
+from core.middleware.validate_access_token import ValidateAccessTokenMiddleware
+from ui.controller import auth_controller, chat_controller, chat_interaction_controller, onboarding_controller, rag_controller, llm_business_handler_controller
 from infrastructure.kafka.consumer import consume
 from kernel.config.config import session_id_var
 
@@ -30,11 +31,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(ValidateAccessTokenMiddleware)
 
 app.include_router(chat_controller.ChatRouter)
 app.include_router(onboarding_controller.OnboardingRouter)
 app.include_router(rag_controller.RagRouter)
 app.include_router(llm_business_handler_controller.LLMBusinessHandlerRouter)
+app.include_router(auth_controller.AuthRouter)
+app.include_router(chat_interaction_controller.ChatInteractionRouter)
 
 # Middleware
 @app.middleware("http")
