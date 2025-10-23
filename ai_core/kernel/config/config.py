@@ -41,6 +41,10 @@ RECOMMENDATION_SERVICE_URL = (
     f"http://{RECOMMENDATION_SERVICE_HOST}:{RECOMMENDATION_SERVICE_PORT}/proactive-recommendator"
 )
 
+AUTH_SERVICE_HOST = os.getenv('AUTH_SERVICE_HOST', 'localhost')
+AUTH_SERVICE_PORT = int(os.getenv('AUTH_SERVICE_PORT', 4000))
+AUTH_SERVICE_URL = f"http://{AUTH_SERVICE_HOST}:{AUTH_SERVICE_PORT}"
+
 # PostgreSQL configuration for ai_core service
 POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
 POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', 5432))
