@@ -28,3 +28,37 @@ def build_authorization_headers(service: str, user_id: str) -> Dict[str, str]:
     except Exception as e:
         print(f"Error encrypting token: {e}")
     return headers
+
+def generate_sse_token(user_id: str) -> str:
+    """
+    Generate an SSE token for the given user ID.
+    """
+    try:
+        service = "chat_hub"
+        plain_text = f"{service}::{private_token}::{user_id}"
+        sse_token = security_config.encrypt_sse(plain_text)
+        return sse_token
+    except Exception as e:
+        print(f"Error generating SSE token: {e}")
+        return None
+
+def decode_sse_token(encrypted_token: str) -> str:
+    """
+    Decode the given SSE token to retrieve the original plain text.
+    """
+    try:
+        plain_text = security_config.decrypt_sse(encrypted_token)
+        parts = plain_text.split("::")
+        if len(parts) < 3:
+            raise ValueError("Invalid SSE token format")
+        if parts[0] != "chat_hub":
+            raise ValueError("Invalid service in SSE token")
+        if parts[1] != private_token:
+            raise ValueError("Invalid private token in SSE token")
+        user_id = parts[2]
+        if user_id == "":
+            raise ValueError("User ID is empty in SSE token")
+        return user_id
+    except Exception as e:
+        print(f"Error decoding SSE token: {e}")
+        return ""

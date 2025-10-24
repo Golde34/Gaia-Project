@@ -1,6 +1,8 @@
 import traceback
 from fastapi import APIRouter, HTTPException, Request
 
+from core.usecase.chat import ChatUsecase as chat_usecase
+
 
 ChatInteractionRouter = APIRouter(
     prefix="/chat-interaction",
@@ -14,7 +16,7 @@ async def initiate_chat(request: Request):
         if not user_info:
             raise HTTPException(status_code=401, detail="Unauthorized: User info missing")
         user_id = user_info["user_id"]
-        ## now initiate chat logic here
+        return await chat_usecase.initiate_chat(user_id=user_id)
     except Exception as e:
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)

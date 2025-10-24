@@ -6,9 +6,17 @@ from core.service import chat_service
 from infrastructure.kafka.producer import send_kafka_message
 from infrastructure.redis.redis import get_key, set_key, increase_key, decrease_key
 from kernel.config.config import RECURSIVE_SUMMARY_MAX_LENGTH, LONG_TERM_MEMORY_MAX_LENGTH
+from kernel.utils import build_header
 
 
 class ChatUsecase:
+
+    @classmethod
+    async def initiate_chat(cls, user_id: str):
+        sse_token = await build_header.generate_sse_token(user_id=user_id)
+        if sse_token is None:
+            raise Exception("Failed to generate SSE token")
+        return sse_token
 
     @classmethod
     async def chat(cls, query: QueryRequest, chat_type: str, default=True):
