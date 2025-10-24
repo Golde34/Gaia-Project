@@ -12,13 +12,6 @@ from kernel.utils import build_header
 class ChatUsecase:
 
     @classmethod
-    async def initiate_chat(cls, user_id: str):
-        sse_token = await build_header.generate_sse_token(user_id=user_id)
-        if sse_token is None:
-            raise Exception("Failed to generate SSE token")
-        return sse_token
-
-    @classmethod
     async def chat(cls, query: QueryRequest, chat_type: str, default=True):
         """
         Gaia selects the appropriate ability based on the chat type and query.

@@ -15,7 +15,8 @@ class DialogueService:
                 return await self._get_dialogue_by_id(dialogue_id)
             return await self._create_dialogue_if_not_exists(userId, msg_type)
         except Exception as e:
-            raise e 
+            print(f"Error in get_or_create_dialogue: {e}")
+            return None
 
     async def _get_dialogue_by_id(self, user_id: str, dialogue_id: str) -> UserDialogue:
         return await user_dialogue_repository.get_dialogue_by_id(user_id, dialogue_id)
