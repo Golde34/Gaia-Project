@@ -26,6 +26,16 @@ class ChatInteractionUsecase:
             "hasMore": has_more
         }
     
+    @classmethod
+    async def get_chat_dialogues(cls, user_id: str, size: int, cursor: str):
+        dialogues, has_more = await dialogue_service.get_all_dialogues_by_user_id(user_id, size, cursor)
+        if len(dialogues) > 0:
+            next_cursor = dialogues[0].created_at
+        return {
+            "dialogues": dialogues,
+            "nextCursor": next_cursor,
+            "hasMore": has_more
+        }
 
             
 chat_interaction_usecase = ChatInteractionUsecase()

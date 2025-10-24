@@ -1,6 +1,7 @@
 import traceback
 from fastapi import APIRouter, HTTPException, Request
 
+from core.domain.response.base_response import return_response, return_success_response
 from core.usecase.chat_interact_usecase import chat_interaction_usecase as usecase 
 
 ChatInteractionRouter = APIRouter(
@@ -49,3 +50,20 @@ async def get_chat_history(request: Request):
         print("ERROR:", stack_trace)
         raise HTTPException(status_code=500, detail=str(e))
     
+@ChatInteractionRouter.get("/dialogues")
+async def get_user_dialogues(request: Request):
+    try:
+        user_info = _user_info_from_middleware(request)
+        user_id = user_info["user_id"]
+        size = int(request.query_params.get("size", "20"))
+        cursor = request.query_params.get("cursor", "")
+        response = await usecase.get_chat_dialogues(
+            user_id=user_id,
+            size=size,
+            cursor=cursor
+        ) 
+        return return_success_response("Fetched dialogues successfully", response)
+    except Exception as e:
+        stack_trace = traceback.format_exc()
+        print("ERROR:", stack_trace)
+        raise HTTPException(status_code=500, detail=str(e))
