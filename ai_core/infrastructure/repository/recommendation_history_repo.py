@@ -1,9 +1,7 @@
-import asyncio
-from dataclasses import dataclass
 from typing import List, Optional
 
 from core.domain.entities.recommendation_history import RecommendationHistory
-from infrastructure.database.postgres import postgres_db
+from kernel.database.postgres import postgres_db
 
 
 class RecommendationHistoryRepository:

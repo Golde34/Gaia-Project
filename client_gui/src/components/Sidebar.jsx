@@ -40,12 +40,12 @@ const LinkWrapper = styled.a`
 `;
 
 const Sidebar = ({ isOpen = true }) => {
-        const panelBaseClass = "transform transition-all duration-300";
-        const panelVisibilityClass = isOpen ? "translate-x-0 opacity-100 pointer-events-auto" : "-translate-x-full opacity-0 pointer-events-none";
+	const panelBaseClass = "transform transition-all duration-300";
+	const panelVisibilityClass = isOpen ? "translate-x-0 opacity-100 pointer-events-auto" : "-translate-x-full opacity-0 pointer-events-none";
 
-        return (
-                <>
-                        <div className={`fixed left-3 sm:left-6 top-[20vh] mt-10 ${panelBaseClass} ${panelVisibilityClass}`}>
+	return (
+		<>
+			<div className={`fixed left-3 sm:left-6 top-[15vh] mt-10 ${panelBaseClass} ${panelVisibilityClass}`}>
 				<Grid numItems={1}>
 					<Col numColSpan={1}>
 						<LinkWrapper href="/client-gui/dashboard">
@@ -152,7 +152,7 @@ const Sidebar = ({ isOpen = true }) => {
 					</LinkWrapper>
 				</Col> */}
 			</div>
-                        <div className={`fixed bottom-4 left-3 sm:left-6 ${panelBaseClass} ${panelVisibilityClass}`}>
+			<div className={`fixed bottom-4 left-3 sm:left-6 ${panelBaseClass} ${panelVisibilityClass}`}>
 				<a href="#top">
 					<ArrowUpIcon
 						width={40}
@@ -168,7 +168,7 @@ const Sidebar = ({ isOpen = true }) => {
 };
 
 Sidebar.propTypes = {
-        isOpen: PropTypes.bool,
+	isOpen: PropTypes.bool,
 };
 
 export default Sidebar;

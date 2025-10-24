@@ -1,7 +1,7 @@
 from typing import List
 
 from core.domain.entities.recursive_summary import RecursiveSummary
-from infrastructure.database.postgres import postgres_db
+from kernel.database.postgres import postgres_db
 
 
 class RecursiveSummaryRepository:
