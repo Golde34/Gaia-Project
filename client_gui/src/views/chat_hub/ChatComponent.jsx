@@ -95,16 +95,51 @@ export default function ChatComponent(props) {
         });
 
         if (!chatInput.trim()) return;
-        const userMessage = createMessage(chatInput, "user");
-        setChatHistory((prev) => [...prev, userMessage]);
+        const messageToSend = chatInput;
+        const userMessage = createMessage(messageToSend, "user");
+        const botMessageId = `bot-${Date.now()}-${Math.random()}`;
+        const botPlaceholder = {
+            ...createMessage("", "bot"),
+            id: botMessageId,
+            isStreaming: true,
+        };
+        setChatHistory((prev) => [...prev, userMessage, botPlaceholder]);
         setChatInput("");
 
         try {
-            const response = await sendSSEChatMessage("", chatInput, chatType);
-            if (response) {
-                const botMessage = createMessage(response, "bot");
-                setChatHistory((prev) => [...prev, botMessage]);
-            }
+            await sendSSEChatMessage(dialogueId, messageToSend, chatType, {
+                onChunk: (_chunk, aggregated) => {
+                    setChatHistory((prev) =>
+                        prev.map((msg) =>
+                            msg.id === botMessageId
+                                ? { ...msg, content: aggregated }
+                                : msg
+                        )
+                    );
+                },
+                onComplete: (finalResponse) => {
+                    setChatHistory((prev) =>
+                        prev.map((msg) =>
+                            msg.id === botMessageId
+                                ? { ...msg, content: finalResponse, isStreaming: false }
+                                : msg
+                        )
+                    );
+                },
+                onError: () => {
+                    setChatHistory((prev) =>
+                        prev.map((msg) =>
+                            msg.id === botMessageId
+                                ? {
+                                    ...msg,
+                                    content: "Sorry, something went wrong. Please try again.",
+                                    isStreaming: false,
+                                }
+                                : msg
+                        )
+                    );
+                },
+            });
         } catch (error) {
             console.error("Failed to send chat message:", error);
         }
