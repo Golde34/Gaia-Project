@@ -7,14 +7,12 @@ import asyncio
 import uuid
 import uvicorn
 
+from ui.controller.back import rag_controller
+from ui.controller.external import auth_controller, chat_controller, chat_interaction_controller, onboarding_controller
+from ui.controller.internal import llm_business_handler_controller
 from core.middleware.validate_access_token import ValidateAccessTokenMiddleware
-from ui.controller import (
-    auth_controller, chat_controller, chat_interaction_controller,
-    onboarding_controller, rag_controller, llm_business_handler_controller
-)
 from infrastructure.kafka.consumer import consume
 from kernel.config.config import session_id_var
-
 
 load_dotenv()
 
