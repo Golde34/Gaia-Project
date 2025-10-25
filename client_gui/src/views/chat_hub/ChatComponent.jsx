@@ -1,5 +1,4 @@
 import { useDispatch, useSelector } from "react-redux";
-import { getTabId } from "../../kernels/utils/set-interval";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getChatHistory, sendSSEChatMessage } from "../../api/store/actions/chat_hub/messages.actions";
 import { Button, Card, Col, Grid, TextInput } from "@tremor/react";
@@ -8,7 +7,7 @@ import { useSearchParams } from "react-router-dom";
 export default function ChatComponent(props) {
     const isDashboard = props.isDashboard === undefined ? false : props.isDashboard;
     const chatType = props.chatType === undefined ? "" : props.chatType;
-    const tabId = getTabId();
+    const onServerEvent = props.onServerEvent;
 
     const dispatch = useDispatch();
     const [searchParams] = useSearchParams();
@@ -138,6 +137,11 @@ export default function ChatComponent(props) {
                                 : msg
                         )
                     );
+                },
+                onEvent: (eventName, data) => {
+                    if (typeof onServerEvent === "function") {
+                        onServerEvent(eventName, data);
+                    }
                 },
             });
         } catch (error) {

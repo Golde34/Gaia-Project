@@ -3,27 +3,22 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Card, Col, Grid, Metric, Badge, Title, Text } from "@tremor/react";
 import TaskRegistration from "./TaskRegistration";
 import ChatComponent from "../chat_hub/ChatComponent";
-import { useMultiWS } from "../../kernels/context/MultiWSContext";
 import { getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 import { dayNames, tagColors } from "../../kernels/utils/calendar";
 import { useRegisterScheduleCalendarDispatch } from "../../kernels/utils/write-dialog-api-requests";
 
 const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     const dispatch = useDispatch();
-    const { messages, isConnected, sendMessage } = useMultiWS();
 
     const [scheduleCalendarRegistration, setScheduleCalendarRegistration] = useState(null);
     const [selectedDay, setSelectedDay] = useState('1'); // Default to Monday
 
-    useEffect(() => {
-        const handleMessage = (message) => {
-            const data = JSON.parse(message);
-            if (data.type === 'register_calendar') {
-                setScheduleCalendarRegistration(data);
-            }
-        };
-        messages.chat.forEach(handleMessage);
-    }, [messages])
+    const handleServerEvent = useCallback((eventName, payload) => {
+        if (eventName === "register_calendar_result" && payload?.type === "register_calendar") {
+            setScheduleCalendarRegistration(payload);
+            setSelectedDay('1');
+        }
+    }, []);
 
     const timeBubbleConfigList = useSelector((state) => state.getTimeBubbleConfig);
     const { loading, error, config } = timeBubbleConfigList;
@@ -36,7 +31,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
         if (didTimeBubbleConfig.current) return;
         timeBubbleConfigs();
         didTimeBubbleConfig.current = true;
-    }, [])
+    }, [timeBubbleConfigs])
     useEffect(() => {
         if (!loading && !error && config) {
             const wrapped = { type: 'register_calendar', data: { response: config.data } };
@@ -117,7 +112,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
             <Grid numItems={9}>
                 <Col numColSpan={4}>
                     <div className="m-4">
-                        <ChatComponent chatType={'register_calendar'} />
+                        <ChatComponent chatType={'register_calendar'} onServerEvent={handleServerEvent} />
                     </div>
                 </Col>
                 <Col numColSpan={5}>

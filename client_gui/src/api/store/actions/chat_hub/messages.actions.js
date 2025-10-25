@@ -68,7 +68,7 @@ export const sendSSEChatMessage = (dialogueId, message, chatType, callbacks = {}
 		return Promise.reject(new Error("Message is required"));
 	}
 
-	const { onChunk, onComplete, onError } = callbacks;
+	const { onChunk, onComplete, onError, onEvent } = callbacks;
 	const userId = resolveUserId();
 	const baseUrl = `http://${config.serverHost}:${config.aiCorePort}`;
 	const endpoint = getAiCoreEndpoint(chatType);
@@ -84,12 +84,24 @@ export const sendSSEChatMessage = (dialogueId, message, chatType, callbacks = {}
 		const eventSource = new EventSource(url, { withCredentials: true });
 		let aggregatedResponse = "";
 		let isClosed = false;
+		let closeTimer = null;
 
 		const closeStream = () => {
 			if (!isClosed) {
 				isClosed = true;
 				eventSource.close();
+				if (closeTimer) {
+					clearTimeout(closeTimer);
+					closeTimer = null;
+				}
 			}
+		};
+
+		const scheduleAutoClose = () => {
+			if (closeTimer) return;
+			closeTimer = setTimeout(() => {
+				closeStream();
+			}, 30000);
 		};
 
 		eventSource.addEventListener("message_chunk", (event) => {
@@ -104,7 +116,6 @@ export const sendSSEChatMessage = (dialogueId, message, chatType, callbacks = {}
 		});
 
 		eventSource.addEventListener("message_complete", (event) => {
-			closeStream();
 			let finalResponse = aggregatedResponse;
 			try {
 				const data = JSON.parse(event.data);
@@ -116,6 +127,7 @@ export const sendSSEChatMessage = (dialogueId, message, chatType, callbacks = {}
 			}
 			onComplete?.(finalResponse);
 			resolve(finalResponse);
+			scheduleAutoClose();
 		});
 
 		eventSource.addEventListener("error", (event) => {
@@ -127,6 +139,16 @@ export const sendSSEChatMessage = (dialogueId, message, chatType, callbacks = {}
 			const error = new Error("EventSource error");
 			onError?.(error, event);
 			reject(error);
+		});
+
+		eventSource.addEventListener("register_calendar_result", (event) => {
+			try {
+				const data = JSON.parse(event.data);
+				onEvent?.("register_calendar_result", data);
+			} catch (error) {
+				console.error("Failed to parse register calendar SSE event", error);
+			}
+			scheduleAutoClose();
 		});
 	});
 };
