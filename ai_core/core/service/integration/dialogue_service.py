@@ -9,17 +9,24 @@ from infrastructure.repository.dialogue_repository import user_dialogue_reposito
 class DialogueService:
     """Service layer for user dialogues, interfacing with the UserDialogueRepository."""
     
-    async def get_or_create_dialogue(self, userId: str, dialogue_id: str, msg_type: str) -> UserDialogue:
+    async def get_or_create_dialogue(self, user_id: str, dialogue_id: str, msg_type: str) -> UserDialogue:
         try:
             if dialogue_id:
-                return await self._get_dialogue_by_id(dialogue_id)
-            return await self._create_dialogue_if_not_exists(userId, msg_type)
+                return await self.get_dialogue_by_id(user_id, dialogue_id)
+            return await self._create_dialogue_if_not_exists(user_id, msg_type)
         except Exception as e:
             print(f"Error in get_or_create_dialogue: {e}")
             return None
 
-    async def _get_dialogue_by_id(self, user_id: str, dialogue_id: str) -> UserDialogue:
-        return await user_dialogue_repository.get_dialogue_by_id(user_id, dialogue_id)
+    async def get_dialogue_by_id(self, user_id: str, dialogue_id: str) -> UserDialogue:
+        try:
+            dialogue = await user_dialogue_repository.get_dialogue_by_id(user_id, dialogue_id)
+            if dialogue is None:
+                print(f"Dialogue with ID {dialogue_id} not found for user {user_id}.")
+            return dialogue
+        except Exception as e:
+            print(f"Error in get_dialogue_by_id: {e}")
+            return None
 
     async def _create_dialogue_if_not_exists(self, user_id: str, dialogue_type: str) -> UserDialogue:
         dialogue = await self._get_dialogue_by_user_id_and_type(user_id, dialogue_type)

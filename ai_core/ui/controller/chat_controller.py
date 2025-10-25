@@ -34,3 +34,14 @@ async def send_message(
     return await handle_sse_stream(
         dialogue_id, message, model_name, user_id, enum.ChatType.ABILITIES.value
     )
+
+@ChatRouter.get("/recent-history")
+async def get_recent_chat_history(
+    user_id: str = None,
+    size: int = 10,
+    cursor: str = None
+):
+    """
+    Get recent chat history for a user.
+    """
+    return await chatUsecase.get_recent_chat_history(user_id=user_id, size=size, cursor=cursor)

@@ -2,7 +2,7 @@ import traceback
 from fastapi import APIRouter, HTTPException, Request
 
 from core.domain.response.base_response import return_response, return_success_response
-from core.usecase.chat_interact_usecase import chat_interaction_usecase as usecase 
+from core.usecase.chat_interact_usecase import chat_interaction_usecase as usecase
 
 ChatInteractionRouter = APIRouter(
     prefix="/chat-interaction",
@@ -23,7 +23,8 @@ async def initiate_chat(request: Request):
 def _user_info_from_middleware(request: Request):
     user_info = getattr(request.state, "user", None)
     if not user_info:
-        raise HTTPException(status_code=401, detail="Unauthorized: User info missing")
+        raise HTTPException(
+            status_code=401, detail="Unauthorized: User info missing")
     return user_info
 
 @ChatInteractionRouter.get("/history")
@@ -33,10 +34,10 @@ async def get_chat_history(request: Request):
         user_id = user_info["user_id"]
         dialogue_id = request.query_params.get("dialogueId", "")
         chat_type = request.query_params.get("chatType", "")
-        
+
         size = int(request.query_params.get("size", "10"))
         cursor = request.query_params.get("cursor", "")
-        
+
         response = await usecase.get_chat_history_from_db(
             user_id=user_id,
             dialogue_id=dialogue_id,
@@ -49,7 +50,7 @@ async def get_chat_history(request: Request):
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 @ChatInteractionRouter.get("/dialogues")
 async def get_user_dialogues(request: Request):
     try:
@@ -61,7 +62,7 @@ async def get_user_dialogues(request: Request):
             user_id=user_id,
             size=size,
             cursor=cursor
-        ) 
+        )
         return return_success_response("Fetched dialogues successfully", response)
     except Exception as e:
         stack_trace = traceback.format_exc()
