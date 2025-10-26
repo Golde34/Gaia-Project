@@ -68,7 +68,7 @@ class MessageRepository(BaseRepository[Message]):
 
         # Basic query for message retrieval
         base_query = """
-            SELECT id, user_id, dialogue_id, sender_type, content, metadata, created_at
+            SELECT id, user_id, dialogue_id, sender_type, message_type, content, metadata, created_at
             FROM messages
             WHERE dialogue_id = $1
         """
@@ -93,7 +93,7 @@ class MessageRepository(BaseRepository[Message]):
         messages = []
         for row in rows:
             message = self._row_to_model(self.model_cls, row)
-            messages.append(message)
+            messages.append(message.model_dump(by_alias=True))
 
         has_more = len(messages) > size
         if has_more:

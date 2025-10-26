@@ -8,7 +8,7 @@ class TagScheduleTaskRequest(BaseModel):
     title: str
 
     class Config:
-        allow_population_by_field_name = True
+        validate_by_name = True
         populate_by_name = True
 
 class TagScheduleTaskRequestBody(BaseModel):
@@ -16,5 +16,5 @@ class TagScheduleTaskRequestBody(BaseModel):
     tasks: List[TagScheduleTaskRequest]
 
     class Config:
-        allow_population_by_field_name = True
+        validate_by_name = True
         populate_by_name = True

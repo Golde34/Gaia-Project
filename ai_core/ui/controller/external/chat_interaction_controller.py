@@ -1,7 +1,7 @@
 import traceback
 from fastapi import APIRouter, HTTPException, Request
 
-from core.domain.response.base_response import return_response, return_success_response
+from core.domain.response.base_response import return_success_response
 from core.usecase.chat_interact_usecase import chat_interaction_usecase as usecase
 
 ChatInteractionRouter = APIRouter(
@@ -13,7 +13,7 @@ ChatInteractionRouter = APIRouter(
 async def initiate_chat(request: Request):
     try:
         user_info = _user_info_from_middleware(request)
-        user_id = user_info["user_id"]
+        user_id = int(user_info["user_id"])
         return await usecase.initiate_chat(user_id=user_id)
     except Exception as e:
         stack_trace = traceback.format_exc()
@@ -31,7 +31,7 @@ def _user_info_from_middleware(request: Request):
 async def get_chat_history(request: Request):
     try:
         user_info = _user_info_from_middleware(request)
-        user_id = user_info["user_id"]
+        user_id = int(user_info["user_id"])
         dialogue_id = request.query_params.get("dialogueId", "")
         chat_type = request.query_params.get("chatType", "")
 
@@ -55,7 +55,7 @@ async def get_chat_history(request: Request):
 async def get_user_dialogues(request: Request):
     try:
         user_info = _user_info_from_middleware(request)
-        user_id = user_info["user_id"]
+        user_id = int(user_info["user_id"])
         size = int(request.query_params.get("size", "20"))
         cursor = request.query_params.get("cursor", "")
         response = await usecase.get_chat_dialogues(

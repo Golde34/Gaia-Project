@@ -42,7 +42,7 @@ RECOMMENDATION_SERVICE_URL = (
 )
 
 AUTH_SERVICE_HOST = os.getenv('AUTH_SERVICE_HOST', 'localhost')
-AUTH_SERVICE_PORT = int(os.getenv('AUTH_SERVICE_PORT', 4000))
+AUTH_SERVICE_PORT = int(os.getenv('AUTH_SERVICE_PORT', 4001))
 AUTH_SERVICE_URL = f"http://{AUTH_SERVICE_HOST}:{AUTH_SERVICE_PORT}"
 
 # PostgreSQL configuration for ai_core service

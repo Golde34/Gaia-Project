@@ -58,11 +58,11 @@ class AuthServiceClient:
 
     async def check_token(self, token: str) -> Dict:
         try:
-            auth_service_url = f"{self.base_url}/auth/check-token"
+            auth_service_url = f"{self.base_url}/auth/get-check-token"
             headers = build_header.build_default_headers()
-            body = {"token": token}
-            result = await aiohttp_utils.post(auth_service_url, payload=body, header=headers)
-            token_response = result.get("message", {})
+            params = {"token": token}
+            result = await aiohttp_utils.get(auth_service_url, params=params, header=headers)
+            token_response = result["data"]["message"]
             return token_response
         except Exception as e:
             logging.error(f"Error in check_token: {e}")

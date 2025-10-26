@@ -38,5 +38,5 @@ kafka_actions = {
     KafkaTopic.UPDATE_RECURSIVE_SUMMARY.value: update_recursive_summary_handler, 
     KafkaTopic.UPDATE_LONG_TERM_MEMORY.value: update_long_term_memory_handler,
     KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value: register_calendar_schedule_handler,
-    KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value: schedule_result_handler,
+    # KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value: schedule_result_handler,
 }

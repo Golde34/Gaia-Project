@@ -32,15 +32,15 @@ class UserDialogueRepository(BaseRepository[UserDialogue]):
             order_by="created_at DESC",
             to_models=True,
         )
-        return rows[0] if rows else None
+        return rows[0].model_dump(by_alias=True) if rows else None
 
-    async def get_dialogue_by_id(self, user_id: str, dialogue_id: str) -> Optional[UserDialogue]:
+    async def get_dialogue_by_id(self, user_id: int, dialogue_id: str) -> Optional[UserDialogue]:
         rows = await self.list(
             where={"user_id": user_id, "id": dialogue_id},
             to_models=True,
             limit=1,
         )
-        return rows[0] if rows else None
+        return rows[0].model_dump(by_alias=True) if rows else None
 
     async def get_all_dialogues_by_user_id(
         self,

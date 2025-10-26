@@ -29,7 +29,7 @@ def build_authorization_headers(service: str, user_id: str) -> Dict[str, str]:
         print(f"Error encrypting token: {e}")
     return headers
 
-def generate_sse_token(user_id: str) -> str:
+def generate_sse_token(user_id: int) -> str:
     """
     Generate an SSE token for the given user ID.
     """

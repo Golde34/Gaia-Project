@@ -28,8 +28,6 @@ class MessageService:
             message_type=message_type,
             content=message,
             sender_type=sender_type,
-            content=message,
-            sender_type=sender_type,
             metadata={},
             created_at=time.time(),
             updated_at=time.time(),
