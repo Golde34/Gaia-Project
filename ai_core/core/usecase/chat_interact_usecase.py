@@ -19,9 +19,9 @@ class ChatInteractionUsecase:
                 raise Exception("Failed to get or create dialogue")
             messages, has_more = await message_service.get_messages_by_dialogue_id_with_cursor_pagination(dialogue.id, size, cursor)
             if len(messages) > 0:
-                next_cursor = messages[0]['createdAt']
+                next_cursor = messages[0].created_at
             return {
-                "dialogue": dialogue.model_dump(by_alias=True),
+                "dialogue": dialogue,
                 "chatMessages": messages,
                 "nextCursor": next_cursor,
                 "hasMore": has_more

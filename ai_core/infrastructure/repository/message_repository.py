@@ -94,7 +94,7 @@ class MessageRepository(BaseRepository[Message]):
         messages = []
         for row in rows:
             message = self._row_to_model(self.model_cls, row)
-            messages.append(message.model_dump(by_alias=True))
+            messages.append(message)
 
         has_more = len(messages) > size
         if has_more:
