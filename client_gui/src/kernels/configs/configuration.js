@@ -3,7 +3,6 @@ const gaiaConnectorPort = parseInt( import.meta.env.GAIA_CONNECTOR_PORT ?? '5000
 const authenticationServicePort = parseInt( import.meta.env.AUTHENTICATION_SERVICE_PORT ?? '4001' );
 const middlewarePort = parseInt( import.meta.env.MIDDLEWARE_PORT ?? '4000')
 const chatHubPort = parseInt( import.meta.env.CHAT_HUB_PORT ?? '4004' );
-const aiCorePort = parseInt( import.meta.env.AI_CORE_PORT ?? '4002' );
 const serverTimeout = parseInt( import.meta.env.SERVER_TIMEOUT ?? '10000' );
 const notifyAgentWSHost = import.meta.env.NOTIFICATION_WS_HOST ?? 'localhost:4003';
 const chatHubWSHost = import.meta.env.CHAT_HUB_WS_HOST ?? 'localhost:4004';
@@ -16,8 +15,7 @@ const REQUIRED_ENV_VARS = [
     'SERVER_TIMEOUT',
     'MIDDLEWARE_PORT',
     'NOTIFICATION_WS_HOST',
-    'CHAT_HUB_WS_HOST',
-    'AI_CORE_PORT'
+    'CHAT_HUB_WS_HOST'
 ];
 
 export const config = {
@@ -29,7 +27,6 @@ export const config = {
     serverTimeout: serverTimeout,
     notifyAgentWSHost: notifyAgentWSHost,
     chatHubWSHost: chatHubWSHost,
-    aiCorePort: aiCorePort,
 };
 
 export const validateEnvironmentVars = () => {

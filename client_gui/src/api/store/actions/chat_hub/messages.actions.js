@@ -31,127 +31,77 @@ export const getChatHistory = (size, cursor, dialogueId, chatType) => async (dis
 	}
 };
 
-const aiCoreEndpointMap = {
-	gaia_introduction: "/onboarding/introduce-gaia",
-	register_calendar: "/onboarding/register-calendar",
-};
-
-const getAiCoreEndpoint = (chatType) => {
-	if (!chatType) return "/chat/send-message";
-	return aiCoreEndpointMap[chatType] || "/chat/send-message";
-};
-
-const resolveUserId = () => {
-	if (typeof window === "undefined") return "";
+export const sendSSEChatMessage = async (dialogueId, message, chatType) => {
 	try {
-		const userInfo = window.localStorage.getItem("userInfo");
-		if (!userInfo) {
-			return "";
+		const tokenResponse = await serverRequest(`/chat-interaction/initiate-chat`, HttpMethods.POST, portName.chatHubPort);
+		if (tokenResponse.status !== 200) {
+			throw new Error("Failed to initiate chat");
 		}
-		const parsed = JSON.parse(userInfo);
-		const potentialIds = [
-			parsed?.id,
-			parsed?.userId,
-			parsed?.user?.id,
-			parsed?.user?.userId,
-		];
-		const resolved = potentialIds.find((value) => value !== undefined && value !== null && `${value}`.length > 0);
-		return resolved ? `${resolved}` : "";
-	} catch (error) {
-		console.warn("Unable to parse userInfo from localStorage", error);
-		return "";
-	}
-};
+		if (!tokenResponse.data) {
+			throw new Error("SSE token not received");
+		}
 
-export const sendSSEChatMessage = (dialogueId, message, chatType, callbacks = {}) => {
-	if (!message?.trim()) {
-		return Promise.reject(new Error("Message is required"));
-	}
+		const params = new URLSearchParams({
+			dialogueId: dialogueId,
+			message: message,
+			type: chatType,
+			sseToken: tokenResponse.data,
+		});
+		const baseUrl = `http://${config.serverHost}:${config.chatHubPort}`;
+		const url = `${baseUrl}/chat-system/send-message?${params}`;
 
-	const { onChunk, onComplete, onError, onEvent } = callbacks;
-	const userId = resolveUserId();
-	const baseUrl = `http://${config.serverHost}:${config.aiCorePort}`;
-	const endpoint = getAiCoreEndpoint(chatType);
-	const params = new URLSearchParams({
-		dialogue_id: dialogueId ?? "",
-		message,
-		user_id: userId ?? "",
-	});
+		return new Promise((resolve, reject) => {
+			const eventSource = new EventSource(url);
 
-	const url = `${baseUrl}${endpoint}?${params.toString()}`;
-
-	return new Promise((resolve, reject) => {
-		const eventSource = new EventSource(url, { withCredentials: true });
-		let aggregatedResponse = "";
-		let isClosed = false;
-		let closeTimer = null;
-
-		const closeStream = () => {
-			if (!isClosed) {
-				isClosed = true;
+			eventSource.onmessage = (event) => {
 				eventSource.close();
-				if (closeTimer) {
-					clearTimeout(closeTimer);
-					closeTimer = null;
-				}
-			}
-		};
+				const response = event.data;
+				resolve(response);
+			};
 
-		const scheduleAutoClose = () => {
-			if (closeTimer) return;
-			closeTimer = setTimeout(() => {
-				closeStream();
-			}, 30000);
-		};
-
-		eventSource.addEventListener("message_chunk", (event) => {
-			try {
-				const data = JSON.parse(event.data);
-				const chunk = data?.chunk ?? "";
-				aggregatedResponse += chunk;
-				onChunk?.(chunk, aggregatedResponse, data);
-			} catch (error) {
-				console.error("Failed to parse SSE chunk data", error);
-			}
+			eventSource.onerror = (error) => {
+				eventSource.close();
+				reject(new Error("EventSource error"));
+			};
 		});
-
-		eventSource.addEventListener("message_complete", (event) => {
-			let finalResponse = aggregatedResponse;
-			try {
-				const data = JSON.parse(event.data);
-				if (typeof data?.full_response === "string" && data.full_response.length > 0) {
-					finalResponse = data.full_response;
-				}
-			} catch (error) {
-				console.warn("Failed to parse SSE completion data", error);
-			}
-			onComplete?.(finalResponse);
-			resolve(finalResponse);
-			scheduleAutoClose();
-		});
-
-		eventSource.addEventListener("error", (event) => {
-			if (isClosed) {
-				return;
-			}
-			closeStream();
-			console.error("AI Core SSE stream error:", event);
-			const error = new Error("EventSource error");
-			onError?.(error, event);
-			reject(error);
-		});
-
-		eventSource.addEventListener("register_calendar_result", (event) => {
-			try {
-				const data = JSON.parse(event.data);
-				onEvent?.("register_calendar_result", data);
-			} catch (error) {
-				console.error("Failed to parse register calendar SSE event", error);
-			}
-			scheduleAutoClose();
-		});
-	});
+	} catch (error) {
+		console.error("Error sending chat message:", error);
+		throw error;
+	}
 };
+
+export const subscribeSSE = async (dialogueId, tabId, onMessage) => {
+	const tokenResponse = await serverRequest(`/chat-interaction/initiate-chat`, HttpMethods.POST, portName.chatHubPort);
+	if (tokenResponse.status !== 200) {
+		throw new Error("Failed to initiate chat");
+	}
+	if (!tokenResponse.data) {
+		throw new Error("SSE token not received");
+	}
+
+	const baseUrl = `http://${config.serverHost}:${config.chatHubPort}`;
+	const url = `${baseUrl}/chat-system/subscribe-sse?dialogueId=${encodeURIComponent(dialogueId)}&tabId=${encodeURIComponent(tabId)}&sseToken=${tokenResponse.data}`;
+
+	const eventSource = new EventSource(url);
+	eventSource.onmessage = (event) => {
+		if (event.data) {
+			try {
+				event.data = JSON.parse(event.data);
+				onMessage(event.data);
+			} catch (error) {
+				console.error("Error parsing SSE message:", error);
+				onMessage({ content: event.data })
+			}
+		}
+	};
+	eventSource.onerror = (error) => {
+		setTimeout(() => {
+			subscribeSSE(dialogueId, tabId, onMessage);
+		}, 5000); // Retry after 5 seconds
+		console.error("Error subscribing to SSE:", error);
+	};
+	return eventSource;
+}
 
 export const sendNormalChatMessageNew = async (dialogueId, message, chatType, tabId) => {
 	const resp = await serverRequest(`/chat-interaction/send-message`, HttpMethods.POST, portName.chatHubPort, {

@@ -1,4 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
+import { getTabId } from "../../kernels/utils/set-interval";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getChatHistory, sendSSEChatMessage } from "../../api/store/actions/chat_hub/messages.actions";
 import { Button, Card, Col, Grid, TextInput } from "@tremor/react";
@@ -7,7 +8,7 @@ import { useSearchParams } from "react-router-dom";
 export default function ChatComponent(props) {
     const isDashboard = props.isDashboard === undefined ? false : props.isDashboard;
     const chatType = props.chatType === undefined ? "" : props.chatType;
-    const onServerEvent = props.onServerEvent;
+    const tabId = getTabId();
 
     const dispatch = useDispatch();
     const [searchParams] = useSearchParams();
@@ -94,56 +95,16 @@ export default function ChatComponent(props) {
         });
 
         if (!chatInput.trim()) return;
-        const messageToSend = chatInput;
-        const userMessage = createMessage(messageToSend, "user");
-        const botMessageId = `bot-${Date.now()}-${Math.random()}`;
-        const botPlaceholder = {
-            ...createMessage("", "bot"),
-            id: botMessageId,
-            isStreaming: true,
-        };
-        setChatHistory((prev) => [...prev, userMessage, botPlaceholder]);
+        const userMessage = createMessage(chatInput, "user");
+        setChatHistory((prev) => [...prev, userMessage]);
         setChatInput("");
 
         try {
-            await sendSSEChatMessage(dialogueId, messageToSend, chatType, {
-                onChunk: (_chunk, aggregated) => {
-                    setChatHistory((prev) =>
-                        prev.map((msg) =>
-                            msg.id === botMessageId
-                                ? { ...msg, content: aggregated }
-                                : msg
-                        )
-                    );
-                },
-                onComplete: (finalResponse) => {
-                    setChatHistory((prev) =>
-                        prev.map((msg) =>
-                            msg.id === botMessageId
-                                ? { ...msg, content: finalResponse, isStreaming: false }
-                                : msg
-                        )
-                    );
-                },
-                onError: () => {
-                    setChatHistory((prev) =>
-                        prev.map((msg) =>
-                            msg.id === botMessageId
-                                ? {
-                                    ...msg,
-                                    content: "Sorry, something went wrong. Please try again.",
-                                    isStreaming: false,
-                                }
-                                : msg
-                        )
-                    );
-                },
-                onEvent: (eventName, data) => {
-                    if (typeof onServerEvent === "function") {
-                        onServerEvent(eventName, data);
-                    }
-                },
-            });
+            const response = await sendSSEChatMessage("", chatInput, chatType);
+            if (response) {
+                const botMessage = createMessage(response, "bot");
+                setChatHistory((prev) => [...prev, botMessage]);
+            }
         } catch (error) {
             console.error("Failed to send chat message:", error);
         }
