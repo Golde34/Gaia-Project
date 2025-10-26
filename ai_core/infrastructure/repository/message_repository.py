@@ -1,3 +1,4 @@
+import datetime
 import uuid
 from typing import List, Tuple
 
@@ -79,7 +80,7 @@ class MessageRepository(BaseRepository[Message]):
         if cursor:
             query += " AND created_at < $2::timestamp"
             query += " ORDER BY created_at DESC LIMIT $3"
-            params.append(cursor)
+            params.append(datetime.datetime.fromisoformat(cursor))
             params.append(query_limit)
         else:
             query += " ORDER BY created_at DESC LIMIT $2"
