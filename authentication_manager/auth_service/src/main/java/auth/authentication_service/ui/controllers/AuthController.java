@@ -67,6 +67,12 @@ public class AuthController {
         return authService.checkToken(token);
     }
 
+    @GetMapping("/get-check-token")
+    public ResponseEntity<?> getCheckToken(@RequestParam String token) throws Exception {
+        TokenDto tokenDto = TokenDto.builder().token(token).build();
+        return authService.checkToken(tokenDto);
+    }
+
     @GetMapping("/check-permission")
     public ResponseEntity<?> checkPermission(@RequestBody UserPermissionDto permission) throws Exception {
         return authService.checkPermission(permission);
