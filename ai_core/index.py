@@ -28,10 +28,10 @@ app = FastAPI(title="Task Information Extraction API", lifespan=lifespan)
 # Add CORS middleware for SSE
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure this appropriately for production
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=["http://localhost:5173"],  # Chỉnh sửa cho đúng
+    allow_methods=["HEAD", "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],  # Đảm bảo OPTIONS được phép
     allow_headers=["*"],
+    allow_credentials=True,
 )
 app.add_middleware(ValidateAccessTokenMiddleware)
 
