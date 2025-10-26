@@ -6,6 +6,9 @@ from core.service.integration import auth_service
 
 class ValidateAccessTokenMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
         no_auth_required = ["/chat-system", "refresh-token"]
         
         if any(path in request.url.path for path in no_auth_required):

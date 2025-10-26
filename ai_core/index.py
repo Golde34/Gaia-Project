@@ -7,14 +7,12 @@ import asyncio
 import uuid
 import uvicorn
 
+from ui.controller.back import rag_controller
+from ui.controller.external import auth_controller, chat_controller, chat_interaction_controller, onboarding_controller
+from ui.controller.internal import llm_business_handler_controller
 from core.middleware.validate_access_token import ValidateAccessTokenMiddleware
-from ui.controller import (
-    auth_controller, chat_controller, chat_interaction_controller,
-    onboarding_controller, rag_controller, llm_business_handler_controller
-)
 from infrastructure.kafka.consumer import consume
 from kernel.config.config import session_id_var
-
 
 load_dotenv()
 
@@ -30,10 +28,10 @@ app = FastAPI(title="Task Information Extraction API", lifespan=lifespan)
 # Add CORS middleware for SSE
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure this appropriately for production
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=["http://localhost:5173"],  # Chỉnh sửa cho đúng
+    allow_methods=["HEAD", "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],  # Đảm bảo OPTIONS được phép
     allow_headers=["*"],
+    allow_credentials=True,
 )
 app.add_middleware(ValidateAccessTokenMiddleware)
 

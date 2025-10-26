@@ -25,3 +25,7 @@ def bytes_to_str(obj):
     if isinstance(obj, bytes):
         return obj.decode("utf-8")
     raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+
+def to_camel(string: str) -> str:
+    parts = string.split('_')
+    return parts[0] + ''.join(word.capitalize() for word in parts[1:])

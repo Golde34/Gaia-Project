@@ -5,7 +5,6 @@ from core.service.chat_service import update_recursive_summary, update_long_term
 
 
 async def update_recursive_summary_handler(msg: ConsumerRecord):
-    ## convert message string value to json
     payload = json.loads(msg.value)
     print(f"Received payload for update_recursive_summary: {payload}") 
     return await update_recursive_summary(payload['user_id'], payload['dialogue_id']) 
