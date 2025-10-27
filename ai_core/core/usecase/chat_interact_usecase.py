@@ -1,3 +1,4 @@
+from core.domain.request.chat_hub_request import SendMessageRequest
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
 from kernel.utils import build_header
@@ -39,6 +40,16 @@ class ChatInteractionUsecase:
             "nextCursor": next_cursor,
             "hasMore": has_more
         }
+
+    @classmethod
+    async def handle_send_message(cls, request: SendMessageRequest):
+        # decode sse token to get user id
+        # get or create dialogue
+        # create user message in db
+        # validate user model
+        # chat (call chat usecase to get bot message)
+        # store bot message in db
+        pass
 
             
 chat_interaction_usecase = ChatInteractionUsecase()

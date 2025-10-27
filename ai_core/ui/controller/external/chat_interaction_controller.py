@@ -1,6 +1,7 @@
 import traceback
 from fastapi import APIRouter, HTTPException, Request
 
+from core.domain.request.chat_hub_request import SendMessageRequest
 from core.domain.response.base_response import return_success_response
 from core.usecase.chat_interact_usecase import chat_interaction_usecase as usecase
 
@@ -64,6 +65,16 @@ async def get_user_dialogues(request: Request):
             cursor=cursor
         )
         return return_success_response("Fetched dialogues successfully", response)
+    except Exception as e:
+        stack_trace = traceback.format_exc()
+        print("ERROR:", stack_trace)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@ChatInteractionRouter.post("/send-message")
+async def send_message(request: SendMessageRequest):
+    try:
+        response = await usecase.handle_send_message(request) 
+        return response
     except Exception as e:
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)
