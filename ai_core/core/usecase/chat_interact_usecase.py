@@ -1,7 +1,10 @@
+import functools
 from core.domain.request.chat_hub_request import SendMessageRequest
+from core.service import sse_stream_service
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
 from kernel.utils import build_header
+from functools import partial
 
 
 class ChatInteractionUsecase:
@@ -42,8 +45,11 @@ class ChatInteractionUsecase:
         }
 
     @classmethod
-    async def handle_send_message(cls, request: SendMessageRequest):
-        # decode sse token to get user id
+    async def handle_send_message(cls, user_id: int, request: SendMessageRequest):
+        handler = functools.partial(cls.store_message, user_id, request)
+        await sse_stream_service.handle_sse_stream(user_id=user_id, func=handler, meta={'dialogue_id': request.dialogue_id})
+
+    async def store_message(self, user_id: int, request: SendMessageRequest):
         # get or create dialogue
         # create user message in db
         # validate user model

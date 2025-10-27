@@ -1,7 +1,7 @@
 import json
 from aiokafka import ConsumerRecord
 
-from ui.sse.connection_registry import broadcast_to_user
+from kernel.utils.sse_connection_registry import broadcast_to_user
 
 
 async def schedule_result_handler(msg: ConsumerRecord):
