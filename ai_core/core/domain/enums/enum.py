@@ -49,3 +49,7 @@ class DialogueEnum(Enum):
 class ActiveEnum(Enum):
     ACTIVE = "active"
     INACTIVE = "inactive"
+
+class SenderTypeEnum(Enum):
+    USER = "user"
+    BOT = "bot"

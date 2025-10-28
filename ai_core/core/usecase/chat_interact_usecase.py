@@ -1,10 +1,14 @@
 import functools
+
+from core.domain.enums.enum import SenderTypeEnum
 from core.domain.request.chat_hub_request import SendMessageRequest
+from core.domain.request.query_request import QueryRequest
 from core.service import sse_stream_service
+from core.service.integration import auth_service
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
+from core.usecase.chat import ChatUsecase as chat_usecase
 from kernel.utils import build_header
-from functools import partial
 
 
 class ChatInteractionUsecase:
@@ -46,16 +50,45 @@ class ChatInteractionUsecase:
 
     @classmethod
     async def handle_send_message(cls, user_id: int, request: SendMessageRequest):
-        handler = functools.partial(cls.store_message, user_id, request)
+        handler = functools.partial(cls._create_message_flow, user_id, request)
         await sse_stream_service.handle_sse_stream(user_id=user_id, func=handler, meta={'dialogue_id': request.dialogue_id})
 
-    async def store_message(self, user_id: int, request: SendMessageRequest):
-        # get or create dialogue
-        # create user message in db
-        # validate user model
-        # chat (call chat usecase to get bot message)
-        # store bot message in db
-        pass
+    async def _create_message_flow(self, user_id: int, request: SendMessageRequest):
+        dialogue = await dialogue_service.get_or_create_dialogue(user_id=user_id, dialogue_id=request.dialogue_id, msg_type=request.msg_type)
+        if dialogue is None:
+            raise Exception("Failed to get or create dialogue")
+
+        user_message_id = await message_service.create_message(
+            dialogue=dialogue,
+            user_id=user_id,
+            message=request.message,
+            msg_type=request.msg_type,
+            sender_type=SenderTypeEnum.USER.value,
+        )
+
+        user_model = await auth_service.get_user_model(user_id)
+
+        query_request: QueryRequest = QueryRequest(
+            user_id=user_id,
+            query=request.message,
+            model_name=user_model,
+            dialogue_id=dialogue.id,
+            type=request.msg_type,
+        )
+        
+        # TODO: Category with semantic router like onboarding or normal chitchat        
+        bot_response = chat_usecase.chat(query=query_request, chat_type=request.msg_type)
+
+        bot_message_id = await message_service.create_message(
+            dialogue=dialogue,
+            user_id=user_id,
+            message=bot_response,
+            msg_type=request.msg_type,
+            sender_type=SenderTypeEnum.BOT.value,
+            user_message_id=user_message_id,
+        )
+        print("Bot response stored with message ID:", bot_message_id)
+        return bot_response
 
             
 chat_interaction_usecase = ChatInteractionUsecase()
