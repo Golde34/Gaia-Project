@@ -12,13 +12,9 @@ class DialogueService:
     async def get_or_create_dialogue(self, user_id: int, dialogue_id: str, msg_type: str) -> UserDialogue:
         if msg_type is None or msg_type.strip() == "":
             msg_type = DialogueEnum.DEFAULT_TYPE.value
-        try:
-            if dialogue_id:
-                return await self.get_dialogue_by_id(user_id, dialogue_id)
-            return await self._create_dialogue_if_not_exists(user_id, msg_type)
-        except Exception as e:
-            print(f"Error in get_or_create_dialogue: {e}")
-            return None
+        if dialogue_id:
+            return await self.get_dialogue_by_id(user_id, dialogue_id)
+        return await self._create_dialogue_if_not_exists(user_id, msg_type)
 
     async def get_dialogue_by_id(self, user_id: int, dialogue_id: str) -> UserDialogue:
         try:

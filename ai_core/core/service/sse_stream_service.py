@@ -1,42 +1,40 @@
-
 import asyncio
 import json
 import traceback
-from typing import Optional
-
-from fastapi import HTTPException
+import inspect
+from typing import Optional, Callable, Any
 from fastapi.responses import StreamingResponse
-from core.domain.request.query_request import QueryRequest
-from core.usecase.chat import ChatUsecase as chatUsecase
-from ui.sse.connection_registry import (
-    format_sse_event,
-    register_client,
-    unregister_client,
-)
+
+from typing import Dict
+from kernel.utils.sse_connection_registry import format_sse_event, register_client, unregister_client
+
 
 KEEP_ALIVE_INTERVAL = 15
 
 
 async def handle_sse_stream(
-    dialogue_id: str,
-    message: str,
-    model_name: str,
     user_id: str,
-    chat_type: str,
-):
+    func: Optional[Callable[..., Any]] = None,
+    *,
+    meta: Optional[Dict[str, Any]] = None,
+) -> StreamingResponse:
     """
-    Shared SSE stream handler to reduce duplication.
-    """
-    if not message:
-        raise HTTPException(status_code=400, detail="message parameter is required")
+    Shared SSE stream handler that wraps a callable producing a message/response.
 
-    query_request = QueryRequest(
-        user_id=user_id,
-        query=message,
-        dialogue_id=dialogue_id,
-        model_name=model_name,
-        type=chat_type,
-    )
+    The SSE wrapper is intentionally thin: it does not attempt to construct or
+    inspect parameters for the provided callable. Callers should provide a
+    zero-argument callable (for example `functools.partial(cls.store_message, user_id, request)`)
+    which captures any required arguments. The callable may be async or sync.
+
+    Args:
+        user_id: id of the user for connection registration.
+        func: zero-argument callable producing the response (dict or str).
+        meta: optional metadata that will be ignored by the wrapper but can be
+              used by callers for bookkeeping (not used internally).
+
+    Returns:
+        StreamingResponse streamed back to the client.
+    """
 
     connection_queue: asyncio.Queue[str] = asyncio.Queue()
     connection_closed = asyncio.Event()
@@ -50,7 +48,19 @@ async def handle_sse_stream(
 
     async def stream_initial_response() -> None:
         try:
-            response = await chatUsecase.chat(query=query_request, chat_type=chat_type)
+            response = None
+            if func:
+                # The wrapper will call the provided callable without adding or
+                # inferring any parameters. Callers should pass a zero-argument
+                # callable (use functools.partial or a bound method to capture
+                # required params). The callable can be async (returns a
+                # coroutine) or sync. If it returns an awaitable, we'll await it.
+                result = func()
+                # If the callable returned a coroutine/awaitable, await it.
+                if inspect.isawaitable(result):
+                    response = await result
+                else:
+                    response = result
             response_payload, response_text = _extract_response_payload(response)
 
             chunks, normalized_response = _chunk_response(response_text)
@@ -132,7 +142,7 @@ async def handle_sse_stream(
             },
         )
     except Exception:
-        print(f"ERROR in SSE endpoint [{chat_type}]:", traceback.format_exc())
+        print("ERROR in SSE endpoint:", traceback.format_exc())
         initial_task.cancel()
         keep_alive_task.cancel()
         await asyncio.gather(
