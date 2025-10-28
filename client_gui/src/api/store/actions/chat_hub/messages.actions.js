@@ -70,39 +70,6 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType) => {
 	}
 };
 
-export const subscribeSSE = async (dialogueId, tabId, onMessage) => {
-	const tokenResponse = await serverRequest(`/chat-interaction/initiate-chat`, HttpMethods.POST, portName.chatHubPort);
-	if (tokenResponse.status !== 200) {
-		throw new Error("Failed to initiate chat");
-	}
-	if (!tokenResponse.data) {
-		throw new Error("SSE token not received");
-	}
-
-	const baseUrl = `http://${config.serverHost}:${config.chatHubPort}`;
-	const url = `${baseUrl}/chat-system/subscribe-sse?dialogueId=${encodeURIComponent(dialogueId)}&tabId=${encodeURIComponent(tabId)}&sseToken=${tokenResponse.data}`;
-
-	const eventSource = new EventSource(url);
-	eventSource.onmessage = (event) => {
-		if (event.data) {
-			try {
-				event.data = JSON.parse(event.data);
-				onMessage(event.data);
-			} catch (error) {
-				console.error("Error parsing SSE message:", error);
-				onMessage({ content: event.data })
-			}
-		}
-	};
-	eventSource.onerror = (error) => {
-		setTimeout(() => {
-			subscribeSSE(dialogueId, tabId, onMessage);
-		}, 5000); // Retry after 5 seconds
-		console.error("Error subscribing to SSE:", error);
-	};
-	return eventSource;
-}
-
 export const sendNormalChatMessageNew = async (dialogueId, message, chatType, tabId) => {
 	const resp = await serverRequest(`/chat-interaction/send-message`, HttpMethods.POST, portName.chatHubPort, {
 		dialogueId: dialogueId,
