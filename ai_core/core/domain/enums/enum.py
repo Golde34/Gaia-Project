@@ -42,7 +42,7 @@ class DialogueEnum(Enum):
     GAIA_INTRODUCTION = "Gaia Introduction"
     GAIA_INTRODUCTION_TYPE = "gaia_introduction"
     REGISTER_SCHEDULE_CALENDAR = "Register Schedule Calendar"
-    REGISTER_SCHEDULE_CALENDAR_TYPE = "register_schedule_calendar"
+    REGISTER_SCHEDULE_CALENDAR_TYPE = "register_calendar"
     CHAT_TYPE = "chitchat_message"
     DEFAULT_TYPE = "default"
     

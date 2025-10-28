@@ -2,9 +2,7 @@ import asyncio
 import json
 import traceback
 import inspect
-import functools
 from typing import Optional, Callable, Any
-from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 
 from typing import Dict
