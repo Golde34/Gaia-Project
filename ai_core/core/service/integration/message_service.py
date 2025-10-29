@@ -29,8 +29,6 @@ class MessageService:
             content=message,
             sender_type=sender_type,
             metadata={},
-            created_at=time.time(),
-            updated_at=time.time(),
         )
         return new_message
 

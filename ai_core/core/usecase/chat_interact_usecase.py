@@ -26,6 +26,7 @@ class ChatInteractionUsecase:
             if dialogue is None:
                 raise Exception("Failed to get or create dialogue")
             messages, has_more = await message_service.get_messages_by_dialogue_id_with_cursor_pagination(dialogue.id, size, cursor)
+            next_cursor = None
             if len(messages) > 0:
                 next_cursor = messages[0].created_at
             return {

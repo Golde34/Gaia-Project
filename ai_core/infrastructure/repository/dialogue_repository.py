@@ -20,7 +20,7 @@ class UserDialogueRepository(BaseRepository[UserDialogue]):
         ret = await self.insert(
             dialogue,
             returning=("id", "user_id", "dialogue_name", "dialogue_type", "dialogue_status",
-                       "metadata", "created_at", "updated_at"),
+                       "metadata"),
             auto_timestamps=True,
         )
         return UserDialogue(**ret)

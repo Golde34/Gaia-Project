@@ -30,7 +30,7 @@ class DialogueService:
         dialogue = await self._get_dialogue_by_user_id_and_type(user_id, dialogue_type)
         if dialogue is not None and dialogue.id is not None:
             return dialogue
-        return self._create_dialogue(user_id, dialogue_type)
+        return await self._create_dialogue(user_id, dialogue_type)
 
     async def _get_dialogue_by_user_id_and_type(self, user_id: int, dialogue_type: str) -> UserDialogue:
         return await user_dialogue_repository.get_dialogue_by_user_id_and_type(user_id, dialogue_type)
@@ -41,10 +41,8 @@ class DialogueService:
             user_id=int(user_id),
             dialogue_name=DialogueEnum.GAIA_INTRODUCTION.value,
             dialogue_type=dialogue_type,
-            dialogue_status=ActiveEnum.ACTIVE.value,
-            metadata={},
-            created_at=time.time(),
-            updated_at=time.time(),
+            dialogue_status=ActiveEnum.ACTIVE_BOOL.value,
+            metadata="",
         )
         return await user_dialogue_repository.create_dialogue(new_dialogue)
     

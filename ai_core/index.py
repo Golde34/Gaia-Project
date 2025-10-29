@@ -8,8 +8,8 @@ import uuid
 import uvicorn
 
 from ui.controller.back import rag_controller
-from ui.controller.external import auth_controller, chat_controller, chat_interaction_controller, onboarding_controller
-from ui.controller.internal import llm_business_handler_controller
+from ui.controller.external import auth_controller, chat_interaction_controller
+from ui.controller.internal import llm_business_handler_controller, chat_system
 from core.middleware.validate_access_token import ValidateAccessTokenMiddleware
 from infrastructure.kafka.consumer import consume
 from kernel.config.config import session_id_var
@@ -35,12 +35,11 @@ app.add_middleware(
 )
 app.add_middleware(ValidateAccessTokenMiddleware)
 
-app.include_router(chat_controller.ChatRouter)
-app.include_router(onboarding_controller.OnboardingRouter)
 app.include_router(rag_controller.RagRouter)
 app.include_router(llm_business_handler_controller.LLMBusinessHandlerRouter)
 app.include_router(auth_controller.AuthRouter)
 app.include_router(chat_interaction_controller.ChatInteractionRouter)
+app.include_router(chat_system.ChatSystemRouter)
 
 # Middleware
 @app.middleware("http")
