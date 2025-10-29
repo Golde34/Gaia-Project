@@ -7,6 +7,7 @@ import ChatComponent from './ChatComponent';
 export default function Chat() {
   const [searchParams] = useSearchParams();
   const dialogueId = searchParams.get("dialogueId");
+  const dialogueType = searchParams.get("dialogueType");
 
   return (
     <Template>
@@ -17,7 +18,7 @@ export default function Chat() {
           </Card>
         </Col>
         <Col numColSpan={7} className="ms-2">
-          <ChatComponent key={dialogueId} />
+          <ChatComponent key={dialogueId} chatType={dialogueType}/>
         </Col>
       </Grid>
     </Template>
