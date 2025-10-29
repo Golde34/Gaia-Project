@@ -1,6 +1,7 @@
 import functools
 
-from core.domain.enums.enum import SenderTypeEnum
+from core.abilities.ability_routers import MESSAGE_TYPE_CONVERTER
+from core.domain.enums.enum import SenderTypeEnum, ChatType
 from core.domain.request.chat_hub_request import SendMessageRequest
 from core.domain.request.query_request import QueryRequest
 from core.service import sse_stream_service
@@ -52,9 +53,14 @@ class ChatInteractionUsecase:
     @classmethod
     async def handle_send_message(cls, user_id: int, request: SendMessageRequest):
         handler = functools.partial(cls._create_message_flow, user_id, request)
-        await sse_stream_service.handle_sse_stream(user_id=user_id, func=handler, meta={'dialogue_id': request.dialogue_id})
+        return await sse_stream_service.handle_sse_stream(
+            user_id=user_id,
+            func=handler,
+            meta={'dialogue_id': request.dialogue_id},
+        )
 
-    async def _create_message_flow(self, user_id: int, request: SendMessageRequest):
+    @staticmethod
+    async def _create_message_flow(user_id: int, request: SendMessageRequest):
         dialogue = await dialogue_service.get_or_create_dialogue(user_id=user_id, dialogue_id=request.dialogue_id, msg_type=request.msg_type)
         if dialogue is None:
             raise Exception("Failed to get or create dialogue")
@@ -63,8 +69,9 @@ class ChatInteractionUsecase:
             dialogue=dialogue,
             user_id=user_id,
             message=request.message,
-            msg_type=request.msg_type,
+            message_type=request.msg_type,
             sender_type=SenderTypeEnum.USER.value,
+            user_message_id=None
         )
 
         user_model = await auth_service.get_user_model(user_id)
@@ -73,18 +80,18 @@ class ChatInteractionUsecase:
             user_id=user_id,
             query=request.message,
             model_name=user_model,
-            dialogue_id=dialogue.id,
+            dialogue_id=str(dialogue.id),
             type=request.msg_type,
         )
         
-        # TODO: Category with semantic router like onboarding or normal chitchat        
-        bot_response = chat_usecase.chat(query=query_request, chat_type=request.msg_type)
+        chat_type = MESSAGE_TYPE_CONVERTER.get(request.msg_type, ChatType.ABILITIES.value)
+        bot_response = await chat_usecase.chat(query=query_request, chat_type=chat_type)
 
         bot_message_id = await message_service.create_message(
             dialogue=dialogue,
             user_id=user_id,
             message=bot_response,
-            msg_type=request.msg_type,
+            message_type=request.msg_type,
             sender_type=SenderTypeEnum.BOT.value,
             user_message_id=user_message_id,
         )

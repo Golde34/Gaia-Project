@@ -11,7 +11,7 @@ class Message(BaseModel):
     id: uuid.UUID = None
     user_id: int 
     dialogue_id: uuid.UUID 
-    user_message_id: Optional[uuid.UUID] = None
+    user_message_id: Optional[str] = None
     message_type: str
     sender_type: str
     content: str

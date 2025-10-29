@@ -133,6 +133,7 @@ class BaseRepository(Generic[TModel]):
         If `returning` is iterable -> return dict of requested columns.
         """
         data = _model_dump(entity)
+        print(data)
 
         # optional managed timestamps
         if auto_timestamps:

@@ -10,6 +10,13 @@ from core.service.gaia_abilities_service import abilities_handler
 from kernel.config import llm_models
 
 
+MESSAGE_TYPE_CONVERTER = {
+    enum.DialogueEnum.CHAT_TYPE.value: enum.ChatType.ABILITIES.value,
+    enum.DialogueEnum.GAIA_INTRODUCTION_TYPE.value: enum.ChatType.GAIA_INTRODUCTION.value,
+    enum.DialogueEnum.REGISTER_SCHEDULE_CALENDAR_TYPE.value: enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value,
+}
+
+
 ROUTERS = [
     {
         'label': enum.ChatType.GAIA_INTRODUCTION.value,

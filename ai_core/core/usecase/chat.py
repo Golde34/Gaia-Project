@@ -26,6 +26,7 @@ class ChatUsecase:
             dict: The response from the selected ability handler.
 
         """
+        print(f"Chat Type: {chat_type}, Query: {query.query}")
         tool_selection, use_chat_history_prompt = await ability_routers.select_ability(label_value=chat_type, query=query)
 
         if use_chat_history_prompt:
