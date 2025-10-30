@@ -52,16 +52,77 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType) => {
 
 		return new Promise((resolve, reject) => {
 			const eventSource = new EventSource(url);
+			let accumulatedResponse = "";
+			let settled = false;
 
-			eventSource.onmessage = (event) => {
+			const resolveOnce = (payload) => {
+				if (settled) return;
+				settled = true;
 				eventSource.close();
-				const response = event.data;
-				resolve(response);
+				resolve(payload);
 			};
 
-			eventSource.onerror = (error) => {
+			const rejectOnce = (error) => {
+				if (settled) return;
+				settled = true;
 				eventSource.close();
-				reject(new Error("EventSource error"));
+				reject(error);
+			};
+
+			eventSource.addEventListener("message_chunk", (event) => {
+				try {
+					const data = JSON.parse(event.data);
+					if (data?.chunk) {
+						accumulatedResponse += data.chunk;
+						if (data?.is_final) {
+							resolveOnce(accumulatedResponse);
+						}
+					}
+				} catch {
+					accumulatedResponse += event.data || "";
+				}
+			});
+
+			eventSource.addEventListener("message_complete", (event) => {
+				let finalResponse = accumulatedResponse;
+				try {
+					const data = JSON.parse(event.data);
+					if (data?.full_response) {
+						finalResponse = data.full_response;
+					}
+				} catch {
+					if (!finalResponse && event.data) {
+						finalResponse = event.data;
+					}
+				}
+				resolveOnce(finalResponse);
+			});
+
+			eventSource.addEventListener("error", (event) => {
+				let errorMessage = "EventSource error";
+				try {
+					const data = JSON.parse(event.data);
+					if (data?.error) {
+						errorMessage = data.error;
+					}
+				} catch {
+					if (event?.data) {
+						errorMessage = event.data;
+					}
+				}
+				rejectOnce(new Error(errorMessage));
+			});
+
+			eventSource.onmessage = (event) => {
+				const response = event.data;
+				if (response) {
+					accumulatedResponse = response;
+				}
+				resolveOnce(response ?? accumulatedResponse);
+			};
+
+			eventSource.onerror = () => {
+				rejectOnce(new Error("EventSource connection error"));
 			};
 		});
 	} catch (error) {
