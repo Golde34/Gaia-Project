@@ -165,9 +165,9 @@ async def update_long_term_memory(user_id: int, dialogue_id: str) -> None:
     """
     try:
         recent_history = message_service.get_recent_history(
-            query=QueryRequest(
+            query=RecentHistoryRequest(
                 user_id=user_id,
-                dialogue_id=dialogue_id,
+                dialogue_id=str(dialogue_id),
                 number_of_messages=config.LONG_TERM_MEMORY_MAX_LENGTH
             )
         )
