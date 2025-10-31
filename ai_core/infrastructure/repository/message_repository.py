@@ -38,7 +38,7 @@ class MessageRepository(BaseRepository[Message]):
         """
         # Perform a subquery to get the N-th latest user message
         query = """
-            SELECT user_id, dialogue_id, sender_type, content, metadata
+            SELECT *
             FROM messages
             WHERE dialogue_id = $1
             AND created_at >= COALESCE((
@@ -55,7 +55,7 @@ class MessageRepository(BaseRepository[Message]):
         async with pool.acquire() as conn:
             rows = await conn.fetch(query, dialogue_id, number_of_messages - 1, number_of_messages)
 
-        return [self._row_to_model(self.model_cls, row) for row in rows]
+        return [dict(row) for row in rows]
 
     # --- GetMessagesByDialogueIdWithCursorPagination ---
     async def get_messages_by_dialogue_id_with_cursor_pagination(

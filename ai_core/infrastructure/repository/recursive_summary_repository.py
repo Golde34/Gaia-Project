@@ -57,7 +57,7 @@ class RecursiveSummaryRepository:
         )
         pool = await postgres_db.connect()
         async with pool.acquire() as conn:
-            rows = await conn.fetch(query, user_id, dialogue_id)
+            rows = await conn.fetch(query, str(user_id), dialogue_id)
             return [RecursiveSummary(**dict(row)) for row in rows]
 
 
