@@ -70,24 +70,3 @@ async def get_user_dialogues(request: Request):
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)
         raise HTTPException(status_code=500, detail=str(e))
-
-@ChatInteractionRouter.post("/send-message")
-async def send_message(request: SendMessageRequest):
-    try:
-        if not request.message:
-            raise HTTPException(status_code=400, detail="Message is required")
-        if not request.msg_type:
-            raise HTTPException(status_code=400, detail="Message type is required")
-
-        user_id = build_header.decode_sse_token(request.sse_token)
-        if not user_id:
-            raise HTTPException(status_code=401, detail="Invalid SSE token")
-
-        return usecase.handle_send_message(int(user_id), request)
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        stack_trace = traceback.format_exc()
-        print("ERROR:", stack_trace)
-        raise HTTPException(status_code=500, detail=str(e))

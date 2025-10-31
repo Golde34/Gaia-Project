@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 class RecursiveSummary(BaseModel):
     id: uuid.UUID = None
-    user_id: str
+    user_id: int 
     dialogue_id: str
     summary: str
     created_at: Optional[datetime] = None

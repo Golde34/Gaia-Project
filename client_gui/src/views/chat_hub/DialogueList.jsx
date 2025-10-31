@@ -44,8 +44,8 @@ const DialogueList = ({
         }, 500);
     }, []);
 
-    const handleDialogueClick = (dialogueId) => {
-        navigate(`/chat?dialogueId=${encodeURIComponent(dialogueId)}`);
+    const handleDialogueClick = (dialogueId, dialogueType) => {
+        navigate(`/chat?dialogueId=${encodeURIComponent(dialogueId)}&dialogueType=${encodeURIComponent(dialogueType)}`);
         window.location.reload();
     };
 
@@ -124,7 +124,7 @@ const DialogueList = ({
                             <ItemRow
                                 key={g.id}
                                 label={g.dialogueType}
-                                onClick={() => handleDialogueClick(g.id)}
+                                onClick={() => handleDialogueClick(g.id, g.dialogueType)}
                             />
                         ))
                     ) : (

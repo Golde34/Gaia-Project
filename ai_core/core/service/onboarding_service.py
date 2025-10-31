@@ -42,16 +42,7 @@ async def introduce(query: QueryRequest, guided_route: str) -> dict:
             response = await handle_onboarding_action(query, enum.SemanticRoute.CHITCHAT.value)
         else:
             raise ValueError("No route found for the query.")
-
-        data = {
-            'type': guided_route.value,
-            'response': response
-        }
-
-        return return_success_response(
-            status_message="Onboarding response generated successfully",
-            data=data
-        )
+        return response
     except Exception as e:
         raise e
 

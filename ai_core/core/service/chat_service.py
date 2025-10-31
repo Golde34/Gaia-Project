@@ -24,9 +24,10 @@ async def query_chat_history(query: QueryRequest, semantic_response: dict = conf
     if semantic_response.get('recent_history'):
         recent_history = await message_service.get_recent_history(
             RecentHistoryRequest(user_id=query.user_id,
-                                 dialogue_id=query.dialogue_id,
+                                 dialogue_id=str(query.dialogue_id),
                                  number_of_messages=config.RECENT_HISTORY_MAX_LENGTH)
         )
+        print(f"Recent History: {recent_history}")
 
     if semantic_response.get('recursive_summary'):
         recursive_summary = await get_recursive_summary(query.user_id, query.dialogue_id)
@@ -37,7 +38,7 @@ async def query_chat_history(query: QueryRequest, semantic_response: dict = conf
     return recent_history, recursive_summary, long_term_memory
 
 
-async def get_recursive_summary(user_id: str, dialogue_id: str) -> str:
+async def get_recursive_summary(user_id: int, dialogue_id: str) -> str:
     """
     Retrieves recursive summary from Redis, falling back to the database if necessary.
     """
@@ -53,7 +54,7 @@ async def get_recursive_summary(user_id: str, dialogue_id: str) -> str:
         return ''
 
 
-async def get_long_term_memory(user_id: str, dialogue_id: str, query: str) -> str:
+async def get_long_term_memory(user_id: int, dialogue_id: str, query: str) -> str:
     """
     Retrieve long term memory from Redis or Milvus.
 
@@ -107,7 +108,7 @@ async def reflection_chat_history(recent_history: str, recursive_summary: str, l
     return new_query
 
 
-async def update_recursive_summary(user_id: str, dialogue_id: str) -> None:
+async def update_recursive_summary(user_id: int, dialogue_id: str) -> None:
     """
     Update the recursive summary in Redis.
 
@@ -154,7 +155,7 @@ async def update_recursive_summary(user_id: str, dialogue_id: str) -> None:
         print(f"Error updating recursive summary: {e}")
 
 
-async def update_long_term_memory(user_id: str, dialogue_id: str) -> None:
+async def update_long_term_memory(user_id: int, dialogue_id: str) -> None:
     """
     Update the long term memory in Redis.
 
@@ -164,9 +165,9 @@ async def update_long_term_memory(user_id: str, dialogue_id: str) -> None:
     """
     try:
         recent_history = message_service.get_recent_history(
-            query=QueryRequest(
+            query=RecentHistoryRequest(
                 user_id=user_id,
-                dialogue_id=dialogue_id,
+                dialogue_id=str(dialogue_id),
                 number_of_messages=config.LONG_TERM_MEMORY_MAX_LENGTH
             )
         )

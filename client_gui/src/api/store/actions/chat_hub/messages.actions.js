@@ -31,12 +31,12 @@ export const getChatHistory = (size, cursor, dialogueId, chatType) => async (dis
 	}
 };
 
-export const sendSSEChatMessage = async (dialogueId, message, chatType) => {
-	try {
-		const tokenResponse = await serverRequest(`/chat-interaction/initiate-chat`, HttpMethods.POST, portName.chatHubPort);
-		if (tokenResponse.status !== 200) {
-			throw new Error("Failed to initiate chat");
-		}
+export const sendSSEChatMessage = async (dialogueId, message, chatType, options = {}) => {
+        try {
+                const tokenResponse = await serverRequest(`/chat-interaction/initiate-chat`, HttpMethods.POST, portName.chatHubPort);
+                if (tokenResponse.status !== 200) {
+                        throw new Error("Failed to initiate chat");
+                }
 		if (!tokenResponse.data) {
 			throw new Error("SSE token not received");
 		}
@@ -50,18 +50,123 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType) => {
 		const baseUrl = `http://${config.serverHost}:${config.chatHubPort}`;
 		const url = `${baseUrl}/chat-system/send-message?${params}`;
 
-		return new Promise((resolve, reject) => {
-			const eventSource = new EventSource(url);
+                const { onChunk, onComplete, onError } = options ?? {};
 
-			eventSource.onmessage = (event) => {
-				eventSource.close();
-				const response = event.data;
-				resolve(response);
-			};
+                return new Promise((resolve, reject) => {
+                        const eventSource = new EventSource(url);
+                        let accumulatedResponse = "";
+                        let settled = false;
 
-			eventSource.onerror = (error) => {
-				eventSource.close();
-				reject(new Error("EventSource error"));
+                        const resolveOnce = (payload) => {
+                                if (settled) return;
+                                settled = true;
+                                if (onComplete) {
+                                        try {
+                                                onComplete(payload);
+                                        } catch (callbackError) {
+                                                console.error("onComplete callback failed:", callbackError);
+                                        }
+                                }
+                                eventSource.close();
+                                resolve(payload);
+                        };
+
+                        const rejectOnce = (error) => {
+                                if (settled) return;
+                                settled = true;
+                                eventSource.close();
+                                if (onError) {
+                                        try {
+                                                onError(error);
+                                        } catch (callbackError) {
+                                                console.error("onError callback failed:", callbackError);
+                                        }
+                                }
+                                reject(error);
+                        };
+
+                        eventSource.addEventListener("message_chunk", (event) => {
+                                try {
+                                        const data = JSON.parse(event.data);
+                                        if (data?.chunk) {
+                                                accumulatedResponse += data.chunk;
+                                                if (onChunk) {
+                                                        try {
+                                                                onChunk(accumulatedResponse, data.chunk);
+                                                        } catch (callbackError) {
+                                                                console.error("onChunk callback failed:", callbackError);
+                                                        }
+                                                }
+                                                if (data?.is_final) {
+                                                        resolveOnce(accumulatedResponse);
+                                                }
+                                        }
+                                } catch {
+                                        accumulatedResponse += event.data || "";
+                                        if (onChunk) {
+                                                try {
+                                                        onChunk(accumulatedResponse, event.data || "");
+                                                } catch (callbackError) {
+                                                        console.error("onChunk callback failed:", callbackError);
+                                                }
+                                        }
+                                }
+                        });
+
+                        eventSource.addEventListener("message_complete", (event) => {
+                                let finalResponse = accumulatedResponse;
+				try {
+					const data = JSON.parse(event.data);
+					if (data?.full_response) {
+						finalResponse = data.full_response;
+					}
+				} catch {
+                                        if (!finalResponse && event.data) {
+                                                finalResponse = event.data;
+                                        }
+                                }
+                                if (onChunk && finalResponse !== accumulatedResponse) {
+                                        try {
+                                                onChunk(finalResponse, finalResponse);
+                                        } catch (callbackError) {
+                                                console.error("onChunk callback failed:", callbackError);
+                                        }
+                                }
+                                resolveOnce(finalResponse);
+                        });
+
+                        eventSource.addEventListener("error", (event) => {
+                                let errorMessage = "EventSource error";
+				try {
+					const data = JSON.parse(event.data);
+					if (data?.error) {
+						errorMessage = data.error;
+					}
+				} catch {
+					if (event?.data) {
+						errorMessage = event.data;
+					}
+				}
+                                rejectOnce(new Error(errorMessage));
+                        });
+
+                        eventSource.onmessage = (event) => {
+                                const response = event.data;
+                                if (response) {
+                                        accumulatedResponse = response;
+                                        if (onChunk) {
+                                                try {
+                                                        onChunk(accumulatedResponse, response);
+                                                } catch (callbackError) {
+                                                        console.error("onChunk callback failed:", callbackError);
+                                                }
+                                        }
+                                }
+                                resolveOnce(response ?? accumulatedResponse);
+                        };
+
+                        eventSource.onerror = () => {
+				rejectOnce(new Error("EventSource connection error"));
 			};
 		});
 	} catch (error) {

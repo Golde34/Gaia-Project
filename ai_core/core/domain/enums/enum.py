@@ -49,6 +49,8 @@ class DialogueEnum(Enum):
 class ActiveEnum(Enum):
     ACTIVE = "active"
     INACTIVE = "inactive"
+    ACTIVE_BOOL = True
+    INACTIVE_BOOL = False
 
 class SenderTypeEnum(Enum):
     USER = "user"

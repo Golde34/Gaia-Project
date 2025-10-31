@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from kernel.utils.parse_json import to_camel
 
 class RecentHistoryRequest(BaseModel):
-    user_id: str
+    user_id: int 
     dialogue_id: str
     number_of_messages: int = 5
 

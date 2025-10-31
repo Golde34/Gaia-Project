@@ -26,6 +26,7 @@ class ChatUsecase:
             dict: The response from the selected ability handler.
 
         """
+        print(f"Chat Type: {chat_type}, Query: {query.query}")
         tool_selection, use_chat_history_prompt = await ability_routers.select_ability(label_value=chat_type, query=query)
 
         if use_chat_history_prompt:
@@ -74,7 +75,7 @@ class ChatUsecase:
         cls._update_redis(rs_len, lt_len, query.user_id, query.dialogue_id)
 
     @staticmethod
-    def _check_redis(user_id: str, dialogue_id: str):
+    def _check_redis(user_id: int, dialogue_id: str):
         """
         Checks the Redis queue lengths for recursive summary and long-term memory, sets TTL if needed.
         """
@@ -93,7 +94,7 @@ class ChatUsecase:
         return 0
 
     @classmethod
-    async def _update_recursive_summary(cls, user_id: str, dialogue_id: str):
+    async def _update_recursive_summary(cls, user_id: int, dialogue_id: str):
         """
         Sends a Kafka message to update the recursive summary.
         """
@@ -101,7 +102,7 @@ class ChatUsecase:
         await send_kafka_message(kafka_enum.KafkaTopic.UPDATE_RECURSIVE_SUMMARY.value, payload)
 
     @classmethod
-    async def _update_long_term_memory(cls, user_id: str, dialogue_id: str):
+    async def _update_long_term_memory(cls, user_id: int, dialogue_id: str):
         """
         Sends a Kafka message to update the long-term memory.
         """
@@ -109,7 +110,7 @@ class ChatUsecase:
         await send_kafka_message(kafka_enum.KafkaTopic.UPDATE_LONG_TERM_MEMORY.value, payload)
 
     @staticmethod
-    def _update_redis(rs_len: int, lt_len: int, user_id: str, dialogue_id: str):
+    def _update_redis(rs_len: int, lt_len: int, user_id: int, dialogue_id: str):
         """
         Updates the Redis queues for recursive summary and long-term memory.
         """

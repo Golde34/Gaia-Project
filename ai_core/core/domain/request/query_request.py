@@ -3,7 +3,7 @@ from fastapi import UploadFile
 
 
 class QueryRequest(BaseModel):
-    user_id: str
+    user_id: int 
     dialogue_id: str
     query: str
     model_name: str

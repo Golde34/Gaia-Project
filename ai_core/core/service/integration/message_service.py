@@ -1,5 +1,5 @@
+from typing import List
 import uuid
-import time
 
 from core.domain.entities.user_dialogue import UserDialogue
 from core.domain.entities.message import Message
@@ -12,29 +12,27 @@ from infrastructure.repository.message_repository import message_repository
 class MessageService:
     """Service layer for messages, interfacing with the MessageRepository."""
 
-    async def create_message(self, dialogue: UserDialogue, user_id: str, message: str, user_message_id: str, sender_type: str, message_type: str) -> str:
+    async def create_message(self, dialogue: UserDialogue, user_id: int, message: str, user_message_id: str, sender_type: str, message_type: str) -> str:
         message_request = self._build_message(
             dialogue, user_id, message, user_message_id, sender_type, message_type)
         message_id = await message_repository.create_message(message_request)
         print(f"Created message with ID: {message_id}")
         return message_id
 
-    def _build_message(self, dialogue: UserDialogue, user_id: str, message: str, user_message_id: str, sender_type: str, message_type: str) -> Message:
+    def _build_message(self, dialogue: UserDialogue, user_id: int, message: str, user_message_id: str, sender_type: str, message_type: str) -> Message:
         new_message = Message(
             id=uuid.uuid4(),
-            user_id=int(user_id),
+            user_id=user_id,
             dialogue_id=dialogue.id,
-            user_message_id=user_message_id,
+            user_message_id=str(user_message_id),
             message_type=message_type,
             content=message,
             sender_type=sender_type,
-            metadata={},
-            created_at=time.time(),
-            updated_at=time.time(),
+            metadata="",
         )
         return new_message
 
-    async def get_message_by_dialogue_id(self, dialogue_id: str, number_of_messages: int) -> Message:
+    async def get_message_by_dialogue_id(self, dialogue_id: str, number_of_messages: int) -> RecentHistory | None:
         recent_chat_messages = await message_repository.get_recent_chat_messages_by_dialogue_id(dialogue_id, number_of_messages)
         if len(recent_chat_messages) == 0:
             print("No messages found for dialogue_id:", dialogue_id)
@@ -42,13 +40,13 @@ class MessageService:
         recent_chat_messages_response = []
         for message in recent_chat_messages:
             recent_chat_messages_response.append(MessageResponseDTO(
-                message="<" + message.sender_type + "> " + message.content,
-                metadata=message.metadata
+                message="<" + message['sender_type'] + "> " + message['content'],
+                metadata=message['metadata'],
             ))
 
         recent_chat_his: RecentHistory = RecentHistory(
-            user_id=recent_chat_messages[0].user_id,
-            dialogue_id=dialogue_id,
+            user_id=recent_chat_messages[0]['user_id'],
+            dialogue_id=str(dialogue_id),
             messages=recent_chat_messages_response
         )
         return recent_chat_his
@@ -79,28 +77,27 @@ class MessageService:
             if not self._validate_recent_history_response(request, result):
                 print("Recent history response validation failed.")
                 return ''
-
-            return self._format_history(result.get('messages'))
+            return self._format_history(result.messages)
         except Exception as e:
             print(f"Error in ChatHubServiceClient.get_recent_history: {e}")
             return ''
 
-    def _validate_recent_history_response(self, request: RecentHistoryRequest, response: dict) -> bool:
-        if int(request.user_id) != int(response.get('userId')):
-            print(f"User ID mismatch: {request.user_id} != {response.get('userId')}")
+    def _validate_recent_history_response(self, request: RecentHistoryRequest, response: RecentHistory) -> bool:
+        if int(request.user_id) != int(response.user_id):
+            print(f"User ID mismatch: {request.user_id} != {response.user_id}")
             return False
-        if request.dialogue_id != response.get('dialogueId'):
-            print(f"Dialogue ID mismatch: {request.dialogue_id} != {response.get('dialogueId')}")
+        if request.dialogue_id != response.dialogue_id:
+            print(f"Dialogue ID mismatch: {request.dialogue_id} != {response.dialogue_id}")
             return False
         return True
 
-    def _format_history(self, history_list):
+    def _format_history(self, history_list: List[MessageResponseDTO]) -> str:
         lines = []
         for msg in history_list:
-            if msg["message"].startswith("<user>"):
-                lines.append("User: " + msg["message"].replace("<user>", "").strip())
-            elif msg["message"].startswith("<bot>"):
-                lines.append("GAIA: " + msg["message"].replace("<bot>", "").strip())
+            if msg.message.startswith("<user>"):
+                lines.append("User: " + msg.message.replace("<user>", "").strip())
+            elif msg.message.startswith("<bot>"):
+                lines.append("GAIA: " + msg.message.replace("<bot>", "").strip())
         return "\n".join(lines)
 
 message_service = MessageService()

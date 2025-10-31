@@ -87,11 +87,12 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
 
   // Handle sending messages
   const handleSend = async () => {
-    const createMessage = (content, senderType) => ({
+    const createMessage = (content, senderType, extra = {}) => ({
       id: `${senderType}-${Date.now()}-${Math.random()}`,
       content,
       senderType,
       timestamp: new Date().toISOString(),
+      ...extra,
     });
 
     if (!chatInput.trim()) return;
@@ -99,14 +100,50 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
     setChatHistory((prev) => [...prev, userMessage]);
     setChatInput("");
 
+    const botMessageId = `bot-${Date.now()}-${Math.random()}`;
+    const botMessage = {
+      ...createMessage("...", "bot", { isStreaming: true }),
+      id: botMessageId,
+    };
+
+    setChatHistory((prev) => [...prev, botMessage]);
+
+    const updateBotMessage = (updates) => {
+      setChatHistory((prev) =>
+        prev.map((msg) => {
+          if (msg.id !== botMessageId) return msg;
+          const next = typeof updates === "function" ? updates(msg) : updates;
+          return { ...msg, ...next };
+        })
+      );
+    };
+
     try {
-      const response = await sendSSEChatMessage("", chatInput, "gaia_introduction");
-      if (response) {
-        const botMessage = createMessage(response, "bot");
-        setChatHistory((prev) => [...prev, botMessage]);
-      }
+      await sendSSEChatMessage("", chatInput, "gaia_introduction", {
+        onChunk: (accumulated) => {
+          updateBotMessage({ content: accumulated, isStreaming: true });
+        },
+        onComplete: (finalResponse) => {
+          updateBotMessage({
+            content: finalResponse ?? "",
+            isStreaming: false,
+          });
+        },
+        onError: () => {
+          updateBotMessage({
+            content: "Sorry, something went wrong.",
+            isStreaming: false,
+            hasError: true,
+          });
+        },
+      });
     } catch (error) {
       console.error("Failed to send chat message:", error);
+      updateBotMessage({
+        content: "Sorry, something went wrong.",
+        isStreaming: false,
+        hasError: true,
+      });
     }
   };
   return (
@@ -166,10 +203,14 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
                         >
                           <Grid numItems={1}>
                             <Col numColSpan={1}>
-                              <div className={[
-                                "max-w-lg px-4 py-2 rounded-3xl break-words",
-                                msg.senderType === "bot" ? "bg-gray-200 text-gray-800" : "bg-blue-500 text-white",
-                              ].join(" ")}>
+                              <div
+                                className={[
+                                  "max-w-lg px-4 py-2 rounded-3xl break-words",
+                                  msg.senderType === "bot" ? "bg-gray-200 text-gray-800" : "bg-blue-500 text-white",
+                                  msg.isStreaming ? "animate-pulse" : "",
+                                ].filter(Boolean).join(" ")
+                                }
+                              >
                                 {msg.content}
                               </div>
                             </Col>
