@@ -53,7 +53,7 @@ const baseRequest = async (api, method, portConfig, body, headers) => {
         clearTimeout(timerId);
         if (response.status !== 200) {
             // handleUnauthorizedResponse(response, portName);
-            if (response.status === 401) {
+            if (response.status === 401 || response.status === undefined) {
                 const refreshUrl = `http://${config.serverHost}:${config[portName]}/auth/refresh-token`;
                 console.info('Access token expired, trying to refresh...');
                 try {
