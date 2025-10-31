@@ -1,7 +1,18 @@
-from fastapi import Request, HTTPException
+from typing import Optional, Tuple, Dict, Any
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 
 from core.service.integration import auth_service
+
+
+NO_AUTH_REQUIRED_PATHS = [
+    "/chat-system",
+    "/auth/refresh-token",
+]
+
+ACCESS_COOKIE_NAME = "accessToken"
+REFRESH_COOKIE_NAME = "refreshToken"
 
 
 class ValidateAccessTokenMiddleware(BaseHTTPMiddleware):
@@ -9,58 +20,66 @@ class ValidateAccessTokenMiddleware(BaseHTTPMiddleware):
         if request.method == "OPTIONS":
             return await call_next(request)
 
-        no_auth_required = ["/chat-system", "refresh-token"]
-        
-        if any(path in request.url.path for path in no_auth_required):
-            response = await call_next(request)
-            return response
+        if any(request.url.path.startswith(p) for p in NO_AUTH_REQUIRED_PATHS):
+            return await call_next(request)
 
-        # Validate refresh token
-        if not validate_refresh_token(request):
-            raise HTTPException(status_code=403, detail="Unauthorized")
+        refresh_ok = validate_refresh_token(request)
+        if not refresh_ok:
+            return JSONResponse({"detail": "Unauthorized"}, status_code=403)
 
-        # Validate access token and set context
         access_token, ctx_with_user = await validate_access_token(request)
         if not access_token or not ctx_with_user:
-            raise HTTPException(status_code=401, detail="Unauthorized")
+            return JSONResponse({"detail": "Unauthorized"}, status_code=401)
 
         request.state.user = ctx_with_user
 
-        response = await call_next(request)
+        try:
+            response = await call_next(request)
+        except Exception:
+            return JSONResponse({"detail": "Internal Server Error"}, status_code=500)
+
         return response
 
-# Dependency function for validating refresh token
+
 def validate_refresh_token(request: Request) -> bool:
-    refresh_cookie = request.cookies.get("refreshToken")
-    if refresh_cookie:
-        return bool(refresh_cookie)
-    
+    refresh_cookie = request.cookies.get(REFRESH_COOKIE_NAME)
+    if refresh_cookie and refresh_cookie.strip():
+        return True
+
     refresh_header = request.headers.get("Refresh-Token")
-    if refresh_header:
-        return bool(refresh_header.strip())
-    
+    if refresh_header and refresh_header.strip():
+        return True
+
     return False
 
-# Dependency function for validating access token
-async def validate_access_token(request: Request):
-    access_token = request.cookies.get("accessToken")
-    if not access_token:
-        access_header = request.headers.get("Access-Token")
-        if not access_header:
-            raise HTTPException(status_code=401, detail="Unauthorized: Missing Access Token")
-        access_token = access_header.strip()
-        if not access_token:
-            raise HTTPException(status_code=401, detail="Unauthorized: Empty Access Token")
 
-    # Simulate token check with a service
+async def validate_access_token(request: Request) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
+    token: Optional[str] = None
+
+    token = request.cookies.get(ACCESS_COOKIE_NAME)
+    if not token:
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.lower().startswith("bearer "):
+            token = auth_header[7:].strip()
+
+    if not token:
+        header_token = request.headers.get("Access-Token", "")
+        if header_token.strip():
+            token = header_token.strip()
+
+    if not token:
+        return None, None
+
     try:
-        # Replace with actual service call
-        token_response = await auth_service.check_token(access_token)
+        token_response = await auth_service.check_token(token)
         if not token_response:
-            raise HTTPException(status_code=401, detail="Unauthorized: Invalid Token")
-        
-        # Simulate context update with user ID
-        ctx_with_user = {"user_id": token_response["id"]}
-        return access_token, ctx_with_user
-    except Exception as e:
-        raise HTTPException(status_code=401, detail="Unauthorized: Invalid Token")
+            return None, None
+
+        ctx_with_user = {
+            "user_id": token_response.get("id"),
+            "roles": token_response.get("roles", []),
+            "scopes": token_response.get("scopes", []),
+        }
+        return token, ctx_with_user
+    except Exception:
+        return None, None

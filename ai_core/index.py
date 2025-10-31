@@ -26,9 +26,13 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Task Information Extraction API", lifespan=lifespan)
 
 # Add CORS middleware for SSE
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Chỉnh sửa cho đúng
+    allow_origins=origins,  # Chỉnh sửa cho đúng
     allow_methods=["HEAD", "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],  # Đảm bảo OPTIONS được phép
     allow_headers=["*"],
     allow_credentials=True,
