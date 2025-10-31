@@ -50,7 +50,7 @@ class RecursiveSummaryRepository:
                     summary.created_at,
                 )
 
-    async def list_by_dialogue(self, user_id: str, dialogue_id: str) -> List[RecursiveSummary]:
+    async def list_by_dialogue(self, user_id: int, dialogue_id: str) -> List[RecursiveSummary]:
         query = (
             "SELECT id, user_id, dialogue_id, summary, created_at "
             "FROM recursive_summary WHERE user_id=$1 AND dialogue_id=$2 ORDER BY id"

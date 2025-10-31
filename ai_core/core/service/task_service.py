@@ -51,7 +51,7 @@ async def create_task(query: QueryRequest) -> dict:
     except Exception as e:
         raise e
 
-async def _optimize_datetime(datetime_object: dict, model_name: str, user_id: str) -> dict:
+async def _optimize_datetime(datetime_object: dict, model_name: str, user_id: int) -> dict:
     try:
         prompt = PARSING_DATE_PROMPT.format(input=datetime_object)
         function = await llm_models.get_model_generate_content(model_name, user_id)

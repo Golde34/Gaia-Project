@@ -16,7 +16,6 @@ async def refresh_token(request: Request, response: Response):
         if not refresh_token or refresh_token == "":
             raise HTTPException(status_code=403, detail="Unauthorized")
         new_access_token = await auth_service.refresh_token(refresh_token)
-        print("New access token:", new_access_token)
         response.set_cookie(
             key="accessToken",
             value=new_access_token,

@@ -13,7 +13,7 @@ KEEP_ALIVE_INTERVAL = 15
 
 
 async def handle_sse_stream(
-    user_id: str,
+    user_id: int,
     func: Optional[Callable[..., Any]] = None,
     *,
     meta: Optional[Dict[str, Any]] = None,

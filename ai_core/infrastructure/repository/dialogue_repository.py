@@ -25,7 +25,7 @@ class UserDialogueRepository(BaseRepository[UserDialogue]):
         )
         return UserDialogue(**ret)
 
-    async def get_dialogue_by_user_id_and_type(self, user_id: str, dialogue_type: str) -> Optional[UserDialogue]:
+    async def get_dialogue_by_user_id_and_type(self, user_id: int, dialogue_type: str) -> Optional[UserDialogue]:
         rows = await self.select_paginated(
             where={"user_id": user_id, "dialogue_type": dialogue_type},
             page=Page(limit=1, offset=0),

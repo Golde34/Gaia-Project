@@ -45,7 +45,7 @@ class AuthServiceClient:
             logging.error(f"Error in validate_service_jwt: {e}")
             return ""
 
-    async def get_user_llm_model_config(self, user_id: str) -> Dict:
+    async def get_user_llm_model_config(self, user_id: int) -> Dict:
         try:
             user_llm_model_config_url = f"{self.base_url}/user-model-setting/get-model-by-user?userId={user_id}"
             headers = build_header.build_authorization_headers("authentication_service", user_id)

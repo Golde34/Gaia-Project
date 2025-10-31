@@ -12,17 +12,17 @@ from infrastructure.repository.message_repository import message_repository
 class MessageService:
     """Service layer for messages, interfacing with the MessageRepository."""
 
-    async def create_message(self, dialogue: UserDialogue, user_id: str, message: str, user_message_id: str, sender_type: str, message_type: str) -> str:
+    async def create_message(self, dialogue: UserDialogue, user_id: int, message: str, user_message_id: str, sender_type: str, message_type: str) -> str:
         message_request = self._build_message(
             dialogue, user_id, message, user_message_id, sender_type, message_type)
         message_id = await message_repository.create_message(message_request)
         print(f"Created message with ID: {message_id}")
         return message_id
 
-    def _build_message(self, dialogue: UserDialogue, user_id: str, message: str, user_message_id: str, sender_type: str, message_type: str) -> Message:
+    def _build_message(self, dialogue: UserDialogue, user_id: int, message: str, user_message_id: str, sender_type: str, message_type: str) -> Message:
         new_message = Message(
             id=uuid.uuid4(),
-            user_id=int(user_id),
+            user_id=user_id,
             dialogue_id=dialogue.id,
             user_message_id=str(user_message_id),
             message_type=message_type,
@@ -33,6 +33,7 @@ class MessageService:
         return new_message
 
     async def get_message_by_dialogue_id(self, dialogue_id: str, number_of_messages: int) -> Message:
+        print("Dialogue ID in get_message_by_dialogue_id:", dialogue_id)
         recent_chat_messages = await message_repository.get_recent_chat_messages_by_dialogue_id(dialogue_id, number_of_messages)
         if len(recent_chat_messages) == 0:
             print("No messages found for dialogue_id:", dialogue_id)
