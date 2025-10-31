@@ -15,7 +15,6 @@ function App() {
   // WebSocket connection
   const endpoints = {
     notification: `ws://${config.notifyAgentWSHost}/ws`,
-    chat: `ws://${config.chatHubWSHost}/ws`,
   }
 
   return (
