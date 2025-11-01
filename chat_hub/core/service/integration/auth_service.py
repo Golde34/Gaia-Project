@@ -16,7 +16,7 @@ async def check_token(access_token: str):
         existed_access_token = get_key(access_token)
         if existed_access_token:
             print("existed_access_token:", existed_access_token)
-            return existed_access_token
+            return json.loads(existed_access_token)
         
         token_response = await auth_service_client.check_token(access_token)
         if not token_response["valid"]:
