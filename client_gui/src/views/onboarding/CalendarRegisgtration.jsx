@@ -22,7 +22,9 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
                 setScheduleCalendarRegistration(data);
             }
         };
-        messages.chat.forEach(handleMessage);
+        if (messages.chat && Array.isArray(messages.chat)) {
+            messages.chat.forEach(handleMessage);
+        }
     }, [messages])
 
     const timeBubbleConfigList = useSelector((state) => state.getTimeBubbleConfig);
