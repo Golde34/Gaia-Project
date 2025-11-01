@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getChatHistory, sendSSEChatMessage } from "../../api/store/actions/chat_hub/messages.actions";
-import { buildChatHistoryKey, defaultChatHistoryState } from "../../api/store/utils/chatHistory";
+import { buildChatHistoryKey, defaultChatHistoryState } from "../../kernels/utils/chat-history-utils";
 
 const GaiaIntroduction = ({ onNext, onSkip }) => {
   const dispatch = useDispatch();

@@ -3,7 +3,7 @@ import {
 	GET_CHAT_HISTORY_REQUEST,
 	GET_CHAT_HISTORY_SUCCESS,
 } from "../../constants/chat_hub/messages.constant";
-import { defaultChatHistoryState } from "../../utils/chatHistory";
+import { defaultChatHistoryState } from "../../../../kernels/utils/chat-history-utils";
 
 const cloneDefaultState = () => ({ ...defaultChatHistoryState });
 

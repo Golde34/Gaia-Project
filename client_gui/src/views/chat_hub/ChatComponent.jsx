@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getChatHistory, sendSSEChatMessage } from "../../api/store/actions/chat_hub/messages.actions";
 import { Button, Card, Col, Grid, TextInput } from "@tremor/react";
 import { useSearchParams } from "react-router-dom";
-import { buildChatHistoryKey, defaultChatHistoryState } from "../../api/store/utils/chatHistory";
+import { buildChatHistoryKey, defaultChatHistoryState } from "../../kernels/utils/chat-history-utils";
 
 export default function ChatComponent(props) {
     const isDashboard = props.isDashboard === undefined ? false : props.isDashboard;
