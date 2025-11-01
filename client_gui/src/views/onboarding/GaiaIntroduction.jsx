@@ -1,8 +1,9 @@
 import { Button, Card, Col, Grid, Metric, TextInput } from "@tremor/react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getChatHistory, sendSSEChatMessage } from "../../api/store/actions/chat_hub/messages.actions";
+import { buildChatHistoryKey, defaultChatHistoryState } from "../../api/store/utils/chatHistory";
 
 const GaiaIntroduction = ({ onNext, onSkip }) => {
   const dispatch = useDispatch();
@@ -14,10 +15,11 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
   const [loadingMore, setLoadingMore] = useState(false);
 
   const dbChatHistory = useSelector((state) => state.chatHistory);
-  const { loading, error, chatMessages, nextCursor, hasMore } = dbChatHistory;
+  const chatKey = useMemo(() => buildChatHistoryKey("", "gaia_introduction"), []);
+  const chatState = dbChatHistory[chatKey] ?? defaultChatHistoryState;
+  const { loading, error, chatMessages, nextCursor, hasMore } = chatState;
 
   const messagesContainerRef = useRef(null);
-  const didGetChatHistoryRef = useRef(false);
   const isLoadingMoreRef = useRef(false);
   const prevScrollHeightRef = useRef(0);
   const prevScrollTopRef = useRef(0);
@@ -28,16 +30,24 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
     "Why should I use Gaia?",
   ];
 
-  const getChatMessages = useCallback((loadCursor) => {
-    const cursorToUse = loadCursor || nextCursor || "";
-    dispatch(getChatHistory(size, cursorToUse, "", "gaia_introduction"));
-  }, [dispatch, size, nextCursor]);
+  const getChatMessages = useCallback(
+    (cursorOverride = "") => {
+      const cursorToUse = cursorOverride ?? "";
+      dispatch(getChatHistory(size, cursorToUse, "", "gaia_introduction"));
+    },
+    [dispatch, size]
+  );
 
   useEffect(() => {
-    if (didGetChatHistoryRef.current) return;
-    getChatMessages();
-    didGetChatHistoryRef.current = true;
-  }, []);
+    setChatHistory([]);
+    isLoadingMoreRef.current = false;
+    prevScrollHeightRef.current = 0;
+    prevScrollTopRef.current = 0;
+  }, [chatKey]);
+
+  useEffect(() => {
+    getChatMessages("");
+  }, [chatKey, getChatMessages]);
 
   useEffect(() => {
     if (!chatMessages || chatMessages.length === 0) return;
@@ -78,12 +88,12 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
         prevScrollHeightRef.current = container.scrollHeight;
         prevScrollTopRef.current = container.scrollTop;
         setLoadingMore(true);
-        getChatMessages();
+        getChatMessages(nextCursor);
       }
     };
     container.addEventListener("scroll", handleScroll);
     return () => container.removeEventListener("scroll", handleScroll);
-  }, [hasMore, loading, getChatMessages]);
+  }, [hasMore, loading, getChatMessages, nextCursor]);
 
   // Handle sending messages
   const handleSend = async () => {

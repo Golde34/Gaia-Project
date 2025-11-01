@@ -5,13 +5,15 @@ import {
 	GET_CHAT_HISTORY_REQUEST,
 	GET_CHAT_HISTORY_SUCCESS,
 } from "../../constants/chat_hub/messages.constant";
+import { buildChatHistoryKey } from "../../utils/chatHistory";
 
 const portName = {
 	chatHubPort: "chatHubPort",
 };
 
 export const getChatHistory = (size, cursor, dialogueId, chatType) => async (dispatch) => {
-	dispatch({ type: GET_CHAT_HISTORY_REQUEST });
+	const chatKey = buildChatHistoryKey(dialogueId, chatType);
+	dispatch({ type: GET_CHAT_HISTORY_REQUEST, meta: { chatKey }, payload: { cursor } });
 	try {
 		const cursorParam = cursor ? `&cursor=${encodeURIComponent(cursor)}` : '';
 		const { data } = await serverRequest(
@@ -19,7 +21,13 @@ export const getChatHistory = (size, cursor, dialogueId, chatType) => async (dis
 			HttpMethods.GET,
 			portName.chatHubPort,
 		);
-		dispatch({ type: GET_CHAT_HISTORY_SUCCESS, payload: data });
+		dispatch({
+			type: GET_CHAT_HISTORY_SUCCESS,
+			payload: {
+				...data,
+				chatKey,
+			},
+		});
 	} catch (error) {
 		dispatch({
 			type: GET_CHAT_HISTORY_FAILURE,
@@ -27,6 +35,7 @@ export const getChatHistory = (size, cursor, dialogueId, chatType) => async (dis
 				error.response && error.response.data.message
 					? error.response.data.message
 					: error.message,
+			meta: { chatKey },
 		});
 	}
 };
