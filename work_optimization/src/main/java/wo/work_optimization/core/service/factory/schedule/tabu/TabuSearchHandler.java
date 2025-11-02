@@ -63,10 +63,8 @@ public class TabuSearchHandler {
         double bestScore = currentScore;
         List<Integer> bestOrder = new ArrayList<>(currentOrder);
 
-        int maxIterations =
-                Math.min(MAX_ITERATIONS, Math.max(MIN_ITERATIONS, taskCount * taskCount));
-        int tabuTenure =
-                Math.min(MAX_TABU_TENURE, Math.max(MIN_TABU_TENURE, taskCount / 2));
+        int maxIterations = Math.min(MAX_ITERATIONS, Math.max(MIN_ITERATIONS, taskCount * taskCount));
+        int tabuTenure = Math.min(MAX_TABU_TENURE, Math.max(MIN_TABU_TENURE, taskCount / 2));
 
         Map<String, Integer> tabuList = new HashMap<>();
         Deque<String> tabuQueue = new ArrayDeque<>();
@@ -113,48 +111,6 @@ public class TabuSearchHandler {
         return new TabuSolution(orderedTasks, featureMap, bestScore);
     }
 
-    private NeighborCandidate findBestNeighbor(List<TaskFeature> features,
-                                               List<Integer> currentOrder,
-                                               double capacity,
-                                               double overtimePenalty,
-                                               Map<String, Integer> tabuList,
-                                               double bestScore,
-                                               int iteration) {
-
-        NeighborCandidate bestCandidate = null;
-
-        int size = currentOrder.size();
-        for (int i = 0; i < size - 1; i++) {
-            for (int j = i + 1; j < size; j++) {
-                List<Integer> neighbor = new ArrayList<>(currentOrder);
-                Collections.swap(neighbor, i, j);
-
-                double score = evaluateSolution(features, neighbor, capacity, overtimePenalty);
-                String moveKey = buildMoveKey(currentOrder.get(i), currentOrder.get(j));
-                boolean isTabu = tabuList.getOrDefault(moveKey, -1) > iteration;
-
-                if (bestCandidate == null
-                        || score > bestCandidate.score()
-                        || (isTabu && score > bestScore)) {
-                    if (!isTabu || score > bestScore) {
-                        bestCandidate = new NeighborCandidate(neighbor, score, moveKey);
-                    }
-                }
-            }
-        }
-
-        return bestCandidate;
-    }
-
-    private List<Integer> initialOrder(List<TaskFeature> features) {
-        return IntStream.range(0, features.size())
-                .boxed()
-                .sorted((left, right) -> Double.compare(
-                        features.get(right).baseScore(),
-                        features.get(left).baseScore()))
-                .collect(Collectors.toList());
-    }
-
     private List<TaskFeature> buildFeatures(List<Task> tasks, TaskRegistration registration) {
         double minPriority = tasks.stream().mapToDouble(Task::getPriority).min().orElse(0);
         double maxPriority = tasks.stream().mapToDouble(Task::getPriority).max().orElse(1);
@@ -191,10 +147,51 @@ public class TabuSearchHandler {
                     + urgency
                     - BASE_DURATION_PENALTY * durationNorm;
 
-            features.add(new TaskFeature(task, duration, durationNorm, priorityNorm, enjoyNorm, effortNorm, urgency, baseScore));
+            features.add(new TaskFeature(task, duration, durationNorm, priorityNorm, enjoyNorm, effortNorm, urgency,
+                    baseScore));
         }
 
         return features;
+    }
+
+    private double safePositive(Double value, double fallback) {
+        if (value == null || value.isNaN() || value <= 0) {
+            return fallback;
+        }
+        return value;
+    }
+
+    private double normalize(double value, double min, double max) {
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            return 0.5;
+        }
+        double range = max - min;
+        if (range < 1e-9) {
+            return 0.5;
+        }
+        double normalized = (value - min) / range;
+        return Math.max(0.0, Math.min(1.0, normalized));
+    }
+
+    private double computeUrgency(Task task, LocalDateTime now) {
+        try {
+            LocalDateTime deadline = DateTimeUtils.convertLongToLocalDateTime(task.getEndDate());
+            Duration duration = Duration.between(now, deadline);
+            double hours = Math.max(0.0, duration.toHours());
+            return 1.0 / (1.0 + hours);
+        } catch (Exception exception) {
+            log.debug("Unable to compute urgency for task {}: {}", task.getId(), exception.getMessage());
+            return 0.5;
+        }
+    }
+
+    private List<Integer> initialOrder(List<TaskFeature> features) {
+        return IntStream.range(0, features.size())
+                .boxed()
+                .sorted((left, right) -> Double.compare(
+                        features.get(right).baseScore(),
+                        features.get(left).baseScore()))
+                .collect(Collectors.toList());
     }
 
     private double resolveCapacity(TaskRegistration registration, List<TaskFeature> features) {
@@ -215,6 +212,79 @@ public class TabuSearchHandler {
             weightSum += Optional.ofNullable(registration.getConstant3()).orElse(0.0);
         }
         return Math.max(1.5, weightSum);
+    }
+
+    private double evaluateSolution(List<TaskFeature> features,
+            List<Integer> order,
+            double capacity,
+            double overtimePenalty) {
+        double cumulativeTime = 0.0;
+        double score = 0.0;
+
+        for (int position = 0; position < order.size(); position++) {
+            TaskFeature feature = features.get(order.get(position));
+            cumulativeTime += feature.duration();
+
+            double positionalWeight = 1.0 / (1 + position);
+            double overtime = Math.max(0.0, cumulativeTime - capacity);
+            double penalty = overtimePenalty * overtime + feature.durationNorm() * position * 0.05;
+
+            score += positionalWeight * feature.baseScore() - penalty;
+        }
+
+        return score;
+    }
+
+    private NeighborCandidate findBestNeighbor(List<TaskFeature> features,
+            List<Integer> currentOrder,
+            double capacity,
+            double overtimePenalty,
+            Map<String, Integer> tabuList,
+            double bestScore,
+            int iteration) {
+
+        NeighborCandidate bestCandidate = null;
+
+        int size = currentOrder.size();
+        for (int i = 0; i < size - 1; i++) {
+            for (int j = i + 1; j < size; j++) {
+                List<Integer> neighbor = new ArrayList<>(currentOrder);
+                Collections.swap(neighbor, i, j);
+
+                double score = evaluateSolution(features, neighbor, capacity, overtimePenalty);
+                String moveKey = buildMoveKey(currentOrder.get(i), currentOrder.get(j));
+                boolean isTabu = tabuList.getOrDefault(moveKey, -1) > iteration;
+
+                if (bestCandidate == null
+                        || score > bestCandidate.score()
+                        || (isTabu && score > bestScore)) {
+                    if (!isTabu || score > bestScore) {
+                        bestCandidate = new NeighborCandidate(neighbor, score, moveKey);
+                    }
+                }
+            }
+        }
+
+        return bestCandidate;
+    }
+
+    private String buildMoveKey(int first, int second) {
+        return first < second ? first + "-" + second : second + "-" + first;
+    }
+
+    private void pruneExpiredTabuMoves(Deque<String> tabuQueue,
+            Map<String, Integer> tabuList,
+            int currentIteration) {
+        while (!tabuQueue.isEmpty()) {
+            String move = tabuQueue.peekFirst();
+            Integer expiry = tabuList.get(move);
+            if (expiry != null && expiry <= currentIteration) {
+                tabuQueue.removeFirst();
+                tabuList.remove(move);
+            } else {
+                break;
+            }
+        }
     }
 
     private void persistSolution(TabuSolution solution, int batchIndex) {
@@ -242,93 +312,22 @@ public class TabuSearchHandler {
             }
         }
     }
-
-    private double evaluateSolution(List<TaskFeature> features,
-                                    List<Integer> order,
-                                    double capacity,
-                                    double overtimePenalty) {
-        double cumulativeTime = 0.0;
-        double score = 0.0;
-
-        for (int position = 0; position < order.size(); position++) {
-            TaskFeature feature = features.get(order.get(position));
-            cumulativeTime += feature.duration();
-
-            double positionalWeight = 1.0 / (1 + position);
-            double overtime = Math.max(0.0, cumulativeTime - capacity);
-            double penalty = overtimePenalty * overtime + feature.durationNorm() * position * 0.05;
-
-            score += positionalWeight * feature.baseScore() - penalty;
-        }
-
-        return score;
-    }
-
-    private void pruneExpiredTabuMoves(Deque<String> tabuQueue,
-                                       Map<String, Integer> tabuList,
-                                       int currentIteration) {
-        while (!tabuQueue.isEmpty()) {
-            String move = tabuQueue.peekFirst();
-            Integer expiry = tabuList.get(move);
-            if (expiry != null && expiry <= currentIteration) {
-                tabuQueue.removeFirst();
-                tabuList.remove(move);
-            } else {
-                break;
-            }
-        }
-    }
-
-    private double normalize(double value, double min, double max) {
-        if (Double.isNaN(value) || Double.isInfinite(value)) {
-            return 0.5;
-        }
-        double range = max - min;
-        if (range < 1e-9) {
-            return 0.5;
-        }
-        double normalized = (value - min) / range;
-        return Math.max(0.0, Math.min(1.0, normalized));
-    }
-
-    private double computeUrgency(Task task, LocalDateTime now) {
-        try {
-            LocalDateTime deadline = DateTimeUtils.convertLongToLocalDateTime(task.getEndDate());
-            Duration duration = Duration.between(now, deadline);
-            double hours = Math.max(0.0, duration.toHours());
-            return 1.0 / (1.0 + hours);
-        } catch (Exception exception) {
-            log.debug("Unable to compute urgency for task {}: {}", task.getId(), exception.getMessage());
-            return 0.5;
-        }
-    }
-
-    private double safePositive(Double value, double fallback) {
-        if (value == null || value.isNaN() || value <= 0) {
-            return fallback;
-        }
-        return value;
-    }
-
-    private String buildMoveKey(int first, int second) {
-        return first < second ? first + "-" + second : second + "-" + first;
-    }
-
+    
     private record TabuSolution(List<Task> orderedTasks,
-                                Map<String, TaskFeature> features,
-                                double score) {
+            Map<String, TaskFeature> features,
+            double score) {
     }
 
     private record NeighborCandidate(List<Integer> order, double score, String moveKey) {
     }
 
     private record TaskFeature(Task task,
-                               double duration,
-                               double durationNorm,
-                               double priorityNorm,
-                               double enjoymentNorm,
-                               double effortNorm,
-                               double urgency,
-                               double baseScore) {
+            double duration,
+            double durationNorm,
+            double priorityNorm,
+            double enjoymentNorm,
+            double effortNorm,
+            double urgency,
+            double baseScore) {
     }
 }
