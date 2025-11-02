@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import Dict, List, Optional
 from pydantic import ValidationError
@@ -168,12 +169,24 @@ async def _generate_calendar_schedule_response(query: QueryRequest, recent_histo
                 "query": parsed_response.get("requirement", query.query),
                 "type": "register_calendar_schedule"
             }
-            await send_kafka_message(kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value, query)
+            # await send_kafka_message(kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value, query)
+            kafka_task = asyncio.create_task(
+                send_kafka_message(
+                    kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value,
+                    query
+                )
+            )
+            kafka_task.add_done_callback(_log_background_task_error)
 
         return parsed_response.get("response", "Sorry, I couldn't process your request at this time.")
     except Exception as e:
         print(f"Error generating calendar schedule: {str(e)}")
 
+def _log_background_task_error(task: asyncio.Task) -> None:
+    try:
+        task.result()
+    except Exception as exc:
+        print(f"Background task send_kafka_message failed: {exc}")
 
 async def _chitchat_and_register_calendar(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
     try:
