@@ -73,6 +73,7 @@ async def validate_access_token(request: Request) -> Tuple[Optional[str], Option
     try:
         token_response = await auth_service.check_token(token)
         if not token_response:
+            print("Invalid token_response")
             return None, None
 
         ctx_with_user = {

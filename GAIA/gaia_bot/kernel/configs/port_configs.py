@@ -42,16 +42,6 @@ PORTS = {
         "database_name": "gaia",
         "shell_path": "gaia_bot/microservices/bash_shell/gaia_connector.sh"
     }, 
-    "ai_core": {
-        "name": "AI Core",
-        "port": 4002,
-        "programming_language": "Python",
-        "description": "AI Core API",
-        "router": "ai-core",
-        "database": None,
-        "database_name": None,
-        "shell_path": "gaia_bot/microservices/bash_shell/ai_core.sh"
-    },
     "notify_agent": {
         "name": "Notify Agent",
         "port": 4003,
@@ -64,11 +54,11 @@ PORTS = {
     },
     "chat_hub": {
         "name": "Chat Hub",
-        "port": 4004,
-        "programming_language": "Golang",
+        "port": 4002,
+        "programming_language": "Python",
         "description": "Chat Hub API",
         "router": "chat-hub",
-        "database": None,
+        "database": "PostgreSQL",
         "database_name": None,
         "shell_path": "gaia_bot/microservices/bash_shell/chat_hub.sh"
     },
@@ -198,7 +188,7 @@ PORT_COMPONENTS = [
     "work_optimization",
     "notify_agent",
     "contribution_tracker",
-    "ai_core",
+    # "ai_core",
     "chat_hub",
     # 3rd Party + Pipeline
     "sor_data_transfer",

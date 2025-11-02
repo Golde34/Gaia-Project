@@ -1,9 +1,10 @@
 import { useDispatch, useSelector } from "react-redux";
 import { getTabId } from "../../kernels/utils/set-interval";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getChatHistory, sendSSEChatMessage } from "../../api/store/actions/chat_hub/messages.actions";
 import { Button, Card, Col, Grid, TextInput } from "@tremor/react";
 import { useSearchParams } from "react-router-dom";
+import { buildChatHistoryKey, defaultChatHistoryState } from "../../kernels/utils/chat-history-utils";
 
 export default function ChatComponent(props) {
     const isDashboard = props.isDashboard === undefined ? false : props.isDashboard;
@@ -20,24 +21,36 @@ export default function ChatComponent(props) {
     const [loadingMore, setLoadingMore] = useState(false);
 
     const dbChatHistory = useSelector((state) => state.chatHistory);
-    const { loading, error, chatMessages, nextCursor, hasMore } = dbChatHistory;
+    const conversationKey = useMemo(
+        () => buildChatHistoryKey(dialogueId, chatType),
+        [dialogueId, chatType]
+    );
+    const chatState = dbChatHistory[conversationKey] ?? defaultChatHistoryState;
+    const { loading, error, chatMessages, nextCursor, hasMore } = chatState;
 
     const messagesContainerRef = useRef(null);
-    const didGetChatHistoryRef = useRef(false);
     const isLoadingMoreRef = useRef(false);
     const prevScrollHeightRef = useRef(0);
     const prevScrollTopRef = useRef(0);
 
-    const getChatMessages = useCallback((loadCursor) => {
-        const cursorToUse = loadCursor || nextCursor || "";
-        dispatch(getChatHistory(size, cursorToUse, dialogueId, chatType));
-    }, [dispatch, size, nextCursor]);
+    const getChatMessages = useCallback(
+        (cursorOverride = "") => {
+            const cursorToUse = cursorOverride ?? "";
+            dispatch(getChatHistory(size, cursorToUse, dialogueId, chatType));
+        },
+        [dispatch, size, dialogueId, chatType]
+    );
 
     useEffect(() => {
-        if (didGetChatHistoryRef.current) return;
-        getChatMessages();
-        didGetChatHistoryRef.current = true;
-    }, []);
+        setChatHistory([]);
+        isLoadingMoreRef.current = false;
+        prevScrollHeightRef.current = 0;
+        prevScrollTopRef.current = 0;
+    }, [conversationKey]);
+
+    useEffect(() => {
+        getChatMessages("");
+    }, [conversationKey, getChatMessages]);
 
     useEffect(() => {
         if (!chatMessages || chatMessages.length === 0) return;
@@ -78,12 +91,12 @@ export default function ChatComponent(props) {
                 prevScrollHeightRef.current = container.scrollHeight;
                 prevScrollTopRef.current = container.scrollTop;
                 setLoadingMore(true);
-                getChatMessages();
+                getChatMessages(nextCursor);
             }
         };
         container.addEventListener("scroll", handleScroll);
         return () => container.removeEventListener("scroll", handleScroll);
-    }, [hasMore, loading, getChatMessages]);
+    }, [hasMore, loading, getChatMessages, nextCursor]);
 
     // Handle sending messages
     const handleSend = async () => {

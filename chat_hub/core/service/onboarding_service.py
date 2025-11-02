@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import Dict, List, Optional
 from pydantic import ValidationError
@@ -37,12 +38,11 @@ async def introduce(query: QueryRequest, guided_route: str) -> dict:
     try:
         print("Onboarding Query:", query.query)
         if guided_route == SemanticRoute.GAIA_INTRODUCTION:
-            response = await handle_onboarding_action(query, enum.SemanticRoute.GAIA_INTRODUCTION.value)
+            return await handle_onboarding_action(query, enum.SemanticRoute.GAIA_INTRODUCTION.value)
         elif guided_route == SemanticRoute.CHITCHAT:
-            response = await handle_onboarding_action(query, enum.SemanticRoute.CHITCHAT.value)
+            return await handle_onboarding_action(query, enum.SemanticRoute.CHITCHAT.value)
         else:
             raise ValueError("No route found for the query.")
-        return response
     except Exception as e:
         raise e
 
@@ -68,13 +68,7 @@ async def register_schedule_calendar(query: QueryRequest, guided_route: Optional
         selection = function(prompt=selection_prompt,
                              model_name=default_model).strip().lower()
         print(f"Selected action: {selection}")
-        response = await handle_onboarding_action(query, selection)
-
-        return return_success_response(
-            status_message="Onboarding response generated successfully",
-            data=response
-        )
-
+        return await handle_onboarding_action(query, selection)
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
         return return_response(
@@ -128,9 +122,7 @@ async def _gaia_introduce(query: QueryRequest, recent_history: str, recursive_su
     )
 
     function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=prompt)
-    response = function(prompt=prompt, model_name=default_model)
-    print("Response:", response)
-    return response
+    return function(prompt=prompt, model_name=default_model)
 
 
 async def _chitchat_with_history(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
@@ -152,8 +144,7 @@ async def _chitchat_with_history(query: QueryRequest, recent_history: str, recur
             long_term_memory=long_term_memory
         )
         function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
-        response = function(prompt=prompt, model_name=query.model_name)
-        return response
+        return function(prompt=prompt, model_name=query.model_name)
     except Exception as e:
         raise e
 
@@ -178,12 +169,24 @@ async def _generate_calendar_schedule_response(query: QueryRequest, recent_histo
                 "query": parsed_response.get("requirement", query.query),
                 "type": "register_calendar_schedule"
             }
-            await send_kafka_message(kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value, query)
+            # await send_kafka_message(kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value, query)
+            kafka_task = asyncio.create_task(
+                send_kafka_message(
+                    kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value,
+                    query
+                )
+            )
+            kafka_task.add_done_callback(_log_background_task_error)
 
-        return parsed_response 
+        return parsed_response.get("response", "Sorry, I couldn't process your request at this time.")
     except Exception as e:
         print(f"Error generating calendar schedule: {str(e)}")
 
+def _log_background_task_error(task: asyncio.Task) -> None:
+    try:
+        task.result()
+    except Exception as exc:
+        print(f"Background task send_kafka_message failed: {exc}")
 
 async def _chitchat_and_register_calendar(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
     try:

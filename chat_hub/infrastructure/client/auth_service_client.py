@@ -65,6 +65,6 @@ class AuthServiceClient:
             return token_response
         except Exception as e:
             logging.error(f"Error in check_token: {e}")
-            return {}
+            return None
 
 auth_service_client = AuthServiceClient()
