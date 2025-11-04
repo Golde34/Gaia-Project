@@ -9,17 +9,18 @@ import re
 from core.domain.enums import enum, kafka_enum
 from core.domain.enums.enum import SemanticRoute
 from core.domain.request.query_request import QueryRequest
-from core.domain.response.base_response import return_success_response, return_response
+from core.domain.response.base_response import return_response
 from core.domain.response.model_output_schema import DailyRoutineSchema, TimeBubbleDTO
 from core.prompts import onboarding_prompt
 from core.prompts.abilities_prompt import CHITCHAT_WITH_HISTORY_PROMPT
 from core.service import chat_service
 from core.validation import milvus_validation
 from infrastructure.embedding.base_embedding import embedding_model
-from infrastructure.kafka.producer import send_kafka_message, publish_message
+from infrastructure.kafka.producer import publish_message
 from infrastructure.vector_db.milvus import milvus_db
 from kernel.config import llm_models, config
 from kernel.utils.parse_json import bytes_to_str
+from kernel.utils.background import log_background_task_error
 
 
 default_model = config.LLM_DEFAULT_MODEL
@@ -164,7 +165,7 @@ async def _generate_calendar_schedule_response(query: QueryRequest, recent_histo
                     requirement=readiness["requirement"],
                 )
             )
-            background_task.add_done_callback(_log_background_task_error)
+            background_task.add_done_callback(log_background_task_error)
 
         return readiness["response"]
     except Exception as e:
@@ -216,18 +217,14 @@ async def _dispatch_register_calendar_request(query: QueryRequest, requirement: 
     }
 
     try:
-        await send_kafka_message(
+        await publish_message(
             kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value,
+            "registerCalendarSchedule",
             payload,
         )
     except Exception as exc:
         print(f"Failed to dispatch register calendar request: {exc}")
 
-def _log_background_task_error(task: asyncio.Task) -> None:
-    try:
-        task.result()
-    except Exception as exc:
-        print(f"Background task execution failed: {exc}")
 
 async def _chitchat_and_register_calendar(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
     try:
@@ -268,8 +265,7 @@ async def generate_calendar_schedule(query: QueryRequest) -> Dict:
 
     # Step 4: Call LLM
     function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=prompt)
-    response = await asyncio.to_thread(function, prompt=prompt, model_name=default_model)
-    print(f"LLM response: {response}")
+    response = function(prompt=prompt, model_name=default_model)
 
     # Step 5: Parse response
     try:
@@ -300,11 +296,10 @@ async def generate_calendar_schedule(query: QueryRequest) -> Dict:
         )
 
     # Step 9: Success case
-    safe_response = json.loads(json.dumps(schedule_dto.model_dump(), default=bytes_to_str))
+    safe_response = json.loads(json.dumps(
+        schedule_dto.model_dump(), default=bytes_to_str))
     result = {"response": safe_response, "userId": query.user_id}
     print(f"Generated schedule: {schedule_dto}")
-    await publish_message(kafka_enum.KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value,
-                   kafka_enum.KafkaCommand.GENERATE_CALENDAR_SCHEDULE.value, result)
 
 
 async def translate_to_english(text: str, source_lang: str) -> str:
