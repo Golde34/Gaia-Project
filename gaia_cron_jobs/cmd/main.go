@@ -19,6 +19,7 @@ func main() {
 
 	handlers := map[string] kafka.MessageHandler {
 		domain.FullSyncGithubCommitTopic: &ui.FullSyncGithubCommitHandler{},
+		domain.AIGenerateScheduleCalendar: &ui.RegisterScheduleCalendar{},
 	}
 	consumerGroupHandler := kafka.NewConsumerGroupHandler(kafkaCfg.Name, handlers)
 
