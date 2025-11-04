@@ -151,42 +151,83 @@ async def _chitchat_with_history(query: QueryRequest, recent_history: str, recur
 
 async def _generate_calendar_schedule_response(query: QueryRequest, recent_history: str, long_term_memory: str) -> Dict:
     try:
-        prompt = onboarding_prompt.REGISTER_CALENDAR_READINESS_PROMPT.format(
-            query=query.query,
+        readiness = await _prepare_calendar_readiness(
+            query=query,
             recent_history=recent_history,
-            long_term_memory=long_term_memory
+            long_term_memory=long_term_memory,
         )
-        function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
-        response = function(prompt=prompt, model_name=query.model_name)
-        json_response = _clean_json_string(response)
-        parsed_response = json.loads(json_response)
-        if (parsed_response.get("ready", False)):
-            print("User is ready to register calendar schedule.")
-            query: QueryRequest = {
-                "user_id": query.user_id,
-                "dialogue_id": query.dialogue_id,
-                "model_name": query.model_name,
-                "query": parsed_response.get("requirement", query.query),
-                "type": "register_calendar_schedule"
-            }
-            # await send_kafka_message(kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value, query)
-            kafka_task = asyncio.create_task(
-                send_kafka_message(
-                    kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value,
-                    query
+
+        if readiness["ready"]:
+            background_task = asyncio.create_task(
+                _dispatch_register_calendar_request(
+                    query=query,
+                    requirement=readiness["requirement"],
                 )
             )
-            kafka_task.add_done_callback(_log_background_task_error)
+            background_task.add_done_callback(_log_background_task_error)
 
-        return parsed_response.get("response", "Sorry, I couldn't process your request at this time.")
+        return readiness["response"]
     except Exception as e:
         print(f"Error generating calendar schedule: {str(e)}")
+
+
+async def _prepare_calendar_readiness(query: QueryRequest, recent_history: str, long_term_memory: str) -> Dict[str, object]:
+    prompt = onboarding_prompt.REGISTER_CALENDAR_READINESS_PROMPT.format(
+        query=query.query,
+        recent_history=recent_history,
+        long_term_memory=long_term_memory
+    )
+
+    function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
+    response = await asyncio.to_thread(function, prompt=prompt, model_name=query.model_name)
+    json_response = _clean_json_string(response)
+
+    try:
+        parsed_response = json.loads(json_response)
+    except json.JSONDecodeError as exc:
+        print(f"Failed to parse readiness response: {exc}")
+        return {
+            "ready": False,
+            "requirement": query.query,
+            "response": "Sorry, I couldn't process your request at this time.",
+        }
+
+    ready = bool(parsed_response.get("ready", False))
+    requirement = parsed_response.get("requirement", query.query)
+    response_text = parsed_response.get(
+        "response",
+        "Sorry, I couldn't process your request at this time."
+    )
+
+    return {
+        "ready": ready,
+        "requirement": requirement,
+        "response": response_text,
+    }
+
+
+async def _dispatch_register_calendar_request(query: QueryRequest, requirement: str) -> None:
+    payload = {
+        "user_id": query.user_id,
+        "dialogue_id": query.dialogue_id,
+        "model_name": query.model_name,
+        "query": requirement,
+        "type": "register_calendar_schedule",
+    }
+
+    try:
+        await send_kafka_message(
+            kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value,
+            payload,
+        )
+    except Exception as exc:
+        print(f"Failed to dispatch register calendar request: {exc}")
 
 def _log_background_task_error(task: asyncio.Task) -> None:
     try:
         task.result()
     except Exception as exc:
-        print(f"Background task send_kafka_message failed: {exc}")
+        print(f"Background task execution failed: {exc}")
 
 async def _chitchat_and_register_calendar(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
     try:
@@ -227,7 +268,7 @@ async def generate_calendar_schedule(query: QueryRequest) -> Dict:
 
     # Step 4: Call LLM
     function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=prompt)
-    response = function(prompt=prompt, model_name=default_model)
+    response = await asyncio.to_thread(function, prompt=prompt, model_name=default_model)
     print(f"LLM response: {response}")
 
     # Step 5: Parse response
