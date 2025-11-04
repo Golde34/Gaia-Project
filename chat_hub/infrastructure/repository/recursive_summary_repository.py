@@ -6,7 +6,7 @@ from kernel.database.postgres import postgres_db
 
 class RecursiveSummaryRepository:
 
-    async def get_summary_by_dialogue_id_and_user_id(self, user_id: str, dialogue_id: str) -> RecursiveSummary:
+    async def get_summary_by_dialogue_id_and_user_id(self, user_id: int, dialogue_id: str) -> RecursiveSummary:
         """
         Retrieves a list of recursive summaries for a specific user and dialogue ID.
         """
