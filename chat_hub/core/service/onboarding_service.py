@@ -219,7 +219,7 @@ async def _dispatch_register_calendar_request(query: QueryRequest, requirement: 
     try:
         await publish_message(
             kafka_enum.KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value,
-            "registerCalendarSchedule",
+            kafka_enum.KafkaCommand.GENERATE_CALENDAR_SCHEDULE.value,
             payload,
         )
     except Exception as exc:

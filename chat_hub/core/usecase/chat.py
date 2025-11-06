@@ -6,7 +6,6 @@ from core.service import chat_service
 from infrastructure.kafka.producer import send_kafka_message
 from infrastructure.redis.redis import get_key, set_key, increase_key, decrease_key
 from kernel.config.config import RECURSIVE_SUMMARY_MAX_LENGTH, LONG_TERM_MEMORY_MAX_LENGTH
-from kernel.utils import build_header
 
 
 class ChatUsecase:
