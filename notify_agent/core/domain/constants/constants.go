@@ -4,6 +4,7 @@ package constants
 const (
 	OptimizeTaskCmd = "optimizeTask"
 	TaskResultCmd = "taskResult"
+    GenerateCalendarScheduleCmd = "gaiaRegisterCalendar"
 )
 
 const (
