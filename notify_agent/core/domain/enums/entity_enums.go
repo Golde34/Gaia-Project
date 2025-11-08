@@ -19,3 +19,7 @@ var (
 	DELETE = "DELETE"
 	HEAD = "HEAD"
 )
+
+var (
+	RegisterCalendarDialogueType = "register_calendar"
+)

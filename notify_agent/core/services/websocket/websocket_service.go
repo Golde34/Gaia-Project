@@ -79,7 +79,7 @@ func (s *WebSocketService) validateUserJwt(ctx context.Context, jwt string) stri
 	return userId
 }
 
-func SendToUser(userId string, message []byte) {
+func (s *WebSocketService) SendToUser(userId string, message []byte) {
 	log.Println("Attempting to send message to user:", userId)
 
 	if conn, ok := userConnections.Load(userId); ok {
@@ -119,7 +119,7 @@ func (s *WebSocketService) HandleOptimizeTask(userId string, status bool) {
 	log.Println("Response:", string(responseBytes))
 
 	LogActiveConnections()
-	SendToUser(userId, responseBytes)
+	s.SendToUser(userId, responseBytes)
 }
 
 func LogActiveConnections() {
