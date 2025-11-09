@@ -1,109 +1,23 @@
 import asyncio
-from datetime import datetime
-from typing import Dict, List, Optional
-from pydantic import ValidationError
-from langdetect import detect
+from typing import Dict, List
 import json
 import re
 
 from core.domain.enums import enum, kafka_enum
-from core.domain.enums.enum import SemanticRoute
 from core.domain.request.query_request import QueryRequest
-from core.domain.response.base_response import return_response
-from core.domain.response.model_output_schema import DailyRoutineSchema, TimeBubbleDTO
 from core.prompts import onboarding_prompt
 from core.prompts.abilities_prompt import CHITCHAT_WITH_HISTORY_PROMPT
-from core.service import chat_service
 from core.validation import milvus_validation
 from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.kafka.producer import publish_message
 from infrastructure.vector_db.milvus import milvus_db
 from kernel.config import llm_models, config
-from kernel.utils.parse_json import bytes_to_str
 from kernel.utils.background import log_background_task_error
 
 
 default_model = config.LLM_DEFAULT_MODEL
 
-
-async def introduce(query: QueryRequest, guided_route: str) -> dict:
-    """
-    Register task via an user's daily life summary
-
-    Args:
-        query (str): onboarding user's daily summary
-
-    Returns:
-        user_daily_entries (dict):
-    """
-    try:
-        print("Onboarding Query:", query.query)
-        if guided_route == SemanticRoute.GAIA_INTRODUCTION:
-            return await handle_onboarding_action(query, enum.SemanticRoute.GAIA_INTRODUCTION.value)
-        elif guided_route == SemanticRoute.CHITCHAT:
-            return await handle_onboarding_action(query, enum.SemanticRoute.CHITCHAT.value)
-        else:
-            raise ValueError("No route found for the query.")
-    except Exception as e:
-        raise e
-
-
-async def register_schedule_calendar(query: QueryRequest, guided_route: Optional[str] = None) -> Dict:
-    """
-    Register or modify a task via a user's daily life summary, using Chain of Thought to handle
-    incomplete or ambiguous inputs in a single LLM call.
-
-    Args:
-        query (QueryRequest): User's daily summary or schedule modification request.
-        guided_route: Optional parameter for guided routing (not used in this version).
-
-    Returns:
-        Dict: Response containing the schedule or a clarification request.
-    """
-    print(
-        f"Processing query: {query.query} (Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S %Z')})")
-
-    try:
-        selection_prompt = onboarding_prompt.CLASSIFY_REGISTER_CALENDAR_PROMPT.format(query=query.query)
-        function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=selection_prompt)
-        selection = function(prompt=selection_prompt,
-                             model_name=default_model).strip().lower()
-        print(f"Selected action: {selection}")
-        return await handle_onboarding_action(query, selection)
-    except Exception as e:
-        print(f"Unexpected error: {str(e)}")
-        return return_response(
-            status="error",
-            status_message="Unexpected error occurred",
-            error_code=400,
-            error_message=str(e),
-            data=None
-        )
-
-
-async def handle_onboarding_action(query: QueryRequest, selection: str) -> dict:
-    recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query)
-
-    handlers = {
-        enum.SemanticRoute.GAIA_INTRODUCTION.value:
-            lambda: _gaia_introduce(
-                query, recent_history, recursive_summary, long_term_memory),
-        enum.SemanticRoute.CHITCHAT.value:
-            lambda: _chitchat_with_history(
-                query, recent_history, recursive_summary, long_term_memory),
-        enum.GaiaAbilities.REGISTER_SCHEDULE_CALENDAR.value:
-            lambda: _generate_calendar_schedule_response(
-                query, recent_history=recent_history, long_term_memory=long_term_memory),
-        enum.GaiaAbilities.CHITCHAT.value:
-            lambda: _chitchat_and_register_calendar(
-                query, recent_history, recursive_summary, long_term_memory),
-    }
-
-    handler = handlers.get(selection)
-    return await handler() if handler else None
-
-
-async def _gaia_introduce(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
+async def gaia_introduce(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
     embedding = await embedding_model.get_embeddings(texts=[enum.VectorDBContext.GAIA_INTRODUCTION.value])
     query_embeddings = milvus_validation.validate_milvus_search_top_n(
         embedding)
@@ -126,7 +40,7 @@ async def _gaia_introduce(query: QueryRequest, recent_history: str, recursive_su
     return function(prompt=prompt, model_name=default_model)
 
 
-async def _chitchat_with_history(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
+async def chitchat_with_history(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
     """
     Chitchat with history pipeline
     Args:
@@ -150,7 +64,7 @@ async def _chitchat_with_history(query: QueryRequest, recent_history: str, recur
         raise e
 
 
-async def _generate_calendar_schedule_response(query: QueryRequest, recent_history: str, long_term_memory: str) -> Dict:
+async def generate_calendar_schedule_response(query: QueryRequest, recent_history: str, long_term_memory: str) -> Dict:
     try:
         readiness = await _prepare_calendar_readiness(
             query=query,
@@ -171,7 +85,6 @@ async def _generate_calendar_schedule_response(query: QueryRequest, recent_histo
     except Exception as e:
         print(f"Error generating calendar schedule: {str(e)}")
 
-
 async def _prepare_calendar_readiness(query: QueryRequest, recent_history: str, long_term_memory: str) -> Dict[str, object]:
     prompt = onboarding_prompt.REGISTER_CALENDAR_READINESS_PROMPT.format(
         query=query.query,
@@ -181,7 +94,7 @@ async def _prepare_calendar_readiness(query: QueryRequest, recent_history: str, 
 
     function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
     response = await asyncio.to_thread(function, prompt=prompt, model_name=query.model_name)
-    json_response = _clean_json_string(response)
+    json_response = clean_json_string(response)
 
     try:
         parsed_response = json.loads(json_response)
@@ -206,7 +119,6 @@ async def _prepare_calendar_readiness(query: QueryRequest, recent_history: str, 
         "response": response_text,
     }
 
-
 async def _dispatch_register_calendar_request(query: QueryRequest, requirement: str) -> None:
     payload = {
         "user_id": query.user_id,
@@ -226,7 +138,7 @@ async def _dispatch_register_calendar_request(query: QueryRequest, requirement: 
         print(f"Failed to dispatch register calendar request: {exc}")
 
 
-async def _chitchat_and_register_calendar(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
+async def chitchat_and_register_calendar(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
     try:
         prompt = onboarding_prompt.CHITCHAT_AND_RECOMMEND_REGISTER_CALENDAR_PROMPT.format(
             query=query.query,
@@ -239,67 +151,6 @@ async def _chitchat_and_register_calendar(query: QueryRequest, recent_history: s
         return response
     except Exception as e:
         raise e
-
-
-async def generate_calendar_schedule(query: QueryRequest) -> Dict:
-    # Step 1: Preprocess query (language detection and translation)
-    query_text = query.query.strip()
-    try:
-        detected_language = detect(query_text)
-        print(f"Detected language: {detected_language}")
-        if detected_language != "en":
-            query_text = await translate_to_english(query_text, detected_language)
-            print(f"Translated query: {query_text}")
-    except Exception as e:
-        detected_language = "en"
-        print("Language detection failed; defaulting to English")
-
-    recent_history, _, long_term_memory = await chat_service.query_chat_history(query)
-    print(f"Retrieved recent history: {recent_history}")
-    # Step 3: Construct CoT prompt
-    prompt = onboarding_prompt.REGISTER_SCHEDULE_CALENDAR_V2.format(
-        query=query_text,
-        recent_history=json.dumps(recent_history),
-        long_term_memory=long_term_memory
-    )
-
-    # Step 4: Call LLM
-    function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=prompt)
-    response = function(prompt=prompt, model_name=default_model)
-
-    # Step 5: Parse response
-    try:
-        json_response = _clean_json_string(response)
-        parsed_response = json.loads(json_response)
-        print(f"Parsed JSON response: {json_response}")
-    except json.JSONDecodeError as e:
-        print(f"Invalid JSON response: {str(e)}")
-        return return_response(
-            status="error",
-            status_message="Failed to parse LLM response",
-            error_code=400,
-            error_message=str(e),
-            data=None
-        )
-
-    # Step 8: Validate schedule
-    try:
-        schedule_dto = DailyRoutineSchema.model_validate(parsed_response)
-    except ValidationError as e:
-        print(f"Schema validation failed: {str(e)}")
-        return return_response(
-            status="error",
-            status_message="Invalid schedule format",
-            error_code=400,
-            error_message=str(e),
-            data=None
-        )
-
-    # Step 9: Success case
-    safe_response = json.loads(json.dumps(
-        schedule_dto.model_dump(), default=bytes_to_str))
-    result = {"response": safe_response, "userId": query.user_id}
-    print(f"Generated schedule: {schedule_dto}")
 
 
 async def translate_to_english(text: str, source_lang: str) -> str:
@@ -331,7 +182,7 @@ def merge_schedules(existing_schedule: Dict[str, List], new_intervals: Dict[str,
     return fill_schedule_gaps(merged)
 
 
-def _clean_json_string(raw_str: str) -> str:
+def clean_json_string(raw_str: str) -> str:
     cleaned = re.sub(r"^```json\s*|\s*```$", "",
                      raw_str, flags=re.MULTILINE).strip()
     return cleaned
