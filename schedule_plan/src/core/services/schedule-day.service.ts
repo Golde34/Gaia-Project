@@ -1,4 +1,3 @@
-import { createMessage } from "../../infrastructure/kafka/create-message";
 import KafkaHandler from "../../infrastructure/kafka/kafka-handler";
 import { scheduleDayRepository } from "../../infrastructure/repositories/schedule-day.repo";
 import { timeBubbleRepository } from "../../infrastructure/repositories/time-bubble.repo";
@@ -9,9 +8,7 @@ import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
 import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
 import TimeBubblesEntity from "../domain/entities/time-bubble.entity";
 import { ActiveStatus } from "../domain/enums/enums";
-import { KafkaCommand, KafkaTopic } from "../domain/enums/kafka.enum";
 import { timeBubbleMapper } from "../mapper/time-bubble.mapper";
-import { notificationService } from "./notifi-agent.service";
 
 class ScheduleDayService {
     constructor(
@@ -174,7 +171,6 @@ class ScheduleDayService {
             throw error;
         }
     }
-
 
     async returnDailyCalendar(userId: number): Promise<ScheduleDayBubbleEntity[]> {
         try {

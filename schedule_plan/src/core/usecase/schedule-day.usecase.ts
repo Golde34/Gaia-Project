@@ -51,8 +51,6 @@ class ScheduleDayUsecase {
                 message: "Successfully generated schedule config",
                 timeBubblesConfig: timeBubblesConfig,
                 taskConfig: registerOptimizeTaskConfig,
-                response: registerScheduleConfig.response,
-                userId: userId,
             });
         } catch (error: any) {
             console.error("Error generating schedule config:", error.message);
