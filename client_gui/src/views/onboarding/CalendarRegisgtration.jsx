@@ -75,8 +75,8 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     }
 
     const renderDaySchedule = (dayKey) => {
-        const daySchedule = scheduleCalendarRegistration?.data?.response?.schedule?.[dayKey] || [];
-
+        const daySchedule = scheduleCalendarRegistration?.data?.timeBubbleConfig?.[dayKey] || [];
+        console.log("Rendering schedule for day ", dayKey, daySchedule);
         return (
             <div className="space-y-2">
                 <Title className="text-lg font-semibold mb-3">{dayNames[dayKey]}</Title>
@@ -101,7 +101,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     };
 
     const renderTotals = () => {
-        const totals = scheduleCalendarRegistration?.data?.totals || {};
+        const totals = scheduleCalendarRegistration?.data?.taskConfig || {};
 
         return (
             <Card className="p-4 mt-4">
