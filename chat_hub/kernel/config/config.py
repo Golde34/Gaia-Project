@@ -61,3 +61,5 @@ DEFAULT_SEMANTIC_RESPONSE = {
     "recursive_summary": True,
     "long_term_memory": True
 }
+
+BACKGROUND_LOOP_POOL_SIZE = int(os.getenv('BACKGROUND_LOOP_POOL_SIZE', 2))
