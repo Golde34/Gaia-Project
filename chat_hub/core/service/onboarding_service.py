@@ -211,6 +211,12 @@ async def llm_generate_calendar_schedule(query: QueryRequest, recent_history: st
         return return_response(status="error", status_message="Invalid schedule format",
                                error_code=400, error_message=str(e), data=None)
 
+async def return_generated_schedule(payload: dict) -> Dict:
+    await publish_message(
+            kafka_enum.KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value,
+            kafka_enum.KafkaCommand.GENERATE_CALENDAR_SCHEDULE.value,
+            payload,
+        )
 
 async def translate_to_english(text: str, source_lang: str) -> str:
     """

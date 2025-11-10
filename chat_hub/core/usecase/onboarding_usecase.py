@@ -5,6 +5,7 @@ from typing import Dict, Optional
 from langdetect import detect
 from core.domain.enums import enum
 from core.domain.response.base_response import return_response
+from core.domain.response.model_output_schema import DailyRoutineSchema
 from core.domain.request.query_request import QueryRequest
 from core.service import chat_service, onboarding_service
 from core.prompts import onboarding_prompt
@@ -74,13 +75,14 @@ async def generate_calendar_schedule(query: QueryRequest) -> Dict:
     recent_history, _, long_term_memory = await chat_service.query_chat_history(query)
     print(f"Retrieved recent history: {recent_history}")
 
-    schedule_dto = await onboarding_service.llm_generate_calendar_schedule(
+    schedule_dto: DailyRoutineSchema = await onboarding_service.llm_generate_calendar_schedule(
         query, recent_history, long_term_memory)
 
     safe_response = json.loads(json.dumps(
         schedule_dto.model_dump(), default=bytes_to_str))
     result = {"response": safe_response, "userId": query.user_id}
     print(f"Generated schedule: {schedule_dto}")
+    await onboarding_service.return_generated_schedule(result)
 
 
 async def _detect_language(query: str) -> str:
