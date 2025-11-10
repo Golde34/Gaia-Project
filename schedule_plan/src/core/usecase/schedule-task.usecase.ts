@@ -52,7 +52,7 @@ class ScheduleTaskUsecase {
                 const optimizedTask = await scheduleTaskService.optimizeScheduleTask(schedulePlanOptimizeMessage.tasks)
                 await schedulePlanService.updateTaskBatch(validateUser, 0, true);
                 // Push notification
-                await notificationService.pushNotification(schedulePlanOptimizeMessage.userId, optimizedTask, schedulePlanOptimizeMessage.notificationFlowId);
+                await notificationService.pushOptimNotification(schedulePlanOptimizeMessage.userId, optimizedTask, schedulePlanOptimizeMessage.notificationFlowId);
             }
         } catch (error) {
             console.error("Error on optimizeScheduleTask: ", error);

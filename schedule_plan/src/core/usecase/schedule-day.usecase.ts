@@ -2,6 +2,7 @@ import { IResponse, msg200, msg400 } from "../common/response";
 import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
 import { ActiveStatus, ErrorStatus, TaskStatus } from "../domain/enums/enums";
 import { scheduleTaskMapper } from "../mapper/schedule-task.mapper";
+import { notificationService } from "../services/notifi-agent.service";
 import { scheduleDayService } from "../services/schedule-day.service";
 import { schedulePlanService } from "../services/schedule-plan.service";
 import { scheduleTaskService } from "../services/schedule-task.service";
@@ -24,27 +25,34 @@ class ScheduleDayUsecase {
         return msg200("Schedule plan created successfully");
     }
 
-    async generateScheduleConfig(userId: number, registerScheduleConfig: any): Promise<boolean> {
-        const schedulePlan = await this.getSchedulePlanByUserId(userId);
-        if (!schedulePlan) {
-            console.log("Failed to create schedule plan for user: ", userId);
-            return false;
-        }
+    async generateScheduleConfig(userId: number, registerScheduleConfig: any): Promise<void> {
+        try {
+            const schedulePlan = await this.getSchedulePlanByUserId(userId);
+            if (!schedulePlan) {
+                console.log("Failed to create schedule plan for user: ", userId);
+                throw new Error("Failed to create schedule plan");
+            }
 
-        const schedule = registerScheduleConfig.schedule;
-        const scheduleConfigStatus = await scheduleDayService.generateScheduleConfig(schedule, schedulePlan);
-        if (scheduleConfigStatus !== ErrorStatus.SUCCESS) {
-            console.log("Failed to register schedule config: ", scheduleConfigStatus);
-            return false;
-        }
+            const schedule = registerScheduleConfig.schedule;
+            const timeBubblesConfig  = await scheduleDayService.generateScheduleConfig(schedule, schedulePlan);
+            if (timeBubblesConfig === null || timeBubblesConfig === undefined) {
+                console.log("Failed to register schedule config: ", timeBubblesConfig);
+                throw new Error("Failed to register schedule config"); 
+            } else {
+                await notificationService.pushRegisterCalendarNotification(userId, timeBubblesConfig);
+            }
 
-        const registerOptimizeTaskConfig = await schedulePlanService.registerTaskConfig(schedulePlan, registerScheduleConfig);
-        if (registerOptimizeTaskConfig !== ErrorStatus.SUCCESS) {
-            console.log("Failed to register optimize task config: ", registerOptimizeTaskConfig);
-            return false;
-        }
+            const registerOptimizeTaskConfig = await schedulePlanService.registerTaskConfig(schedulePlan, registerScheduleConfig);
+            if (registerOptimizeTaskConfig !== ErrorStatus.SUCCESS) {
+                console.log("Failed to register optimize task config: ", registerOptimizeTaskConfig);
+                throw new Error("Failed to register optimize task config");
+            }
 
-        return true;
+            console.log("Successfully generated schedule config for user: ", userId);
+        } catch (error: any) {
+            console.error("Error generating schedule config:", error.message);
+            // push to logging tracker service
+        }
     }
 
     private async getSchedulePlanByUserId(userId: number): Promise<any | null> {

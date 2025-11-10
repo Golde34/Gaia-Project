@@ -9,7 +9,8 @@ export enum KafkaTopic {
     UPDATE_TASK = "task-manager.update-task.topic",
     SCHEDULE_GROUP_CREATE_TASK = "schedule-plan.schedule-group-create-task.topic",
     GENERATE_SCHEDULE_CALENDAR = "ai-core.generate-calendar-schedule.topic",
-    UPDATE_SCHEDULE_TASK_FIELD = "schedule-plan.update-task-field.topic"
+    UPDATE_SCHEDULE_TASK_FIELD = "schedule-plan.update-task-field.topic",
+    GENERATE_TIME_BUBBLE = "schedule-plan.generate-schedule-task.topic"
 }
 
 export enum KafkaCommand {

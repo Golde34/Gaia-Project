@@ -1,3 +1,5 @@
+import { createMessage } from "../../infrastructure/kafka/create-message";
+import KafkaHandler from "../../infrastructure/kafka/kafka-handler";
 import { scheduleDayRepository } from "../../infrastructure/repositories/schedule-day.repo";
 import { timeBubbleRepository } from "../../infrastructure/repositories/time-bubble.repo";
 import { parseTime } from "../../kernel/utils/string-utils";
@@ -6,13 +8,17 @@ import ScheduleDayBubbleEntity from "../domain/entities/schedule-day.entity";
 import SchedulePlanEntity from "../domain/entities/schedule-plan.entity";
 import ScheduleTaskEntity from "../domain/entities/schedule-task.entity";
 import TimeBubblesEntity from "../domain/entities/time-bubble.entity";
-import { ActiveStatus, ErrorStatus, Tag } from "../domain/enums/enums";
+import { ActiveStatus } from "../domain/enums/enums";
+import { KafkaCommand, KafkaTopic } from "../domain/enums/kafka.enum";
 import { timeBubbleMapper } from "../mapper/time-bubble.mapper";
+import { notificationService } from "./notifi-agent.service";
 
 class ScheduleDayService {
-    constructor() { }
+    constructor(
+        public kafkaHandler: KafkaHandler = new KafkaHandler(),
+    ) { }
 
-    async generateScheduleConfig(schedule: any, schedulePlan: SchedulePlanEntity): Promise<string> {
+    async generateScheduleConfig(schedule: any, schedulePlan: SchedulePlanEntity): Promise<any> {
         try {
             for (const day in schedule) {
                 if (schedule.hasOwnProperty(day)) {
@@ -30,7 +36,7 @@ class ScheduleDayService {
                     }
                 }
             }
-            return ErrorStatus.SUCCESS;
+            return await this.getTimeBubbleConfig(schedulePlan.userId);
         } catch (error: any) {
             console.error("Error registering schedule config:", error);
             return error.message.toString();
