@@ -3,6 +3,7 @@ from typing import Dict
 from pydantic import ValidationError
 import json
 
+from infrastructure.client.schedule_plan_client import schedule_plan_client
 from core.domain.enums import enum, kafka_enum
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.base_response import return_response
@@ -15,7 +16,7 @@ from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.kafka.producer import publish_message
 from infrastructure.vector_db.milvus import milvus_db
 from kernel.config import llm_models, config
-from kernel.utils.parse_json import clean_json_string
+from kernel.utils.parse_json import bytes_to_str, clean_json_string
 from kernel.utils.background_loop import log_background_task_error
 
 
@@ -208,11 +209,23 @@ async def llm_generate_calendar_schedule(query: QueryRequest, recent_history: st
                                error_code=400, error_message=str(e), data=None)
 
 
-async def return_generated_schedule(payload: dict) -> Dict:
+async def return_generated_schedule(user_id: int, payload: DailyRoutineSchema) -> Dict:
+    safe_response = json.loads(json.dumps(
+        payload.model_dump(), default=bytes_to_str))
+    result = await schedule_plan_client.create_or_update_time_bubble_configs(
+        user_id=user_id,
+        schedule_config=safe_response
+    )
+    if result == {}:
+        print("No response from Schedule Plan Service.")
+        return {
+            "response": "System Error! Failed to generate schedule. Please try again later."
+        }
+    
     await publish_message(
         kafka_enum.KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value,
         kafka_enum.KafkaCommand.GENERATE_CALENDAR_SCHEDULE.value,
-        payload,
+        result,
     )
 
 

@@ -78,11 +78,8 @@ async def generate_calendar_schedule(query: QueryRequest) -> Dict:
     schedule_dto: DailyRoutineSchema = await onboarding_service.llm_generate_calendar_schedule(
         query, recent_history, long_term_memory)
 
-    safe_response = json.loads(json.dumps(
-        schedule_dto.model_dump(), default=bytes_to_str))
-    result = {"response": safe_response, "userId": query.user_id}
     print(f"Generated schedule: {schedule_dto}")
-    await onboarding_service.return_generated_schedule(result)
+    await onboarding_service.return_generated_schedule(query.user_id, schedule_dto)
 
 
 async def _detect_language(query: str) -> str:

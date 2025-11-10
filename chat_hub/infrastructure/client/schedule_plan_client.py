@@ -1,4 +1,4 @@
-from chat_hub.core.domain.response.model_output_schema import DailyRoutineSchema
+from core.domain.response.model_output_schema import DailyRoutineSchema
 from kernel.config import config
 from kernel.utils import aiohttp_utils, build_header
 
@@ -28,9 +28,10 @@ class SchedulePlanClient:
                 print("No response from Schedule Plan Service.")
                 return {}
 
-            print("Received response from Schedule Plan Service:", result)
+            print("Received response from Schedule Plan Service:", result["status"])
             return result["data"]
         except Exception as e:
             print(f"Error in SchedulePlanClient.create_or_update_time_bubble_configs: {e}")
             return {} 
     
+schedule_plan_client = SchedulePlanClient()
