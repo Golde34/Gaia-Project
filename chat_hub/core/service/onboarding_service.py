@@ -1,23 +1,54 @@
 import asyncio
-from typing import Dict, List
+from datetime import datetime
+from typing import Dict, List, Optional
+from pydantic import ValidationError
+from langdetect import detect
 import json
 import re
 
 from core.domain.enums import enum, kafka_enum
+from core.domain.enums.enum import SemanticRoute
 from core.domain.request.query_request import QueryRequest
+from core.domain.response.base_response import return_response
+from core.domain.response.model_output_schema import DailyRoutineSchema, TimeBubbleDTO
 from core.prompts import onboarding_prompt
 from core.prompts.abilities_prompt import CHITCHAT_WITH_HISTORY_PROMPT
+from core.service import chat_service
 from core.validation import milvus_validation
 from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.kafka.producer import publish_message
 from infrastructure.vector_db.milvus import milvus_db
 from kernel.config import llm_models, config
+from kernel.utils.parse_json import bytes_to_str, clean_json_string
 from kernel.utils.background import log_background_task_error
 
 
 default_model = config.LLM_DEFAULT_MODEL
 
-async def gaia_introduce(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
+
+async def handle_onboarding_action(query: QueryRequest, selection: str) -> dict:
+    recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query)
+
+    handlers = {
+        enum.SemanticRoute.GAIA_INTRODUCTION.value:
+            lambda: _gaia_introduce(
+                query, recent_history, recursive_summary, long_term_memory),
+        enum.SemanticRoute.CHITCHAT.value:
+            lambda: _chitchat_with_history(
+                query, recent_history, recursive_summary, long_term_memory),
+        enum.GaiaAbilities.REGISTER_SCHEDULE_CALENDAR.value:
+            lambda: _generate_calendar_schedule_response(
+                query, recent_history=recent_history, long_term_memory=long_term_memory),
+        enum.GaiaAbilities.CHITCHAT.value:
+            lambda: _chitchat_and_register_calendar(
+                query, recent_history, recursive_summary, long_term_memory),
+    }
+
+    handler = handlers.get(selection)
+    return await handler() if handler else None
+
+
+async def _gaia_introduce(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
     embedding = await embedding_model.get_embeddings(texts=[enum.VectorDBContext.GAIA_INTRODUCTION.value])
     query_embeddings = milvus_validation.validate_milvus_search_top_n(
         embedding)
@@ -40,7 +71,7 @@ async def gaia_introduce(query: QueryRequest, recent_history: str, recursive_sum
     return function(prompt=prompt, model_name=default_model)
 
 
-async def chitchat_with_history(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
+async def _chitchat_with_history(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
     """
     Chitchat with history pipeline
     Args:
@@ -64,7 +95,7 @@ async def chitchat_with_history(query: QueryRequest, recent_history: str, recurs
         raise e
 
 
-async def generate_calendar_schedule_response(query: QueryRequest, recent_history: str, long_term_memory: str) -> Dict:
+async def _generate_calendar_schedule_response(query: QueryRequest, recent_history: str, long_term_memory: str) -> Dict:
     try:
         readiness = await _prepare_calendar_readiness(
             query=query,
@@ -84,6 +115,7 @@ async def generate_calendar_schedule_response(query: QueryRequest, recent_histor
         return readiness["response"]
     except Exception as e:
         print(f"Error generating calendar schedule: {str(e)}")
+
 
 async def _prepare_calendar_readiness(query: QueryRequest, recent_history: str, long_term_memory: str) -> Dict[str, object]:
     prompt = onboarding_prompt.REGISTER_CALENDAR_READINESS_PROMPT.format(
@@ -119,6 +151,7 @@ async def _prepare_calendar_readiness(query: QueryRequest, recent_history: str, 
         "response": response_text,
     }
 
+
 async def _dispatch_register_calendar_request(query: QueryRequest, requirement: str) -> None:
     payload = {
         "user_id": query.user_id,
@@ -138,7 +171,7 @@ async def _dispatch_register_calendar_request(query: QueryRequest, requirement: 
         print(f"Failed to dispatch register calendar request: {exc}")
 
 
-async def chitchat_and_register_calendar(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
+async def _chitchat_and_register_calendar(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
     try:
         prompt = onboarding_prompt.CHITCHAT_AND_RECOMMEND_REGISTER_CALENDAR_PROMPT.format(
             query=query.query,
@@ -153,6 +186,32 @@ async def chitchat_and_register_calendar(query: QueryRequest, recent_history: st
         raise e
 
 
+async def llm_generate_calendar_schedule(query: QueryRequest, recent_history: str, long_term_memory: str) -> str:
+    prompt = onboarding_prompt.REGISTER_SCHEDULE_CALENDAR_V2.format(
+        query=query.query.strip(),
+        recent_history=json.dumps(recent_history),
+        long_term_memory=long_term_memory
+    )
+
+    function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=prompt)
+    response = function(prompt=prompt, model_name=default_model)
+    try:
+        json_response = clean_json_string(response)
+        parsed_response = json.loads(json_response)
+        print(f"Parsed JSON response: {json_response}")
+    except json.JSONDecodeError as e:
+        print(f"Invalid JSON response: {str(e)}")
+        return return_response(status="error", status_message="Failed to parse LLM response",
+                               error_code=400, error_message=str(e), data=None)
+
+    try:
+        return DailyRoutineSchema.model_validate(parsed_response)
+    except ValidationError as e:
+        print(f"Schema validation failed: {str(e)}")
+        return return_response(status="error", status_message="Invalid schedule format",
+                               error_code=400, error_message=str(e), data=None)
+
+
 async def translate_to_english(text: str, source_lang: str) -> str:
     """
     Translate text to English using a translation service.
@@ -161,50 +220,3 @@ async def translate_to_english(text: str, source_lang: str) -> str:
     print(f"Translating from {source_lang} to English: {text}")
     # Mock translation; integrate Google Translate, DeepL, or similar
     return text  # Replace with actual translation logic
-
-
-def merge_schedules(existing_schedule: Dict[str, List], new_intervals: Dict[str, List], day: str) -> List:
-    """
-    Merge new intervals into an existing schedule, resolving conflicts by prioritizing new entries.
-    """
-    merged = existing_schedule.get(day, []).copy()
-    new_entries = new_intervals.get(day, [])
-
-    # Remove conflicting intervals (new entries take precedence)
-    for new_entry in new_entries:
-        merged = [entry for entry in merged if not (
-            entry.start < new_entry.end and new_entry.start < entry.end
-        )]
-        merged.append(new_entry)
-
-    # Sort by start time and fill gaps
-    merged.sort(key=lambda x: x.start)
-    return fill_schedule_gaps(merged)
-
-
-def clean_json_string(raw_str: str) -> str:
-    cleaned = re.sub(r"^```json\s*|\s*```$", "",
-                     raw_str, flags=re.MULTILINE).strip()
-    return cleaned
-
-
-def fill_schedule_gaps(intervals: List[Dict]) -> List[Dict]:
-    """
-    Fill gaps in a day's schedule with 'relax' to ensure 24-hour coverage.
-    """
-    if not intervals:
-        return [{"start": "00:00", "end": "23:59", "tag": "relax"}]
-
-    filled = []
-    current_time = "00:00"
-    for interval in intervals:
-        if interval["start"] > current_time:
-            filled.append(
-                {"start": current_time, "end": interval["start"], "tag": "relax"})
-        filled.append(interval)
-        current_time = interval["end"]
-
-    if current_time < "23:59":
-        filled.append({"start": current_time, "end": "23:59", "tag": "relax"})
-
-    return filled

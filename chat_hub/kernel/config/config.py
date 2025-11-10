@@ -45,10 +45,6 @@ AUTH_SERVICE_HOST = os.getenv('AUTH_SERVICE_HOST', 'localhost')
 AUTH_SERVICE_PORT = int(os.getenv('AUTH_SERVICE_PORT', 4001))
 AUTH_SERVICE_URL = f"http://{AUTH_SERVICE_HOST}:{AUTH_SERVICE_PORT}"
 
-SCHEDULE_PLAN_HOST = os.getenv('SCHEDULE_PLAN_SERVICE_HOST', 'localhost')
-SCHEDULE_PLAN_PORT = int(os.getenv('SCHEDULE_PLAN_SERVICE_PORT', 4006))
-SCHEDULE_PLAN_SERVICE_URL = (f"http://{SCHEDULE_PLAN_HOST}:{SCHEDULE_PLAN_PORT}/schedule-plan")
-
 # PostgreSQL configuration for ai_core service
 POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
 POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', 5432))
