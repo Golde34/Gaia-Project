@@ -1,10 +1,9 @@
-import asyncio
 import json
 from aiokafka import ConsumerRecord
 
 from core.domain.request.query_request import QueryRequest
 from core.usecase.onboarding_usecase import generate_calendar_schedule
-from kernel.utils.background import log_background_task_error
+from kernel.utils.background_loop import background_loop_pool, log_background_task_error 
 
 
 async def register_calendar_schedule_handler(msg: ConsumerRecord):
@@ -12,8 +11,9 @@ async def register_calendar_schedule_handler(msg: ConsumerRecord):
     payload = json.loads(msg.value)
     query = QueryRequest.model_validate(payload.get("data"))
     print(f"Received payload for register_calendar_schedule: {payload}")
-
-    task = asyncio.create_task(generate_calendar_schedule(query))
-    task.add_done_callback(log_background_task_error)
-
+ 
+    background_loop_pool.schedule(
+        lambda: generate_calendar_schedule(query),
+        callback=log_background_task_error,
+    )
     return None
