@@ -46,17 +46,18 @@ func (handler *ScheduleResultHandler) HandleMessage(topic string, key, value []b
 func (handler *ScheduleResultHandler) RegisterCalendarTopic(key []byte, data map[string]interface{}) {
 	messageId := string(key)
 	log.Println("Processing Register Calendar for data:", data)
-	userId := data["userId"].(string)
+	userId := data["userId"].(float64)
 	go handler.handleService(data, userId)
 
 	fmt.Printf("Register Calendar handled successfully for message ID: %s\n", messageId)
 }
 
-func (handler *ScheduleResultHandler) handleService(messageMap map[string]interface{}, userId string) {
+func (handler *ScheduleResultHandler) handleService(messageMap map[string]interface{}, userId float64) {
+	userIdStr := fmt.Sprintf("%.0f", userId)
 	// return messageMap to client
 	response := map[string]interface{}{
 		"type": enums.RegisterCalendarDialogueType,
-		"userId": userId,
+		"userId": userIdStr,
 		"data": messageMap,
 	}
 
@@ -67,5 +68,5 @@ func (handler *ScheduleResultHandler) handleService(messageMap map[string]interf
 	}
 
 	log.Println("Handling service for user:", messageMapStr)
-	handler.websocketUsecase.SendToUser(userId, messageMapStr)
+	handler.websocketUsecase.SendToUser(userIdStr, messageMapStr)
 }
