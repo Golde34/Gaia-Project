@@ -5,7 +5,6 @@ from core.domain.enums.kafka_enum import KafkaTopic
 from kernel.config.kafka_config import KafkaConfig, convert_topics_to_list 
 from ui.kafka.update_chat_history_handler import update_long_term_memory_handler, update_recursive_summary_handler 
 from ui.kafka.message_handler import register_calendar_schedule_handler
-from ui.kafka.schedule_result_handler import schedule_result_handler
 
 
 load_dotenv()

@@ -14,18 +14,27 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
 
     const [scheduleCalendarRegistration, setScheduleCalendarRegistration] = useState(null);
     const [selectedDay, setSelectedDay] = useState('1'); // Default to Monday
+    const lastNotificationIndex = useRef(0);
 
     useEffect(() => {
-        const handleMessage = (message) => {
-            const data = JSON.parse(message);
-            if (data.type === 'register_calendar') {
-                setScheduleCalendarRegistration(data);
+        const notificationMessages = messages?.notification;
+        if (!Array.isArray(notificationMessages)) return;
+
+        const newMessages = notificationMessages.slice(lastNotificationIndex.current);
+        newMessages.forEach((message) => {
+            try {
+                const data = JSON.parse(message);
+                if (data.type === 'register_calendar') {
+                    setScheduleCalendarRegistration(data);
+                    console.log("Received schedule calendar registration data: ", data);
+                }
+            } catch (error) {
+                console.warn("Failed to parse notification message", error);
             }
-        };
-        if (messages.chat && Array.isArray(messages.chat)) {
-            messages.chat.forEach(handleMessage);
-        }
-    }, [messages])
+        });
+
+        lastNotificationIndex.current = notificationMessages.length;
+    }, [messages.notification])
 
     const timeBubbleConfigList = useSelector((state) => state.getTimeBubbleConfig);
     const { loading, error, config } = timeBubbleConfigList;
@@ -66,8 +75,8 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     }
 
     const renderDaySchedule = (dayKey) => {
-        const daySchedule = scheduleCalendarRegistration?.data?.response?.schedule?.[dayKey] || [];
-
+        const daySchedule = scheduleCalendarRegistration?.data?.timeBubbleConfig?.[dayKey] || [];
+        console.log("Rendering schedule for day ", dayKey, daySchedule);
         return (
             <div className="space-y-2">
                 <Title className="text-lg font-semibold mb-3">{dayNames[dayKey]}</Title>
@@ -92,7 +101,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     };
 
     const renderTotals = () => {
-        const totals = scheduleCalendarRegistration?.data?.totals || {};
+        const totals = scheduleCalendarRegistration?.data?.taskConfig || {};
 
         return (
             <Card className="p-4 mt-4">

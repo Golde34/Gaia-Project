@@ -1,5 +1,4 @@
 import uuid
-import time
 
 from core.domain.enums.enum import DialogueEnum, ActiveEnum
 from core.domain.entities.user_dialogue import UserDialogue

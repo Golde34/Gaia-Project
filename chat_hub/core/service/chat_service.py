@@ -141,9 +141,8 @@ async def update_recursive_summary(user_id: int, dialogue_id: str) -> None:
             summary=recursive_summary_str,
             created_at=datetime.date.today(),
         )
-        await recursive_summary_repo.save_summary(
-            summary=recursive_summary
-        )
+        print(f"Saving recursive summary for user {user_id} and dialogue {dialogue_id}")
+        await recursive_summary_repo.save_summary(summary=recursive_summary)
 
         recursive_summary_key = RedisEnum.RECURSIVE_SUMMARY_CONTENT.value + \
             f":{user_id}:{dialogue_id}"

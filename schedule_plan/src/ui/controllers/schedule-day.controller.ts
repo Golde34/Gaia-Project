@@ -14,6 +14,17 @@ class ScheduleDayController {
         }
     }
 
+    async generateScheduleConfig(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const userId = req.body.userId;
+            const scheduleConfig = req.body.schedule;
+            console.log("Generating schedule config for user: ", req.body);
+            return await scheduleDayUsecase.generateScheduleConfig(userId, scheduleConfig);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async registerScheduleConfig(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = req.body.userId;

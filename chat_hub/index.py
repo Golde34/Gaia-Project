@@ -32,8 +32,8 @@ origins = [
 ]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # Chỉnh sửa cho đúng
-    allow_methods=["HEAD", "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],  # Đảm bảo OPTIONS được phép
+    allow_origins=origins,
+    allow_methods=["HEAD", "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
     allow_credentials=True,
 )

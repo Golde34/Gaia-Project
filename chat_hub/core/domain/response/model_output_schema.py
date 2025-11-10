@@ -54,6 +54,7 @@ class DailyRoutineSchema(BaseModel):
         description="Map of day-of-week to list of time blocks"
     )
     totals: TotalsDTO = Field(..., description="Summary of total hours per tag")
+    response: str = Field(..., description="LLM-generated response text")
  
 
 class LongTermMemorySchema(BaseModel):

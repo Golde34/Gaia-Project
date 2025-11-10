@@ -71,3 +71,14 @@ scheduleDayRouter.put("/delete-task-away-schedule",
         }
     }
 )
+
+scheduleDayRouter.post("/generate-time-bubble", 
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const updatedTimeBubble = await scheduleDayController.generateScheduleConfig(req, next);
+            return returnResult(updatedTimeBubble, "FAIL", res, next);
+        } catch (error) {
+            next(error);
+        }
+    }
+)

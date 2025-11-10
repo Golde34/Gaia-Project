@@ -7,7 +7,7 @@ class NotificationService {
     
     kafkaHandler: KafkaHandler = new KafkaHandler();
 
-    async pushNotification(userId: number, optimizeStatus: string, notificationFlowId: string): Promise<void> {
+    async pushOptimNotification(userId: number, optimizeStatus: string, notificationFlowId: string): Promise<void> {
         const data = {
             "userId": userId,
             "optimizeStatus": optimizeStatus,
@@ -21,7 +21,7 @@ class NotificationService {
             ))
         }]
         console.log("Push Kafka Message: ", messages);
-        this.kafkaHandler.produce(KafkaTopic.OPTIMIZE_TASK_NOTIFY, messages);
+        await this.kafkaHandler.produce(KafkaTopic.OPTIMIZE_TASK_NOTIFY, messages);
     }
 }
 

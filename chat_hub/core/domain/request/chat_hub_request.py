@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 
 from kernel.utils.parse_json import to_camel
@@ -12,6 +13,7 @@ class SendMessageRequest(BaseModel):
     message: str
     msg_type: str
     sse_token: str
+    user_message_id: Optional[str] = None
 
     model_config = {
         "alias_generator": to_camel,

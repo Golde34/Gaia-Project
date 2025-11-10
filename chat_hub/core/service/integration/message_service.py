@@ -24,7 +24,7 @@ class MessageService:
             id=uuid.uuid4(),
             user_id=user_id,
             dialogue_id=dialogue.id,
-            user_message_id=str(user_message_id),
+            user_message_id=user_message_id,
             message_type=message_type,
             content=message,
             sender_type=sender_type,

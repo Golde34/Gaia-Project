@@ -1,4 +1,5 @@
 import json
+import re
 
 def parse_json_string(s: str):
     """
@@ -29,3 +30,9 @@ def bytes_to_str(obj):
 def to_camel(string: str) -> str:
     parts = string.split('_')
     return parts[0] + ''.join(word.capitalize() for word in parts[1:])
+
+
+def clean_json_string(raw_str: str) -> str:
+    cleaned = re.sub(r"^```json\s*|\s*```$", "",
+                     raw_str, flags=re.MULTILINE).strip()
+    return cleaned
