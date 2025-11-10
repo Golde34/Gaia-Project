@@ -1,13 +1,9 @@
 import asyncio
-from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict
 from pydantic import ValidationError
-from langdetect import detect
 import json
-import re
 
 from core.domain.enums import enum, kafka_enum
-from core.domain.enums.enum import SemanticRoute
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.base_response import return_response
 from core.domain.response.model_output_schema import DailyRoutineSchema, TimeBubbleDTO
@@ -19,8 +15,8 @@ from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.kafka.producer import publish_message
 from infrastructure.vector_db.milvus import milvus_db
 from kernel.config import llm_models, config
-from kernel.utils.parse_json import bytes_to_str, clean_json_string
-from kernel.utils.background import log_background_task_error
+from kernel.utils.parse_json import clean_json_string
+from kernel.utils.background_loop import log_background_task_error
 
 
 default_model = config.LLM_DEFAULT_MODEL
@@ -211,12 +207,14 @@ async def llm_generate_calendar_schedule(query: QueryRequest, recent_history: st
         return return_response(status="error", status_message="Invalid schedule format",
                                error_code=400, error_message=str(e), data=None)
 
+
 async def return_generated_schedule(payload: dict) -> Dict:
     await publish_message(
-            kafka_enum.KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value,
-            kafka_enum.KafkaCommand.GENERATE_CALENDAR_SCHEDULE.value,
-            payload,
-        )
+        kafka_enum.KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value,
+        kafka_enum.KafkaCommand.GENERATE_CALENDAR_SCHEDULE.value,
+        payload,
+    )
+
 
 async def translate_to_english(text: str, source_lang: str) -> str:
     """
