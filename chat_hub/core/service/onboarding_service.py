@@ -183,7 +183,7 @@ async def _chitchat_and_register_calendar(query: QueryRequest, recent_history: s
 
 
 async def llm_generate_calendar_schedule(query: QueryRequest, recent_history: str, long_term_memory: str) -> str:
-    prompt = onboarding_prompt.REGISTER_SCHEDULE_CALENDAR_V2.format(
+    prompt = onboarding_prompt.REGISTER_SCHEDULE_CALENDAR.format(
         query=query.query.strip(),
         recent_history=json.dumps(recent_history),
         long_term_memory=long_term_memory
