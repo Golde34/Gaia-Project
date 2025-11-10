@@ -26,11 +26,15 @@ class WorkOptimizationAdapter {
                 method: HttpMethod.POST,
                 body: JSON.stringify(taskConfig)
             });
+            const data = await response.json();
 
-            if (response.status !== 200) {
+            if (response.status === HttpCodeMessage.BAD_REQUEST && data.data === 'User already exists') {
+                console.log("User already exists in work optimization service");
+            } else if (response.status !== HttpCodeMessage.OK) {
+                console.log("Failed to register task config in work optimization service");
                 return getInternalServiceErrorResponse(response.status);
             }
-            const data = await response.json();
+            
             console.log("Response from work optimization service: ", data);
             return data.data;
         } catch (error: any) {

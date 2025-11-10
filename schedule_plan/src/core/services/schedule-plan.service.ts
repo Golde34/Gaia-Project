@@ -127,27 +127,28 @@ class SchedulePlanService {
         }
     }
 
-    async registerTaskConfig(schedulePlan: any, registerTaskConfig: any): Promise<string> {
+    async registerTaskConfig(schedulePlan: any, registerTaskConfig: any): Promise<any> {
         try {
+            const totals = registerTaskConfig.totals;
             const monday = registerTaskConfig.schedule[1];
             const startSleepTime = monday.find((item: any) => item.tag === "sleep")?.start;
             const endSleepTime = monday.find((item: any) => item.tag === "sleep")?.end;
             const taskConfig = {
                 userId: schedulePlan.userId,
-                sleepDuration: registerTaskConfig.sleep,
+                sleepDuration: totals.sleep,
                 startSleepTime: startSleepTime,
                 endSleepTime: endSleepTime,
-                relaxTime: registerTaskConfig.relax,
-                eatTime: registerTaskConfig.eat,
-                travelTime: registerTaskConfig.travel,
-                workTime: registerTaskConfig.work
+                relaxTime: totals.relax,
+                eatTime: totals.eat,
+                travelTime: totals.travel,
+                workTime: totals.work
             };
             const response = await workOptimizationAdapter.registerTaskConfig(taskConfig);
             console.log("Task configuration registered successfully: ", response);
-            return ErrorStatus.SUCCESS;
+            return response
         } catch (error: any) {
             console.error("Error registering task configuration: ", error);
-            return error.message.toString();
+            return null
         }
     }
 }

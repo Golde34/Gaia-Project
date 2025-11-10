@@ -8,9 +8,7 @@ export enum KafkaTopic {
     DELETE_TASK = "task-manager.delete-task.topic",
     UPDATE_TASK = "task-manager.update-task.topic",
     SCHEDULE_GROUP_CREATE_TASK = "schedule-plan.schedule-group-create-task.topic",
-    GENERATE_SCHEDULE_CALENDAR = "ai-core.generate-calendar-schedule.topic",
     UPDATE_SCHEDULE_TASK_FIELD = "schedule-plan.update-task-field.topic",
-    GENERATE_TIME_BUBBLE = "schedule-plan.generate-schedule-task.topic"
 }
 
 export enum KafkaCommand {
@@ -27,7 +25,6 @@ export enum KafkaCommand {
     UPDATE_TASK_STATUS = "updateTaskStatus",
     DELETE_TASK = "deleteTask",
     SCHEDULE_GROUP_CREATE_TASK = "scheduleGroupCreateTask",
-    GENERATE_SCHEDULE_CALENDAR = "gaiaRegisterCalendar",
 }
 
 export class KafkaMessage {
