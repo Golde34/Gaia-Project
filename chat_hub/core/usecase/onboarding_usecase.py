@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 from typing import Dict, Optional
 
@@ -8,9 +7,10 @@ from core.domain.response.base_response import return_response
 from core.domain.response.model_output_schema import DailyRoutineSchema
 from core.domain.request.query_request import QueryRequest
 from core.service import chat_service, onboarding_service
+from core.service.integration.dialogue_service import dialogue_service
+from core.service.integration.message_service import message_service
 from core.prompts import onboarding_prompt
 from kernel.config import config, llm_models
-from kernel.utils.parse_json import bytes_to_str
 
 
 default_model = config.LLM_DEFAULT_MODEL
@@ -79,7 +79,21 @@ async def generate_calendar_schedule(query: QueryRequest) -> Dict:
         query, recent_history, long_term_memory)
 
     print(f"Generated schedule: {schedule_dto}")
-    await onboarding_service.return_generated_schedule(query.user_id, schedule_dto)
+    response = await onboarding_service.return_generated_schedule(query.user_id, schedule_dto)
+
+    msg_type = enum.DialogueEnum.REGISTER_SCHEDULE_CALENDAR_TYPE.value
+    dialogue = await dialogue_service.get_or_create_dialogue(user_id=query.user_id, msg_type=msg_type, dialogue_id=None)
+    if dialogue is None:
+        raise Exception("Failed to get or create dialogue")
+    bot_message_id = await message_service.create_message(
+            dialogue=dialogue,
+            user_id=query.user_id,
+            message=response["data"]["response"],
+            message_type=msg_type,
+            sender_type=enum.SenderTypeEnum.BOT.value,
+            user_message_id=query.user_message_id,
+        )
+    print(f"Created bot message with ID: {bot_message_id}")
 
 
 async def _detect_language(query: str) -> str:

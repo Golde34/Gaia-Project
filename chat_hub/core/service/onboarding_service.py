@@ -1,4 +1,5 @@
 import asyncio
+from collections import defaultdict
 from typing import Dict
 from pydantic import ValidationError
 import json
@@ -156,6 +157,7 @@ async def _dispatch_register_calendar_request(query: QueryRequest, requirement: 
         "model_name": query.model_name,
         "query": requirement,
         "type": "register_calendar_schedule",
+        "user_message_id": query.user_message_id,
     }
 
     try:
@@ -209,7 +211,7 @@ async def llm_generate_calendar_schedule(query: QueryRequest, recent_history: st
                                error_code=400, error_message=str(e), data=None)
 
 
-async def return_generated_schedule(user_id: int, payload: DailyRoutineSchema) -> Dict:
+async def return_generated_schedule(user_id: int, payload: DailyRoutineSchema):
     safe_response = json.loads(json.dumps(
         payload.model_dump(), default=bytes_to_str))
     result = await schedule_plan_client.create_or_update_time_bubble_configs(
@@ -222,12 +224,42 @@ async def return_generated_schedule(user_id: int, payload: DailyRoutineSchema) -
             "response": "System Error! Failed to generate schedule. Please try again later."
         }
     
+    response = _validate_generated_calendar_result(result, user_id, payload)
+    
     await publish_message(
         kafka_enum.KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value,
         kafka_enum.KafkaCommand.GENERATE_CALENDAR_SCHEDULE.value,
-        result,
+        response,
     )
 
+    return response
+
+def _validate_generated_calendar_result(result: dict, user_id: int, payload: DailyRoutineSchema) -> Dict:
+    if type(result["data"].get("taskConfig")) is str:
+        task_config = payload.totals
+    return {
+        "data": {
+            "user_id": user_id,
+            "timeBubbleConfig": _convert_to_schedule_format(result["data"].get("timeBubblesConfig")),
+            "taskConfig": task_config,
+            "response": payload.response,
+        }
+    }
+
+def _convert_to_schedule_format(response):
+    time_bubbles = response["data"].get("timeBubblesConfig", [])
+    
+    schedule = defaultdict(list)
+    
+    for slot in time_bubbles:
+        day = slot["dayOfWeek"]
+        schedule[day].append({
+            "start": slot["startTime"][:-3],
+            "end": slot["endTime"][:-3],
+            "tag": slot["tag"]
+        })
+    
+    return dict(schedule)
 
 async def translate_to_english(text: str, source_lang: str) -> str:
     """

@@ -85,7 +85,7 @@ class ChatInteractionUsecase:
         )
         
         chat_type = MESSAGE_TYPE_CONVERTER.get(request.msg_type, ChatType.ABILITIES.value)
-        bot_response = await chat_usecase.chat(query=query_request, chat_type=chat_type)
+        bot_response = await chat_usecase.chat(query=query_request, chat_type=chat_type, user_message_id=user_message_id)
 
         bot_message_id = await message_service.create_message(
             dialogue=dialogue,

@@ -1,3 +1,4 @@
+from typing import Any
 from core.abilities import ability_routers
 from core.domain.enums import redis_enum, kafka_enum
 from core.domain.request.query_request import QueryRequest
@@ -11,7 +12,7 @@ from kernel.config.config import RECURSIVE_SUMMARY_MAX_LENGTH, LONG_TERM_MEMORY_
 class ChatUsecase:
 
     @classmethod
-    async def chat(cls, query: QueryRequest, chat_type: str, default=True):
+    async def chat(cls, query: QueryRequest, chat_type: str, default=True, **kwargs: Any):
         """
         Gaia selects the appropriate ability based on the chat type and query.
         It retrieves the chat history, generates a new query based on the context,
@@ -21,10 +22,14 @@ class ChatUsecase:
             query (QueryRequest): The user's query containing user_id, dialogue_id, and model_name
             chat_type (str): The type of chat to handle, e.g., abilities, introduction, etc.
             default (bool): Whether to use the default semantic response or a custom one.
+            **kwargs: Additional optional arguments (e.g., user_message_id) for downstream handlers.
         Returns:
             dict: The response from the selected ability handler.
 
         """
+        user_message_id = kwargs.get("user_message_id")
+        if user_message_id is not None:
+            query.user_message_id = user_message_id
         print(f"Chat Type: {chat_type}, Query: {query.query}")
         tool_selection, use_chat_history_prompt = await ability_routers.select_ability(label_value=chat_type, query=query)
 
