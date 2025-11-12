@@ -10,6 +10,7 @@ export default function ChatComponent(props) {
     const navigate = useNavigate();
     const isDashboard = props.isDashboard === undefined ? false : props.isDashboard;
     const chatType = props.chatType === undefined ? "" : props.chatType;
+    const websocketMessageQueue = Array.isArray(props.websocketMessageQueue) ? props.websocketMessageQueue : [];
     const tabId = getTabId();
 
     const dispatch = useDispatch();
@@ -33,6 +34,7 @@ export default function ChatComponent(props) {
     const isLoadingMoreRef = useRef(false);
     const prevScrollHeightRef = useRef(0);
     const prevScrollTopRef = useRef(0);
+    const processedWebsocketMessageIdsRef = useRef(new Set());
 
     const getChatMessages = useCallback(
         (cursorOverride = "") => {
@@ -47,6 +49,7 @@ export default function ChatComponent(props) {
         isLoadingMoreRef.current = false;
         prevScrollHeightRef.current = 0;
         prevScrollTopRef.current = 0;
+        processedWebsocketMessageIdsRef.current = new Set();
     }, [conversationKey]);
 
     useEffect(() => {
@@ -62,6 +65,16 @@ export default function ChatComponent(props) {
             return [...newMessages, ...prev];
         });
     }, [chatMessages]);
+
+    useEffect(() => {
+        if (!websocketMessageQueue.length) return;
+        const queuedMessages = websocketMessageQueue.filter(
+            (msg) => msg?.id && !processedWebsocketMessageIdsRef.current.has(msg.id)
+        );
+        if (!queuedMessages.length) return;
+        setChatHistory((prev) => [...prev, ...queuedMessages]);
+        queuedMessages.forEach((msg) => processedWebsocketMessageIdsRef.current.add(msg.id));
+    }, [websocketMessageQueue]);
 
     useEffect(() => {
         const container = messagesContainerRef.current;

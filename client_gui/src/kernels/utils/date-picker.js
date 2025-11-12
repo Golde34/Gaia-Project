@@ -52,3 +52,8 @@ export const toMin = (t) => {
         if (Number.isNaN(h) || Number.isNaN(m)) return null;
         return h * 60 + m;
     };
+
+export const formatTime = (value) => {
+        if (!value || typeof value !== "string") return "--:--";
+        return value.length >= 5 ? value.slice(0, 5) : value;
+    };
