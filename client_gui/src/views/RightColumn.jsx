@@ -8,9 +8,7 @@ const RightColumn = () => {
 			<CompareCommitChart />
 			<DoneTasksComponent />
 			<div>
-				<a href="/client-gui/chat">Other Chats</a>
 				<ChatComponent isDashboard={true} chatType={"chitchat_message"} />
-
 			</div>
 		</div>
 	);
