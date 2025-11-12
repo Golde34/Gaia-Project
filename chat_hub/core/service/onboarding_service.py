@@ -223,9 +223,9 @@ async def return_generated_schedule(user_id: int, payload: DailyRoutineSchema):
         return {
             "response": "System Error! Failed to generate schedule. Please try again later."
         }
-    
+
     response = _validate_generated_calendar_result(result, user_id, payload)
-    
+
     await publish_message(
         kafka_enum.KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value,
         kafka_enum.KafkaCommand.GENERATE_CALENDAR_SCHEDULE.value,
@@ -234,23 +234,21 @@ async def return_generated_schedule(user_id: int, payload: DailyRoutineSchema):
 
     return response
 
+
 def _validate_generated_calendar_result(result: dict, user_id: int, payload: DailyRoutineSchema) -> Dict:
-    if type(result["data"].get("taskConfig")) is str:
+    if type(result.get("taskConfig")) is str:
         task_config = payload.totals
     return {
-        "data": {
-            "user_id": user_id,
-            "timeBubbleConfig": _convert_to_schedule_format(result["data"].get("timeBubblesConfig")),
-            "taskConfig": task_config,
-            "response": payload.response,
-        }
+        "userId": user_id,
+        "timeBubbleConfig": _convert_to_schedule_format(result.get("timeBubblesConfig")),
+        "taskConfig": task_config.model_dump(),
+        "response": payload.response,
     }
 
-def _convert_to_schedule_format(response):
-    time_bubbles = response["data"].get("timeBubblesConfig", [])
-    
+
+def _convert_to_schedule_format(time_bubbles: list) -> Dict[str, list]:
     schedule = defaultdict(list)
-    
+
     for slot in time_bubbles:
         day = slot["dayOfWeek"]
         schedule[day].append({
@@ -258,8 +256,9 @@ def _convert_to_schedule_format(response):
             "end": slot["endTime"][:-3],
             "tag": slot["tag"]
         })
-    
+
     return dict(schedule)
+
 
 async def translate_to_english(text: str, source_lang: str) -> str:
     """

@@ -29,7 +29,7 @@ class ChatUsecase:
         """
         user_message_id = kwargs.get("user_message_id")
         if user_message_id is not None:
-            query.user_message_id = user_message_id
+            query.user_message_id = str(user_message_id)
         print(f"Chat Type: {chat_type}, Query: {query.query}")
         tool_selection, use_chat_history_prompt = await ability_routers.select_ability(label_value=chat_type, query=query)
 
