@@ -39,9 +39,11 @@ function ContentArea() {
                         <Text className="mt-5">No Notifications</Text>
                     ) : (
                         notifications.map((noti) => (
-                            <Card key={noti.id || noti.notification_flow_id} className="mt-5">
-                                <Text>{noti.content}</Text>
-                            </Card>
+                            <div className="ms-20 me-20">
+                                <Card key={noti.id || noti.notification_flow_id} className="mt-5">
+                                    <Text>{noti.content}</Text>
+                                </Card>
+                            </div>
                         ))
                     )}
                 </>
