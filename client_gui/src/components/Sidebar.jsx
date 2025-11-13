@@ -74,7 +74,7 @@ const Sidebar = ({ isOpen = true }) => {
 							<Description>Optimize Your Tasks</Description>
 						</LinkWrapper>
 					</Col>
-					<Col numColSpan={1}>
+					{/* <Col numColSpan={1}>
 						<LinkWrapper href="/client-gui/calendar">
 							<Button variant="primary" color="indigo"
 								className="p-2 rounded-lg mb-4">
@@ -82,7 +82,7 @@ const Sidebar = ({ isOpen = true }) => {
 							</Button>
 							<Description>Daily Calendar</Description>
 						</LinkWrapper>
-					</Col>
+					</Col> */}
 					<Col numColSpan={1}>
 						<LinkWrapper href="/client-gui/note-dashboard">
 							<Button variant="primary" color="indigo"
