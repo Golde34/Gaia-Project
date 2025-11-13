@@ -7,6 +7,7 @@ import { useMultiWS } from "../../kernels/context/MultiWSContext";
 import { getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";
 import { dayNames, tagColors } from "../../kernels/utils/calendar";
 import { useRegisterScheduleCalendarDispatch } from "../../kernels/utils/write-dialog-api-requests";
+import { formatTime } from "../../kernels/utils/date-picker";
 
 const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
     const dispatch = useDispatch();
@@ -14,7 +15,31 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
 
     const [scheduleCalendarRegistration, setScheduleCalendarRegistration] = useState(null);
     const [selectedDay, setSelectedDay] = useState('1'); // Default to Monday
+    const [websocketMessageQueue, setWebsocketMessageQueue] = useState([]);
     const lastNotificationIndex = useRef(0);
+
+    const appendResponseToQueue = useCallback((responseText) => {
+        if (!responseText || typeof responseText !== "string") return;
+        setWebsocketMessageQueue((prevQueue) => ([
+            ...prevQueue,
+            {
+                id: `ws-${Date.now()}-${Math.random()}`,
+                content: responseText,
+                senderType: "bot",
+                type: "websocket",
+                timestamp: new Date().toISOString(),
+            }
+        ]));
+    }, []);
+
+    const extractResponseText = useCallback((payload) => {
+        if (!payload || typeof payload !== "object") return "";
+        if (typeof payload.response === "string") return payload.response;
+        if (typeof payload?.data?.response === "string") return payload.data.response;
+        if (typeof payload?.message === "string") return payload.message;
+        if (typeof payload?.data?.message === "string") return payload.data.message;
+        return "";
+    }, []);
 
     useEffect(() => {
         const notificationMessages = messages?.notification;
@@ -27,6 +52,8 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
                 if (data.type === 'register_calendar') {
                     setScheduleCalendarRegistration(data);
                     console.log("Received schedule calendar registration data: ", data);
+                    const responseText = extractResponseText(data);
+                    appendResponseToQueue(responseText);
                 }
             } catch (error) {
                 console.warn("Failed to parse notification message", error);
@@ -34,7 +61,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
         });
 
         lastNotificationIndex.current = notificationMessages.length;
-    }, [messages.notification])
+    }, [messages.notification, appendResponseToQueue, extractResponseText])
 
     const timeBubbleConfigList = useSelector((state) => state.getTimeBubbleConfig);
     const { loading, error, config } = timeBubbleConfigList;
@@ -52,8 +79,10 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
         if (!loading && !error && config) {
             const wrapped = { type: 'register_calendar', data: { response: config.data } };
             setScheduleCalendarRegistration(wrapped);
+            const responseText = extractResponseText(wrapped);
+            appendResponseToQueue(responseText);
         }
-    }, [loading, error, config]);
+    }, [loading, error, config, appendResponseToQueue, extractResponseText]);
 
     const registerScheduleCalendar = useRegisterScheduleCalendarDispatch();
     const handleRegisterCalendar = () => {
@@ -74,15 +103,44 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
             });
     }
 
+    const normalizeDaySchedule = (dayKey) => {
+        const config = scheduleCalendarRegistration?.data;
+        if (!config) return [];
+
+        const mapConfig = config.timeBubbleConfig;
+        const listConfig = config.timeBubblesConfig;
+
+        if (mapConfig && typeof mapConfig === "object" && !Array.isArray(mapConfig)) {
+            return mapConfig?.[dayKey] ?? [];
+        }
+
+        if (Array.isArray(listConfig)) {
+            return listConfig
+                .filter((slot) => `${slot?.dayOfWeek}` === `${dayKey}`)
+                .map((slot) => ({
+                    tag: slot?.tag,
+                    start: slot?.start ?? slot?.startTime,
+                    end: slot?.end ?? slot?.endTime,
+                }));
+        }
+
+        return [];
+    };
+
     const renderDaySchedule = (dayKey) => {
-        const daySchedule = scheduleCalendarRegistration?.data?.timeBubbleConfig?.[dayKey] || [];
+        const daySchedule = normalizeDaySchedule(dayKey).map((slot) => ({
+            tag: slot?.tag ?? "unknown",
+            start: formatTime(slot?.start),
+            end: formatTime(slot?.end),
+        }));
+
         console.log("Rendering schedule for day ", dayKey, daySchedule);
         return (
             <div className="space-y-2">
                 <Title className="text-lg font-semibold mb-3">{dayNames[dayKey]}</Title>
                 {daySchedule.length > 0 ? (
                     daySchedule.map((slot, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div key={`${slot.tag}-${index}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <div className="flex items-center space-x-3">
                                 <Badge color={tagColors[slot.tag] || 'gray'} size="sm">
                                     {slot.tag}
@@ -100,22 +158,56 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
         );
     };
 
+    const normalizeTotals = () => {
+        const totals = scheduleCalendarRegistration?.data?.taskConfig;
+        if (!totals) return [];
+
+        if (typeof totals === "string") {
+            return totals ? [{ tag: totals, hours: null, isMessage: true }] : [];
+        }
+
+        if (Array.isArray(totals)) {
+            return totals
+                .map((item, index) => ({
+                    tag: item?.tag ?? `Item ${index + 1}`,
+                    hours: item?.hours ?? item?.duration ?? item?.value ?? 0,
+                }))
+                .filter((item) => item.tag);
+        }
+
+        if (typeof totals === "object") {
+            return Object.entries(totals).map(([tag, hours]) => ({
+                tag,
+                hours,
+            }));
+        }
+
+        return [];
+    };
+
     const renderTotals = () => {
-        const totals = scheduleCalendarRegistration?.data?.taskConfig || {};
+        const normalizedTotals = normalizeTotals();
+        if (!normalizedTotals.length) return null;
+
+        const isMessageOnly = normalizedTotals.length === 1 && normalizedTotals[0].isMessage;
 
         return (
             <Card className="p-4 mt-4">
                 <Title className="text-lg font-semibold mb-3">Total time in week</Title>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {Object.entries(totals).map(([tag, hours]) => (
-                        <div key={tag} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                            <Badge color={tagColors[tag] || 'gray'} size="sm">
-                                {tag}
-                            </Badge>
-                            <Text className="font-medium">{hours}h</Text>
-                        </div>
-                    ))}
-                </div>
+                {isMessageOnly ? (
+                    <Text className="text-gray-600">{normalizedTotals[0].tag}</Text>
+                ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {normalizedTotals.map(({ tag, hours }) => (
+                            <div key={tag} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                <Badge color={tagColors[tag] || 'gray'} size="sm">
+                                    {tag}
+                                </Badge>
+                                <Text className="font-medium">{hours}h</Text>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </Card>
         );
     };
@@ -128,7 +220,10 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
             <Grid numItems={9}>
                 <Col numColSpan={4}>
                     <div className="m-4">
-                        <ChatComponent chatType={'register_calendar'} />
+                        <ChatComponent
+                            chatType={'register_calendar'}
+                            websocketMessageQueue={websocketMessageQueue}
+                        />
                     </div>
                 </Col>
                 <Col numColSpan={5}>

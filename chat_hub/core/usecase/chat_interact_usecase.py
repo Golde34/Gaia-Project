@@ -93,7 +93,7 @@ class ChatInteractionUsecase:
             message=bot_response,
             message_type=request.msg_type,
             sender_type=SenderTypeEnum.BOT.value,
-            user_message_id=user_message_id,
+            user_message_id=str(user_message_id),
         )
         print("Bot response stored with message ID:", bot_message_id)
         return bot_response

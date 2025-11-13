@@ -3,12 +3,14 @@ import { getTabId } from "../../kernels/utils/set-interval";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getChatHistory, sendSSEChatMessage } from "../../api/store/actions/chat_hub/messages.actions";
 import { Button, Card, Col, Grid, TextInput } from "@tremor/react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { buildChatHistoryKey, defaultChatHistoryState } from "../../kernels/utils/chat-history-utils";
 
 export default function ChatComponent(props) {
+    const navigate = useNavigate();
     const isDashboard = props.isDashboard === undefined ? false : props.isDashboard;
     const chatType = props.chatType === undefined ? "" : props.chatType;
+    const websocketMessageQueue = Array.isArray(props.websocketMessageQueue) ? props.websocketMessageQueue : [];
     const tabId = getTabId();
 
     const dispatch = useDispatch();
@@ -32,6 +34,7 @@ export default function ChatComponent(props) {
     const isLoadingMoreRef = useRef(false);
     const prevScrollHeightRef = useRef(0);
     const prevScrollTopRef = useRef(0);
+    const processedWebsocketMessageIdsRef = useRef(new Set());
 
     const getChatMessages = useCallback(
         (cursorOverride = "") => {
@@ -46,6 +49,7 @@ export default function ChatComponent(props) {
         isLoadingMoreRef.current = false;
         prevScrollHeightRef.current = 0;
         prevScrollTopRef.current = 0;
+        processedWebsocketMessageIdsRef.current = new Set();
     }, [conversationKey]);
 
     useEffect(() => {
@@ -61,6 +65,16 @@ export default function ChatComponent(props) {
             return [...newMessages, ...prev];
         });
     }, [chatMessages]);
+
+    useEffect(() => {
+        if (!websocketMessageQueue.length) return;
+        const queuedMessages = websocketMessageQueue.filter(
+            (msg) => msg?.id && !processedWebsocketMessageIdsRef.current.has(msg.id)
+        );
+        if (!queuedMessages.length) return;
+        setChatHistory((prev) => [...prev, ...queuedMessages]);
+        queuedMessages.forEach((msg) => processedWebsocketMessageIdsRef.current.add(msg.id));
+    }, [websocketMessageQueue]);
 
     useEffect(() => {
         const container = messagesContainerRef.current;
@@ -163,6 +177,10 @@ export default function ChatComponent(props) {
     const getDashboardClass = (isDashboard) =>
         `flex flex-col ${isDashboard ? 'h-[40vh] mt-4' : 'h-[80vh]'}`;
 
+    const navigateToOtherChats = () => {
+        navigate('/chat');
+    };
+
     return (
         <>
             {loading && !chatHistory.length ? (
@@ -170,54 +188,63 @@ export default function ChatComponent(props) {
             ) : error ? (
                 <p>Error when loading chat history: {error}</p>
             ) : (
-                <Card className={getDashboardClass(isDashboard)}>
-                    <div
-                        ref={messagesContainerRef}
-                        className="flex-1 overflow-auto p-4 space-y-3"
-                        style={{ scrollBehavior: "smooth" }}
-                    >
-                        {loadingMore && (
-                            <div className="text-center text-gray-400 my-2">Loading more...</div>
-                        )}
+                <>
+                    <Card className={getDashboardClass(isDashboard)}>
+                        <div
+                            ref={messagesContainerRef}
+                            className="flex-1 overflow-auto p-4 space-y-3"
+                            style={{ scrollBehavior: "smooth" }}
+                        >
+                            {loadingMore && (
+                                <div className="text-center text-gray-400 my-2">Loading more...</div>
+                            )}
 
-                        {chatHistory && chatHistory.length > 0 ? (
-                            chatHistory.map((msg, idx) => (
-                                <div
-                                    key={msg.id || idx}
-                                    className={`flex ${msg.senderType === "bot" ? "justify-start" : "justify-end"}`}
-                                >
-                                    <Grid numItems={1}>
-                                        <Col numColSpan={1}>
-                                            <div
-                                                className={[
-                                                    "max-w-lg px-4 py-2 rounded-3xl break-words",
-                                                    msg.senderType === "bot" ? "bg-gray-200 text-gray-800" : "bg-blue-500 text-white",
-                                                    msg.isStreaming ? "animate-pulse" : "",
-                                                ].filter(Boolean).join(" ")
-                                                }
-                                            >
-                                                {msg.content}
-                                            </div>
-                                        </Col>
-                                    </Grid>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="text-center text-gray-500">No messages yet</div>
-                        )}
-                    </div>
+                            {chatHistory && chatHistory.length > 0 ? (
+                                chatHistory.map((msg, idx) => (
+                                    <div
+                                        key={msg.id || idx}
+                                        className={`flex ${msg.senderType === "bot" ? "justify-start" : "justify-end"}`}
+                                    >
+                                        <Grid numItems={1}>
+                                            <Col numColSpan={1}>
+                                                <div
+                                                    className={[
+                                                        "max-w-lg px-4 py-2 rounded-3xl break-words",
+                                                        msg.senderType === "bot" ? "bg-gray-200 text-gray-800" : "bg-blue-500 text-white",
+                                                        msg.isStreaming ? "animate-pulse" : "",
+                                                    ].filter(Boolean).join(" ")
+                                                    }
+                                                >
+                                                    {msg.content}
+                                                </div>
+                                            </Col>
+                                        </Grid>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center text-gray-500">No messages yet</div>
+                            )}
+                        </div>
 
-                    <div className="flex items-center p-4 border-t">
-                        <TextInput
-                            placeholder="Type your message here..."
-                            value={chatInput}
-                            onChange={(e) => setChatInput(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                            className="flex-1 mr-2"
-                        />
-                        <Button onClick={handleSend}>Send</Button>
-                    </div>
-                </Card>
+                        <div className="flex items-center p-4 border-t">
+                            <TextInput
+                                placeholder="Type your message here..."
+                                value={chatInput}
+                                onChange={(e) => setChatInput(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                                className="flex-1 mr-2"
+                            />
+                            <Button color="indigo" onClick={handleSend}>Send</Button>
+                        </div>
+                        {isDashboard && (
+                            <div className="mt-2 text-center">
+                                <Button variant="light" size="sm" onClick={navigateToOtherChats}>
+                                    Go to Other Chats
+                                </Button>
+                            </div>
+                        )}
+                    </Card>
+                </>
             )}
         </>
     );
