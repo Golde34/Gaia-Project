@@ -20,7 +20,7 @@ const Template = (props) => {
       >
         {isSidebarOpen ? <ArrowLeftIcon className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
       </button>
-      <div className="fixed top-0 left-0 h-full">
+      <div className="fixed top-0 left-0 h-full z-10">
         <Sidebar isOpen={isSidebarOpen} />
       </div>
       <div className={`flex flex-col flex-1 relative transition-all duration-300 ${isSidebarOpen ? 'ml-0 sm:ml-16' : 'ml-0'}`}>
