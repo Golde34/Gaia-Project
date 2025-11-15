@@ -2,14 +2,19 @@ package auth.authentication_service.core.domain.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Collection;
 
 @Entity
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "privilege")
 public class Privilege {
 
     @Id
@@ -22,12 +27,4 @@ public class Privilege {
     @JsonBackReference
     @ManyToMany(mappedBy = "privileges")
     private Collection<Role> roles;
-
-    public Privilege(String name) {
-        this.name = name;
-    }
-
-    public Privilege() {
-
-    }
 }

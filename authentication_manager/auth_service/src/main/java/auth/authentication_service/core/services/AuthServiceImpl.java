@@ -6,11 +6,11 @@ import auth.authentication_service.core.domain.dto.request.ServiceJwtRequest;
 import auth.authentication_service.core.domain.dto.request.ValidateJwtRequest;
 import auth.authentication_service.core.domain.dto.response.CheckTokenDtoResponse;
 import auth.authentication_service.core.domain.dto.response.SignInDtoResponse;
-import auth.authentication_service.core.domain.entities.Privilege;
 import auth.authentication_service.core.domain.entities.Role;
 import auth.authentication_service.core.domain.entities.User;
 import auth.authentication_service.core.domain.enums.BossType;
 import auth.authentication_service.core.domain.enums.ResponseEnum;
+import auth.authentication_service.core.port.mapper.ResponseCookieMapper;
 import auth.authentication_service.core.port.mapper.UserMapper;
 import auth.authentication_service.core.port.store.UserCRUDStore;
 import auth.authentication_service.core.services.interfaces.AuthService;
@@ -24,13 +24,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
-import java.util.Collection;
 import java.util.Date;
-import java.util.Map;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -50,6 +47,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserCRUDStore userStore;
     // private final TokenStore tokenStore;
     private final UserMapper userMapper;
+    private final ResponseCookieMapper responseCookieMapper;
     private final UserServiceValidation userServiceValidation;
 
     private final GenericResponse<String> genericResponse;
@@ -61,48 +59,39 @@ public class AuthServiceImpl implements AuthService {
             User user = userStore.findByUsername(username);
             final UserDetails userDetails = userDetailService.loadUserByUsername(username);
             // Validate User
-            GenericResponse<String> validate = userServiceValidation._validateUserSignin(userDetails, username,
-                    password,
-                    user);
+            GenericResponse<String> validate = userServiceValidation.validateUserSignin(
+                    userDetails, username, password, user);
             if (!validate.getResponseMessage().equals(ResponseEnum.msg200)) {
                 return genericResponse.matchingResponseMessage(validate);
             }
+
             if (user.isEnabled() == false) {
                 log.error("User is inactive");
                 return genericResponse
                         .matchingResponseMessage(new GenericResponse<>("User is inactive", ResponseEnum.msg401));
             }
+
             // Generate sign-in information
             return generateSignInToken(user, userDetails, BossType.USER);
         } catch (Exception e) {
             log.error("Error during sign-in: {}", e.getMessage(), e);
-            return genericResponse
-                    .matchingResponseMessage(
-                            new GenericResponse<>("The system encountered an unexpected error", ResponseEnum.msg500));
+            return genericResponse.matchingResponseMessage(
+                    new GenericResponse<>("The system encountered an unexpected error", ResponseEnum.msg500));
         }
     }
 
     private ResponseEntity<?> generateSignInToken(User user, UserDetails userDetails, BossType bossType) {
-        String accessToken = _generateAccessToken(user, userDetails);
-        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", accessToken)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .sameSite("Strict")
-                .maxAge(Duration.ofHours(2))
-                .build();
-        String refreshToken = _generateRefreshToken(user, userDetails);
-        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .sameSite("Strict")
-                .maxAge(Duration.ofDays(1))
-                .build();
+        String accessToken = tokenService.generateAccessToken(userDetails);
+        var accessTokenCookie = responseCookieMapper.genAccessTokenCookie(accessToken);
+
+        String refreshToken = generateRefreshToken(user, userDetails);
+        var refreshTokenCookie = responseCookieMapper.genRefreshTokenCookie(refreshToken);
+
         Role userRole = roleService.getBiggestRole(user.getRoles());
-        SignInDtoResponse signInResponse = userMapper.signInMapper(user, userRole, accessToken, refreshToken,
-                BossType.USER);
+        SignInDtoResponse signInResponse = userMapper.signInMapper(
+                user, userRole, accessToken, refreshToken, BossType.USER);
         log.info("User: " + user.getUsername() + " sign-in success");
+
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
         headers.add(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
@@ -110,25 +99,8 @@ public class AuthServiceImpl implements AuthService {
                 200, headers);
     }
 
-    private String _generateAccessToken(User user, UserDetails userDetails) {
-        // AuthToken accessToken = new AuthToken();
-        // accessToken.setUser(user);
-        // accessToken.setTokenType(TokenType.ACCESS_TOKEN);
-        String generatedToken = tokenService.generateAccessToken(userDetails);
-        // accessToken.setToken(generatedToken);
-        // accessToken.setExpiryDate(tokenService.getExpirationDateFromToken(generatedToken));
-        // tokenStore.save(accessToken);
-        return generatedToken;
-    }
-
-    private String _generateRefreshToken(User user, UserDetails userDetails) {
-        // AuthToken refreshToken = new AuthToken();
-        // refreshToken.setUser(user);
-        // refreshToken.setTokenType(TokenType.REFRESH_TOKEN);
+    private String generateRefreshToken(User user, UserDetails userDetails) {
         String generatedToken = tokenService.generateRefreshToken(userDetails);
-        // refreshToken.setToken(generatedToken);
-        // refreshToken.setExpiryDate(tokenService.getExpirationDateFromToken(generatedToken));
-        // tokenStore.save(refreshToken);
         user.setLastLogin(new Date());
         userStore.save(user);
         return generatedToken;
@@ -138,8 +110,8 @@ public class AuthServiceImpl implements AuthService {
         User user = userStore.findByUsername(username);
         final UserDetails userDetails = userDetailService.loadUserByUsername(username);
         // Validate User
-        GenericResponse<String> validate = userServiceValidation._validateUserSignin(userDetails, username, password,
-                user);
+        GenericResponse<String> validate = userServiceValidation.validateUserSignin(
+                userDetails, username, password, user);
         if (!validate.getResponseMessage().equals(ResponseEnum.msg200)) {
             return genericResponse.matchingResponseMessage(validate);
         }
@@ -147,8 +119,8 @@ public class AuthServiceImpl implements AuthService {
         if (user.getRoles().stream().anyMatch(role -> role.getName().equals(BossType.BOSS.getRole()))) {
             return generateSignInToken(user, userDetails, BossType.BOSS);
         } else {
-            return genericResponse
-                    .matchingResponseMessage(new GenericResponse<>("Permission denied", ResponseEnum.msg401));
+            return genericResponse.matchingResponseMessage(
+                    new GenericResponse<>("Permission denied", ResponseEnum.msg401));
         }
     }
 
@@ -165,18 +137,18 @@ public class AuthServiceImpl implements AuthService {
 
     public ResponseEntity<?> checkPermission(UserPermissionDto permission) {
         User user = userService.getUserById(permission.getUserId(), "Check Permission");
-        Collection<Role> userRole = user.getRoles();
-        for (Role role : userRole) {
-            Collection<Privilege> rolePrivilege = role.getPrivileges();
-            for (Privilege privilege : rolePrivilege) {
-                if (privilege.getName().equals(permission.getPermission())) {
-                    return genericResponse
-                            .matchingResponseMessage(new GenericResponse<>(privilege, ResponseEnum.msg200));
-                }
-            }
+
+        var matchedPrivilege = user.getRoles().stream()
+                .flatMap(role -> role.getPrivileges().stream())
+                .filter(p -> p.getName().equals(permission.getPermission()))
+                .findFirst().orElse(null);
+
+        if (matchedPrivilege != null) {
+            return genericResponse
+                    .matchingResponseMessage(new GenericResponse<>(matchedPrivilege, ResponseEnum.msg200));
         }
-        return genericResponse
-                .matchingResponseMessage(new GenericResponse<>("Permission denied", ResponseEnum.msg401));
+        return genericResponse.matchingResponseMessage(
+                new GenericResponse<>("Permission denied", ResponseEnum.msg401));
     }
 
     public ResponseEntity<?> checkStatus() {
@@ -186,31 +158,34 @@ public class AuthServiceImpl implements AuthService {
 
     public ResponseEntity<?> refreshToken(String token) {
         try {
-            final UserDetails userDetails = userDetailService
-                    .loadUserByUsername(tokenService.getUsernameFromToken(token));
-            User user = userStore.findByUsername(tokenService.getUsernameFromToken(token));
+            String username = tokenService.getUsernameFromToken(token);
+
+            final UserDetails userDetails = userDetailService.loadUserByUsername(username);
+
+            User user = userStore.findByUsername(username);
             if (user == null) {
                 log.error("User not found");
-                return genericResponse
-                        .matchingResponseMessage(new GenericResponse<>("User not found", ResponseEnum.msg401));
+                return genericResponse.matchingResponseMessage(
+                        new GenericResponse<>("User not found", ResponseEnum.msg401));
             }
             if (!user.isEnabled()) {
                 log.error("User is inactive");
-                return genericResponse
-                        .matchingResponseMessage(new GenericResponse<>("User is inactive", ResponseEnum.msg401));
+                return genericResponse.matchingResponseMessage(
+                        new GenericResponse<>("User is inactive", ResponseEnum.msg401));
             }
             if (!tokenService.validateToken(token)) {
                 log.error("Invalid refresh token");
-                return genericResponse
-                        .matchingResponseMessage(new GenericResponse<>("Invalid refresh token", ResponseEnum.msg401));
+                return genericResponse.matchingResponseMessage(
+                        new GenericResponse<>("Invalid refresh token", ResponseEnum.msg401));
             }
+
             String newAccessToken = tokenService.generateAccessToken(userDetails);
-            return genericResponse.matchingResponseMessage(new GenericResponse<>(newAccessToken, ResponseEnum.msg200));
+            return genericResponse.matchingResponseMessage(
+                    new GenericResponse<>(newAccessToken, ResponseEnum.msg200));
         } catch (Exception e) {
             log.error("Error during refresh token: {}", e.getMessage(), e);
-            return genericResponse
-                    .matchingResponseMessage(
-                            new GenericResponse<>("The system encountered an unexpected error", ResponseEnum.msg500));
+            return genericResponse.matchingResponseMessage(
+                    new GenericResponse<>("The system encountered an unexpected error", ResponseEnum.msg500));
         }
     }
 
@@ -221,27 +196,26 @@ public class AuthServiceImpl implements AuthService {
             Duration serviceDuration = convertServiceDuration(request.getService());
             if (serviceDuration == null) {
                 log.error("Service not found");
-                return genericResponse
-                        .matchingResponseMessage(new GenericResponse<>("Service not found", ResponseEnum.msg401));
+                return genericResponse.matchingResponseMessage(
+                        new GenericResponse<>("Service not found", ResponseEnum.msg401));
             }
 
-            String jwtToken = tokenService.generateServiceToken(user.getUsername(), request.getService(),
+            var jwtToken = tokenService.generateServiceToken(user.getUsername(), request.getService(),
                     serviceDuration);
-            return genericResponse
-                    .matchingResponseMessage(new GenericResponse<>(jwtToken, ResponseEnum.msg200));
+            return genericResponse.matchingResponseMessage(
+                    new GenericResponse<>(jwtToken, ResponseEnum.msg200));
         } catch (Exception e) {
             log.error("Error during get service jwt: {}", e.getMessage(), e);
-            return genericResponse
-                    .matchingResponseMessage(
-                            new GenericResponse<>("The system encountered an unexpected error", ResponseEnum.msg500));
+            return genericResponse.matchingResponseMessage(
+                    new GenericResponse<>("The system encountered an unexpected error", ResponseEnum.msg500));
         }
     }
 
     private Duration convertServiceDuration(String service) {
         Long serviceDuration = 0L;
-        Map<String, JwtServiceConfig.JwtServiceProperties> services = listJwtServiceConfig.getServices();
+        var services = listJwtServiceConfig.getServices();
         log.info("Services: {}", services);
-        for (Map.Entry<String, JwtServiceConfig.JwtServiceProperties> entry : services.entrySet()) {
+        for (var entry : services.entrySet()) {
             if (entry.getValue().getName().equals(service)) {
                 String duration = entry.getValue().getDuration();
                 serviceDuration = Long.parseLong(duration) * 60 * 60;
@@ -254,19 +228,19 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ResponseEntity<?> validateServiceJwt(ValidateJwtRequest request) {
         try {
-            String username= tokenService.validateServiceToken(request.getJwt(), request.getService());
+            String username = tokenService.validateServiceToken(request.getJwt(), request.getService());
             User user = userStore.findByUsername(username);
             if (user == null) {
-                return genericResponse
-                        .matchingResponseMessage(new GenericResponse<>("User not found", ResponseEnum.msg401));
+                return genericResponse.matchingResponseMessage(
+                        new GenericResponse<>("User not found", ResponseEnum.msg401));
             }
             String userId = user.getId().toString();
-            return genericResponse.matchingResponseMessage(new GenericResponse<>(userId, ResponseEnum.msg200));
+            return genericResponse.matchingResponseMessage(
+                    new GenericResponse<>(userId, ResponseEnum.msg200));
         } catch (Exception e) {
             log.error("Error during validate service jwt: {}", e.getMessage(), e);
-            return genericResponse
-                    .matchingResponseMessage(
-                            new GenericResponse<>("The system encountered an unexpected error", ResponseEnum.msg500));
+            return genericResponse.matchingResponseMessage(
+                    new GenericResponse<>("The system encountered an unexpected error", ResponseEnum.msg500));
         }
     }
 }

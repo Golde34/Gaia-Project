@@ -9,8 +9,8 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -21,15 +21,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class GlobalConfigService {
 
-    @Autowired
-    AuthServiceConfigRepository globalConfigRepository;
+    private final AuthServiceConfigRepository globalConfigRepository;
 
     private LoadingCache<String, String> globalConfigCache;
-    @Autowired
-    private AuthServiceConfigRepository authServiceConfigRepository;
 
     @PostConstruct
     public void init() {
@@ -117,7 +115,7 @@ public class GlobalConfigService {
 
     public void setAuthServiceConfig(String paramName, String paramValue) {
         try {
-            Optional<AuthServiceConfiguration> authServiceConfiguration = authServiceConfigRepository.findParam(paramName);
+            Optional<AuthServiceConfiguration> authServiceConfiguration = globalConfigRepository.findParam(paramName);
             if (authServiceConfiguration.isPresent()) {
                 authServiceConfiguration.get().setParamValue(paramValue);
                 globalConfigRepository.save(authServiceConfiguration.get());

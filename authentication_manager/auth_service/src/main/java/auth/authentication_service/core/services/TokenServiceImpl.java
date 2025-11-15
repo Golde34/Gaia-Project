@@ -5,31 +5,22 @@ import auth.authentication_service.core.domain.entities.User;
 import auth.authentication_service.core.port.store.UserCRUDStore;
 import auth.authentication_service.core.services.interfaces.TokenService;
 import auth.authentication_service.kernel.utils.JwtUtil;
-import auth.authentication_service.kernel.utils.ModelMapperConfig;
+import lombok.RequiredArgsConstructor;
 
 import java.time.Duration;
 import java.util.Date;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class TokenServiceImpl implements TokenService {
-
-    @Autowired
-    ModelMapperConfig modelMapper;
 
     private final JwtUtil jwtUtil;
     private final UserDetailsServices userDetailsServices;
     private final UserCRUDStore userStore;
     // private final TokenStore tokenStore;
-
-    public TokenServiceImpl(JwtUtil jwtUtil, UserDetailsServices userDetailsServices, UserCRUDStore userStore) {
-        this.jwtUtil = jwtUtil;
-        this.userDetailsServices = userDetailsServices;
-        this.userStore = userStore;
-    }
 
     @Override
     public String generateAccessToken(UserDetails user) {
@@ -62,9 +53,12 @@ public class TokenServiceImpl implements TokenService {
             // AuthToken authToken = tokenRepository.findByToken(token);
             // Date expiryDate = authToken.getExpiryDate();
             User user = userStore.findByUsername(username);
-            CheckTokenDtoResponse tokenResponse = new CheckTokenDtoResponse(user.getId(), user.getUsername(), token,
-                    expiryDate);
-            return tokenResponse;
+            return CheckTokenDtoResponse.builder()
+                    .id(user.getId())
+                    .username(user.getUsername())
+                    .accessToken(token)
+                    .expiryDate(expiryDate)
+                    .build();
         } else {
             return null;
         }

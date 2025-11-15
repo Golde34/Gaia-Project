@@ -30,6 +30,7 @@ public class LLMModel {
     private Long modelId;
 
     private String modelName;
+    
     private boolean activeStatus;
 
     @JsonBackReference

@@ -58,7 +58,7 @@ public class UserServiceImpl implements UserService {
         try {
             User user = modelMapperConfig._mapperDtoToEntity(userDto);
 
-            GenericResponse<?> validation = userServiceValidation._validateUserCreation(userDto, user);
+            GenericResponse<?> validation = userServiceValidation.validateUserCreation(userDto, user);
             if (validation.getResponseMessage() != ResponseEnum.msg200) {
                 return genericResponse.matchingResponseMessage(validation);
             }
@@ -88,11 +88,9 @@ public class UserServiceImpl implements UserService {
     }
 
     private Role _isBoss(final boolean isBoss) {
-        if (isBoss) {
-            return roleStore.findByName(BossType.BOSS.getRole());
-        } else {
-            return roleStore.findByName(BossType.USER.getRole());
-        }
+        return roleStore.findByName(
+            isBoss ? BossType.BOSS.getRole() : BossType.USER.getRole()
+        );
     }
 
     @Override
@@ -130,7 +128,7 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<?> deleteUser(UserDto userDto) {
         try {
             User user = modelMapperConfig._mapperDtoToEntity(userDto);
-            GenericResponse<?> validation = userServiceValidation._validateUserDeletion(user);
+            GenericResponse<?> validation = userServiceValidation.validateUserDeletion(user);
             if (validation.getResponseMessage() != ResponseEnum.msg200) {
                 // return http status code base on validate response message
                 return genericResponse.matchingResponseMessage(validation);
@@ -152,8 +150,6 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<?> getAllUsers() {
         try {
             List<User> users = userStore.findAll();
-            // List<UserResponse> userResponses =
-            // modelMapperConfig._mapperEntityToDto(users);
             log.info("Get all users: {}", users.toString());
             return genericResponse.matchingResponseMessage(new GenericResponse<>(users, ResponseEnum.msg200));
         } catch (Exception e) {
