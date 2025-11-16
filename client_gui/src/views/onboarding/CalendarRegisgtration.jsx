@@ -75,9 +75,10 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
         timeBubbleConfigs();
         didTimeBubbleConfig.current = true;
     }, [])
+
     useEffect(() => {
         if (!loading && !error && config) {
-            const wrapped = { type: 'register_calendar', data: { response: config.data } };
+            const wrapped = { type: 'register_calendar', data: config.data };
             setScheduleCalendarRegistration(wrapped);
             const responseText = extractResponseText(wrapped);
             appendResponseToQueue(responseText);
@@ -105,9 +106,11 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
 
     const normalizeDaySchedule = (dayKey) => {
         const config = scheduleCalendarRegistration?.data;
+        console.log("Normalizing day schedule for day ", dayKey, " with config: ", config);
         if (!config) return [];
 
         const mapConfig = config.timeBubbleConfig;
+        console.log("Normalizing day schedule for day ", mapConfig);
         const listConfig = config.timeBubblesConfig;
 
         if (mapConfig && typeof mapConfig === "object" && !Array.isArray(mapConfig)) {
