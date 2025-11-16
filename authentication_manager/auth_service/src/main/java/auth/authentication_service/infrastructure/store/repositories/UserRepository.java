@@ -9,8 +9,12 @@ import auth.authentication_service.core.domain.entities.User;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     User findUserById(Long id);
+
     User findByEmail(String email);
+
     User findByUsername(String username);
+
     @Override
     void delete(User user);
+
 }

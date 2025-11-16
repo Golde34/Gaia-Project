@@ -3,18 +3,21 @@ package auth.authentication_service.ui.controllers;
 import auth.authentication_service.core.domain.dto.RegisterDto;
 import auth.authentication_service.core.domain.dto.UserDto;
 import auth.authentication_service.core.domain.dto.request.UpdateUserRequest;
+import auth.authentication_service.core.domain.entities.UserLLMModel;
+import auth.authentication_service.core.services.interfaces.UserLLMModelService;
 import auth.authentication_service.core.services.interfaces.UserService;
+import lombok.RequiredArgsConstructor;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/user")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final UserLLMModelService userLLMModelService;
 
     @PostMapping("/create-user")
     public ResponseEntity<?> createUser(@RequestBody RegisterDto userDto) {
@@ -44,5 +47,15 @@ public class UserController {
     @GetMapping("/get-user-by-id")
     public ResponseEntity<?> getUserById(@RequestParam Long id) {
         return userService.getUserResponseById(id);
+    }
+
+    @GetMapping("/llm-models")
+    public ResponseEntity<?> getUserLLMModelsByUserId(@RequestParam Long userId) {
+        return userLLMModelService.getUserLLMModelsByUserId(userId);
+    }
+
+    @PostMapping("/llm-models/upsert")
+    public ResponseEntity<?> upsertLLMModel(@RequestBody UserLLMModel userLLMModel) {
+        return userLLMModelService.upsert(userLLMModel);
     }
 }
