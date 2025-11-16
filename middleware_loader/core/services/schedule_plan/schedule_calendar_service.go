@@ -38,7 +38,7 @@ func (s *ScheduleCalendarService) ReturnTimeBubbleMap(timeBubbleConfigs []respon
     }
 
     return map[string]interface{}{
-        "schedule": schedule,
+        "timeBubbleConfig": schedule,
     }
 }
 
