@@ -17,5 +17,5 @@ public interface TaskRegistrationRouter {
     ResponseEntity<GeneralResponse<?>> registerTaskConfig(@RequestBody TaskRegistrationRequestDTO request);
 
     @GetMapping("")
-    ResponseEntity<GeneralResponse<?>> getTaskConfigInfo(@RequestBody QueryTaskConfigRequestDTO request);
+    ResponseEntity<GeneralResponse<?>> isTaskConfigExisted(@RequestBody QueryTaskConfigRequestDTO request);
 }

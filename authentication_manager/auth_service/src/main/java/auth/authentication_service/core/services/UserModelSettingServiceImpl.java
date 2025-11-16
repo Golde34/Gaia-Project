@@ -54,7 +54,8 @@ public class UserModelSettingServiceImpl implements UserModelSettingService {
             updateModels.add(model);
             user.setLlmModels(updateModels);
             userStore.save(user);
-            return genericResponse.matchingResponseMessage(new GenericResponse<>("Save user model successfully", ResponseEnum.msg200));
+            return genericResponse.matchingResponseMessage(
+                new GenericResponse<>("Save user model successfully", ResponseEnum.msg200));
         } catch (Exception e) {
             log.error("Error updating model settings: {}", e.getMessage());
             GenericResponse<String> response = responseUtils.returnMessage(

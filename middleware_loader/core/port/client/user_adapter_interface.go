@@ -13,4 +13,6 @@ type IUserAdapter interface {
 	UpdateUserSetting(updateUserSetting model.UpdateUserSettingInput) (response_dtos.UserSettingDTO, error)
 	GetAllModels() ([]response_dtos.LLMModel, error)
 	UpdateUserModel(input request_dtos.UpdateUserModelRequestDTO) (string, error)
+	GetUserModels(userId string) ([]response_dtos.UserLLMModel, error)
+	UpsertUserLLMModel(input request_dtos.UpsertUserLLMModelRequestDTO) (string, error)
 }

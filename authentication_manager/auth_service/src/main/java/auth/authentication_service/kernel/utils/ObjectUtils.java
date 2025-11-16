@@ -2,13 +2,15 @@ package auth.authentication_service.kernel.utils;
 
 import java.util.Objects;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
 public class ObjectUtils {
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public boolean isNullOrEmpty(String str) {
         return str == null || str.isEmpty();

@@ -56,7 +56,7 @@ public class TaskRegistrationUseCase {
         }
     }
 
-    public GeneralResponse<?> getTaskConfigInfo(QueryTaskConfigRequestDTO request) {
+    public GeneralResponse<?> isTaskConfigExisted(QueryTaskConfigRequestDTO request) {
         try {
             log.info("Validate query request: {}", request);
             Pair<String, Boolean> requestValidation = taskRegistrationValidation.validateQueryRequest(request);
@@ -71,7 +71,7 @@ public class TaskRegistrationUseCase {
                         new GenericResponse<>(isUserExisted.getFirst(), ResponseMessage.msg400));
             }
 
-            RegisteredTaskConfigStatus taskConfigStatus = taskRegistrationService.userRegisterTaskInformation(request);
+            RegisteredTaskConfigStatus taskConfigStatus = taskRegistrationService.isTaskConfigExisted(request);
             
             return genericResponse.matchingResponseMessage(
                 new GenericResponse<>(taskConfigStatus, ResponseMessage.msg200));

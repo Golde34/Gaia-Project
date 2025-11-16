@@ -1,5 +1,7 @@
 package wo.work_optimization.core.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,8 +22,12 @@ public class TaskRegistration {
     private Long userId;
     private String name;
     private Double maxWorkTime;
+
+    @JsonIgnore
     private double constant1;
+    @JsonIgnore
     private double constant2;
+    @JsonIgnore
     private double constant3;
 
     private double sleepDuration;

@@ -24,8 +24,8 @@ public class TaskRegistrationController implements TaskRegistrationRouter {
     }
 
     @Override
-    public ResponseEntity<GeneralResponse<?>> getTaskConfigInfo(QueryTaskConfigRequestDTO request) {
-        GeneralResponse<?> response = taskRegistrationUseCase.getTaskConfigInfo(request);
+    public ResponseEntity<GeneralResponse<?>> isTaskConfigExisted(QueryTaskConfigRequestDTO request) {
+        GeneralResponse<?> response = taskRegistrationUseCase.isTaskConfigExisted(request);
         return responseFactory.success(response);
     }
 }

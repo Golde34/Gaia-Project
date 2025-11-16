@@ -42,11 +42,17 @@ func NewUserRouter(userService *services.UserService, db database_mongo.Database
 	})
 	r.Route("/user-model", func(r chi.Router) {
 		r.Use(middleware.CheckMicroserviceStatus(db, enums.AUTH_SERVICE))
-		r.Get("/get-all-models", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/all-config-models", func(w http.ResponseWriter, r *http.Request) {
 			controller.GetAllModels(w, r, userService)
 		})
-		r.Put("/update-user-model", func(w http.ResponseWriter, r *http.Request) {
+		r.Put("/update-active", func(w http.ResponseWriter, r *http.Request) {
 			controller.UpdateUserModel(w, r, userService)
+		})
+		r.Get("/all", func(w http.ResponseWriter, r *http.Request) {
+			controller.GetUserModels(w, r, userService)
+		})
+		r.Post("/upsert", func(w http.ResponseWriter, r *http.Request) {
+			controller.UpsertUserModels(w, r, userService)
 		})
 	})
 	return &UserRouter{

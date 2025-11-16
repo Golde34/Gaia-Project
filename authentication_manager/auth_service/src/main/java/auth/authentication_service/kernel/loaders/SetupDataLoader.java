@@ -83,8 +83,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     public Privilege createPrivilegeIfNotFound(final String name) {
         Privilege privilege = privilegeRepository.findByName(name);
         if (privilege == null) {
-            privilege = new Privilege(name);
-            privilege = privilegeRepository.save(privilege);
+            privilegeRepository.save(Privilege.builder().name(name).build());
         }
         return privilege;
     }
@@ -93,11 +92,10 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     public Role createRoleIfNotFound(final String name, final Collection<Privilege> privileges) {
         Role role = roleRepository.findByName(name);
         if (role == null) {
-            role = new Role(name);
+            role = Role.builder().name(name).build();
         }
         role.setPrivileges(privileges);
-        role = roleRepository.save(role);
-        return role;
+        return roleRepository.save(role);
     }
 
     @Transactional
@@ -105,16 +103,17 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
                                      final String password, final Collection<Role> roles, final Collection<LLMModel> llmModels) {
         User user = userRepository.findByUsername(username);
         if (user == null) {
-            user = new User();
-            user.setName(name);
-            user.setUsername(username);
-            user.setPassword(passwordEncoder.encode(password));
-            user.setEmail(email);
-            user.setEnabled(true);
+            user = User.builder()
+                    .name(name)
+                    .username(username)
+                    .password(passwordEncoder.encode(password))
+                    .email(email)
+                    .enabled(true)
+                    .build();
         }
         user.setRoles(roles);
         user.setLlmModels(llmModels);
-        user = userRepository.save(user);
+        userRepository.save(user);
     }
 
     @Transactional

@@ -69,21 +69,16 @@ public class TaskRegistrationServiceImpl implements TaskRegistrationService {
     }
 
     @Override
-    public RegisteredTaskConfigStatus userRegisterTaskInformation(QueryTaskConfigRequestDTO request) {
+    public RegisteredTaskConfigStatus isTaskConfigExisted(QueryTaskConfigRequestDTO request) {
         boolean isUserRegisteredTask = checkExistedTaskRegistration(request.getUserId());
-        RegisteredTaskConfigStatus taskRegistration = RegisteredTaskConfigStatus.builder()
-                .isTaskConfigExist(isUserRegisteredTask).build();
-
-        return taskRegistration;
+        return RegisteredTaskConfigStatus.builder()
+                .isTaskConfigExist(isUserRegisteredTask)
+                .build();
     }
 
     @Override
     public TaskRegistration getTaskRegistrationByUserId(Long userId) {
         Optional<TaskRegistration> taskRegistration = taskRegistrationStore.getTaskRegistrationByUserId(userId);
-        if (taskRegistration.isPresent()) {
-            return taskRegistration.get();
-        }
-
-        return null;
+        return taskRegistration.isPresent() ? taskRegistration.get() : null;
     }
 }

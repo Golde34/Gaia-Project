@@ -8,7 +8,7 @@ import wo.work_optimization.core.domain.entity.TaskRegistration;
 
 public interface TaskRegistrationService {
     TaskRegistration registerWorkOptimization(TaskRegistrationRequestDTO request);
-    RegisteredTaskConfigStatus userRegisterTaskInformation(QueryTaskConfigRequestDTO request);
+    RegisteredTaskConfigStatus isTaskConfigExisted(QueryTaskConfigRequestDTO request);
     TaskRegistration getTaskRegistrationByUserId(Long userId);
     Pair<String, Boolean> checkExistedUser(Long userId);
 }

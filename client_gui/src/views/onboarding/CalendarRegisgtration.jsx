@@ -75,9 +75,10 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
         timeBubbleConfigs();
         didTimeBubbleConfig.current = true;
     }, [])
+
     useEffect(() => {
         if (!loading && !error && config) {
-            const wrapped = { type: 'register_calendar', data: { response: config.data } };
+            const wrapped = { type: 'register_calendar', data: config.data };
             setScheduleCalendarRegistration(wrapped);
             const responseText = extractResponseText(wrapped);
             appendResponseToQueue(responseText);
@@ -108,6 +109,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
         if (!config) return [];
 
         const mapConfig = config.timeBubbleConfig;
+        console.log("Normalizing day schedule for day ", mapConfig);
         const listConfig = config.timeBubblesConfig;
 
         if (mapConfig && typeof mapConfig === "object" && !Array.isArray(mapConfig)) {
@@ -214,7 +216,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
 
     return (
         <>
-            <Metric className="text-2xl mb-5">
+            <Metric className="text-2xl">
                 Calendar Registration
             </Metric>
             <Grid numItems={9}>
@@ -228,42 +230,29 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
                 </Col>
                 <Col numColSpan={5}>
                     <Card className="mt-4">
-                        {!scheduleCalendarRegistration ? (
-                            <TaskRegistration />
-                        ) : (
-                            <div className="space-y-4">
-                                <div className="flex flex-row items-center justify-between mb-4">
-                                    <div className="flex flex-row space-x-2">
-                                        {Object.entries(dayNames).map(([dayKey, dayName]) => (
-                                            <Button
-                                                key={dayKey}
-                                                variant={selectedDay === dayKey ? 'secondary' : 'light'}
-                                                size="sm"
-                                                onClick={() => setSelectedDay(dayKey)}
-                                                color="indigo"
-                                            >
-                                                {dayName}
-                                            </Button>
-                                        ))}
-                                    </div>
+                        <div className="space-y-4">
+                            <div className="flex flex-row space-x-5">
+                                {Object.entries(dayNames).map(([dayKey, dayName]) => (
                                     <Button
-                                        variant="primary"
+                                        key={dayKey}
+                                        variant={selectedDay === dayKey ? 'secondary' : 'light'}
+                                        size="sm"
+                                        onClick={() => setSelectedDay(dayKey)}
                                         color="indigo"
-                                        onClick={handleRegisterCalendar}
                                     >
-                                        Register Calendar
+                                        {dayName}
                                     </Button>
-                                </div>
-
-                                {/* Schedule Display */}
-                                <Card className="p-4">
-                                    {renderDaySchedule(selectedDay)}
-                                </Card>
-
-                                {/* Totals */}
-                                {renderTotals()}
+                                ))}
                             </div>
-                        )}
+
+                            {/* Schedule Display */}
+                            <Card className="p-4">
+                                {renderDaySchedule(selectedDay)}
+                            </Card>
+
+                            {/* Totals */}
+                            {renderTotals()}
+                        </div>
 
                         {/* Default fallback card when no data */}
                         {scheduleCalendarRegistration && !scheduleCalendarRegistration.data && (
@@ -272,6 +261,15 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
                             </Card>
                         )}
 
+                        <div className="mt-4 flex justify-end gap-2">
+                            <Button
+                                variant="primary"
+                                color="indigo"
+                                onClick={handleRegisterCalendar}
+                                className="flex justify-end"
+                            > Register Calendar
+                            </Button>
+                        </div>
                     </Card>
                     <div className="mt-4 flex justify-end gap-2">
                         <Button variant="secondary" onClick={onPrevious}>

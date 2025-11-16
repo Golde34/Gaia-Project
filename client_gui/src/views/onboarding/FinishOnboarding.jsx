@@ -37,10 +37,10 @@ const FinishOnboarding = ({ onNext, onSkip, onPrevious }) => {
     let timeBubble = { ok: false, notReadyMessage: null };
     if (errorBubble) {
       timeBubble.notReadyMessage = "Failed to fetch Time Bubble info.";
-    } else if (!timeBubbleConfig?.data?.schedule?.[0]) {
+    } else if (!timeBubbleConfig?.data?.timeBubbleConfig?.[0]) {
       timeBubble.notReadyMessage = "No Time Bubble found.";
     } else {
-      const draft = timeBubbleConfig.data.schedule[0]?.find?.((b) => b?.status === "DRAFT");
+      const draft = timeBubbleConfig.data.timeBubbleConfig[0]?.find?.((b) => b?.status === "DRAFT");
       if (draft) {
         timeBubble.notReadyMessage = "Time Bubble is in DRAFT.";
       } else {

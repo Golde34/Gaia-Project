@@ -57,3 +57,16 @@ type UpdateUserModelRequestDTO struct {
 func NewUpdateUserModelRequestDTO() *UpdateUserModelRequestDTO {
 	return &UpdateUserModelRequestDTO{}
 }
+
+type UpsertUserLLMModelRequestDTO struct {
+	UserId       float64 `json:"userId"`
+	Id           float64 `json:"id"`
+	ModelName    string  `json:"modelName"`
+	ModelKey     string  `json:"modelKey"`
+	ActiveStatus bool    `json:"activeStatus"`
+	UserModel    string  `json:"userModel"`
+}
+
+func NewUpsertUserLLMModelRequestDTO() *UpsertUserLLMModelRequestDTO {
+	return &UpsertUserLLMModelRequestDTO{}
+}

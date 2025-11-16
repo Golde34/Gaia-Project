@@ -10,6 +10,7 @@ import auth.authentication_service.core.domain.enums.BossType;
 
 @Component
 public class UserMapper {
+
     public User updateUserMapper(UpdateUserRequest updateUser, User user) {
         user.setId(updateUser.getUserId());
         user.setEmail(updateUser.getEmail());

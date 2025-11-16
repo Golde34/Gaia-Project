@@ -1,6 +1,5 @@
 package auth.authentication_service.core.validations.service_validations;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.util.Pair;
@@ -10,19 +9,16 @@ import auth.authentication_service.core.domain.constant.Constants;
 import auth.authentication_service.core.domain.entities.Role;
 import auth.authentication_service.core.port.store.RoleStore;
 import auth.authentication_service.kernel.utils.ObjectUtils;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class RoleServiceValidation {
 
     private final RoleStore roleStore;
     private final ObjectUtils objectUtils;
-
-    public RoleServiceValidation(RoleStore roleStore, ObjectUtils objectUtils) {
-        this.roleStore = roleStore;
-        this.objectUtils = objectUtils;
-    }
 
     public Pair<String, Boolean> canUpdateRole(Role role, String newName) {
         try {
@@ -50,33 +46,14 @@ public class RoleServiceValidation {
     }
 
     public boolean checkExistRole(Role role) {
-        try {
-            if (objectUtils.isNullOrEmpty(role)) {
-                return false;
-            }
-
-            List<Role> existingRole = roleStore.findAll();
-            Optional<Role> existingRoleOptional = existingRole.stream()
-                    .filter(r -> r.getId().equals(role.getId()))
-                    .findFirst();
-
-            return existingRoleOptional.isPresent();
-        } catch (Exception e) {
-            log.error("Check if can delete role failed: ", e);
+        if (objectUtils.isNullOrEmpty(role)) {
             return false;
         }
+
+        return roleStore.findRoleById(role.getId()) != null;
     }
 
     public boolean checkExistRoleName(String roleName) {
-        try {
-            Optional<Role> existingRole = roleStore.findAll().stream()
-                    .filter(r -> r.getName().equals(roleName))
-                    .findFirst();
-
-            return existingRole.isPresent();
-        } catch (Exception e) {
-            log.error("Check if role name exists failed: ", e);
-            return false;
-        }
+        return roleStore.findByName(roleName) != null;
     }
 }
