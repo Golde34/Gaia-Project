@@ -43,35 +43,6 @@ public class GaiaAlgorithm extends ScheduleService<GaiaAlgorithmDTO, List<Task>>
                 .build();
     }
 
-    // @Override
-    // public List<List<Task>> sortTaskToBatches(List<Task> tasks) {
-    // tasks.sort((task1, task2) -> {
-    // LocalDate date1 = Instant.ofEpochMilli(task1.getEndDate())
-    // .atZone(ZoneId.systemDefault())
-    // .toLocalDate();
-    // LocalDate date2 = Instant.ofEpochMilli(task2.getEndDate())
-    // .atZone(ZoneId.systemDefault())
-    // .toLocalDate();
-
-    // int dateCompare = date2.compareTo(date1);
-    // if (dateCompare != 0) {
-    // return dateCompare;
-    // } else {
-    // return Integer.compare(task2.getPriority(), task1.getPriority());
-    // }
-    // });
-
-    // List<List<Task>> taskBatches = new ArrayList<>();
-    // int batchSize = Constants.OptimizeVariables.BATCH_SIZE;
-    // for (int i = 0; i < tasks.size(); i += batchSize) {
-    // int end = Math.min(i + batchSize, tasks.size());
-    // List<Task> batch = tasks.subList(i, end);
-    // taskBatches.add(new ArrayList<>(batch));
-    // }
-
-    // return taskBatches;
-    // }
-
     @Override
     public List<List<Task>> sortTaskToBatches(double totalTime, List<Task> tasks) {
         double maxDuration = tasks.stream()
