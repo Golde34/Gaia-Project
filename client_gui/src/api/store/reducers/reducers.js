@@ -31,7 +31,10 @@ import {
 } from './task_manager/comment.reducers'
 import { getOnboardingReducer, microserviceListReducer, screenListReducer } from "./middleware_loader/microservices.reducer";
 import { notificationListReducer } from "./middleware_loader/notification.reducer";
-import { getAllLLMModelsReducer, updateUserModelReducer, userDetailReducer, userListReducer, userSettingUpdateReducer, userUpdateReducer } from "./auth_service/user.reducer";
+import { getAllLLMModelsReducer, getUserLLMModelsReducer, updateUserModelReducer, 
+    upsertUserLLMModelReducer, userDetailReducer, userListReducer, 
+    userSettingUpdateReducer, userUpdateReducer 
+} from "./auth_service/user.reducer";
 import { roleCreateReducer, roleListReducer } from "./auth_service/role.reducer";
 import { privilegeListReducer } from "./auth_service/privilege.reducer";
 import { queryTaskConfigReducer, registerTaskConfigReducer } from "./onboarding/task-registration.reducers";
@@ -49,7 +52,6 @@ import { getNotificationJwt } from "../actions/auth_service/auth.actions";
 import { editTimeBubbleReducer, getDailyTasksReducer, getTimeBubbleConfigReducer, registerScheduleCalendarReducer, deleteTaskAwayScheduleReducer } from "./schedule_plan/schedule-calendar.reducers";
 import { chatHistoryReducer } from "./chat_hub/messages.reducer";
 import { getAllDialoguesReducer } from "./chat_hub/dialogue.reducer";
-import { getUserLLMModelsReducer } from "./chat_hub/user-llm-models.reducer";
 
 export const reducer = combineReducers({
     // auth service
@@ -70,6 +72,8 @@ export const reducer = combineReducers({
     userModelUpdate: updateUserModelReducer,
     userChatHubJwt: getChatHubJwtReducer,
     notificationJwt: getNotificationJwt,
+    userLLMModels: getUserLLMModelsReducer,
+    upsertUserLLMModel: upsertUserLLMModelReducer,
     // task manager
     projectList: projectListReducer,
     projectDetail: projectDetailReducer,
@@ -138,5 +142,4 @@ export const reducer = combineReducers({
     // chat hub
     chatHistory: chatHistoryReducer,
     allDialogues: getAllDialoguesReducer,
-    userLLMModels: getUserLLMModelsReducer,
 })
