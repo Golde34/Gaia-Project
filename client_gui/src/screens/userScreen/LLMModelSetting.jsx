@@ -2,11 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getLLMModels } from "../../api/store/actions/auth_service/user.actions";
 import MessageBox from "../../components/subComponents/MessageBox";
-import { Button, Card, Flex, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Title } from "@tremor/react";
+import { Button, Card, Divider, Flex, Grid, Subtitle, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, TextInput, Title } from "@tremor/react";
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from "@headlessui/react";
 import clsx from "clsx";
 import { CheckIcon, ChevronDownIcon } from "@heroicons/react/solid";
 import { useUpdateUserModelDispatch } from "../../kernels/utils/write-dialog-api-requests";
+import CustomModelSetting from "./CustomModelSetting";
 
 const LLMModelSettingScreen = (props) => {
     const user = props.user;
@@ -115,6 +116,8 @@ const LLMModelSettingScreen = (props) => {
                             </TableRow>
                         </TableBody>
                     </Table>
+                    <Divider className="my-6" />
+                    <CustomModelSetting allModels={llmModels}/>
                 </Card>
             ) : (
                 <>?????????</>
