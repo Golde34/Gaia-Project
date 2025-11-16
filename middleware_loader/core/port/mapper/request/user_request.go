@@ -46,3 +46,13 @@ func UpdateUserModelRequestDTOMapper(body map[string]interface{}, userId string)
 	input.ModelId = utils.GetFloatValue(body, "modelId", 0)
 	return input
 }
+
+func UpsertUserModelRequestDTOMapper(body map[string]interface{}, userId string) request_dtos.UpsertUserLLMModelRequestDTO {
+	var input request_dtos.UpsertUserLLMModelRequestDTO
+	input.UserId = utils.ParseFloatValue(userId) 
+	input.Id = utils.GetFloatValue(body, "id", 0)
+	input.ModelName = utils.GetStringValue(body, "modelName", "")
+	input.ModelKey = utils.GetStringValue(body, "modelKey", "")
+	input.ActiveStatus = body["activeStatus"].(bool)
+	return input
+}

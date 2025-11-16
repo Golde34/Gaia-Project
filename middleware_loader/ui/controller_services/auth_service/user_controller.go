@@ -122,3 +122,46 @@ func UpdateUserModel(w http.ResponseWriter, r *http.Request, userService *servic
 		return
 	}
 }
+
+func GetUserModels(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
+	allModels, err := services.NewUserService().GetAllModels()	
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	models := map[string]interface{}{
+		"llmModels": allModels,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(models); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}
+
+func UpsertUserModels(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
+	var body map[string]interface{}
+	body, err := controller_utils.MappingBody(w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	input := mapper.UpsertUserModelRequestDTOMapper(body, userId)
+	updateUserModel, err := services.NewUserService().UpsertUserModels(input)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(updateUserModel); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}

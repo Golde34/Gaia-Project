@@ -96,3 +96,19 @@ func (s *UserService) UpdateUserModel(input request_dtos.UpdateUserModelRequestD
 		return userModel, nil
 	}
 }
+
+func (s *UserService) GetUserModels(userId string) ([]response_dtos.UserLLMModel, error) {
+	userModels, err := client.IUserAdapter(&adapter.UserAdapter{}).GetUserModels(userId)
+	if err != nil {
+		return nil, err
+	}
+	return userModels, nil
+}
+
+func (s *UserService) UpsertUserModels(input request_dtos.UpsertUserLLMModelRequestDTO) (string, error) {
+	userModel, err := client.IUserAdapter(&adapter.UserAdapter{}).UpsertUserLLMModel(input)
+	if err != nil {
+		return "Something error when upsert user model", err
+	}
+	return userModel, nil
+}

@@ -133,10 +133,24 @@ func (in *UserSettingDTO) MapperToGraphQLModelSetting(input UserSettingDTO) mode
 }
 
 type LLMModel struct {
-	ModelId      float64 `json:"modelId"`
-	ModelName    string  `json:"modelName"`
+	ModelId   float64 `json:"modelId"`
+	ModelName string  `json:"modelName"`
 }
 
 func NewLLMModel() *LLMModel {
 	return &LLMModel{}
+}
+
+type UserLLMModel struct {
+	UserId       float64 `json:"userId"`
+	ModelId      float64 `json:"modelId"`
+	ModelName    string  `json:"modelName"`
+	UserModel    string  `json:"userModel"`
+	Id           float64 `json:"id"`
+	ModelKey     string  `json:"modelKey"`
+	ActiveStatus bool    `json:"activeStatus"`
+}
+
+func NewUserLLMModel() *UserLLMModel {
+	return &UserLLMModel{}
 }

@@ -72,3 +72,15 @@ func ReturnLLMModelObjectMapper(body map[string]interface{}) *response_dtos.LLMM
 	input.ModelName = body["modelName"].(string)
 	return &input
 }
+
+func ReturnUserLLMModelObjectMapper(body map[string]interface{}) *response_dtos.UserLLMModel{
+	var input response_dtos.UserLLMModel
+	input.Id = body["id"].(float64)
+	input.UserId = body["userId"].(float64)
+	input.ModelId = body["modelId"].(float64)
+	input.ModelName = body["modelName"].(string)
+	input.UserModel = body["userModel"].(string)
+	input.ModelKey = body["modelKey"].(string)
+	input.ActiveStatus = body["activeStatus"].(bool)
+	return &input
+}
