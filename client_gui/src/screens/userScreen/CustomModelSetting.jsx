@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import MessageBox from "../../components/subComponents/MessageBox";
 import {
@@ -50,7 +50,10 @@ const CustomModelSetting = ({ allModels = [] }) => {
         activeStatus: true,
     });
 
+    const didFetch = useRef(false);
     const findUserLLMModelInfo = useCallback(() => {
+        if (didFetch.current) return;
+        didFetch.current = true;
         dispatch(getUserLLMModels());
     }, [dispatch]);
 
@@ -160,7 +163,7 @@ const CustomModelSetting = ({ allModels = [] }) => {
                 userModel: trimmedUserModel,
                 modelName: trimmedModelName,
                 modelKey: trimmedKey,
-                activeStatus: newActiveStatus,
+                activeStatus: newActiveStatus == null ? true : newActiveStatus,
             }),
         );
     };
@@ -206,29 +209,29 @@ const CustomModelSetting = ({ allModels = [] }) => {
                                             <TableCell className="align-top">
                                                 {isEditing ? (
                                                     <TextInput
-                                                        value={editingValues.userModel}
+                                                        value={editingValues.modelName}
                                                         onChange={(e) =>
                                                             setEditingValues((prev) => ({
                                                                 ...prev,
-                                                                userModel: e.target.value,
+                                                                modelName: e.target.value,
                                                             }))
                                                         }
                                                         placeholder="User model alias"
                                                     />
                                                 ) : (
                                                     <Text className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                                                        {model.userModel || "-"}
+                                                        {model.modelName|| "-"}
                                                     </Text>
                                                 )}
                                             </TableCell>
                                             <TableCell className="align-top">
                                                 {isEditing ? (
                                                     <Select
-                                                        value={editingValues.modelName || ""}
+                                                        value={editingValues.userModel|| ""}
                                                         onValueChange={(value) =>
                                                             setEditingValues((prev) => ({
                                                                 ...prev,
-                                                                modelName: value,
+                                                                userModel: value,
                                                             }))
                                                         }
                                                         placeholder="Select a base model"
@@ -241,7 +244,7 @@ const CustomModelSetting = ({ allModels = [] }) => {
                                                     </Select>
                                                 ) : (
                                                     <Text className="font-medium text-tremor-content dark:text-dark-tremor-content">
-                                                        {model.modelName || "-"}
+                                                        {model.userModel|| "-"}
                                                     </Text>
                                                 )}
                                             </TableCell>
@@ -322,14 +325,14 @@ const CustomModelSetting = ({ allModels = [] }) => {
                                 <TableCell>
                                     <TextInput
                                         placeholder="User model alias"
-                                        value={newUserModelName}
-                                        onChange={(e) => setNewUserModelName(e.target.value)}
+                                        value={newSelectedModelName}
+                                        onChange={(e) => setNewSelectedModelName(e.target.value)}
                                     />
                                 </TableCell>
                                 <TableCell>
                                     <Select
-                                        value={newSelectedModelName}
-                                        onValueChange={setNewSelectedModelName}
+                                        value={newUserModelName}
+                                        onValueChange={setNewUserModelName}
                                         placeholder={
                                             llmModelOptions.length === 0
                                                 ? "No available models"
@@ -351,16 +354,7 @@ const CustomModelSetting = ({ allModels = [] }) => {
                                         onChange={(e) => setNewModelKey(e.target.value)}
                                     />
                                 </TableCell>
-                                <TableCell>
-                                    <label className="flex items-center gap-2 text-sm text-tremor-content dark:text-dark-tremor-content">
-                                        <input
-                                            type="checkbox"
-                                            checked={newActiveStatus}
-                                            onChange={(e) => setNewActiveStatus(e.target.checked)}
-                                        />
-                                        Mark as active
-                                    </label>
-                                </TableCell>
+                                <TableCell></TableCell>
                                 <TableCell>
                                     <Button
                                         variant="primary"
