@@ -40,13 +40,14 @@ public class UserLLMModelServiceImpl implements UserLLMModelService {
         try {
             UserLLMModel userModel = Optional.ofNullable(userLLMModel.getId())
                     .flatMap(userLLMModelStore::findById)
-                    .map(e -> UserLLMModel.builder()
-                            .modelName(userLLMModel.getModelName())
-                            .modelKey(userLLMModel.getModelKey())
-                            .activeStatus(userLLMModel.getActiveStatus())
-                            .userId(userLLMModel.getUserId())
-                            .userModel(userLLMModel.getUserModel())
-                            .build())
+                    .map(existing -> {
+                        existing.setModelName(userLLMModel.getModelName());
+                        existing.setModelKey(userLLMModel.getModelKey());
+                        existing.setActiveStatus(userLLMModel.getActiveStatus());
+                        existing.setUserId(userLLMModel.getUserId());
+                        existing.setUserModel(userLLMModel.getUserModel());
+                        return existing;
+                    })
                     .orElse(userLLMModel);
             userLLMModelStore.saveUserLLMModel(userModel);
             return genericResponse.matchingResponseMessage(
