@@ -81,7 +81,7 @@ func UpdateUserSetting(w http.ResponseWriter, r *http.Request, userService *serv
 }
 
 func GetAllModels(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
-	allModels, err := services.NewUserService().GetAllModels()	
+	allModels, err := services.NewUserService().GetAllModels()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -124,18 +124,23 @@ func UpdateUserModel(w http.ResponseWriter, r *http.Request, userService *servic
 }
 
 func GetUserModels(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
-	allModels, err := services.NewUserService().GetAllModels()	
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	userModels, err := services.NewUserService().GetUserModels(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	models := map[string]interface{}{
-		"llmModels": allModels,
+	response := map[string]interface{}{
+		"data": map[string]interface{}{
+			"userLLMModels": userModels,
+			"hasMore":       false,
+			"nextCursor":    "",
+		},
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(models); err != nil {
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Error encoding response: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -159,7 +164,7 @@ func UpsertUserModels(w http.ResponseWriter, r *http.Request, userService *servi
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(updateUserModel); err != nil {
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{"message": updateUserModel}); err != nil {
 		log.Printf("Error encoding response: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

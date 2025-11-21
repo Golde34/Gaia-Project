@@ -25,7 +25,7 @@ func NewUserRouter(userService *services.UserService, db database_mongo.Database
 			controller.GetUserDetail(w, r, userService)
 		})
 		// r.Post("/create-user", func(w http.ResponseWriter, r *http.Request) {
-		// 	controller_services.CreateUser(w, r, userService)
+		// controller_services.CreateUser(w, r, userService)
 		// })
 		r.Put("/update-user", func(w http.ResponseWriter, r *http.Request) {
 			controller.UpdateUser(w, r, userService)
@@ -33,11 +33,17 @@ func NewUserRouter(userService *services.UserService, db database_mongo.Database
 		r.Put("/update-user-setting", func(w http.ResponseWriter, r *http.Request) {
 			controller.UpdateUserSetting(w, r, userService)
 		})
+		r.Get("/llm-models", func(w http.ResponseWriter, r *http.Request) {
+			controller.GetUserModels(w, r, userService)
+		})
+		r.Post("/llm-models", func(w http.ResponseWriter, r *http.Request) {
+			controller.UpsertUserModels(w, r, userService)
+		})
 		// r.Delete("/delete-user", func(w http.ResponseWriter, r *http.Request) {
-		// 	controller_services.DeleteUser(w, r, userService)
+		// controller_services.DeleteUser(w, r, userService)
 		// })
 		// r.Get("/get-user", func(w http.ResponseWriter, r *http.Request) {
-		// 	controller_services.GetUserByUsername(w, r, userService)
+		// controller_services.GetUserByUsername(w, r, userService)
 		// })
 	})
 	r.Route("/user-model", func(r chi.Router) {
