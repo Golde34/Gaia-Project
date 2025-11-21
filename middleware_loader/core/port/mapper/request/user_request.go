@@ -52,6 +52,7 @@ func UpsertUserModelRequestDTOMapper(body map[string]interface{}, userId string)
 	input.Id = utils.GetFloatValue(body, "id", 0)
 	input.ModelName = utils.GetStringValue(body, "modelName", "")
 	input.ModelKey = utils.GetStringValue(body, "modelKey", "")
+	input.UserModel = utils.GetStringValue(body, "userModel", "")
 
 	if activeStatus, ok := body["activeStatus"].(bool); ok {
 		input.ActiveStatus = activeStatus
