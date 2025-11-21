@@ -1,135 +1,377 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import MessageBox from "../../components/subComponents/MessageBox";
-import { Card, Flex, TableBody, TableCell, TableHead, TableHeaderCell, TableRow, Title } from "@tremor/react";
-import { getUserLLMModels } from "../../api/store/actions/chat_hub/user-llm-models.actions";
+import {
+    Badge,
+    Button,
+    Card,
+    Flex,
+    Select,
+    SelectItem,
+    Subtitle,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeaderCell,
+    TableRow,
+    Text,
+    TextInput,
+    Title,
+} from "@tremor/react";
+import { getUserLLMModels, upsertUserLLMModel } from "../../api/store/actions/auth_service/user.actions";
 
-const CustomModelSetting = (props) => {
+const maskKey = (key) => {
+    if (!key) return "";
+    if (key.length <= 4) return key;
+    return `${"•".repeat(Math.max(0, key.length - 4))}${key.slice(-4)}`;
+};
+
+const CustomModelSetting = ({ allModels = [] }) => {
     const dispatch = useDispatch();
 
-    const allModels = props.allModels;
+    const userLlmModels = useSelector((state) => state.userLLMModels);
+    const { loading, error, userLLMModels = [] } = userLlmModels;
 
-    const userLlmModels = useSelector(state => state.userLLMModels);
-    const { loading, error, userLLMModelInfo } = userLlmModels;
+    const upsertState = useSelector((state) => state.upsertUserLLMModel);
+    const { success: upsertSuccess, error: upsertError, loading: upsertLoading } = upsertState;
+
+    const [newUserModelName, setNewUserModelName] = useState("");
+    const [newSelectedModelName, setNewSelectedModelName] = useState("");
+    const [newModelKey, setNewModelKey] = useState("");
+    const [newActiveStatus, setNewActiveStatus] = useState(true);
+    const [saveMessage, setSaveMessage] = useState("");
+    const [formError, setFormError] = useState("");
+    const [editingModelId, setEditingModelId] = useState(null);
+    const [editingValues, setEditingValues] = useState({
+        userModel: "",
+        modelName: "",
+        modelKey: "",
+        activeStatus: true,
+    });
+
+    const didFetch = useRef(false);
     const findUserLLMModelInfo = useCallback(() => {
+        if (didFetch.current) return;
+        didFetch.current = true;
         dispatch(getUserLLMModels());
     }, [dispatch]);
-    const debounceRef = useRef(null);
+
     useEffect(() => {
-        clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
+        findUserLLMModelInfo();
+    }, [findUserLLMModelInfo]);
+
+    useEffect(() => {
+        if (upsertSuccess) {
             findUserLLMModelInfo();
-        }, 200);
-        console.log("userLLMModelInfo: ", userLLMModelInfo);
-    }, []);
+            setNewUserModelName("");
+            setNewSelectedModelName("");
+            setNewModelKey("");
+            setNewActiveStatus(true);
+            setEditingModelId(null);
+            setEditingValues({
+                userModel: "",
+                modelName: "",
+                modelKey: "",
+                activeStatus: true,
+            });
+            setSaveMessage("Model saved successfully.");
+        }
+    }, [upsertSuccess, findUserLLMModelInfo]);
+
+    useEffect(() => {
+        if (upsertError) {
+            setSaveMessage("");
+        }
+    }, [upsertError]);
+
+    const sortedUserModels = useMemo(() => {
+        if (!userLLMModels || userLLMModels.length == 0) return [];
+        return [...userLLMModels].sort((a, b) => Number(b.activeStatus) - Number(a.activeStatus));
+    }, [userLLMModels]);
+
+    const llmModelOptions = useMemo(() => {
+        const names = new Set((allModels ?? []).map((model) => model.modelName));
+        (userLLMModels ?? []).forEach((model) => {
+            if (model?.modelName) {
+                names.add(model.modelName);
+            }
+        });
+        return Array.from(names);
+    }, [allModels, userLLMModels]);
+
+    const startEditingModel = (model) => {
+        setEditingModelId(model.id);
+        setEditingValues({
+            userModel: model.userModel || "",
+            modelName: model.modelName || "",
+            modelKey: model.modelKey || "",
+            activeStatus: !!model.activeStatus,
+        });
+        setFormError("");
+        setSaveMessage("");
+    };
+
+    const cancelEditing = () => {
+        setEditingModelId(null);
+        setEditingValues({
+            userModel: "",
+            modelName: "",
+            modelKey: "",
+            activeStatus: true,
+        });
+    };
+
+    const handleUpdateModel = () => {
+        if (!editingModelId) return;
+        const trimmedUserModel = editingValues.userModel.trim();
+        const trimmedModelName = editingValues.modelName.trim();
+        const trimmedKey = editingValues.modelKey.trim();
+        setFormError("");
+        setSaveMessage("");
+
+        if (!trimmedUserModel || !trimmedModelName || !trimmedKey) {
+            setFormError("User model, LLM model, and API key are required.");
+            return;
+        }
+
+        dispatch(
+            upsertUserLLMModel({
+                id: editingModelId,
+                userModel: trimmedUserModel,
+                modelName: trimmedModelName,
+                modelKey: trimmedKey,
+                activeStatus: editingValues.activeStatus,
+            }),
+        );
+    };
+
+    const handleAddNewModel = () => {
+        const trimmedUserModel = newUserModelName.trim();
+        const trimmedModelName = newSelectedModelName.trim();
+        const trimmedKey = newModelKey.trim();
+        setFormError("");
+        setSaveMessage("");
+
+        if (!trimmedUserModel || !trimmedModelName || !trimmedKey) {
+            setFormError("User model, LLM model, and API key are required.");
+            return;
+        }
+
+        dispatch(
+            upsertUserLLMModel({
+                userModel: trimmedUserModel,
+                modelName: trimmedModelName,
+                modelKey: trimmedKey,
+                activeStatus: newActiveStatus == null ? true : newActiveStatus,
+            }),
+        );
+    };
 
     return (
-        <>
-            {loading ? (
-                <p>Loading...</p>
-            ) : error ? (
-                <MessageBox message={error}></MessageBox>
-            ) : userLLMModelInfo ? (
-                <Card>
-                    <Flex justifyContent="center" alignItems="center" className="mb-">
-                        <Title className="text-white text-xl font-bold">Your Custom LLM Models</Title>
-                    </Flex>
-                    <Table className="mt-8">
+        <Card>
+            <Flex justifyContent="center" alignItems="center">
+                <Title className="text-white text-xl font-bold">Your Custom LLM Models</Title>
+            </Flex>
+
+            <div className="mt-6">
+                <Subtitle className="mb-2">Manage your models</Subtitle>
+                {formError && <MessageBox message={formError} />}
+                {upsertError && <MessageBox message={upsertError} />}
+                {saveMessage && <Text className="text-emerald-500">{saveMessage}</Text>}
+                {loading ? (
+                    <Text>Loading...</Text>
+                ) : error ? (
+                    <MessageBox message={error} />
+                ) : (
+                    <Table>
                         <TableHead>
                             <TableRow className="border-b border-tremor-border dark:border-dark-tremor-border">
-                                <TableHeaderCell className="text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                                    Models 
-                                </TableHeaderCell>
-                                <TableHeaderCell className="text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                                    Key 
-                                </TableHeaderCell>
-                                <TableHeaderCell className="text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                                    Action
-                                </TableHeaderCell>
+                                <TableHeaderCell>User model name</TableHeaderCell>
+                                <TableHeaderCell>LLM model</TableHeaderCell>
+                                <TableHeaderCell>Key</TableHeaderCell>
+                                <TableHeaderCell>Status</TableHeaderCell>
+                                <TableHeaderCell>Actions</TableHeaderCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {
-                                getProjectCommitList.length === 0 ? (
-                                    <></>
-                                ) : (
-                                    getProjectCommitList.map((project) => (
-                                        <TableRow key={project.id} className="border-b border-tremor-border dark:border-dark-tremor-border">
-                                            <TableCell className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                                                {project.projectName}
+                            {sortedUserModels.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5}>
+                                        <Text className="text-tremor-content">No custom model registered.</Text>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                sortedUserModels.map((model) => {
+                                    const isEditing = editingModelId === model.id;
+                                    return (
+                                        <TableRow key={`${model.id}-${model.modelName}`} className="border-b border-tremor-border dark:border-dark-tremor-border">
+                                            <TableCell className="align-top">
+                                                {isEditing ? (
+                                                    <TextInput
+                                                        value={editingValues.modelName}
+                                                        onChange={(e) =>
+                                                            setEditingValues((prev) => ({
+                                                                ...prev,
+                                                                modelName: e.target.value,
+                                                            }))
+                                                        }
+                                                        placeholder="User model alias"
+                                                    />
+                                                ) : (
+                                                    <Text className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
+                                                        {model.modelName|| "-"}
+                                                    </Text>
+                                                )}
                                             </TableCell>
-                                            <TableCell className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                                                {project.githubRepo}
+                                            <TableCell className="align-top">
+                                                {isEditing ? (
+                                                    <Select
+                                                        value={editingValues.userModel|| ""}
+                                                        onValueChange={(value) =>
+                                                            setEditingValues((prev) => ({
+                                                                ...prev,
+                                                                userModel: value,
+                                                            }))
+                                                        }
+                                                        placeholder="Select a base model"
+                                                    >
+                                                        {llmModelOptions.map((name) => (
+                                                            <SelectItem key={name} value={name}>
+                                                                {name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </Select>
+                                                ) : (
+                                                    <Text className="font-medium text-tremor-content dark:text-dark-tremor-content">
+                                                        {model.userModel|| "-"}
+                                                    </Text>
+                                                )}
                                             </TableCell>
-                                            <TableCell className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                                                <Button
-
-                                                    className="flex justify-end"
-                                                    variant="primary"
-                                                    color="red"
-                                                    onClick={() => openModal(project.id)}
-                                                >Remove</Button>
+                                            <TableCell className="align-top">
+                                                {isEditing ? (
+                                                    <TextInput
+                                                        value={editingValues.modelKey}
+                                                        onChange={(e) =>
+                                                            setEditingValues((prev) => ({
+                                                                ...prev,
+                                                                modelKey: e.target.value,
+                                                            }))
+                                                        }
+                                                        placeholder="API key"
+                                                    />
+                                                ) : (
+                                                    <Text className="font-medium text-tremor-content dark:text-dark-tremor-content">
+                                                        {maskKey(model.modelKey)}
+                                                    </Text>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="align-top">
+                                                {isEditing ? (
+                                                    <label className="flex items-center gap-2 text-sm text-tremor-content dark:text-dark-tremor-content">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={editingValues.activeStatus}
+                                                            onChange={(e) =>
+                                                                setEditingValues((prev) => ({
+                                                                    ...prev,
+                                                                    activeStatus: e.target.checked,
+                                                                }))
+                                                            }
+                                                        />
+                                                        Mark as active
+                                                    </label>
+                                                ) : model.activeStatus ? (
+                                                    <Badge color="emerald">Active</Badge>
+                                                ) : (
+                                                    <Badge color="slate">Inactive</Badge>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="align-top">
+                                                {isEditing ? (
+                                                    <Flex gap="2">
+                                                        <Button
+                                                            variant="primary"
+                                                            color="indigo"
+                                                            onClick={handleUpdateModel}
+                                                            disabled={upsertLoading}
+                                                        >
+                                                            {upsertLoading ? "Saving..." : "Update"}
+                                                        </Button>
+                                                        <Button
+                                                            variant="secondary"
+                                                            color="slate"
+                                                            onClick={cancelEditing}
+                                                            disabled={upsertLoading}
+                                                        >
+                                                            Cancel
+                                                        </Button>
+                                                    </Flex>
+                                                ) : (
+                                                    <Button
+                                                        variant="secondary"
+                                                        color="indigo"
+                                                        onClick={() => startEditingModel(model)}
+                                                    >
+                                                        Update
+                                                    </Button>
+                                                )}
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                )
-                            }
+                                    );
+                                })
+                            )}
                             <TableRow>
-                                <TableCell className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                                    <Combobox value={selectedProject} onChange={(value) => setSelectedProject(value)} onClose={() => setQueryProject('')}>
-                                        <div className="relative">
-                                            {/* <ComboboxInput
-                                                className={clsx(
-                                                    'w-full rounded-lg border-none bg-white/5 py-1.5 pl-3 text-sm/6 text-white',
-                                                    'focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25'
-                                                )}
-                                                displayValue={(project) => project?.name}
-                                                onChange={(event) => setQueryProject(event.target.value)}
-                                            />
-                                            <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">
-                                                <ChevronDownIcon className="size-4 fill-white/60 group-data-[hover]:fill-white" />
-                                            </ComboboxButton> */}
-                                        </div>
-                                        {/* <ComboboxOptions
-                                            anchor="bottom"
-                                            transition
-                                            className={clsx(
-                                                'w-[var(--input-width)] rounded-xl border border-white/5 bg-white p-1 [--anchor-gap:var(--spacing-1)] empty:invisible',
-                                                'transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0'
-                                            )}
-                                        >
-                                            {filterProjects.map((project) => (
-                                                <ComboboxOption
-                                                    key={project.id}
-                                                    value={project}
-                                                    className="group flex cursor-default items-center gap-2 rounded-lg py-1.5 px-3 select-none data-[focus]:bg-white/10"
-                                                >
-                                                    <CheckIcon className="invisible size-4 group-data-[selected]:visible" />
-                                                    {project.name}
-                                                </ComboboxOption>
-                                            ))}
-                                        </ComboboxOptions> */}
-                                    </Combobox>
+                                <TableCell>
+                                    <TextInput
+                                        placeholder="User model alias"
+                                        value={newSelectedModelName}
+                                        onChange={(e) => setNewSelectedModelName(e.target.value)}
+                                    />
                                 </TableCell>
-                                <TableCell className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
+                                <TableCell>
+                                    <Select
+                                        value={newUserModelName}
+                                        onValueChange={setNewUserModelName}
+                                        placeholder={
+                                            llmModelOptions.length === 0
+                                                ? "No available models"
+                                                : "Select a base model"
+                                        }
+                                        disabled={llmModelOptions.length === 0}
+                                    >
+                                        {(allModels ?? []).map((model) => (
+                                            <SelectItem key={model.modelId} value={model.modelName}>
+                                                {model.modelName}
+                                            </SelectItem>
+                                        ))}
+                                    </Select>
                                 </TableCell>
-                                <TableCell className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
+                                <TableCell>
+                                    <TextInput
+                                        placeholder="API key"
+                                        value={newModelKey}
+                                        onChange={(e) => setNewModelKey(e.target.value)}
+                                    />
+                                </TableCell>
+                                <TableCell></TableCell>
+                                <TableCell>
                                     <Button
-                                        className="flex justify-end"
                                         variant="primary"
-                                        color="indigo"
-                                        onClick={synchorizeProjectAndRepo}
-                                    >Save</Button>
+                                        color="emerald"
+                                        onClick={handleAddNewModel}
+                                        disabled={upsertLoading || llmModelOptions.length === 0}
+                                    >
+                                        {upsertLoading ? "Saving..." : "Add"}
+                                    </Button>
                                 </TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
-                </Card>
-            ) : (
-                <></>
-            )}
-        </>
-    )
-}
+                )}
+            </div>
+        </Card>
+    );
+};
 
 export default CustomModelSetting;

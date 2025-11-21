@@ -143,9 +143,8 @@ func NewLLMModel() *LLMModel {
 
 type UserLLMModel struct {
 	UserId       float64 `json:"userId"`
-	ModelId      float64 `json:"modelId"`
-	ModelName    string  `json:"modelName"`
 	UserModel    string  `json:"userModel"`
+	ModelName    string  `json:"modelName"`
 	Id           float64 `json:"id"`
 	ModelKey     string  `json:"modelKey"`
 	ActiveStatus bool    `json:"activeStatus"`
