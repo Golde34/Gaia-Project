@@ -21,7 +21,7 @@ import {
 } from "@tremor/react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { DotsVerticalIcon } from "@heroicons/react/solid";
-import { getUserLLMModels, upsertUserLLMModel } from "../../api/store/actions/auth_service/user.actions";
+import { deleteUserLLMModel, getUserLLMModels, upsertUserLLMModel } from "../../api/store/actions/auth_service/user.actions";
 
 const maskKey = (key) => {
     if (!key) return "";
@@ -37,6 +37,8 @@ const CustomModelSetting = ({ allModels = [] }) => {
 
     const upsertState = useSelector((state) => state.upsertUserLLMModel);
     const { success: upsertSuccess, error: upsertError, loading: upsertLoading } = upsertState;
+    const deleteState = useSelector((state) => state.deleteUserLLMModel);
+    const { success: deleteSuccess, error: deleteError } = deleteState;
 
     const [newUserModelName, setNewUserModelName] = useState("");
     const [newSelectedModelName, setNewSelectedModelName] = useState("");
@@ -90,6 +92,26 @@ const CustomModelSetting = ({ allModels = [] }) => {
             setSaveMessage("");
         }
     }, [upsertError]);
+
+    useEffect(() => {
+        if (deleteSuccess) {
+            refreshUserLLMModels();
+            setEditingModelId(null);
+            setEditingValues({
+                userModel: "",
+                modelName: "",
+                modelKey: "",
+                activeStatus: true,
+            });
+            setSaveMessage("Model deleted successfully.");
+        }
+    }, [deleteSuccess, refreshUserLLMModels]);
+
+    useEffect(() => {
+        if (deleteError) {
+            setSaveMessage("");
+        }
+    }, [deleteError]);
 
     const sortedUserModels = useMemo(() => {
         if (!userLLMModels || userLLMModels.length == 0) return [];
@@ -177,15 +199,7 @@ const CustomModelSetting = ({ allModels = [] }) => {
     const handleDeleteModelKey = (model) => {
         setFormError("");
         setSaveMessage("");
-        dispatch(
-            upsertUserLLMModel({
-                id: model.id,
-                userModel: model.userModel,
-                modelName: model.modelName,
-                modelKey: "",
-                activeStatus: model.activeStatus,
-            }),
-        );
+        dispatch(deleteUserLLMModel(model.id));
     };
 
     const renderActionMenu = (model) => (
@@ -232,6 +246,7 @@ const CustomModelSetting = ({ allModels = [] }) => {
                 <Subtitle className="mb-2">Manage your models</Subtitle>
                 {formError && <MessageBox message={formError} />}
                 {upsertError && <MessageBox message={upsertError} />}
+                {deleteError && <MessageBox message={deleteError} />}
                 {saveMessage && <Text className="text-emerald-500">{saveMessage}</Text>}
                 {loading ? (
                     <Text>Loading...</Text>
