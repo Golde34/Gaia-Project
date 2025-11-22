@@ -39,6 +39,9 @@ func NewUserRouter(userService *services.UserService, db database_mongo.Database
 		r.Post("/llm-models", func(w http.ResponseWriter, r *http.Request) {
 			controller.UpsertUserModels(w, r, userService)
 		})
+		r.Delete("/llm-models/{id}", func(w http.ResponseWriter, r *http.Request) {
+			controller.DeleteUserModel(w, r, userService)
+		})
 		// r.Delete("/delete-user", func(w http.ResponseWriter, r *http.Request) {
 		// controller_services.DeleteUser(w, r, userService)
 		// })
@@ -60,6 +63,7 @@ func NewUserRouter(userService *services.UserService, db database_mongo.Database
 		r.Post("/upsert", func(w http.ResponseWriter, r *http.Request) {
 			controller.UpsertUserModels(w, r, userService)
 		})
+		
 	})
 	return &UserRouter{
 		UserService: userService,

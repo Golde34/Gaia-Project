@@ -169,3 +169,13 @@ func (adapter *UserAdapter) UpsertUserLLMModel(input request_dtos.UpsertUserLLMM
 	message := bodyResultMap["message"].(string)
 	return message, nil
 }
+
+func (adapter *UserAdapter) DeleteUserModel(id string) error {
+	deleteUserModelURL := base.AuthServiceURL + "/user/llm-models/" + id
+	headers := utils.BuildAuthorizationHeaders(enums.AS, "1")
+	_, err := utils.BaseAPI(deleteUserModelURL, "DELETE", nil, headers)
+	if err != nil {
+		return err
+	}
+	return nil
+}
