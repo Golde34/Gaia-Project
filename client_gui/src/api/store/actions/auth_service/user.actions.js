@@ -1,5 +1,6 @@
 import { HttpMethods, serverRequest } from "../../../baseAPI";
 import {
+    DELETE_USER_LLM_MODEL_FAILURE, DELETE_USER_LLM_MODEL_REQUEST, DELETE_USER_LLM_MODEL_SUCCESS,
     GET_USER_LLM_MODELS_FAILURE, GET_USER_LLM_MODELS_REQUEST, GET_USER_LLM_MODELS_SUCCESS,
     LLM_MODEL_LIST_FAILURE, LLM_MODEL_LIST_REQUEST, LLM_MODEL_LIST_SUCCESS,
     UPSERT_USER_LLM_MODEL_FAILURE, UPSERT_USER_LLM_MODEL_REQUEST, UPSERT_USER_LLM_MODEL_SUCCESS,
@@ -138,6 +139,26 @@ export const upsertUserLLMModel = (modelData) => async (dispatch) => {
     } catch (error) {
         dispatch({
             type: UPSERT_USER_LLM_MODEL_FAILURE,
+            payload:
+                error.response && error.response.data.message
+                    ? error.response.data.message
+                    : error.message,
+        });
+    }
+};
+
+export const deleteUserLLMModel = (modelId) => async (dispatch) => {
+    dispatch({ type: DELETE_USER_LLM_MODEL_REQUEST });
+    try {
+        const { data } = await serverRequest(
+            `/user/llm-models/${modelId}`,
+            HttpMethods.DELETE,
+            portName.middlewarePort
+        );
+        dispatch({ type: DELETE_USER_LLM_MODEL_SUCCESS, payload: data });
+    } catch (error) {
+        dispatch({
+            type: DELETE_USER_LLM_MODEL_FAILURE,
             payload:
                 error.response && error.response.data.message
                     ? error.response.data.message
