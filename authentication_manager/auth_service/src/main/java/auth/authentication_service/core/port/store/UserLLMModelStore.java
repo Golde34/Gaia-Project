@@ -11,6 +11,8 @@ public interface UserLLMModelStore {
 
     Optional<UserLLMModel> findById(Long id);
 
-    void saveUserLLMModel(UserLLMModel userLLMModel);
+    void save(UserLLMModel userLLMModel);
+
+    void deleteById(Long id);
 
 }

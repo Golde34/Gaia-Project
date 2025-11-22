@@ -9,4 +9,6 @@ public interface UserLLMModelService {
     ResponseEntity<?> getUserLLMModelsByUserId(Long userId);
 
     ResponseEntity<?> upsert(UserLLMModel userLLMModel);
+
+    ResponseEntity<?> delete(Long userModelId);
 }

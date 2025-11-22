@@ -44,7 +44,7 @@ public class UserLLMModelServiceImpl implements UserLLMModelService {
                     .map(existing -> updateExisting(existing, userLLMModel))
                     .orElseGet(() -> createNew(userLLMModel));
 
-            userLLMModelStore.saveUserLLMModel(userModel);
+            userLLMModelStore.save(userModel);
 
             return genericResponse.matchingResponseMessage(
                     new GenericResponse<>("Save user LLM model successfully", ResponseEnum.msg200));
@@ -75,5 +75,20 @@ public class UserLLMModelServiceImpl implements UserLLMModelService {
         request.setOriginKey(request.getModelKey());
         request.setModelKey(new BCryptPasswordEncoder().encode(request.getModelKey()));
         return request;
+    }
+
+    @Override
+    public ResponseEntity<?> delete(Long userModelId) {
+        try {
+            userLLMModelStore.deleteById(userModelId); 
+
+            return genericResponse.matchingResponseMessage(
+                    new GenericResponse<>("Delete user LLM model successfully", ResponseEnum.msg200)); 
+        } catch (Exception e) {
+            log.error("Error deleting user LLM model: {}", e.getMessage());
+            return genericResponse.matchingResponseMessage(
+                    new GenericResponse<>("Delete user LLM model failed: %s".formatted(e.getMessage()),
+                            ResponseEnum.msg500)); 
+        }
     }
 }

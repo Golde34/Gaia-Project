@@ -16,9 +16,6 @@ public interface UserLLMModelRepository extends JpaRepository<UserLLMModel, Long
             "WHERE u.userId = ?1 ORDER BY u.activeStatus DESC, u.createdDate DESC")
     List<UserLLMModel> findByUserId(Long userId);
 
-    @Override
-    void delete(UserLLMModel userLLMModel);
-
     Optional<UserLLMModel> findById(long id);
 
 }

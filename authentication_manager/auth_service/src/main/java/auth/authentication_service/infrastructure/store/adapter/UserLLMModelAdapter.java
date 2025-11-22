@@ -24,7 +24,7 @@ public class UserLLMModelAdapter implements UserLLMModelStore {
     }
 
     @Override
-    public void saveUserLLMModel(UserLLMModel userLLMModel) {
+    public void save(UserLLMModel userLLMModel) {
         userLLMModelRepository.save(userLLMModel);
         log.info("UserLLMModel saved: {}", userLLMModel);
     }
@@ -34,4 +34,9 @@ public class UserLLMModelAdapter implements UserLLMModelStore {
         return userLLMModelRepository.findById(id);
     }
 
+    @Override
+    public void deleteById(Long id) {
+        userLLMModelRepository.deleteById(id);
+        log.info("UserLLMModel deleted with id: {}", id);
+    }
 }
