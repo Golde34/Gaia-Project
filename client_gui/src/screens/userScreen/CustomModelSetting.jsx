@@ -22,6 +22,7 @@ import {
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { DotsVerticalIcon } from "@heroicons/react/solid";
 import { deleteUserLLMModel, getUserLLMModels, upsertUserLLMModel } from "../../api/store/actions/auth_service/user.actions";
+import { AlertDialog } from "../../components/subComponents/AlertDialog";
 
 const maskKey = (key) => {
     if (!key) return "";
@@ -31,6 +32,7 @@ const maskKey = (key) => {
 
 const CustomModelSetting = ({ allModels = [] }) => {
     const dispatch = useDispatch();
+    const [showKeyInfo, setShowKeyInfo] = useState(false);
 
     const userLlmModels = useSelector((state) => state.userLLMModels);
     const { loading, error, userLLMModels = [] } = userLlmModels;
@@ -222,14 +224,15 @@ const CustomModelSetting = ({ allModels = [] }) => {
                 </MenuItem>
                 <MenuItem>
                     {({ active }) => (
-                        <button
-                            type="button"
-                            onClick={() => handleDeleteModelKey(model)}
-                            className={`${active ? "bg-gray-100 dark:bg-slate-700" : ""
+                        <AlertDialog
+                            component="Delete"
+                            action="Delete"
+                            elementName="User model"
+                            elementId={model.id}
+                            onConfirm={() => handleDeleteModelKey(model)}
+                            buttonClassName={`${active ? "bg-gray-100 dark:bg-slate-700" : ""
                                 } block w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400`}
-                        >
-                            Delete key
-                        </button>
+                        />
                     )}
                 </MenuItem>
             </MenuItems>
@@ -258,7 +261,23 @@ const CustomModelSetting = ({ allModels = [] }) => {
                             <TableRow className="border-b border-tremor-border dark:border-dark-tremor-border">
                                 <TableHeaderCell>User model name</TableHeaderCell>
                                 <TableHeaderCell>LLM model</TableHeaderCell>
-                                <TableHeaderCell>Key</TableHeaderCell>
+                                <TableHeaderCell>
+                                    <div className="relative inline-flex items-center">
+                                        <span>Key</span>
+                                        <button
+                                            type="button"
+                                            className="ml-2 h-5 w-5 rounded-full border border-slate-400 text-xs text-slate-500 dark:text-slate-300"
+                                            onClick={() => setShowKeyInfo((prev) => !prev)}
+                                        >
+                                            ?
+                                        </button>
+                                        {showKeyInfo && (
+                                            <div className="absolute left-0 top-full z-20 mt-2 rounded-md bg-slate-800 px-3 py-2 text-xs text-white shadow-lg">
+                                                API key is encoded before storing to help keep it secure and only used when authenticating LLM requests.
+                                            </div>
+                                        )}
+                                    </div>
+                                </TableHeaderCell>
                                 <TableHeaderCell>Status</TableHeaderCell>
                                 <TableHeaderCell>Actions</TableHeaderCell>
                             </TableRow>
