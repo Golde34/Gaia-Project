@@ -36,6 +36,9 @@ def _build_access_token_redis(access_token: str, token_response: dict):
     set_key(access_token, token_response_str, int(ttl))
 
 async def get_user_model(user_id: int):
+    # get from redis
+    # if redis none, call auth service
+    # if auth service none, return default
     default_model = LLM_DEFAULT_MODEL
     user_model = await auth_service_client.get_user_llm_model_config(user_id)
     if not user_model:
