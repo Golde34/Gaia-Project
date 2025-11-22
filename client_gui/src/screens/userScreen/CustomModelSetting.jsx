@@ -119,10 +119,10 @@ const CustomModelSetting = ({ allModels = [] }) => {
     }, [userLLMModels]);
 
     const llmModelOptions = useMemo(() => {
-        const names = new Set((allModels ?? []).map((model) => model.modelName));
+        const names = new Set((allModels ?? []).map((model) => model.userModel));
         (userLLMModels ?? []).forEach((model) => {
-            if (model?.modelName) {
-                names.add(model.modelName);
+            if (model?.userModel) {
+                names.add(model.userModel);
             }
         });
         return Array.from(names);
