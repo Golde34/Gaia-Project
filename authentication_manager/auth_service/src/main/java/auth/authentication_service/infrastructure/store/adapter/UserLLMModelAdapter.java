@@ -39,4 +39,9 @@ public class UserLLMModelAdapter implements UserLLMModelStore {
         userLLMModelRepository.deleteById(id);
         log.info("UserLLMModel deleted with id: {}", id);
     }
+
+    @Override
+    public Optional<UserLLMModel> findActiveModelByUserId(Long userId, String userModel) {
+        return userLLMModelRepository.findByUserIdAndIsActiveTrue(userId, userModel);
+    }
 }

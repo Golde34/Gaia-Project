@@ -15,4 +15,6 @@ public interface UserLLMModelStore {
 
     void deleteById(Long id);
 
+    Optional<UserLLMModel> findActiveModelByUserId(Long userId, String model);
+
 }

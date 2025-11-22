@@ -5,12 +5,14 @@ import java.util.Optional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import auth.authentication_service.core.domain.entities.LLMModel;
 import auth.authentication_service.core.domain.entities.UserLLMModel;
 import auth.authentication_service.core.domain.enums.ResponseEnum;
 import auth.authentication_service.core.port.store.UserLLMModelStore;
 import auth.authentication_service.core.services.interfaces.UserLLMModelService;
 import auth.authentication_service.kernel.utils.BCryptPasswordEncoder;
 import auth.authentication_service.kernel.utils.GenericResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -80,15 +82,43 @@ public class UserLLMModelServiceImpl implements UserLLMModelService {
     @Override
     public ResponseEntity<?> delete(Long userModelId) {
         try {
-            userLLMModelStore.deleteById(userModelId); 
+            userLLMModelStore.deleteById(userModelId);
 
             return genericResponse.matchingResponseMessage(
-                    new GenericResponse<>("Delete user LLM model successfully", ResponseEnum.msg200)); 
+                    new GenericResponse<>("Delete user LLM model successfully", ResponseEnum.msg200));
         } catch (Exception e) {
             log.error("Error deleting user LLM model: {}", e.getMessage());
             return genericResponse.matchingResponseMessage(
                     new GenericResponse<>("Delete user LLM model failed: %s".formatted(e.getMessage()),
-                            ResponseEnum.msg500)); 
+                            ResponseEnum.msg500));
+        }
+    }
+
+    @Override
+    public Optional<UserLLMModel> getActiveLLMModelByUserId(Long userId, LLMModel activeModel) {
+        return userLLMModelStore.findActiveModelByUserId(userId, activeModel.getModelName());
+    }
+
+    @Transactional
+    public ResponseEntity<?> findOtherActiveModel(Long userId, Long modelId, LLMModel activeModel) {
+        try {
+            var errorModel = userLLMModelStore.findById(modelId);
+            if (errorModel.isPresent()) {
+                errorModel.get().setActiveStatus(false);
+                userLLMModelStore.save(errorModel.get());
+            }
+            var otherActiveModel = this.getActiveLLMModelByUserId(userId, activeModel);
+            if (otherActiveModel.isEmpty()) {
+                return genericResponse.matchingResponseMessage(
+                        new GenericResponse<>(null, ResponseEnum.msg200));
+            }
+            return genericResponse.matchingResponseMessage(
+                    new GenericResponse<>(otherActiveModel.get(), ResponseEnum.msg200));
+        } catch (Exception e) {
+            log.error("Error fetching other active user LLM model: {}", e.getMessage());
+            return genericResponse.matchingResponseMessage(
+                    new GenericResponse<>("Get other active user LLM model failed: %s".formatted(e.getMessage()),
+                            ResponseEnum.msg500));
         }
     }
 }

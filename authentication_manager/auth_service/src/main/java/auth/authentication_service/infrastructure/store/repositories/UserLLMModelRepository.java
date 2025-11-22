@@ -18,4 +18,8 @@ public interface UserLLMModelRepository extends JpaRepository<UserLLMModel, Long
 
     Optional<UserLLMModel> findById(long id);
 
+    @Query("SELECT u FROM UserLLMModel u " +
+            "WHERE u.userId = :userId AND u.userModel = :userModel AND u.activeStatus = true " +
+            "ORDER BY u.createdDate DESC LIMIT 1")
+    Optional<UserLLMModel> findByUserIdAndIsActiveTrue(Long userId, String userModel);
 }

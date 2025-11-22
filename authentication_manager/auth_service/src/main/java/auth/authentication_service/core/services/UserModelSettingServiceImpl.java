@@ -3,6 +3,8 @@ package auth.authentication_service.core.services;
 import java.util.ArrayList;
 import java.util.List;
 
+import auth.authentication_service.core.domain.dto.response.UserModelResponse;
+import auth.authentication_service.core.domain.entities.UserLLMModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,7 @@ import auth.authentication_service.core.domain.entities.User;
 import auth.authentication_service.core.domain.enums.ResponseEnum;
 import auth.authentication_service.core.port.store.LLMModelStore;
 import auth.authentication_service.core.port.store.UserCRUDStore;
+import auth.authentication_service.core.services.interfaces.UserLLMModelService;
 import auth.authentication_service.core.services.interfaces.UserModelSettingService;
 import auth.authentication_service.kernel.utils.GenericResponse;
 import auth.authentication_service.kernel.utils.ResponseUtils;
@@ -24,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class UserModelSettingServiceImpl implements UserModelSettingService {
 
+    private final UserLLMModelService userLLMModelService;
     private final LLMModelStore llmModelStore;
     private final UserCRUDStore userStore;
 
@@ -47,7 +51,7 @@ public class UserModelSettingServiceImpl implements UserModelSettingService {
     @Override
     public ResponseEntity<?> updateModelSetting(UpdateUserModelRequest updateUserModelRequest) {
         try {
-            User user = userStore.findUserById(updateUserModelRequest.getUserId()); 
+            User user = userStore.findUserById(updateUserModelRequest.getUserId());
             LLMModel model = llmModelStore.findModelById(updateUserModelRequest.getModelId());
             List<LLMModel> updateModels = new ArrayList<>(user.getLlmModels());
             updateModels.clear();
@@ -55,7 +59,7 @@ public class UserModelSettingServiceImpl implements UserModelSettingService {
             user.setLlmModels(updateModels);
             userStore.save(user);
             return genericResponse.matchingResponseMessage(
-                new GenericResponse<>("Save user model successfully", ResponseEnum.msg200));
+                    new GenericResponse<>("Save user model successfully", ResponseEnum.msg200));
         } catch (Exception e) {
             log.error("Error updating model settings: {}", e.getMessage());
             GenericResponse<String> response = responseUtils.returnMessage(
@@ -71,7 +75,20 @@ public class UserModelSettingServiceImpl implements UserModelSettingService {
         try {
             User user = userStore.findUserById(userId);
             LLMModel model = user.getLlmModels().stream().findFirst().orElse(null);
-            return genericResponse.matchingResponseMessage(new GenericResponse<>(model, ResponseEnum.msg200));
+            var userLLMModel = userLLMModelService.getActiveLLMModelByUserId(userId, model);
+            if (userLLMModel.isEmpty()) {
+                return genericResponse.matchingResponseMessage(
+                        new GenericResponse<>(null, ResponseEnum.msg200));
+            }
+            UserLLMModel present = userLLMModel.get();
+            var response = UserModelResponse.builder()
+                    .id(present.getId())
+                    .modelName(present.getUserModel())
+                    .modelKey(present.getOriginKey())
+                    .userId(present.getUserId())
+                    .build();
+            return genericResponse.matchingResponseMessage(
+                    new GenericResponse<>(response, ResponseEnum.msg200));
         } catch (Exception e) {
             log.error("Error fetching model by user: {}", e.getMessage());
             GenericResponse<String> response = responseUtils.returnMessage(
