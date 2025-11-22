@@ -19,6 +19,8 @@ import {
     TextInput,
     Title,
 } from "@tremor/react";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { DotsVerticalIcon } from "@heroicons/react/solid";
 import { getUserLLMModels, upsertUserLLMModel } from "../../api/store/actions/auth_service/user.actions";
 
 const maskKey = (key) => {
@@ -50,20 +52,24 @@ const CustomModelSetting = ({ allModels = [] }) => {
         activeStatus: true,
     });
 
-    const didFetch = useRef(false);
-    const findUserLLMModelInfo = useCallback(() => {
-        if (didFetch.current) return;
-        didFetch.current = true;
+    const initialFetchDone = useRef(false);
+
+    const loadUserLLMModelsOnce = useCallback(() => {
+        if (initialFetchDone.current) return;
+        initialFetchDone.current = true;
         dispatch(getUserLLMModels());
     }, [dispatch]);
 
+    const refreshUserLLMModels = useCallback(() => {
+        dispatch(getUserLLMModels());
+    }, [dispatch]);
     useEffect(() => {
-        findUserLLMModelInfo();
-    }, [findUserLLMModelInfo]);
+        loadUserLLMModelsOnce();
+    }, [loadUserLLMModelsOnce]);
 
     useEffect(() => {
         if (upsertSuccess) {
-            findUserLLMModelInfo();
+            refreshUserLLMModels();
             setNewUserModelName("");
             setNewSelectedModelName("");
             setNewModelKey("");
@@ -77,7 +83,7 @@ const CustomModelSetting = ({ allModels = [] }) => {
             });
             setSaveMessage("Model saved successfully.");
         }
-    }, [upsertSuccess, findUserLLMModelInfo]);
+    }, [upsertSuccess, refreshUserLLMModels]);
 
     useEffect(() => {
         if (upsertError) {
@@ -168,6 +174,54 @@ const CustomModelSetting = ({ allModels = [] }) => {
         );
     };
 
+    const handleDeleteModelKey = (model) => {
+        setFormError("");
+        setSaveMessage("");
+        dispatch(
+            upsertUserLLMModel({
+                id: model.id,
+                userModel: model.userModel,
+                modelName: model.modelName,
+                modelKey: "",
+                activeStatus: model.activeStatus,
+            }),
+        );
+    };
+
+    const renderActionMenu = (model) => (
+        <Menu as="div" className="relative inline-block text-left">
+            <MenuButton className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none">
+                <DotsVerticalIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            </MenuButton>
+            <MenuItems className="absolute right-0 mt-2 w-40 origin-top-right rounded-md bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                <MenuItem>
+                    {({ active }) => (
+                        <button
+                            type="button"
+                            onClick={() => startEditingModel(model)}
+                            className={`${active ? "bg-gray-100 dark:bg-slate-700" : ""
+                                } block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200`}
+                        >
+                            Update
+                        </button>
+                    )}
+                </MenuItem>
+                <MenuItem>
+                    {({ active }) => (
+                        <button
+                            type="button"
+                            onClick={() => handleDeleteModelKey(model)}
+                            className={`${active ? "bg-gray-100 dark:bg-slate-700" : ""
+                                } block w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400`}
+                        >
+                            Delete key
+                        </button>
+                    )}
+                </MenuItem>
+            </MenuItems>
+        </Menu>
+    );
+
     return (
         <Card>
             <Flex justifyContent="center" alignItems="center">
@@ -220,14 +274,14 @@ const CustomModelSetting = ({ allModels = [] }) => {
                                                     />
                                                 ) : (
                                                     <Text className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                                                        {model.modelName|| "-"}
+                                                        {model.modelName || "-"}
                                                     </Text>
                                                 )}
                                             </TableCell>
                                             <TableCell className="align-top">
                                                 {isEditing ? (
                                                     <Select
-                                                        value={editingValues.userModel|| ""}
+                                                        value={editingValues.userModel || ""}
                                                         onValueChange={(value) =>
                                                             setEditingValues((prev) => ({
                                                                 ...prev,
@@ -244,7 +298,7 @@ const CustomModelSetting = ({ allModels = [] }) => {
                                                     </Select>
                                                 ) : (
                                                     <Text className="font-medium text-tremor-content dark:text-dark-tremor-content">
-                                                        {model.userModel|| "-"}
+                                                        {model.userModel || "-"}
                                                     </Text>
                                                 )}
                                             </TableCell>
@@ -268,19 +322,18 @@ const CustomModelSetting = ({ allModels = [] }) => {
                                             </TableCell>
                                             <TableCell className="align-top">
                                                 {isEditing ? (
-                                                    <label className="flex items-center gap-2 text-sm text-tremor-content dark:text-dark-tremor-content">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={editingValues.activeStatus}
-                                                            onChange={(e) =>
-                                                                setEditingValues((prev) => ({
-                                                                    ...prev,
-                                                                    activeStatus: e.target.checked,
-                                                                }))
-                                                            }
-                                                        />
-                                                        Mark as active
-                                                    </label>
+                                                    <Select
+                                                        value={editingValues.activeStatus ? "active" : "inactive"}
+                                                        onValueChange={(value) =>
+                                                            setEditingValues((prev) => ({
+                                                                ...prev,
+                                                                activeStatus: value === "active",
+                                                            }))
+                                                        }
+                                                    >
+                                                        <SelectItem value="active">Active</SelectItem>
+                                                        <SelectItem value="inactive">Inactive</SelectItem>
+                                                    </Select>
                                                 ) : model.activeStatus ? (
                                                     <Badge color="emerald">Active</Badge>
                                                 ) : (
@@ -308,13 +361,7 @@ const CustomModelSetting = ({ allModels = [] }) => {
                                                         </Button>
                                                     </Flex>
                                                 ) : (
-                                                    <Button
-                                                        variant="secondary"
-                                                        color="indigo"
-                                                        onClick={() => startEditingModel(model)}
-                                                    >
-                                                        Update
-                                                    </Button>
+                                                    renderActionMenu(model)
                                                 )}
                                             </TableCell>
                                         </TableRow>
