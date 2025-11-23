@@ -6,7 +6,6 @@ import {
     Badge,
     Button,
     Card,
-    Divider,
     Flex,
     Table,
     TableBody,
@@ -146,14 +145,15 @@ const LLMModelSettingScreen = (props) => {
             ) : error ? (
                 <MessageBox message={error}></MessageBox>
             ) : llmModelInfo.length > 0 ? (
-                <Card>
-                    <Flex justifyContent="center" alignItems="center">
-                        <Title className="text-white text-xl font-bold">Choose your LLM Model</Title>
-                    </Flex>
-                    {renderModelSelector()}
-                    <Divider className="my-6" />
+                <>
+                    <Card className="mb-4">
+                        <Flex justifyContent="center" alignItems="center">
+                            <Title className="text-white text-xl font-bold">Choose your LLM Model</Title>
+                        </Flex>
+                        {renderModelSelector()}
+                    </Card>
                     <CustomModelSetting allModels={llmModelInfo} user={user} />
-                </Card>
+                </>
             ) : (
                 <Text>No model is available right now.</Text>
             )}

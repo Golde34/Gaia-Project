@@ -112,3 +112,11 @@ func (s *UserService) UpsertUserModels(input request_dtos.UpsertUserLLMModelRequ
 	}
 	return userModel, nil
 }
+
+func (s *UserService) DeleteUserModel(id string) error {
+	err := client.IUserAdapter(&adapter.UserAdapter{}).DeleteUserModel(id)
+	if err != nil {
+		return err
+	}
+	return nil
+}

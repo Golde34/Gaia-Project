@@ -12,6 +12,8 @@ import (
 	"middleware_loader/kernel/utils"
 	"middleware_loader/ui/controller_services/controller_utils"
 	"net/http"
+
+	"github.com/go-chi/chi"
 )
 
 func GetAllUsers(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
@@ -81,7 +83,7 @@ func UpdateUserSetting(w http.ResponseWriter, r *http.Request, userService *serv
 }
 
 func GetAllModels(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
-	allModels, err := services.NewUserService().GetAllModels()
+	allModels, err := userService.GetAllModels()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -109,7 +111,7 @@ func UpdateUserModel(w http.ResponseWriter, r *http.Request, userService *servic
 
 	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	input := mapper.UpdateUserModelRequestDTOMapper(body, userId)
-	updateUserModel, err := services.NewUserService().UpdateUserModel(input)
+	updateUserModel, err := userService.UpdateUserModel(input)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -125,7 +127,7 @@ func UpdateUserModel(w http.ResponseWriter, r *http.Request, userService *servic
 
 func GetUserModels(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
 	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
-	userModels, err := services.NewUserService().GetUserModels(userId)
+	userModels, err := userService.GetUserModels(userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -157,7 +159,7 @@ func UpsertUserModels(w http.ResponseWriter, r *http.Request, userService *servi
 
 	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 	input := mapper.UpsertUserModelRequestDTOMapper(body, userId)
-	updateUserModel, err := services.NewUserService().UpsertUserModels(input)
+	updateUserModel, err := userService.UpsertUserModels(input)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -165,6 +167,22 @@ func UpsertUserModels(w http.ResponseWriter, r *http.Request, userService *servi
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(map[string]interface{}{"message": updateUserModel}); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}
+
+func DeleteUserModel(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
+	id := chi.URLParam(r, "id")
+	err := userService.DeleteUserModel(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{"message": "User model deleted successfully"}); err != nil {
 		log.Printf("Error encoding response: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

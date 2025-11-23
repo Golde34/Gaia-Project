@@ -58,4 +58,9 @@ public class UserController {
     public ResponseEntity<?> upsertLLMModel(@RequestBody UserLLMModel userLLMModel) {
         return userLLMModelService.upsert(userLLMModel);
     }
+
+    @DeleteMapping("/llm-models/{id}")
+    public ResponseEntity<?> deleteLLMModel(@PathVariable Long id) {
+        return userLLMModelService.delete(id);
+    }
 }

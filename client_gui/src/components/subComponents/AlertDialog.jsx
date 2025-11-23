@@ -40,6 +40,10 @@ export const AlertDialog = (props) => {
     };
 
     const actionComponent = (action, elementName) => {
+        if (props.onConfirm) {
+            props.onConfirm();
+            return;
+        }
         if (actionsMap[action]) {
             actionsMap[action]();
             window.location.reload();
@@ -51,7 +55,7 @@ export const AlertDialog = (props) => {
     return (
         <>
             <button
-                className="text-black px-6 py-3"
+                className={`text-black px-6 py-3 ${props.buttonClassName || ""}`}
                 type="button"
                 onClick={openModal}
             >

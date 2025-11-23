@@ -2,6 +2,7 @@ package auth.authentication_service.core.domain.entities;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -36,6 +37,9 @@ public class UserLLMModel {
     private String modelKey;
 
     private Boolean activeStatus;
+
+    @JsonIgnore
+    private String originKey;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

@@ -1,4 +1,5 @@
 import { 
+    DELETE_USER_LLM_MODEL_FAILURE, DELETE_USER_LLM_MODEL_REQUEST, DELETE_USER_LLM_MODEL_SUCCESS,
     GET_USER_LLM_MODELS_FAILURE, GET_USER_LLM_MODELS_REQUEST, GET_USER_LLM_MODELS_SUCCESS,
     LLM_MODEL_LIST_FAILURE, LLM_MODEL_LIST_REQUEST, LLM_MODEL_LIST_SUCCESS, 
     UPSERT_USER_LLM_MODEL_FAILURE, UPSERT_USER_LLM_MODEL_REQUEST, UPSERT_USER_LLM_MODEL_SUCCESS, 
@@ -115,6 +116,20 @@ export const upsertUserLLMModelReducer = (
         case UPSERT_USER_LLM_MODEL_SUCCESS:
             return { loading: false, success: true };
         case UPSERT_USER_LLM_MODEL_FAILURE:
+            return { loading: false, error: action.payload };
+        default:
+            return state;
+    }
+}
+
+export const deleteUserLLMModelReducer = (
+    state = {}, action) => {
+    switch (action.type) {
+        case DELETE_USER_LLM_MODEL_REQUEST:
+            return { loading: true };
+        case DELETE_USER_LLM_MODEL_SUCCESS:
+            return { loading: false, success: true };
+        case DELETE_USER_LLM_MODEL_FAILURE:
             return { loading: false, error: action.payload };
         default:
             return state;

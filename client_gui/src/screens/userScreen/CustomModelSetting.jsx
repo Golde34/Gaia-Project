@@ -19,7 +19,10 @@ import {
     TextInput,
     Title,
 } from "@tremor/react";
-import { getUserLLMModels, upsertUserLLMModel } from "../../api/store/actions/auth_service/user.actions";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { DotsVerticalIcon } from "@heroicons/react/solid";
+import { deleteUserLLMModel, getUserLLMModels, upsertUserLLMModel } from "../../api/store/actions/auth_service/user.actions";
+import { AlertDialog } from "../../components/subComponents/AlertDialog";
 
 const maskKey = (key) => {
     if (!key) return "";
@@ -29,12 +32,15 @@ const maskKey = (key) => {
 
 const CustomModelSetting = ({ allModels = [] }) => {
     const dispatch = useDispatch();
+    const [showKeyInfo, setShowKeyInfo] = useState(false);
 
     const userLlmModels = useSelector((state) => state.userLLMModels);
     const { loading, error, userLLMModels = [] } = userLlmModels;
 
     const upsertState = useSelector((state) => state.upsertUserLLMModel);
     const { success: upsertSuccess, error: upsertError, loading: upsertLoading } = upsertState;
+    const deleteState = useSelector((state) => state.deleteUserLLMModel);
+    const { success: deleteSuccess, error: deleteError } = deleteState;
 
     const [newUserModelName, setNewUserModelName] = useState("");
     const [newSelectedModelName, setNewSelectedModelName] = useState("");
@@ -50,20 +56,24 @@ const CustomModelSetting = ({ allModels = [] }) => {
         activeStatus: true,
     });
 
-    const didFetch = useRef(false);
-    const findUserLLMModelInfo = useCallback(() => {
-        if (didFetch.current) return;
-        didFetch.current = true;
+    const initialFetchDone = useRef(false);
+
+    const loadUserLLMModelsOnce = useCallback(() => {
+        if (initialFetchDone.current) return;
+        initialFetchDone.current = true;
         dispatch(getUserLLMModels());
     }, [dispatch]);
 
+    const refreshUserLLMModels = useCallback(() => {
+        dispatch(getUserLLMModels());
+    }, [dispatch]);
     useEffect(() => {
-        findUserLLMModelInfo();
-    }, [findUserLLMModelInfo]);
+        loadUserLLMModelsOnce();
+    }, [loadUserLLMModelsOnce]);
 
     useEffect(() => {
         if (upsertSuccess) {
-            findUserLLMModelInfo();
+            refreshUserLLMModels();
             setNewUserModelName("");
             setNewSelectedModelName("");
             setNewModelKey("");
@@ -77,7 +87,7 @@ const CustomModelSetting = ({ allModels = [] }) => {
             });
             setSaveMessage("Model saved successfully.");
         }
-    }, [upsertSuccess, findUserLLMModelInfo]);
+    }, [upsertSuccess, refreshUserLLMModels]);
 
     useEffect(() => {
         if (upsertError) {
@@ -85,16 +95,36 @@ const CustomModelSetting = ({ allModels = [] }) => {
         }
     }, [upsertError]);
 
+    useEffect(() => {
+        if (deleteSuccess) {
+            refreshUserLLMModels();
+            setEditingModelId(null);
+            setEditingValues({
+                userModel: "",
+                modelName: "",
+                modelKey: "",
+                activeStatus: true,
+            });
+            setSaveMessage("Model deleted successfully.");
+        }
+    }, [deleteSuccess, refreshUserLLMModels]);
+
+    useEffect(() => {
+        if (deleteError) {
+            setSaveMessage("");
+        }
+    }, [deleteError]);
+
     const sortedUserModels = useMemo(() => {
         if (!userLLMModels || userLLMModels.length == 0) return [];
         return [...userLLMModels].sort((a, b) => Number(b.activeStatus) - Number(a.activeStatus));
     }, [userLLMModels]);
 
     const llmModelOptions = useMemo(() => {
-        const names = new Set((allModels ?? []).map((model) => model.modelName));
+        const names = new Set((allModels ?? []).map((model) => model.userModel));
         (userLLMModels ?? []).forEach((model) => {
-            if (model?.modelName) {
-                names.add(model.modelName);
+            if (model?.userModel) {
+                names.add(model.userModel);
             }
         });
         return Array.from(names);
@@ -168,6 +198,47 @@ const CustomModelSetting = ({ allModels = [] }) => {
         );
     };
 
+    const handleDeleteModelKey = (model) => {
+        setFormError("");
+        setSaveMessage("");
+        dispatch(deleteUserLLMModel(model.id));
+    };
+
+    const renderActionMenu = (model) => (
+        <Menu as="div" className="relative inline-block text-left">
+            <MenuButton className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none">
+                <DotsVerticalIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            </MenuButton>
+            <MenuItems className="absolute right-0 mt-2 w-40 origin-top-right rounded-md bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                <MenuItem>
+                    {({ active }) => (
+                        <button
+                            type="button"
+                            onClick={() => startEditingModel(model)}
+                            className={`${active ? "bg-gray-100 dark:bg-slate-700" : ""
+                                } block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200`}
+                        >
+                            Update
+                        </button>
+                    )}
+                </MenuItem>
+                <MenuItem>
+                    {({ active }) => (
+                        <AlertDialog
+                            component="Delete"
+                            action="Delete"
+                            elementName="User model"
+                            elementId={model.id}
+                            onConfirm={() => handleDeleteModelKey(model)}
+                            buttonClassName={`${active ? "bg-gray-100 dark:bg-slate-700" : ""
+                                } block w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400`}
+                        />
+                    )}
+                </MenuItem>
+            </MenuItems>
+        </Menu>
+    );
+
     return (
         <Card>
             <Flex justifyContent="center" alignItems="center">
@@ -178,6 +249,7 @@ const CustomModelSetting = ({ allModels = [] }) => {
                 <Subtitle className="mb-2">Manage your models</Subtitle>
                 {formError && <MessageBox message={formError} />}
                 {upsertError && <MessageBox message={upsertError} />}
+                {deleteError && <MessageBox message={deleteError} />}
                 {saveMessage && <Text className="text-emerald-500">{saveMessage}</Text>}
                 {loading ? (
                     <Text>Loading...</Text>
@@ -189,7 +261,23 @@ const CustomModelSetting = ({ allModels = [] }) => {
                             <TableRow className="border-b border-tremor-border dark:border-dark-tremor-border">
                                 <TableHeaderCell>User model name</TableHeaderCell>
                                 <TableHeaderCell>LLM model</TableHeaderCell>
-                                <TableHeaderCell>Key</TableHeaderCell>
+                                <TableHeaderCell>
+                                    <div className="relative inline-flex items-center">
+                                        <span>Key</span>
+                                        <button
+                                            type="button"
+                                            className="ml-2 h-5 w-5 rounded-full border border-slate-400 text-xs text-slate-500 dark:text-slate-300"
+                                            onClick={() => setShowKeyInfo((prev) => !prev)}
+                                        >
+                                            ?
+                                        </button>
+                                        {showKeyInfo && (
+                                            <div className="absolute left-0 top-full z-20 mt-2 rounded-md bg-slate-800 px-3 py-2 text-xs text-white shadow-lg">
+                                                API key is encoded before storing to help keep it secure and only used when authenticating LLM requests.
+                                            </div>
+                                        )}
+                                    </div>
+                                </TableHeaderCell>
                                 <TableHeaderCell>Status</TableHeaderCell>
                                 <TableHeaderCell>Actions</TableHeaderCell>
                             </TableRow>
@@ -220,14 +308,14 @@ const CustomModelSetting = ({ allModels = [] }) => {
                                                     />
                                                 ) : (
                                                     <Text className="font-medium text-tremor-content-strong dark:text-dark-tremor-content-strong">
-                                                        {model.modelName|| "-"}
+                                                        {model.modelName || "-"}
                                                     </Text>
                                                 )}
                                             </TableCell>
                                             <TableCell className="align-top">
                                                 {isEditing ? (
                                                     <Select
-                                                        value={editingValues.userModel|| ""}
+                                                        value={editingValues.userModel || ""}
                                                         onValueChange={(value) =>
                                                             setEditingValues((prev) => ({
                                                                 ...prev,
@@ -244,7 +332,7 @@ const CustomModelSetting = ({ allModels = [] }) => {
                                                     </Select>
                                                 ) : (
                                                     <Text className="font-medium text-tremor-content dark:text-dark-tremor-content">
-                                                        {model.userModel|| "-"}
+                                                        {model.userModel || "-"}
                                                     </Text>
                                                 )}
                                             </TableCell>
@@ -268,19 +356,18 @@ const CustomModelSetting = ({ allModels = [] }) => {
                                             </TableCell>
                                             <TableCell className="align-top">
                                                 {isEditing ? (
-                                                    <label className="flex items-center gap-2 text-sm text-tremor-content dark:text-dark-tremor-content">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={editingValues.activeStatus}
-                                                            onChange={(e) =>
-                                                                setEditingValues((prev) => ({
-                                                                    ...prev,
-                                                                    activeStatus: e.target.checked,
-                                                                }))
-                                                            }
-                                                        />
-                                                        Mark as active
-                                                    </label>
+                                                    <Select
+                                                        value={editingValues.activeStatus ? "active" : "inactive"}
+                                                        onValueChange={(value) =>
+                                                            setEditingValues((prev) => ({
+                                                                ...prev,
+                                                                activeStatus: value === "active",
+                                                            }))
+                                                        }
+                                                    >
+                                                        <SelectItem value="active">Active</SelectItem>
+                                                        <SelectItem value="inactive">Inactive</SelectItem>
+                                                    </Select>
                                                 ) : model.activeStatus ? (
                                                     <Badge color="emerald">Active</Badge>
                                                 ) : (
@@ -308,13 +395,7 @@ const CustomModelSetting = ({ allModels = [] }) => {
                                                         </Button>
                                                     </Flex>
                                                 ) : (
-                                                    <Button
-                                                        variant="secondary"
-                                                        color="indigo"
-                                                        onClick={() => startEditingModel(model)}
-                                                    >
-                                                        Update
-                                                    </Button>
+                                                    renderActionMenu(model)
                                                 )}
                                             </TableCell>
                                         </TableRow>
