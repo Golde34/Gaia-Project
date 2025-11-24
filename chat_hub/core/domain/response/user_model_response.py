@@ -13,7 +13,3 @@ class UserModelResponse(BaseModel):
         "alias_generator": to_camel,
         "populate_by_name": True
     }
-
-class SystemModelInfo(BaseModel):
-    model_name: str
-    model_key: str

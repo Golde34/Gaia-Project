@@ -2,7 +2,8 @@ from datetime import datetime, timezone
 import json
 
 from core.domain.enums.redis_enum import RedisEnum
-from core.domain.response.user_model_response import SystemModelInfo, UserModelResponse
+from core.domain.request.query_request import LLMModel
+from core.domain.response.user_model_response import UserModelResponse
 from infrastructure.client.auth_service_client import auth_service_client
 from infrastructure.redis.redis import get_key, set_key
 from kernel.config.config import LLM_DEFAULT_MODEL, SYSTEM_API_KEY
@@ -39,7 +40,7 @@ def _build_access_token_redis(access_token: str, token_response: dict):
     set_key(access_token, token_response_str, int(ttl))
 
 
-async def get_user_model(user_id: int) -> SystemModelInfo:
+async def get_user_model(user_id: int) -> LLMModel:
     """
     Get user's LLM model configuration. Returns user's custom model if valid,
     otherwise falls back to system default model.
@@ -48,12 +49,12 @@ async def get_user_model(user_id: int) -> SystemModelInfo:
         user_id: User identifier
         
     Returns:
-        SystemModelInfo: Always returns a SystemModelInfo object, never a string
+        LLMModel: Always returns a LLMModel object, never a string
     """
     user_model_key = f"{RedisEnum.USER_LLM_MODEL.value}:{user_id}"
     cached_model = get_key(user_model_key)
     if cached_model:
-        return SystemModelInfo.model_validate(json.loads(cached_model))
+        return LLMModel.model_validate(json.loads(cached_model))
 
     user_model = await auth_service_client.get_user_llm_model_config(user_id)
     system_model = _create_system_model(user_model, user_id)
@@ -62,15 +63,15 @@ async def get_user_model(user_id: int) -> SystemModelInfo:
     return system_model
 
 
-def _create_system_model(user_model: UserModelResponse | None, user_id: int) -> SystemModelInfo:
-    """Create SystemModelInfo from user model or fallback to default."""
+def _create_system_model(user_model: UserModelResponse | None, user_id: int) -> LLMModel:
+    """Create LLMModel from user model or fallback to default."""
     if _is_valid_user_model(user_model, user_id):
-        return SystemModelInfo(
+        return LLMModel(
             model_name=user_model.model_name,
             model_key=user_model.model_key
         )
     
-    return SystemModelInfo(
+    return LLMModel(
         model_name=LLM_DEFAULT_MODEL,
         model_key=SYSTEM_API_KEY
     )
@@ -86,6 +87,6 @@ def _is_valid_user_model(user_model: UserModelResponse | None, user_id: int) -> 
     )
 
 
-def _cache_user_model(cache_key: str, system_model: SystemModelInfo, ttl: int = 3600) -> None:
+def _cache_user_model(cache_key: str, system_model: LLMModel, ttl: int = 3600) -> None:
     """Cache the system model configuration."""
     set_key(cache_key, json.dumps(system_model.model_dump()), ttl)
