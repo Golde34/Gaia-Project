@@ -1,10 +1,11 @@
 import datetime
+from pyexpat import model
 import uuid
 
 from core.domain.entities.recursive_summary import RecursiveSummary
 from core.domain.enums.redis_enum import RedisEnum
 from core.domain.request.chat_hub_request import RecentHistoryRequest
-from core.domain.request.query_request import QueryRequest
+from core.domain.request.query_request import LLMModel, QueryRequest
 from core.domain.response.model_output_schema import LongTermMemorySchema
 from core.prompts.system_prompt import CHAT_HISTORY_PROMPT, LONGTERM_MEMORY_PROMPT, RECURSIVE_SUMMARY_PROMPT
 from core.validation import milvus_validation
@@ -101,9 +102,8 @@ async def reflection_chat_history(recent_history: str, recursive_summary: str, l
         long_term_memory=long_term_memory,
         current_query=query.query,
     )
-    model_name = config.LLM_DEFAULT_MODEL
-    function = await llm_models.get_model_generate_content(model_name, query.user_id)
-    new_query = function(prompt=new_prompt, model_name=model_name)
+    function = await llm_models.get_model_generate_content(query.model, query.user_id)
+    new_query = function(prompt=new_prompt, model=query.model)
     print(f"New query generated: {new_query}")
     return new_query
 
@@ -127,11 +127,13 @@ async def update_recursive_summary(user_id: int, dialogue_id: str) -> None:
         if not recent_history:
             recent_history = "No recent history available."
 
-        prompt = RECURSIVE_SUMMARY_PROMPT.format(
-            recent_history=recent_history)
-        model_name = config.LLM_DEFAULT_MODEL
-        function = await llm_models.get_model_generate_content(model_name, user_id)
-        recursive_summary_str = function(prompt=prompt, model_name=model_name)
+        prompt = RECURSIVE_SUMMARY_PROMPT.format(recent_history=recent_history)
+        model: LLMModel = LLMModel(
+            model_name=config.LLM_DEFAULT_MODEL,
+            model_key=config.SYSTEM_API_KEY
+        )
+        function = await llm_models.get_model_generate_content(model=model, user_id=user_id)
+        recursive_summary_str = function(prompt=prompt, model=model)
         print(f"Recursive Summary: {recursive_summary_str}")
 
         recursive_summary = RecursiveSummary(
@@ -175,10 +177,13 @@ async def update_long_term_memory(user_id: int, dialogue_id: str) -> None:
 
         prompt = LONGTERM_MEMORY_PROMPT.format(
             recent_history=recent_history)
-        model_name = config.LLM_DEFAULT_MODEL
-        function = await llm_models.get_model_generate_content(model_name, user_id)
+        model: LLMModel = LLMModel(
+            model_name=config.LLM_DEFAULT_MODEL,
+            model_key=config.SYSTEM_API_KEY
+        )
+        function = await llm_models.get_model_generate_content(model=model, user_id=user_id)
         long_term_memory = function(
-            prompt=prompt, model_name=model_name, dto=LongTermMemorySchema)
+            prompt=prompt, model=model, dto=LongTermMemorySchema)
         print(f"Long Term Memory: {long_term_memory}")
 
         metadata = []

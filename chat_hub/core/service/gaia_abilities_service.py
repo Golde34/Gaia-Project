@@ -1,5 +1,6 @@
+from pyexpat import model
 from core.domain.enums import enum
-from core.domain.request.query_request import QueryRequest
+from core.domain.request.query_request import LLMModel, QueryRequest
 from core.prompts.abilities_prompt import CHITCHAT_PROMPT, CHITCHAT_WITH_HISTORY_PROMPT
 from core.service import chat_service
 from core.service.orchestrator_service import orchestrator_service
@@ -54,10 +55,15 @@ async def chitchat(query: QueryRequest) -> str:
     """
     try:
         prompt = CHITCHAT_PROMPT.format(query=query.query)
-        if not query.model_name:
-            query.model_name = config.LLM_DEFAULT_MODEL
-        function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
-        response = function(prompt=prompt, model_name=query.model_name)
+        if not query.model:
+            model: LLMModel = LLMModel(
+                model_name=config.LLM_DEFAULT_MODEL,
+                model_key=config.SYSTEM_API_KEY
+            )
+        else:
+            model = query.model
+        function = await llm_models.get_model_generate_content(model=model, user_id=query.user_id)
+        response = function(prompt=prompt, model=model)
         print("Response:", response)
         return response
     except Exception as e:
@@ -82,8 +88,8 @@ async def chitchat_with_history(query: QueryRequest) -> str:
             recursive_summary=recursive_summary,
             long_term_memory=long_term_memory
         )
-        function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
-        response = function(prompt=prompt, model_name=query.model_name)
+        function = await llm_models.get_model_generate_content(model=query.model, user_id=query.user_id)
+        response = function(prompt=prompt, model=query.model)
         return response
     except Exception as e:
         raise e

@@ -2,6 +2,7 @@ import json
 from typing import List
 
 from core.domain.enums.enum import TAG_LIST, TagEnum
+from core.domain.request.query_request import LLMModel
 from core.domain.request.tag_schedule_task_request import TagScheduleTaskRequest
 from core.domain.response.tag_schedule_task_response import TagScheduleTaskResponse
 from core.prompts.task_tagging_prompt import TAG_SCHEDULE_TASK_PROMPT
@@ -18,10 +19,14 @@ async def tag_schedule_tasks(
         tasks_json=tasks_json, allowed_tags=", ".join(TAG_LIST)
     )
 
-    function = await llm_models.get_model_generate_content(
-        config.LLM_DEFAULT_MODEL, user_id=user_id, prompt=prompt
+    model: LLMModel = LLMModel(
+        model_name=config.LLM_DEFAULT_MODEL,
+        model_key=config.SYSTEM_API_KEY
     )
-    response = function(prompt=prompt, model_name=config.LLM_DEFAULT_MODEL)
+    function = await llm_models.get_model_generate_content(
+        model=model, user_id=user_id, prompt=prompt
+    )
+    response = function(prompt=prompt, model=model)
 
     try:
         parsed = parse_json_string(response)

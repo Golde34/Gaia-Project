@@ -1,13 +1,12 @@
 from google import genai
+from core.domain.request.query_request import LLMModel
 from fastapi import HTTPException
-from dotenv import load_dotenv
 from kernel.config import config
 
 
-load_dotenv()
 client = genai.Client(api_key=config.SYSTEM_API_KEY)
 
-def generate_content(prompt: str, model_name: str, dto: any = None) -> str:
+def generate_content(prompt: str, model: LLMModel, dto: any = None) -> str:
     """
     Generate content using the Gemini API.
     Args:
@@ -16,9 +15,14 @@ def generate_content(prompt: str, model_name: str, dto: any = None) -> str:
         str: The generated content.
     """
     try:
+        if model is not None:
+            user_client = genai.Client(api_key=model.model_key)
+        else:
+            user_client = client
+
         if dto:
-            response = client.models.generate_content(
-                model=model_name, 
+            response = user_client.models.generate_content(
+                model=model.model_name, 
                 contents=[prompt],
                 config={
                     'response_mime_type': 'application/json',
@@ -26,8 +30,8 @@ def generate_content(prompt: str, model_name: str, dto: any = None) -> str:
                 },
             )
         else:
-            response = client.models.generate_content(
-                model=model_name, 
+            response = user_client.models.generate_content(
+                model=model.model_name, 
                 contents=[prompt],
             )
 
@@ -35,4 +39,3 @@ def generate_content(prompt: str, model_name: str, dto: any = None) -> str:
         return response.text
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-

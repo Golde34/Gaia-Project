@@ -6,7 +6,7 @@ import json
 
 from infrastructure.client.schedule_plan_client import schedule_plan_client
 from core.domain.enums import enum, kafka_enum
-from core.domain.request.query_request import QueryRequest
+from core.domain.request.query_request import LLMModel, QueryRequest
 from core.domain.response.base_response import return_response
 from core.domain.response.model_output_schema import DailyRoutineSchema, TimeBubbleDTO
 from core.prompts import onboarding_prompt
@@ -19,9 +19,6 @@ from infrastructure.vector_db.milvus import milvus_db
 from kernel.config import llm_models, config
 from kernel.utils.parse_json import bytes_to_str, clean_json_string
 from kernel.utils.background_loop import log_background_task_error
-
-
-default_model = config.LLM_DEFAULT_MODEL
 
 
 async def handle_onboarding_action(query: QueryRequest, selection: str) -> dict:
@@ -64,10 +61,13 @@ async def _gaia_introduce(query: QueryRequest, recent_history: str, recursive_su
         long_term_memory=long_term_memory,
         query=query.query,
     )
+    model: LLMModel = LLMModel(
+        model_name=config.LLM_DEFAULT_MODEL,
+        model_key=config.SYSTEM_API_KEY
+    )
 
-    function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=prompt)
-    return function(prompt=prompt, model_name=default_model)
-
+    function = await llm_models.get_model_generate_content(model=model, user_id=query.user_id, prompt=prompt)
+    return function(prompt=prompt, model=model)
 
 async def _chitchat_with_history(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
     """
@@ -87,8 +87,15 @@ async def _chitchat_with_history(query: QueryRequest, recent_history: str, recur
             recursive_summary=recursive_summary,
             long_term_memory=long_term_memory
         )
-        function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
-        return function(prompt=prompt, model_name=query.model_name)
+        if query.model is None:
+            model: LLMModel = LLMModel(
+                model_name=config.LLM_DEFAULT_MODEL,
+                model_key=config.SYSTEM_API_KEY
+            )
+        else:
+            model = query.model
+        function = await llm_models.get_model_generate_content(model, query.user_id)
+        return function(prompt=prompt, model=model)
     except Exception as e:
         raise e
 
@@ -121,9 +128,15 @@ async def _prepare_calendar_readiness(query: QueryRequest, recent_history: str, 
         recent_history=recent_history,
         long_term_memory=long_term_memory
     )
-
-    function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
-    response = await asyncio.to_thread(function, prompt=prompt, model_name=query.model_name)
+    if query.model is None:
+        model: LLMModel = LLMModel(
+            model_name=config.LLM_DEFAULT_MODEL,
+            model_key=config.SYSTEM_API_KEY
+        )
+    else:
+        model = query.model
+    function = await llm_models.get_model_generate_content(model, query.user_id)
+    response = await asyncio.to_thread(function, prompt=prompt, model=model)
     json_response = clean_json_string(response)
 
     try:
@@ -178,8 +191,15 @@ async def _chitchat_and_register_calendar(query: QueryRequest, recent_history: s
             recursive_summary=recursive_summary,
             long_term_memory=long_term_memory
         )
-        function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
-        response = function(prompt=prompt, model_name=query.model_name)
+        if query.model is None:
+            model: LLMModel = LLMModel(
+                model_name=config.LLM_DEFAULT_MODEL,
+                model_key=config.SYSTEM_API_KEY
+            )
+        else:
+            model = query.model
+        function = await llm_models.get_model_generate_content(model, query.user_id)
+        response = function(prompt=prompt, model=model)
         return response
     except Exception as e:
         raise e
@@ -192,8 +212,12 @@ async def llm_generate_calendar_schedule(query: QueryRequest, recent_history: st
         long_term_memory=long_term_memory
     )
 
-    function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=prompt)
-    response = function(prompt=prompt, model_name=default_model)
+    model: LLMModel = LLMModel(
+        model_name=config.LLM_DEFAULT_MODEL,
+        model_key=config.SYSTEM_API_KEY
+    )
+    function = await llm_models.get_model_generate_content(model, query.user_id, prompt=prompt)
+    response = function(prompt=prompt, model=model)
     try:
         json_response = clean_json_string(response)
         parsed_response = json.loads(json_response)
