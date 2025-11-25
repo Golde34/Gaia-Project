@@ -57,9 +57,9 @@ async def select_ability(label_value: str, query: QueryRequest) -> tuple[str, bo
         prompt = CLASSIFY_PROMPT.format(
             query=query.query, tools=tools_string)
 
-        function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
-        classify_response = function(
-            prompt=prompt, model_name=query.model_name)
+        function = await llm_models.get_model_generate_content(
+            query.model, query.user_id, prompt=prompt)
+        classify_response = function(prompt=prompt, model=query.model)
 
         print("Classify Response:", classify_response)
         is_need_history = need_history(classify_response)

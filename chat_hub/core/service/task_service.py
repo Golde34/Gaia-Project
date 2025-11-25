@@ -20,8 +20,9 @@ async def create_task(query: QueryRequest) -> dict:
     try:
         datetime_parse_col = ['startDate', 'deadline']
         prompt = CREATE_TASK_PROMPT.format(query=query.query)
-        function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
-        response = function(prompt=prompt, model_name=query.model_name, dto=CreateTaskSchema)
+
+        function = await llm_models.get_model_generate_content(query.model, query.user_id)
+        response = function(prompt=prompt, model=query.model, dto=CreateTaskSchema)
         
         task_data = json.loads(response)
 
@@ -32,7 +33,7 @@ async def create_task(query: QueryRequest) -> dict:
         
         if datetime_values:
             optimized = await _optimize_datetime(
-                datetime_object=datetime_values, model_name=query.model_name, user_id=query.user_id
+                datetime_object=datetime_values, query=query
             )
 
             for key in list(optimized.keys()):
@@ -51,11 +52,11 @@ async def create_task(query: QueryRequest) -> dict:
     except Exception as e:
         raise e
 
-async def _optimize_datetime(datetime_object: dict, model_name: str, user_id: int) -> dict:
+async def _optimize_datetime(datetime_object: dict, query: QueryRequest) -> dict:
     try:
         prompt = PARSING_DATE_PROMPT.format(input=datetime_object)
-        function = await llm_models.get_model_generate_content(model_name, user_id)
-        response = function(prompt=prompt, model_name=model_name)
+        function = await llm_models.get_model_generate_content(query.model, query.user_id)
+        response = function(prompt=prompt, model=query.model)
         return parse_json_string(response)
     except Exception as e:
         raise e
@@ -72,8 +73,8 @@ async def create_task_result(query: QueryRequest) -> str:
     try:
         prompt = TASK_RESULT_PROMPT.format(query=query.query)
 
-        function = await llm_models.get_model_generate_content(query.model_name, query.user_id)
-        response = function(prompt=prompt, model_name=query.model_name, dto=CreateTaskResultSchema)
+        function = await llm_models.get_model_generate_content(query.model, query.user_id)
+        response = function(prompt=prompt, model=query.model, dto=CreateTaskResultSchema)
         return json.loads(response) 
     except Exception as e:
         raise e

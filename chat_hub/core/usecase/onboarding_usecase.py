@@ -1,11 +1,12 @@
 from datetime import datetime
+from turtle import mode
 from typing import Dict, Optional
 
 from langdetect import detect
 from core.domain.enums import enum
 from core.domain.response.base_response import return_response
 from core.domain.response.model_output_schema import DailyRoutineSchema
-from core.domain.request.query_request import QueryRequest
+from core.domain.request.query_request import LLMModel, QueryRequest
 from core.service import chat_service, onboarding_service
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
@@ -21,8 +22,7 @@ async def introduce(query: QueryRequest, guided_route: str) -> dict:
     Register task via an user's daily life summary
 
     Args:
-        query (str): onboarding user's daily summary
-
+        query (QueryRequest): onboarding user's daily summary
     Returns:
         user_daily_entries (dict):
     """
@@ -56,9 +56,15 @@ async def register_schedule_calendar(query: QueryRequest, guided_route: Optional
     try:
         selection_prompt = onboarding_prompt.CLASSIFY_REGISTER_CALENDAR_PROMPT.format(
             query=query.query)
-        function = await llm_models.get_model_generate_content(default_model, query.user_id, prompt=selection_prompt)
-        selection = function(prompt=selection_prompt,
-                             model_name=default_model).strip().lower()
+        if query.model is None:
+            model: LLMModel = LLMModel(
+                model_name=config.LLM_DEFAULT_MODEL,
+                model_key=config.SYSTEM_API_KEY
+            )
+        else:
+            model = query.model
+        function = await llm_models.get_model_generate_content(model, query.user_id, prompt=selection_prompt)
+        selection = function(prompt=selection_prompt, model=model) 
         print(f"Selected action: {selection}")
         return await onboarding_service.handle_onboarding_action(query, selection)
     except Exception as e:

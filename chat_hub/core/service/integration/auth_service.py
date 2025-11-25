@@ -51,16 +51,20 @@ async def get_user_model(user_id: int) -> LLMModel:
     Returns:
         LLMModel: Always returns a LLMModel object, never a string
     """
-    user_model_key = f"{RedisEnum.USER_LLM_MODEL.value}:{user_id}"
-    cached_model = get_key(user_model_key)
-    if cached_model:
-        return LLMModel.model_validate(json.loads(cached_model))
+    try:
+        user_model_key = f"{RedisEnum.USER_LLM_MODEL.value}:{user_id}"
+        cached_model = get_key(user_model_key)
+        if cached_model:
+            return LLMModel.model_validate(json.loads(cached_model))
 
-    user_model = await auth_service_client.get_user_llm_model_config(user_id)
-    system_model = _create_system_model(user_model, user_id)
-    _cache_user_model(user_model_key, system_model)
-    
-    return system_model
+        user_model = await auth_service_client.get_user_llm_model_config(user_id)
+        system_model = _create_system_model(user_model, user_id)
+        _cache_user_model(user_model_key, system_model)
+        
+        return system_model 
+    except Exception as e:
+        print(f"Error in get_user_model: {e}")
+        return None
 
 
 def _create_system_model(user_model: UserModelResponse | None, user_id: int) -> LLMModel:
