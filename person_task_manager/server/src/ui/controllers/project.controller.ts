@@ -11,9 +11,7 @@ class ProjectController {
     async listAllProjects(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const userId = Number(req.params.userId);
-            const projectResult = await projectService.getAllProjects(userId);
-
-            return projectResult;
+            return await projectService.getAllProjects(userId);
         } catch (err) {
             next(err);
         }
@@ -22,9 +20,7 @@ class ProjectController {
     async getProjectById(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const id = req.params.id;
-            const projectResult = await projectService.getProject(id);
-
-            return projectResult;
+            return await projectService.getProject(id);
         } catch (err) {
             next(err);
         }
@@ -33,9 +29,7 @@ class ProjectController {
     async createProject(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const createProjectObjectDto = plainToInstance(ProjectRequestDto, req.body);
-            const projectResult = await projectService.createProject(createProjectObjectDto);
-
-            return projectResult;
+            return await projectService.createProject(createProjectObjectDto);
         } catch (err) {
             next(err);
         }
@@ -45,9 +39,7 @@ class ProjectController {
         try {
             const id = req.params.id;
             const updateProjectObjectDto = plainToInstance(ProjectRequestDto, req.body);
-            const projectResult = await projectService.updateProject(id, updateProjectObjectDto);
-
-            return projectResult;
+            return await projectService.updateProject(id, updateProjectObjectDto);
         } catch (err) {
             next(err);
         }
@@ -56,9 +48,7 @@ class ProjectController {
     async deleteProject(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const id = req.params.id;
-            const projectResult = await projectService.deleteProject(id);
-
-            return projectResult;
+            return await projectService.deleteProject(id);
         } catch (err) {
             next(err);
         }
@@ -67,9 +57,7 @@ class ProjectController {
     async getGroupTasksInProject(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const id = req.params.id;
-            const projectResult = await projectService.getGroupTasksInProject(id);
-
-            return projectResult;
+            return await projectService.getGroupTasksInProject(id);
         } catch (err) {
             next(err);
         }
@@ -78,9 +66,7 @@ class ProjectController {
     async updateProjectName(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const id = req.params.id;
-            const projectResult = await projectService.updateProjectName(id, req.body.name);
-
-            return projectResult;
+            return await projectService.updateProjectName(id, req.body.name);
         } catch (err) {
             next(err);
         }
@@ -89,9 +75,7 @@ class ProjectController {
     async updateProjectColor(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const id = req.params.id;
-            const projectResult = await projectService.updateProjectColor(id, req.body.color);
-
-            return projectResult;
+            return await projectService.updateProjectColor(id, req.body.color);
         } catch (err) {
             next(err);
         }
@@ -100,9 +84,7 @@ class ProjectController {
     async archiveProject(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const id = req.params.id;
-            const projectResult = await projectService.archiveProject(id);
-
-            return projectResult;
+            return await projectService.archiveProject(id);
         } catch (err) {
             next(err);
         }
@@ -111,9 +93,7 @@ class ProjectController {
     async enableProject(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const id = req.params.id;
-            const projectResult = await projectService.enableProject(id);
-
-            return projectResult;
+            return await projectService.enableProject(id);
         } catch (err) {
             next(err);
         }

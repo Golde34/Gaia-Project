@@ -14,9 +14,7 @@ class GroupTaskController {
     async getGrouptaskById(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const groupTaskId = req.params.id;
-            const groupTaskResult = await groupTaskUsecase.getGroupTask(groupTaskId);
-            
-            return groupTaskResult;
+            return await groupTaskUsecase.getGroupTask(groupTaskId);
         } catch (err) {
             next(err);
         }
@@ -28,9 +26,7 @@ class GroupTaskController {
 
             const createGroupTaskObjectDto = plainToInstance(GroupTaskRequestDto, bodyJson);
             const projectId = bodyJson.projectId;
-            const groupTaskResult = await groupTaskUsecase.createGroupTaskToProject(createGroupTaskObjectDto, projectId);
-           
-            return groupTaskResult;
+            return await groupTaskUsecase.createGroupTaskToProject(createGroupTaskObjectDto, projectId);
         } catch (err) {
             next(err);
         }
@@ -42,9 +38,7 @@ class GroupTaskController {
 
             const groupTaskId = req.params.id;
             const groupTask = plainToInstance(GroupTaskRequestDto, bodyJson);
-            const groupTaskResult = await groupTaskService.updateGroupTask(groupTaskId, groupTask);
-            
-            return groupTaskResult;
+            return await groupTaskService.updateGroupTask(groupTaskId, groupTask);
         } catch (err) {
             next(err);
         }
@@ -57,9 +51,7 @@ class GroupTaskController {
             if (projectFindByGroupTaskId === PROJECT_NOT_FOUND || projectFindByGroupTaskId === EXCEPTION_PREFIX+PROJECT_EXCEPTION) {
                 next(new Error(PROJECT_NOT_FOUND));
             }
-            const groupTaskResult = await groupTaskService.deleteGroupTask(groupTaskId, projectFindByGroupTaskId);
-
-            return groupTaskResult;
+            return await groupTaskService.deleteGroupTask(groupTaskId, projectFindByGroupTaskId);
         } catch (err) {
             next(err);
         }
@@ -79,9 +71,7 @@ class GroupTaskController {
     async calculateCompletedTasks(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const groupTaskId = req.params.id;
-            const totalTasksResult = await groupTaskUsecase.calculateCompletedTasks(groupTaskId);
-
-            return totalTasksResult;
+            return await groupTaskUsecase.calculateCompletedTasks(groupTaskId);
         } catch (err) {
             next(err);
         }
@@ -93,9 +83,7 @@ class GroupTaskController {
 
             const groupTaskId = req.params.id;
             const projectId = bodyJson.projectId;
-            const groupTaskResult = await groupTaskService.updateOrdinalNumber(projectId, groupTaskId);
-
-            return groupTaskResult;
+            return await groupTaskService.updateOrdinalNumber(projectId, groupTaskId);
         } catch (err) {
             next(err);
         }
@@ -104,9 +92,7 @@ class GroupTaskController {
     async archiveGroupTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const groupTaskId = req.params.id;
-            const groupTaskResult = await groupTaskService.archiveGroupTask(groupTaskId);
-
-            return groupTaskResult;
+            return await groupTaskService.archiveGroupTask(groupTaskId);
         } catch (err) {
             next(err);
         }
@@ -115,9 +101,7 @@ class GroupTaskController {
     async enableGroupTask(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const groupTaskId = req.params.id;
-            const groupTaskResult = await groupTaskService.enableGroupTask(groupTaskId);
-
-            return groupTaskResult;
+            return await groupTaskService.enableGroupTask(groupTaskId);
         } catch (err) {
             next(err);
         }
@@ -129,15 +113,11 @@ class GroupTaskController {
             const groupName = req.query.name as string;
             const userId = req.query.userId as string;
             const project = req.query.project as string;
-            const groupTaskResult = await groupTaskService.findGroupTaskByName(groupName, userId, project);
-
-            return groupTaskResult;
+            return await groupTaskService.findGroupTaskByName(groupName, userId, project);
         } catch (err) {
             next(err);
         }
     }
-
-
 }
 
 export const groupTaskController = new GroupTaskController();
