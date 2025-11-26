@@ -3,13 +3,12 @@ import functools
 from core.abilities.ability_routers import MESSAGE_TYPE_CONVERTER
 from core.domain.enums.enum import SenderTypeEnum, ChatType
 from core.domain.request.chat_hub_request import SendMessageRequest
-from core.domain.request.query_request import LLMModel, QueryRequest
+from core.domain.request.query_request import QueryRequest
 from core.service import sse_stream_service
 from core.service.integration import auth_service
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
 from core.usecase.chat import ChatUsecase as chat_usecase
-from kernel.config import config
 from kernel.utils import build_header
 
 
@@ -62,7 +61,8 @@ class ChatInteractionUsecase:
 
     @classmethod
     async def _create_message_flow(cls, user_id: int, request: SendMessageRequest):
-        dialogue = await dialogue_service.get_or_create_dialogue(user_id=user_id, dialogue_id=request.dialogue_id, msg_type=request.msg_type)
+        dialogue = await dialogue_service.get_or_create_dialogue(
+            user_id=user_id, dialogue_id=request.dialogue_id, msg_type=request.msg_type)
         if dialogue is None:
             raise Exception("Failed to get or create dialogue")
 
@@ -87,9 +87,8 @@ class ChatInteractionUsecase:
 
         chat_type = MESSAGE_TYPE_CONVERTER.get(
             request.msg_type, ChatType.ABILITIES.value)
-        bot_response = await chat_usecase.chat(query=query_request,
-                                               chat_type=chat_type,
-                                               user_message_id=user_message_id)
+        bot_response = await chat_usecase.chat(
+            query=query_request, chat_type=chat_type, user_message_id=user_message_id)
 
         bot_message_id = await message_service.create_message(
             dialogue=dialogue,
