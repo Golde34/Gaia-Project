@@ -51,9 +51,7 @@ class OrchestratorService:
         fingerprint = self._compose_fingerprint(query, recommendation_snapshot)
         recommendation_future: Optional[asyncio.Task[str]] = None
         if await recommendation_history_repo.should_recommend(
-            user_id=query.user_id,
-            fingerprint=fingerprint,
-        ):
+            user_id=query.user_id, fingerprint=fingerprint):
             recommendation_future = asyncio.create_task(
                 self._call_recommendation(
                     query,

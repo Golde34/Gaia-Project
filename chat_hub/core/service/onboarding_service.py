@@ -61,13 +61,9 @@ async def _gaia_introduce(query: QueryRequest, recent_history: str, recursive_su
         long_term_memory=long_term_memory,
         query=query.query,
     )
-    model: LLMModel = LLMModel(
-        model_name=config.LLM_DEFAULT_MODEL,
-        model_key=config.SYSTEM_API_KEY
-    )
 
-    function = await llm_models.get_model_generate_content(model=model, user_id=query.user_id, prompt=prompt)
-    return function(prompt=prompt, model=model)
+    function = await llm_models.get_model_generate_content(model=query.model, user_id=query.user_id, prompt=prompt)
+    return function(prompt=prompt, model=query.model)
 
 async def _chitchat_with_history(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
     """
@@ -87,15 +83,8 @@ async def _chitchat_with_history(query: QueryRequest, recent_history: str, recur
             recursive_summary=recursive_summary,
             long_term_memory=long_term_memory
         )
-        if query.model is None:
-            model: LLMModel = LLMModel(
-                model_name=config.LLM_DEFAULT_MODEL,
-                model_key=config.SYSTEM_API_KEY
-            )
-        else:
-            model = query.model
-        function = await llm_models.get_model_generate_content(model, query.user_id)
-        return function(prompt=prompt, model=model)
+        function = await llm_models.get_model_generate_content(query.model, query.user_id)
+        return function(prompt=prompt, model=query.model)
     except Exception as e:
         raise e
 
@@ -128,15 +117,8 @@ async def _prepare_calendar_readiness(query: QueryRequest, recent_history: str, 
         recent_history=recent_history,
         long_term_memory=long_term_memory
     )
-    if query.model is None:
-        model: LLMModel = LLMModel(
-            model_name=config.LLM_DEFAULT_MODEL,
-            model_key=config.SYSTEM_API_KEY
-        )
-    else:
-        model = query.model
-    function = await llm_models.get_model_generate_content(model, query.user_id)
-    response = await asyncio.to_thread(function, prompt=prompt, model=model)
+    function = await llm_models.get_model_generate_content(query.model, query.user_id)
+    response = await asyncio.to_thread(function, prompt=prompt, model=query.model)
     json_response = clean_json_string(response)
 
     try:
@@ -167,7 +149,7 @@ async def _dispatch_register_calendar_request(query: QueryRequest, requirement: 
     payload = {
         "user_id": query.user_id,
         "dialogue_id": query.dialogue_id,
-        "model_name": query.model_name,
+        "model": query.model,
         "query": requirement,
         "type": "register_calendar_schedule",
         "user_message_id": query.user_message_id,
@@ -191,15 +173,8 @@ async def _chitchat_and_register_calendar(query: QueryRequest, recent_history: s
             recursive_summary=recursive_summary,
             long_term_memory=long_term_memory
         )
-        if query.model is None:
-            model: LLMModel = LLMModel(
-                model_name=config.LLM_DEFAULT_MODEL,
-                model_key=config.SYSTEM_API_KEY
-            )
-        else:
-            model = query.model
-        function = await llm_models.get_model_generate_content(model, query.user_id)
-        response = function(prompt=prompt, model=model)
+        function = await llm_models.get_model_generate_content(query.model, query.user_id)
+        response = function(prompt=prompt, model=query.model)
         return response
     except Exception as e:
         raise e
@@ -212,12 +187,8 @@ async def llm_generate_calendar_schedule(query: QueryRequest, recent_history: st
         long_term_memory=long_term_memory
     )
 
-    model: LLMModel = LLMModel(
-        model_name=config.LLM_DEFAULT_MODEL,
-        model_key=config.SYSTEM_API_KEY
-    )
-    function = await llm_models.get_model_generate_content(model, query.user_id, prompt=prompt)
-    response = function(prompt=prompt, model=model)
+    function = await llm_models.get_model_generate_content(query.model, query.user_id, prompt=prompt)
+    response = function(prompt=prompt, model=query.model)
     try:
         json_response = clean_json_string(response)
         parsed_response = json.loads(json_response)
