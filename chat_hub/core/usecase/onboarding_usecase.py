@@ -56,15 +56,8 @@ async def register_schedule_calendar(query: QueryRequest, guided_route: Optional
     try:
         selection_prompt = onboarding_prompt.CLASSIFY_REGISTER_CALENDAR_PROMPT.format(
             query=query.query)
-        if query.model is None:
-            model: LLMModel = LLMModel(
-                model_name=config.LLM_DEFAULT_MODEL,
-                model_key=config.SYSTEM_API_KEY
-            )
-        else:
-            model = query.model
-        function = await llm_models.get_model_generate_content(model, query.user_id, prompt=selection_prompt)
-        selection = function(prompt=selection_prompt, model=model) 
+        function = await llm_models.get_model_generate_content(query.model, query.user_id, prompt=selection_prompt)
+        selection = function(prompt=selection_prompt, model=query.model) 
         print(f"Selected action: {selection}")
         return await onboarding_service.handle_onboarding_action(query, selection)
     except Exception as e:

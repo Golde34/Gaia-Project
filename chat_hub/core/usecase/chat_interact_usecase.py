@@ -75,7 +75,7 @@ class ChatInteractionUsecase:
             user_message_id=None
         )
 
-        user_model = await cls._get_user_model(user_id)
+        user_model = await auth_service.get_user_model(user_id)
 
         query_request: QueryRequest = QueryRequest(
             user_id=user_id,
@@ -88,7 +88,7 @@ class ChatInteractionUsecase:
         chat_type = MESSAGE_TYPE_CONVERTER.get(
             request.msg_type, ChatType.ABILITIES.value)
         bot_response = await chat_usecase.chat(query=query_request,
-                                               chat_type=chat_type, 
+                                               chat_type=chat_type,
                                                user_message_id=user_message_id)
 
         bot_message_id = await message_service.create_message(
@@ -101,16 +101,6 @@ class ChatInteractionUsecase:
         )
         print("Bot response stored with message ID:", bot_message_id)
         return bot_response
-
-    @classmethod
-    async def _get_user_model(cls, user_id: int) -> LLMModel:
-        user_model = await auth_service.get_user_model(user_id)
-        if user_model is None:
-            return LLMModel(
-                model_name=config.LLM_DEFAULT_MODEL,
-                model_key=config.SYSTEM_API_KEY
-            )
-        return user_model
 
 
 chat_interaction_usecase = ChatInteractionUsecase()
