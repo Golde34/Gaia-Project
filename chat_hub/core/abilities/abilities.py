@@ -21,6 +21,10 @@ ABILITIES = [
         'label': enum.GaiaAbilities.REGISTER_SCHEDULE_CALENDAR.value,
         'description': 'Register a calendar for task management.',
         'need_history': False,
+    },
+    {
+        'label': enum.GaiaAbilities.SEARCH.value,
+        'description': 'Search the web and return top links with optional summary.',
+        'need_history': False,
     }
 ]
-

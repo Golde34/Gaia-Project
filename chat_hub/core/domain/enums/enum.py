@@ -25,6 +25,7 @@ class GaiaAbilities(Enum):
     CREATE_TASK = "create_task"
     CREATE_TASK_RESULT = "create_task_result"
     REGISTER_SCHEDULE_CALENDAR = "register_schedule_calendar"
+    SEARCH = "search"
 
 class VectorDBContext(Enum):
     GAIA_INTRODUCTION = "Gaia Introduction"

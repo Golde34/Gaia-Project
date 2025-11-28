@@ -85,6 +85,13 @@ def handle_task_service_response(matched_type: str, result: any) -> str:
             'type': matched_type,
             'response': result
         }
+    elif matched_type == enum.GaiaAbilities.SEARCH.value:
+        payload = result if isinstance(result, dict) else {'response': str(result)}
+        data = {
+            'type': matched_type,
+            'response': payload.get('response', ''),
+            'search': payload
+        }
     else:
         data = {
             'type': matched_type,

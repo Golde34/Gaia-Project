@@ -12,6 +12,7 @@ from core.validation import milvus_validation
 from core.service.integration.message_service import message_service
 from infrastructure.repository.recursive_summary_repository import recursive_summary_repo
 from infrastructure.redis.redis import set_key, get_key
+from infrastructure.search.google_search import run_search
 from infrastructure.vector_db.milvus import milvus_db
 from infrastructure.embedding.base_embedding import embedding_model
 from kernel.config import llm_models, config
@@ -143,7 +144,8 @@ async def update_recursive_summary(user_id: int, dialogue_id: str) -> None:
             summary=recursive_summary_str,
             created_at=datetime.date.today(),
         )
-        print(f"Saving recursive summary for user {user_id} and dialogue {dialogue_id}")
+        print(
+            f"Saving recursive summary for user {user_id} and dialogue {dialogue_id}")
         await recursive_summary_repo.save_summary(summary=recursive_summary)
 
         recursive_summary_key = RedisEnum.RECURSIVE_SUMMARY_CONTENT.value + \
@@ -207,3 +209,19 @@ async def update_long_term_memory(user_id: int, dialogue_id: str) -> None:
             )
     except Exception as e:
         print(f"Error updating long term memory: {e}")
+
+
+async def search(query: QueryRequest) -> dict:
+    """
+    Ability handler for web search. Defaults to link-first (no LLM) mode.
+    """
+    return await run_search(
+        user_query=query.query,
+        user_id=query.user_id,
+        model=query.model,
+        top_k=config.SEARCH_DEFAULT_TOP_K,
+        summarize=False,
+        depth="shallow",
+        lang="vi",
+        safe_search="active",
+    )
