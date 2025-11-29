@@ -24,8 +24,6 @@ class DialogueService:
             UserDialogue: The retrieved or newly created dialogue.
             IsChangedTitle: bool indicating if the dialogue is of type CHAT_TYPE.
         """
-        if msg_type is None or msg_type.strip() == "":
-            msg_type = DialogueEnum.CHAT_TYPE.value
         if dialogue_id:
             return await self.get_dialogue_by_id(user_id, dialogue_id)
 

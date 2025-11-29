@@ -200,7 +200,6 @@ async def update_long_term_memory(memory_request: MemoryRequest) -> None:
             print(
                 f"Dialogue type updated to {updated_dialogue} for dialogue ID {dialogue_id}")
 
-        # Save long term memory to Milvus DB
         if long_term_memory.content and len(long_term_memory.content) > 0:
             metadata = []
             for memory_item in long_term_memory.content:
@@ -212,11 +211,9 @@ async def update_long_term_memory(memory_request: MemoryRequest) -> None:
                     "created_at": datetime.datetime.now().isoformat()
                 })
 
-            # Generate embeddings for all memory content
             embedding = await embedding_model.get_embeddings(texts=long_term_memory.content)
             query_embeddings = milvus_validation.validate_milvus_insert(embedding)
 
-            # Insert into Milvus DB
             milvus_db.insert_data(
                 vectors=query_embeddings,
                 contents=long_term_memory.content,

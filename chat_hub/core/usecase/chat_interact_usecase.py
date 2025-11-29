@@ -1,7 +1,7 @@
 import functools
 
 from core.abilities.ability_routers import MESSAGE_TYPE_CONVERTER
-from core.domain.enums.enum import SenderTypeEnum, ChatType
+from core.domain.enums.enum import DialogueEnum, SenderTypeEnum, ChatType
 from core.domain.request.chat_hub_request import SendMessageRequest
 from core.domain.request.query_request import QueryRequest
 from core.service import sse_stream_service
@@ -22,17 +22,23 @@ class ChatInteractionUsecase:
 
     @classmethod
     async def get_chat_history_from_db(
-        cls, 
-        user_id: int, 
-        dialogue_id: str, 
-        chat_type: str, 
-        size: int, 
-        cursor: str):
+            cls,
+            user_id: int,
+            dialogue_id: str,
+            size: int,
+            cursor: str):
         try:
-            dialogue, _ = await dialogue_service.get_or_create_dialogue(
-                user_id=user_id, dialogue_id=dialogue_id, msg_type=chat_type)
+            if dialogue_id == "" or not dialogue_id:
+                return {
+                    "dialogue": None,
+                    "chatMessages": [],
+                    "nextCursor": None,
+                    "hasMore": False
+                }
+            dialogue, _ = await dialogue_service.get_dialogue_by_id(
+                user_id=user_id, dialogue_id=dialogue_id)
             if dialogue is None:
-                raise Exception("Failed to get or create dialogue")
+                raise Exception(f"Dialogue with ID {dialogue_id} not found")
             messages, has_more = await message_service.get_messages_by_dialogue_id_with_cursor_pagination(
                 dialogue.id, size, cursor)
             next_cursor = None
@@ -69,6 +75,8 @@ class ChatInteractionUsecase:
 
     @classmethod
     async def _create_message_flow(cls, user_id: int, request: SendMessageRequest):
+        if not request.msg_type:
+            request.msg_type = DialogueEnum.CHAT_TYPE.value
         dialogue, is_change_title = await dialogue_service.get_or_create_dialogue(
             user_id=user_id, dialogue_id=request.dialogue_id, msg_type=request.msg_type)
         if dialogue is None:
@@ -96,9 +104,9 @@ class ChatInteractionUsecase:
         chat_type = MESSAGE_TYPE_CONVERTER.get(
             request.msg_type, ChatType.ABILITIES.value)
         bot_response = await chat_usecase.chat(
-            query=query_request, 
-            chat_type=chat_type, 
-            user_message_id=user_message_id, 
+            query=query_request,
+            chat_type=chat_type,
+            user_message_id=user_message_id,
             is_change_title=is_change_title)
 
         bot_message_id = await message_service.create_message(
@@ -110,7 +118,12 @@ class ChatInteractionUsecase:
             user_message_id=str(user_message_id),
         )
         print("Bot response stored with message ID:", bot_message_id)
-        return bot_response
+        
+        # Return response with dialogue_id
+        return {
+            "response": bot_response,
+            "dialogue_id": str(dialogue.id)
+        }
 
 
 chat_interaction_usecase = ChatInteractionUsecase()

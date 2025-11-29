@@ -98,7 +98,7 @@ Your task is to analyze the query and retrieve any relevant long-term memory inf
 - If there is no relevant long-term memory information available, simply return an empty string or a message indicating that no relevant information was found.
 
 **Is change title**:
-- If `is_change_title` is True, return the dialogue title based on the recent history. If False, do not return a title.
+- If `is_change_title` is True, return the short dialogue title based on the recent history. If False, do not return a title.
 
 Return the relevant long-term memory information in the following format:
 ```json
@@ -108,7 +108,7 @@ Return the relevant long-term memory information in the following format:
       "Another piece of relevant long-term memory information here.",
       "Additional relevant long-term memory information here.",
    ],
-   "new_title": "<title_here>"  # Include this line only if the title has changed"
+   "new_title": "<title_here>"  # Nothing else but only title"
 }}
 ```
 """

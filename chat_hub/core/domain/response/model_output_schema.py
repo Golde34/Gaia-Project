@@ -70,5 +70,5 @@ class LongTermMemorySchema(BaseModel):
     )
     new_title: Optional[str] = Field(
         None,
-        description="New dialogue title if the title has changed, in format 'Dialogue title if changed: <title_here>'. Only included when is_change_title is True."
+        description="New dialogue title if the title has changed, in format '<title_here>'. Only included when is_change_title is True."
     )
