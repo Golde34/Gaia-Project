@@ -7,9 +7,7 @@ const RightColumn = () => {
 		<div className="w-full p-2">
 			<CompareCommitChart />
 			<DoneTasksComponent />
-			<div>
-				<ChatComponent isDashboard={true} chatType={"chitchat_message"} />
-			</div>
+			<ChatComponent isDashboard={true} chatType={"chitchat_message"} />
 		</div>
 	);
 };
