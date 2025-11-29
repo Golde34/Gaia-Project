@@ -146,7 +146,7 @@ async def update_recursive_summary(memory_request: MemoryRequest) -> None:
             id=uuid.uuid4().hex,
             user_id=user_id,
             dialogue_id=dialogue_id,
-            summary=recursive_summary_str.trim(),
+            summary=str(recursive_summary_str).strip(),
             created_at=datetime.date.today(),
         )
         print(
