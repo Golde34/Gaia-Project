@@ -3,12 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 import Template from '../../components/template/Template';
 import DialogueList from './DialogueList';
 import ChatComponent from './ChatComponent';
-import { useEffect } from 'react';
 
 export default function Chat() {
   const [searchParams] = useSearchParams();
   const dialogueId = searchParams.get("dialogueId");
-  const dialogueType = validateDialogue(dialogueId, searchParams.get("dialogueType"));
+  const dialogueType = searchParams.get("dialogueType");
 
   return (
     <Template>
@@ -24,13 +23,4 @@ export default function Chat() {
       </Grid>
     </Template>
   );
-}
-
-const validateDialogue = (dialogueId, dialogueType) => {
-  if (dialogueId == null || dialogueId == undefined || dialogueId === "") {
-    if (dialogueType == null || dialogueType == undefined || dialogueType === "") {
-      return "chitchat_message";
-    }
-  }
-  return dialogueType;
 }

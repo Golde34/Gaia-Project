@@ -36,12 +36,10 @@ export const getChatHistory = (size, cursor, dialogueId, chatType) => async (dis
 };
 
 const buildChatHistoryKey = (dialogueId = "", chatType = "") => {
-	const normalizedDialogueId = dialogueId && `${dialogueId}`.trim() !== "" ? `${dialogueId}` : "default";
-	const normalizedChatType = chatType && `${chatType}`.trim() !== "" ? `${chatType}` : "default";
-	return `${normalizedChatType}::${normalizedDialogueId}`;
+    const normalizedDialogueId = dialogueId && `${dialogueId}`.trim() !== "" ? `${dialogueId}` : "default";
+    const normalizedChatType = chatType && `${chatType}`.trim() !== "" ? `${chatType}` : "default";
+    return `${normalizedChatType}::${normalizedDialogueId}`;
 };
-
-
 
 export const sendSSEChatMessage = async (dialogueId, message, chatType, options = {}) => {
     try {
@@ -53,12 +51,21 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
             throw new Error("SSE token not received");
         }
 
-        const params = new URLSearchParams({
-            dialogueId: dialogueId,
-            message: message,
-            type: chatType,
-            sseToken: tokenResponse.data,
-        });
+        let params = null;
+        if (chatType === undefined || chatType === null) {
+            params = new URLSearchParams({
+                dialogueId: dialogueId,
+                message: message,
+                sseToken: tokenResponse.data,
+            });
+        } else {
+            params = new URLSearchParams({
+                dialogueId: dialogueId,
+                message: message,
+                type: chatType,
+                sseToken: tokenResponse.data,
+            });
+        }
         const baseUrl = `http://${config.serverHost}:${config.chatHubPort}`;
         const url = `${baseUrl}/chat-system/send-message?${params}`;
 
@@ -110,7 +117,7 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
                             }
                         }
                         if (data?.is_final) {
-                            resolveOnce(accumulatedResponse);
+                            resolveOnce({ response: accumulatedResponse, dialogueId: null });
                         }
                     }
                 } catch {
@@ -126,25 +133,29 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
             });
 
             eventSource.addEventListener("message_complete", (event) => {
+                // Use the accumulated response that was streamed chunk by chunk
                 let finalResponse = accumulatedResponse;
+                let dialogueIdFromResponse = null;
+                
+                // Only extract dialogue_id from the event data
                 try {
                     const data = JSON.parse(event.data);
-                    if (data?.full_response) {
+                    if (data?.dialogue_id) {
+                        dialogueIdFromResponse = data.dialogue_id;
+                    }
+                    // If backend sends full_response, use it as fallback
+                    if (data?.full_response && !finalResponse) {
                         finalResponse = data.full_response;
                     }
-                } catch {
-                    if (!finalResponse && event.data) {
-                        finalResponse = event.data;
+                    // Handle case where backend sends response field
+                    if (data?.response && !finalResponse) {
+                        finalResponse = data.response;
                     }
+                } catch (parseError) {
+                    console.log("message_complete event data is not JSON, using accumulated response");
                 }
-                if (onChunk && finalResponse !== accumulatedResponse) {
-                    try {
-                        onChunk(finalResponse, finalResponse);
-                    } catch (callbackError) {
-                        console.error("onChunk callback failed:", callbackError);
-                    }
-                }
-                resolveOnce(finalResponse);
+                
+                resolveOnce({ response: finalResponse, dialogueId: dialogueIdFromResponse });
             });
 
             eventSource.addEventListener("error", (event) => {
@@ -174,7 +185,7 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
                         }
                     }
                 }
-                resolveOnce(response ?? accumulatedResponse);
+                resolveOnce({ response: response ?? accumulatedResponse, dialogueId: null });
             };
 
             eventSource.onerror = () => {

@@ -133,7 +133,8 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
         onChunk: (accumulated) => {
           updateBotMessage({ content: accumulated, isStreaming: true });
         },
-        onComplete: (finalResponse) => {
+        onComplete: (result) => {
+          const finalResponse = typeof result === "string" ? result : result?.response;
           updateBotMessage({
             content: finalResponse ?? "",
             isStreaming: false,

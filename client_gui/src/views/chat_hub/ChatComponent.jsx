@@ -9,7 +9,8 @@ import { buildChatHistoryKey, defaultChatHistoryState } from "../../kernels/util
 export default function ChatComponent(props) {
     const navigate = useNavigate();
     const isDashboard = props.isDashboard === undefined ? false : props.isDashboard;
-    const chatType = props.chatType === undefined ? "" : props.chatType;
+    const chatType = (props.chatType === undefined || props.chatType === null)
+        ? undefined : props.chatType;
     const websocketMessageQueue = Array.isArray(props.websocketMessageQueue) ? props.websocketMessageQueue : [];
     const tabId = getTabId();
 
@@ -150,11 +151,24 @@ export default function ChatComponent(props) {
                 onChunk: (accumulated) => {
                     updateBotMessage({ content: accumulated, isStreaming: true });
                 },
-                onComplete: (finalResponse) => {
+                onComplete: (result) => {
+                    const finalResponse = typeof result === "string" ? result : result?.response;
+                    const newDialogueId = typeof result === "object" ? result?.dialogueId : null;
+                    
                     updateBotMessage({
                         content: finalResponse ?? "",
                         isStreaming: false,
                     });
+                    
+                    // Update URL with dialogue_id if received and we don't have one yet
+                    if (newDialogueId && (!dialogueId || dialogueId === "")) {
+                        const newSearchParams = new URLSearchParams(searchParams);
+                        newSearchParams.set("dialogueId", newDialogueId);
+                        if (chatType) {
+                            newSearchParams.set("type", chatType);
+                        }
+                        navigate(`?${newSearchParams.toString()}`, { replace: true });
+                    }
                 },
                 onError: () => {
                     updateBotMessage({
