@@ -60,14 +60,13 @@ async def get_user_model(user_id: int) -> LLMModel:
         user_model = await auth_service_client.get_user_llm_model_config(user_id)
         system_model = _create_system_model(user_model, user_id)
         _cache_user_model(user_model_key, system_model)
-        
         return system_model 
     except Exception as e:
         print(f"Error in get_user_model: {e}")
         return None
 
 
-def _create_system_model(user_model: UserModelResponse | None, user_id: int) -> LLMModel:
+def _create_system_model(user_model: UserModelResponse, user_id: int) -> LLMModel:
     """Create LLMModel from user model or fallback to default."""
     if _is_valid_user_model(user_model, user_id):
         return LLMModel(

@@ -2,9 +2,11 @@ import datetime
 from pyexpat import model
 import uuid
 
+from infrastructure.repository.dialogue_repository import user_dialogue_repository
 from core.domain.entities.recursive_summary import RecursiveSummary
 from core.domain.enums.redis_enum import RedisEnum
 from core.domain.request.chat_hub_request import RecentHistoryRequest
+from core.domain.request.memory_request import MemoryRequest
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.domain.response.model_output_schema import LongTermMemorySchema
 from core.prompts.system_prompt import CHAT_HISTORY_PROMPT, LONGTERM_MEMORY_PROMPT, RECURSIVE_SUMMARY_PROMPT
@@ -109,7 +111,7 @@ async def reflection_chat_history(recent_history: str, recursive_summary: str, l
     return new_query
 
 
-async def update_recursive_summary(user_id: int, dialogue_id: str) -> None:
+async def update_recursive_summary(memory_request: MemoryRequest) -> None:
     """
     Update the recursive summary in Redis.
 
@@ -117,6 +119,8 @@ async def update_recursive_summary(user_id: int, dialogue_id: str) -> None:
         query (QueryRequest): The user's query containing user_id and dialogue_id.
         response (str): The response to be added to the recursive summary.
     """
+    user_id = memory_request.user_id
+    dialogue_id = memory_request.dialogue_id
     try:
         recent_history = await message_service.get_recent_history(
             request=RecentHistoryRequest(
@@ -158,7 +162,7 @@ async def update_recursive_summary(user_id: int, dialogue_id: str) -> None:
         print(f"Error updating recursive summary: {e}")
 
 
-async def update_long_term_memory(user_id: int, dialogue_id: str) -> None:
+async def update_long_term_memory(memory_request: MemoryRequest) -> None:
     """
     Update the long term memory in Redis.
 
@@ -166,6 +170,8 @@ async def update_long_term_memory(user_id: int, dialogue_id: str) -> None:
         query (QueryRequest): The user's query containing user_id and dialogue_id.
         response (str): The response to be added to the long term memory.
     """
+    user_id = memory_request.user_id
+    dialogue_id = memory_request.dialogue_id
     try:
         recent_history = message_service.get_recent_history(
             query=RecentHistoryRequest(
@@ -178,7 +184,9 @@ async def update_long_term_memory(user_id: int, dialogue_id: str) -> None:
             recent_history = "No recent history available."
 
         prompt = LONGTERM_MEMORY_PROMPT.format(
-            recent_history=recent_history)
+            recent_history=recent_history,
+            is_change_title=memory_request.is_change_title)
+
         model: LLMModel = LLMModel(
             model_name=config.LLM_DEFAULT_MODEL,
             model_key=config.SYSTEM_API_KEY
@@ -207,6 +215,14 @@ async def update_long_term_memory(user_id: int, dialogue_id: str) -> None:
                 metadata_list=metadata,
                 partition_name="default_memory"
             )
+
+        if memory_request.is_change_title:
+            updated_dialogue = await user_dialogue_repository.update_dialogue_type(
+                dialogue_id=dialogue_id,
+                new_type=long_term_memory.new_title
+            )
+            print(
+                f"Dialogue type updated to {updated_dialogue} for dialogue ID {dialogue_id}")
     except Exception as e:
         print(f"Error updating long term memory: {e}")
 

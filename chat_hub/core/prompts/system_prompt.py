@@ -86,6 +86,8 @@ Your task is to analyze the conversation context based on the above information 
 LONGTERM_MEMORY_PROMPT = """You are an AI assistant named Gaia, and your task is to retrieve relevant long-term memory information based on the user's query. Below is the user's query:
 **Recent History**:
    - {recent_history}
+**Is Change Title**:
+   - {is_change_title}
 
 Your task is to analyze the query and retrieve any relevant long-term memory information that may help in understanding the user's intent or providing a more accurate response. 
 
@@ -97,10 +99,13 @@ Your task is to analyze the query and retrieve any relevant long-term memory inf
 
 Return the relevant long-term memory information in the following format:
 ```json
-[
-   "Relevant long-term memory information here.",
-   "Another piece of relevant long-term memory information here.",
-   "Additional relevant long-term memory information here.",
-]
+{{
+   "content": [
+      "Relevant long-term memory information here.",
+      "Another piece of relevant long-term memory information here.",
+      "Additional relevant long-term memory information here.",
+   ],
+   "new_title": "Dialogue title if changed: <title_here>"  # Include this line only if the title has changed"
+}}
 ```
 """

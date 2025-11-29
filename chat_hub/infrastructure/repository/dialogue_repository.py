@@ -76,4 +76,12 @@ class UserDialogueRepository(BaseRepository[UserDialogue]):
 
         return rows, has_more
 
+    async def update_dialogue_type(self, dialogue_id: str, new_type: str) -> None:
+        await self.update_by_id(
+            id_value=dialogue_id,
+            values={"dialogue_type": new_type},
+            exclude_none=True,
+            auto_timestamp_updated_at=True,
+        ) 
+
 user_dialogue_repository = UserDialogueRepository()

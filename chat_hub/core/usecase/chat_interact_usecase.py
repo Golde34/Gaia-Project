@@ -21,12 +21,20 @@ class ChatInteractionUsecase:
         return sse_token
 
     @classmethod
-    async def get_chat_history_from_db(cls, user_id: int, dialogue_id: str, chat_type: str, size: int, cursor: str):
+    async def get_chat_history_from_db(
+        cls, 
+        user_id: int, 
+        dialogue_id: str, 
+        chat_type: str, 
+        size: int, 
+        cursor: str):
         try:
-            dialogue = await dialogue_service.get_or_create_dialogue(user_id=user_id, dialogue_id=dialogue_id, msg_type=chat_type)
+            dialogue, _ = await dialogue_service.get_or_create_dialogue(
+                user_id=user_id, dialogue_id=dialogue_id, msg_type=chat_type)
             if dialogue is None:
                 raise Exception("Failed to get or create dialogue")
-            messages, has_more = await message_service.get_messages_by_dialogue_id_with_cursor_pagination(dialogue.id, size, cursor)
+            messages, has_more = await message_service.get_messages_by_dialogue_id_with_cursor_pagination(
+                dialogue.id, size, cursor)
             next_cursor = None
             if len(messages) > 0:
                 next_cursor = messages[0].created_at
@@ -61,7 +69,7 @@ class ChatInteractionUsecase:
 
     @classmethod
     async def _create_message_flow(cls, user_id: int, request: SendMessageRequest):
-        dialogue = await dialogue_service.get_or_create_dialogue(
+        dialogue, is_change_title = await dialogue_service.get_or_create_dialogue(
             user_id=user_id, dialogue_id=request.dialogue_id, msg_type=request.msg_type)
         if dialogue is None:
             raise Exception("Failed to get or create dialogue")
@@ -88,7 +96,10 @@ class ChatInteractionUsecase:
         chat_type = MESSAGE_TYPE_CONVERTER.get(
             request.msg_type, ChatType.ABILITIES.value)
         bot_response = await chat_usecase.chat(
-            query=query_request, chat_type=chat_type, user_message_id=user_message_id)
+            query=query_request, 
+            chat_type=chat_type, 
+            user_message_id=user_message_id, 
+            is_change_title=is_change_title)
 
         bot_message_id = await message_service.create_message(
             dialogue=dialogue,
