@@ -45,8 +45,10 @@ const DialogueList = ({
     }, []);
 
     const handleDialogueClick = (dialogueId, dialogueType) => {
-        navigate(`/chat?dialogueId=${encodeURIComponent(dialogueId)}&dialogueType=${encodeURIComponent(dialogueType)}`);
-        window.location.reload();
+        navigate(`/chat?dialogueId=${encodeURIComponent(dialogueId)}&dialogueType=${encodeURIComponent(dialogueType)}`, { 
+            replace: false,
+            state: { refresh: true }
+        });
     };
 
     const notReadyMessage = useMemo(() => {
@@ -70,8 +72,10 @@ const DialogueList = ({
                         icon={"🆕"}
                         label={"New Chat"}
                         onClick={() => {
-                            navigate("/chat");
-                            window.location.reload();
+                            navigate("/chat", { 
+                                replace: false,
+                                state: { refresh: true, newChat: true }
+                            });
                         }}
                     />
                     <ItemRow

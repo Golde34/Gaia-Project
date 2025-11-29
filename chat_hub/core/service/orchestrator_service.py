@@ -107,6 +107,7 @@ class OrchestratorService:
                     user_id=query.user_id,
                     fingerprint=fingerprint,
                     recommendation=recommendation,
+                    dialogue_id=query.dialogue_id,
                 )
             return recommendation
         except Exception as exc:

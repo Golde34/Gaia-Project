@@ -66,7 +66,7 @@ class MessageService:
 
     async def get_recent_history(self, request: RecentHistoryRequest) -> str:
         try:
-            dialogue = await dialogue_service.get_dialogue_by_id(request.user_id, request.dialogue_id)
+            dialogue, _ = await dialogue_service.get_dialogue_by_id(request.user_id, request.dialogue_id)
             if dialogue is None:
                 print("Dialogue not found for dialogue_id:", request.dialogue_id)
                 return ''

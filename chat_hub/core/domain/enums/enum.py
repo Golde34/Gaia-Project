@@ -25,6 +25,7 @@ class GaiaAbilities(Enum):
     CREATE_TASK = "create_task"
     CREATE_TASK_RESULT = "create_task_result"
     REGISTER_SCHEDULE_CALENDAR = "register_schedule_calendar"
+    SEARCH = "search"
 
 class VectorDBContext(Enum):
     GAIA_INTRODUCTION = "Gaia Introduction"
@@ -44,7 +45,6 @@ class DialogueEnum(Enum):
     REGISTER_SCHEDULE_CALENDAR = "Register Schedule Calendar"
     REGISTER_SCHEDULE_CALENDAR_TYPE = "register_calendar"
     CHAT_TYPE = "chitchat_message"
-    DEFAULT_TYPE = "default"
     
 class ActiveEnum(Enum):
     ACTIVE = "active"

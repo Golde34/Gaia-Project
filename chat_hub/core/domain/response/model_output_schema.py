@@ -60,5 +60,15 @@ class DailyRoutineSchema(BaseModel):
 class LongTermMemorySchema(BaseModel):
     """
     Schema for long-term memory content.
+    
+    - content: List of relevant long-term memory information strings
+    - new_title: Optional dialogue title if the title has changed
     """
-    content: List[str]= Field(..., description="Content of the long-term memory")
+    content: List[str] = Field(
+        ..., 
+        description="List of relevant long-term memory information pieces. Each string should be concise and capture the essence of past interactions."
+    )
+    new_title: Optional[str] = Field(
+        None,
+        description="New dialogue title if the title has changed, in format '<title_here>'. Only included when is_change_title is True."
+    )

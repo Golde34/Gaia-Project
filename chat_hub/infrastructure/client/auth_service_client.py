@@ -1,6 +1,7 @@
 import logging
 from typing import Dict
 
+from core.domain.response.user_model_response import UserModelResponse
 from kernel.config import config
 from kernel.utils import aiohttp_utils, build_header
 
@@ -45,12 +46,12 @@ class AuthServiceClient:
             logging.error(f"Error in validate_service_jwt: {e}")
             return ""
 
-    async def get_user_llm_model_config(self, user_id: int) -> Dict:
+    async def get_user_llm_model_config(self, user_id: int) -> UserModelResponse:
         try:
             user_llm_model_config_url = f"{self.base_url}/user-model-setting/get-model-by-user?userId={user_id}"
             headers = build_header.build_authorization_headers("authentication_service", user_id)
             result = await aiohttp_utils.get(user_llm_model_config_url, header=headers)
-            return result.get("message", {})
+            return UserModelResponse.model_validate(result.get("data", {}).get("message", {}))
         except Exception as e:
             logging.error(f"Error in get_user_llm_model_config: {e}")
             return {}

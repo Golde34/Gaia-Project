@@ -1,7 +1,10 @@
+from operator import is_
 from typing import Any
+
 from core.abilities import ability_routers
 from core.domain.enums import redis_enum, kafka_enum
 from core.domain.request.query_request import QueryRequest
+from core.domain.request.memory_request import MemoryRequest
 from core.semantic_router import router_registry
 from core.service import chat_service
 from infrastructure.kafka.producer import send_kafka_message
@@ -27,19 +30,28 @@ class ChatUsecase:
             dict: The response from the selected ability handler.
 
         """
+        is_change_title = kwargs.get("is_change_title", False)
         user_message_id = kwargs.get("user_message_id")
         if user_message_id is not None:
             query.user_message_id = str(user_message_id)
+
         print(f"Chat Type: {chat_type}, Query: {query.query}")
-        tool_selection, use_chat_history_prompt = await ability_routers.select_ability(label_value=chat_type, query=query)
+        tool_selection, use_chat_history_prompt = await ability_routers.select_ability(
+            label_value=chat_type, 
+            query=query)
 
         if use_chat_history_prompt:
             query = await cls.get_chat_history(query=query, default=default)
 
         print(f"Tool Selection: {tool_selection}")
-        response = await ability_routers.call_router_function(label_value=chat_type, query=query, guided_route=tool_selection)
-        await cls.update_chat_history(query=query, response=response)
+        response = await ability_routers.call_router_function(
+            label_value=chat_type, 
+            query=query, 
+            guided_route=tool_selection)
+
         print(f"Response: {response}")
+
+        await cls.update_chat_history(query=query, is_change_title=is_change_title)
 
         return response
 
@@ -64,17 +76,21 @@ class ChatUsecase:
         return query
 
     @classmethod
-    async def update_chat_history(cls, query: QueryRequest, response: str):
+    async def update_chat_history(cls, query: QueryRequest, is_change_title: bool):
         """
         Updates the chat history with the new query and response, including managing Redis queues.
         """
+        if is_change_title:
+            await cls._update_recursive_summary(query.user_id, query.dialogue_id, is_change_title)
+            await cls._update_long_term_memory(query.user_id, query.dialogue_id, is_change_title)
+
         rs_len, lt_len = cls._check_redis(
             user_id=query.user_id, dialogue_id=query.dialogue_id)
         if rs_len >= RECURSIVE_SUMMARY_MAX_LENGTH:
-            await cls._update_recursive_summary(query.user_id, query.dialogue_id)
+            await cls._update_recursive_summary(query.user_id, query.dialogue_id, is_change_title)
 
         if lt_len >= LONG_TERM_MEMORY_MAX_LENGTH:
-            await cls._update_long_term_memory(query.user_id, query.dialogue_id)
+            await cls._update_long_term_memory(query.user_id, query.dialogue_id, is_change_title)
 
         cls._update_redis(rs_len, lt_len, query.user_id, query.dialogue_id)
 
@@ -98,20 +114,30 @@ class ChatUsecase:
         return 0
 
     @classmethod
-    async def _update_recursive_summary(cls, user_id: int, dialogue_id: str):
+    async def _update_recursive_summary(cls, user_id: int, dialogue_id: str, is_change_title: bool):
         """
         Sends a Kafka message to update the recursive summary.
         """
-        payload = {"user_id": user_id, "dialogue_id": dialogue_id}
-        await send_kafka_message(kafka_enum.KafkaTopic.UPDATE_RECURSIVE_SUMMARY.value, payload)
+        payload: MemoryRequest = MemoryRequest(
+            user_id=user_id,
+            dialogue_id=dialogue_id,
+            is_change_title=is_change_title
+        )
+        # Convert Pydantic model to dict for JSON serialization
+        await send_kafka_message(kafka_enum.KafkaTopic.UPDATE_RECURSIVE_SUMMARY.value, payload.model_dump())
 
     @classmethod
-    async def _update_long_term_memory(cls, user_id: int, dialogue_id: str):
+    async def _update_long_term_memory(cls, user_id: int, dialogue_id: str, is_change_title: bool):
         """
         Sends a Kafka message to update the long-term memory.
         """
-        payload = {"user_id": user_id, "dialogue_id": dialogue_id}
-        await send_kafka_message(kafka_enum.KafkaTopic.UPDATE_LONG_TERM_MEMORY.value, payload)
+        payload: MemoryRequest = MemoryRequest(
+            user_id=user_id,
+            dialogue_id=dialogue_id,
+            is_change_title=is_change_title
+        )
+        # Convert Pydantic model to dict for JSON serialization
+        await send_kafka_message(kafka_enum.KafkaTopic.UPDATE_LONG_TERM_MEMORY.value, payload.model_dump())
 
     @staticmethod
     def _update_redis(rs_len: int, lt_len: int, user_id: int, dialogue_id: str):

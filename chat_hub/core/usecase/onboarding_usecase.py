@@ -81,7 +81,7 @@ async def generate_calendar_schedule(query: QueryRequest) -> Dict:
     response = await onboarding_service.return_generated_schedule(query.user_id, schedule_dto)
 
     msg_type = enum.DialogueEnum.REGISTER_SCHEDULE_CALENDAR_TYPE.value
-    dialogue = await dialogue_service.get_or_create_dialogue(user_id=query.user_id, msg_type=msg_type, dialogue_id=None)
+    dialogue, _ = await dialogue_service.get_or_create_dialogue(user_id=query.user_id, msg_type=msg_type, dialogue_id=None)
     if dialogue is None:
         raise Exception("Failed to get or create dialogue")
     bot_message_id = await message_service.create_message(

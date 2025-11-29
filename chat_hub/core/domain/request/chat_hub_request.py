@@ -11,7 +11,7 @@ class RecentHistoryRequest(BaseModel):
 class SendMessageRequest(BaseModel):
     dialogue_id: str
     message: str
-    msg_type: str
+    msg_type: Optional[str]
     sse_token: str
     user_message_id: Optional[str] = None
 

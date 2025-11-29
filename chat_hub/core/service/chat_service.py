@@ -1,10 +1,13 @@
 import datetime
+import json
 from pyexpat import model
 import uuid
 
+from infrastructure.repository.dialogue_repository import user_dialogue_repository
 from core.domain.entities.recursive_summary import RecursiveSummary
 from core.domain.enums.redis_enum import RedisEnum
 from core.domain.request.chat_hub_request import RecentHistoryRequest
+from core.domain.request.memory_request import MemoryRequest
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.domain.response.model_output_schema import LongTermMemorySchema
 from core.prompts.system_prompt import CHAT_HISTORY_PROMPT, LONGTERM_MEMORY_PROMPT, RECURSIVE_SUMMARY_PROMPT
@@ -12,6 +15,7 @@ from core.validation import milvus_validation
 from core.service.integration.message_service import message_service
 from infrastructure.repository.recursive_summary_repository import recursive_summary_repo
 from infrastructure.redis.redis import set_key, get_key
+from infrastructure.search.google_search import run_search
 from infrastructure.vector_db.milvus import milvus_db
 from infrastructure.embedding.base_embedding import embedding_model
 from kernel.config import llm_models, config
@@ -108,7 +112,7 @@ async def reflection_chat_history(recent_history: str, recursive_summary: str, l
     return new_query
 
 
-async def update_recursive_summary(user_id: int, dialogue_id: str) -> None:
+async def update_recursive_summary(memory_request: MemoryRequest) -> None:
     """
     Update the recursive summary in Redis.
 
@@ -116,6 +120,8 @@ async def update_recursive_summary(user_id: int, dialogue_id: str) -> None:
         query (QueryRequest): The user's query containing user_id and dialogue_id.
         response (str): The response to be added to the recursive summary.
     """
+    user_id = memory_request.user_id
+    dialogue_id = memory_request.dialogue_id
     try:
         recent_history = await message_service.get_recent_history(
             request=RecentHistoryRequest(
@@ -140,10 +146,11 @@ async def update_recursive_summary(user_id: int, dialogue_id: str) -> None:
             id=uuid.uuid4().hex,
             user_id=user_id,
             dialogue_id=dialogue_id,
-            summary=recursive_summary_str,
+            summary=str(recursive_summary_str).strip(),
             created_at=datetime.date.today(),
         )
-        print(f"Saving recursive summary for user {user_id} and dialogue {dialogue_id}")
+        print(
+            f"Saving recursive summary for user {user_id} and dialogue {dialogue_id}")
         await recursive_summary_repo.save_summary(summary=recursive_summary)
 
         recursive_summary_key = RedisEnum.RECURSIVE_SUMMARY_CONTENT.value + \
@@ -156,7 +163,7 @@ async def update_recursive_summary(user_id: int, dialogue_id: str) -> None:
         print(f"Error updating recursive summary: {e}")
 
 
-async def update_long_term_memory(user_id: int, dialogue_id: str) -> None:
+async def update_long_term_memory(memory_request: MemoryRequest) -> None:
     """
     Update the long term memory in Redis.
 
@@ -164,46 +171,97 @@ async def update_long_term_memory(user_id: int, dialogue_id: str) -> None:
         query (QueryRequest): The user's query containing user_id and dialogue_id.
         response (str): The response to be added to the long term memory.
     """
+    user_id = memory_request.user_id
+    dialogue_id = memory_request.dialogue_id
     try:
-        recent_history = message_service.get_recent_history(
-            query=RecentHistoryRequest(
+        recent_history = await message_service.get_recent_history(
+            request=RecentHistoryRequest(
                 user_id=user_id,
-                dialogue_id=str(dialogue_id),
-                number_of_messages=config.LONG_TERM_MEMORY_MAX_LENGTH
+                dialogue_id=dialogue_id,
+                number_of_messages=config.LONG_TERM_MEMORY_MAX_LENGTH,
             )
         )
         if not recent_history:
             recent_history = "No recent history available."
 
         prompt = LONGTERM_MEMORY_PROMPT.format(
-            recent_history=recent_history)
-        model: LLMModel = LLMModel(
-            model_name=config.LLM_DEFAULT_MODEL,
-            model_key=config.SYSTEM_API_KEY
+            recent_history=recent_history,
+            is_change_title=memory_request.is_change_title
         )
-        function = await llm_models.get_model_generate_content(model=model, user_id=user_id)
-        long_term_memory = function(
-            prompt=prompt, model=model, dto=LongTermMemorySchema)
-        print(f"Long Term Memory: {long_term_memory}")
 
-        metadata = []
-        for memory in long_term_memory:
-            metadata.append({
-                "user_id": user_id,
-                "dialogue_id": dialogue_id,
-                "memory": memory,
-                "core_memory_id": uuid.UUID().hex,
-                "created_at": datetime.date.today().isoformat()
-            })
+        long_term_memory = await build_long_term_memory(
+            prompt=prompt, user_id=user_id)
 
-        embedding = await embedding_model.get_embeddings(texts=long_term_memory)
-        query_embeddings = milvus_validation.validate_milvus_insert(embedding)
-        for memory in long_term_memory:
+        if memory_request.is_change_title and long_term_memory.new_title:
+            updated_dialogue = await user_dialogue_repository.update_dialogue_type(
+                dialogue_id=dialogue_id,
+                new_type=long_term_memory.new_title
+            )
+            print(
+                f"Dialogue type updated to {updated_dialogue} for dialogue ID {dialogue_id}")
+
+        if long_term_memory.content and len(long_term_memory.content) > 0:
+            metadata = []
+            for memory_item in long_term_memory.content:
+                metadata.append({
+                    "user_id": user_id,
+                    "dialogue_id": dialogue_id,
+                    "memory": memory_item,
+                    "core_memory_id": uuid.uuid4().hex,
+                    "created_at": datetime.datetime.now().isoformat()
+                })
+
+            embedding = await embedding_model.get_embeddings(texts=long_term_memory.content)
+            query_embeddings = milvus_validation.validate_milvus_insert(embedding)
+
             milvus_db.insert_data(
                 vectors=query_embeddings,
-                contents=long_term_memory,
+                contents=long_term_memory.content,
                 metadata_list=metadata,
                 partition_name="default_memory"
             )
+            print(f"Saved {len(long_term_memory.content)} long term memory items to Milvus DB")
+
+        
     except Exception as e:
         print(f"Error updating long term memory: {e}")
+
+
+async def build_long_term_memory(prompt: str, user_id: int) -> LongTermMemorySchema:
+    model: LLMModel = LLMModel(
+        model_name=config.LLM_DEFAULT_MODEL,
+        model_key=config.SYSTEM_API_KEY
+    )
+    function = await llm_models.get_model_generate_content(model=model, user_id=user_id)
+    long_term_memory_str = function(
+        prompt=prompt, model=model, dto=LongTermMemorySchema)
+    print(f"Long Term Memory raw response: {long_term_memory_str}")
+
+    try:
+        # Clean JSON string if needed
+        long_term_memory_json = json.loads(long_term_memory_str)
+        long_term_memory = LongTermMemorySchema(**long_term_memory_json)
+        print(f"Long Term Memory parsed: {long_term_memory}")
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse long term memory JSON: {e}")
+        print(f"Raw response: {long_term_memory_str}")
+        # Create empty schema if parsing fails
+        long_term_memory = LongTermMemorySchema(content=[], new_title=None)
+
+    return long_term_memory
+
+
+async def search(query: QueryRequest) -> dict:
+    """
+    Ability handler for web search. Defaults to link-first (no LLM) mode.
+    """
+    return await run_search(
+        user_query=query.query,
+        user_id=query.user_id,
+        model=query.model,
+        top_k=config.SEARCH_DEFAULT_TOP_K,
+        summarize=False,
+        depth="shallow",
+        lang="vi",
+        safe_search="active",
+    )
