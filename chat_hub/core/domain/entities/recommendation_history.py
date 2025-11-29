@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 class RecommendationHistory(BaseModel):
     id: uuid.UUID = None
-    user_id: str
+    user_id: int 
     dialogue_id: str
     fingerprint: str
     recommendation: str

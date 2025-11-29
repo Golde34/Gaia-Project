@@ -99,7 +99,4 @@ def handle_task_service_response(matched_type: str, result: any) -> str:
             'task': result
         }
 
-    return return_success_response(
-        status_message=f"{matched_type.replace('_', ' ').capitalize()} response successfully",
-        data=data
-    )
+    return data 
