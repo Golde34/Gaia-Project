@@ -1,4 +1,5 @@
 import datetime
+import json
 from pyexpat import model
 import uuid
 
@@ -145,7 +146,7 @@ async def update_recursive_summary(memory_request: MemoryRequest) -> None:
             id=uuid.uuid4().hex,
             user_id=user_id,
             dialogue_id=dialogue_id,
-            summary=recursive_summary_str,
+            summary=recursive_summary_str.trim(),
             created_at=datetime.date.today(),
         )
         print(
@@ -173,11 +174,11 @@ async def update_long_term_memory(memory_request: MemoryRequest) -> None:
     user_id = memory_request.user_id
     dialogue_id = memory_request.dialogue_id
     try:
-        recent_history = message_service.get_recent_history(
-            query=RecentHistoryRequest(
+        recent_history = await message_service.get_recent_history(
+            request=RecentHistoryRequest(
                 user_id=user_id,
-                dialogue_id=str(dialogue_id),
-                number_of_messages=config.LONG_TERM_MEMORY_MAX_LENGTH
+                dialogue_id=dialogue_id,
+                number_of_messages=config.LONG_TERM_MEMORY_MAX_LENGTH,
             )
         )
         if not recent_history:
@@ -185,46 +186,72 @@ async def update_long_term_memory(memory_request: MemoryRequest) -> None:
 
         prompt = LONGTERM_MEMORY_PROMPT.format(
             recent_history=recent_history,
-            is_change_title=memory_request.is_change_title)
-
-        model: LLMModel = LLMModel(
-            model_name=config.LLM_DEFAULT_MODEL,
-            model_key=config.SYSTEM_API_KEY
+            is_change_title=memory_request.is_change_title
         )
-        function = await llm_models.get_model_generate_content(model=model, user_id=user_id)
-        long_term_memory = function(
-            prompt=prompt, model=model, dto=LongTermMemorySchema)
-        print(f"Long Term Memory: {long_term_memory}")
 
-        metadata = []
-        for memory in long_term_memory:
-            metadata.append({
-                "user_id": user_id,
-                "dialogue_id": dialogue_id,
-                "memory": memory,
-                "core_memory_id": uuid.UUID().hex,
-                "created_at": datetime.date.today().isoformat()
-            })
+        long_term_memory = await build_long_term_memory(
+            prompt=prompt, user_id=user_id)
 
-        embedding = await embedding_model.get_embeddings(texts=long_term_memory)
-        query_embeddings = milvus_validation.validate_milvus_insert(embedding)
-        for memory in long_term_memory:
-            milvus_db.insert_data(
-                vectors=query_embeddings,
-                contents=long_term_memory,
-                metadata_list=metadata,
-                partition_name="default_memory"
-            )
-
-        if memory_request.is_change_title:
+        if memory_request.is_change_title and long_term_memory.new_title:
             updated_dialogue = await user_dialogue_repository.update_dialogue_type(
                 dialogue_id=dialogue_id,
                 new_type=long_term_memory.new_title
             )
             print(
                 f"Dialogue type updated to {updated_dialogue} for dialogue ID {dialogue_id}")
+
+        # Save long term memory to Milvus DB
+        if long_term_memory.content and len(long_term_memory.content) > 0:
+            metadata = []
+            for memory_item in long_term_memory.content:
+                metadata.append({
+                    "user_id": user_id,
+                    "dialogue_id": dialogue_id,
+                    "memory": memory_item,
+                    "core_memory_id": uuid.uuid4().hex,
+                    "created_at": datetime.datetime.now().isoformat()
+                })
+
+            # Generate embeddings for all memory content
+            embedding = await embedding_model.get_embeddings(texts=long_term_memory.content)
+            query_embeddings = milvus_validation.validate_milvus_insert(embedding)
+
+            # Insert into Milvus DB
+            milvus_db.insert_data(
+                vectors=query_embeddings,
+                contents=long_term_memory.content,
+                metadata_list=metadata,
+                partition_name="default_memory"
+            )
+            print(f"Saved {len(long_term_memory.content)} long term memory items to Milvus DB")
+
+        
     except Exception as e:
         print(f"Error updating long term memory: {e}")
+
+
+async def build_long_term_memory(prompt: str, user_id: int) -> LongTermMemorySchema:
+    model: LLMModel = LLMModel(
+        model_name=config.LLM_DEFAULT_MODEL,
+        model_key=config.SYSTEM_API_KEY
+    )
+    function = await llm_models.get_model_generate_content(model=model, user_id=user_id)
+    long_term_memory_str = function(
+        prompt=prompt, model=model, dto=LongTermMemorySchema)
+    print(f"Long Term Memory raw response: {long_term_memory_str}")
+
+    try:
+        # Clean JSON string if needed
+        long_term_memory_json = json.loads(long_term_memory_str)
+        long_term_memory = LongTermMemorySchema(**long_term_memory_json)
+        print(f"Long Term Memory parsed: {long_term_memory}")
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse long term memory JSON: {e}")
+        print(f"Raw response: {long_term_memory_str}")
+        # Create empty schema if parsing fails
+        long_term_memory = LongTermMemorySchema(content=[], new_title=None)
+
+    return long_term_memory
 
 
 async def search(query: QueryRequest) -> dict:
