@@ -2,10 +2,17 @@ from typing import Optional
 from pydantic import BaseModel
 from fastapi import UploadFile
 
+from kernel.utils.parse_json import to_camel
+
 
 class LLMModel(BaseModel):
     model_name: str
     model_key: str
+
+    model_config = {
+        "alias_generator": to_camel,
+        "populate_by_name": True
+    }
 
 
 class QueryRequest(BaseModel):

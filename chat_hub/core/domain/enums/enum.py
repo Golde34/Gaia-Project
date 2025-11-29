@@ -45,7 +45,6 @@ class DialogueEnum(Enum):
     REGISTER_SCHEDULE_CALENDAR = "Register Schedule Calendar"
     REGISTER_SCHEDULE_CALENDAR_TYPE = "register_calendar"
     CHAT_TYPE = "chitchat_message"
-    DEFAULT_TYPE = "default"
     
 class ActiveEnum(Enum):
     ACTIVE = "active"
