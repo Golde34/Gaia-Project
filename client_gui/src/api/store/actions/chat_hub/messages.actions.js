@@ -75,10 +75,12 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
             const eventSource = new EventSource(url);
             let accumulatedResponse = "";
             let settled = false;
+            let timeoutId = null;
 
             const resolveOnce = (payload) => {
                 if (settled) return;
                 settled = true;
+                if (timeoutId) clearTimeout(timeoutId);
                 if (onComplete) {
                     try {
                         onComplete(payload);
@@ -93,6 +95,7 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
             const rejectOnce = (error) => {
                 if (settled) return;
                 settled = true;
+                if (timeoutId) clearTimeout(timeoutId);
                 eventSource.close();
                 if (onError) {
                     try {
@@ -103,6 +106,16 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
                 }
                 reject(error);
             };
+
+            // Safety timeout: if no message_complete after 2 minutes, resolve with what we have
+            timeoutId = setTimeout(() => {
+                if (!settled) {
+                    resolveOnce({ 
+                        response: accumulatedResponse || "Request timeout", 
+                        dialogueId: null 
+                    });
+                }
+            }, 120000); // 2 minutes
 
             eventSource.addEventListener("message_chunk", (event) => {
                 try {
@@ -116,9 +129,7 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
                                 console.error("onChunk callback failed:", callbackError);
                             }
                         }
-                        if (data?.is_final) {
-                            resolveOnce({ response: accumulatedResponse, dialogueId: null });
-                        }
+                        // Don't resolve when is_final=true, wait for message_complete to get dialogue_id
                     }
                 } catch {
                     accumulatedResponse += event.data || "";
@@ -133,26 +144,25 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
             });
 
             eventSource.addEventListener("message_complete", (event) => {
-                // Use the accumulated response that was streamed chunk by chunk
                 let finalResponse = accumulatedResponse;
                 let dialogueIdFromResponse = null;
                 
-                // Only extract dialogue_id from the event data
                 try {
                     const data = JSON.parse(event.data);
+                    
                     if (data?.dialogue_id) {
                         dialogueIdFromResponse = data.dialogue_id;
                     }
-                    // If backend sends full_response, use it as fallback
+                    
+                    // Use full_response from event as fallback if accumulated response is empty
                     if (data?.full_response && !finalResponse) {
                         finalResponse = data.full_response;
                     }
-                    // Handle case where backend sends response field
                     if (data?.response && !finalResponse) {
                         finalResponse = data.response;
                     }
                 } catch (parseError) {
-                    console.log("message_complete event data is not JSON, using accumulated response");
+                    // Use accumulated response if parsing fails
                 }
                 
                 resolveOnce({ response: finalResponse, dialogueId: dialogueIdFromResponse });
@@ -173,24 +183,31 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
                 rejectOnce(new Error(errorMessage));
             });
 
-            eventSource.onmessage = (event) => {
-                const response = event.data;
-                if (response) {
-                    accumulatedResponse = response;
-                    if (onChunk) {
-                        try {
-                            onChunk(accumulatedResponse, response);
-                        } catch (callbackError) {
-                            console.error("onChunk callback failed:", callbackError);
-                        }
-                    }
-                }
-                resolveOnce({ response: response ?? accumulatedResponse, dialogueId: null });
-            };
-
+            // Handle generic connection errors
             eventSource.onerror = () => {
-                rejectOnce(new Error("EventSource connection error"));
+                // Don't reject immediately on first error, could be temporary network issue
+                // The timeout will handle persistent connection problems
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    rejectOnce(new Error("EventSource connection closed unexpectedly"));
+                }
             };
+            
+            // Note: We removed onmessage handler because it was catching all events
+            // and resolving prematurely. We now rely on specific event listeners:
+            // - message_chunk: for streaming chunks
+            // - message_complete: for final response with dialogue_id
+            // This ensures we always wait for message_complete to get dialogue_id
+            
+            // Cleanup function (useful if Promise is canceled externally)
+            const cleanup = () => {
+                if (timeoutId) clearTimeout(timeoutId);
+                if (eventSource.readyState !== EventSource.CLOSED) {
+                    eventSource.close();
+                }
+            };
+            
+            // Attach cleanup to Promise (if needed in future for abort capability)
+            resolve.cleanup = cleanup;
         });
     } catch (error) {
         console.error("Error sending chat message:", error);

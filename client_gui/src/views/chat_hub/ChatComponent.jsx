@@ -153,7 +153,7 @@ export default function ChatComponent(props) {
                 },
                 onComplete: (result) => {
                     const finalResponse = typeof result === "string" ? result : result?.response;
-                    const newDialogueId = typeof result === "object" ? result?.dialogueId : null;
+                    const newDialogueId = typeof result === "object" ? (result?.dialogueId || result?.dialogue_id) : null;
                     
                     updateBotMessage({
                         content: finalResponse ?? "",
@@ -168,6 +168,12 @@ export default function ChatComponent(props) {
                             newSearchParams.set("type", chatType);
                         }
                         navigate(`?${newSearchParams.toString()}`, { replace: true });
+                        
+                        // Reload history after URL update to get persisted messages from database
+                        setTimeout(() => {
+                            setChatHistory([]);
+                            dispatch(getChatHistory(size, "", newDialogueId, chatType));
+                        }, 300);
                     }
                 },
                 onError: () => {
