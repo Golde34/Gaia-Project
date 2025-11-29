@@ -1,4 +1,6 @@
+from datetime import datetime
 from typing import List, Optional
+import uuid
 
 from core.domain.entities.recommendation_history import RecommendationHistory
 from kernel.database.postgres import postgres_db
@@ -12,7 +14,7 @@ class RecommendationHistoryRepository:
     This mirrors the style of recursive_summary_repository.
     """
 
-    async def get_by_user_and_context(self, user_id: str, dialogue_id: str) -> Optional[RecommendationHistory]:
+    async def get_by_user_and_context(self, user_id: int, dialogue_id: str) -> Optional[RecommendationHistory]:
         query = (
             "SELECT id, user_id, dialogue_id, fingerprint, recommendation, created_at "
             "FROM recommendation_history WHERE user_id=$1 AND dialogue_id=$2 ORDER BY created_at DESC"
@@ -40,7 +42,7 @@ class RecommendationHistoryRepository:
             async with pool.acquire() as conn:
                 return await conn.fetchval(query, record.id, record.user_id, record.dialogue_id, record.fingerprint, record.recommendation, record.created_at)
 
-    async def list_by_user(self, user_id: str) -> List[RecommendationHistory]:
+    async def list_by_user(self, user_id: int) -> List[RecommendationHistory]:
         query = (
             "SELECT id, user_id, dialogue_id, fingerprint, recommendation, created_at "
             "FROM recommendation_history WHERE user_id=$1 ORDER BY created_at"
@@ -50,13 +52,13 @@ class RecommendationHistoryRepository:
             rows = await conn.fetch(query, user_id)
             return [RecommendationHistory(**dict(r)) for r in rows]
 
-    async def delete_by_user(self, user_id: str) -> None:
+    async def delete_by_user(self, user_id: int) -> None:
         query = "DELETE FROM recommendation_history WHERE user_id=$1"
         pool = await postgres_db.connect()
         async with pool.acquire() as conn:
             await conn.execute(query, user_id)
 
-    async def should_recommend(self, user_id: Optional[str], fingerprint: str, dialogue_id: Optional[str] = "default") -> bool:
+    async def should_recommend(self, user_id: Optional[int], fingerprint: str, dialogue_id: Optional[str] = "default") -> bool:
         if not user_id:
             # if no user id, always recommend
             return True
@@ -64,19 +66,25 @@ class RecommendationHistoryRepository:
         if rec is None:
             return True
         return rec.fingerprint != fingerprint
-    
-    async def register(self, user_id: Optional[str], fingerprint: str, recommendation: str, dialogue_id: Optional[str] = "default", record_id: Optional[str] = None, created_at=None) -> None:
+
+    async def register(
+            self,
+            user_id: Optional[int],
+            fingerprint: str,
+            recommendation: str,
+            dialogue_id: str,
+    ) -> None:
         if not user_id or not recommendation:
             return
         # lazily import dataclass to avoid circular import at module load
         from core.domain.entities.recommendation_history import RecommendationHistory as RH
         rec = RH(
-            id=record_id or __import__("uuid").uuid4().hex,
-            user_id=str(user_id),
+            id=uuid.uuid4().hex,
+            user_id=user_id,
             dialogue_id=str(dialogue_id),
             fingerprint=fingerprint,
             recommendation=recommendation,
-            created_at=created_at or __import__("datetime").datetime.utcnow(),
+            created_at=datetime.now(),
         )
         await self.save(rec)
 

@@ -33,6 +33,7 @@ class RecommendationServiceClient:
             data = response.get("data", {})
             if data.get("skip"):
                 return ""
+            print("Recommendation service response data:", data.get("message", ""))
             return data.get("message", "")
         except Exception as exc:
             print(f"Failed to fetch recommendation: {exc}")
