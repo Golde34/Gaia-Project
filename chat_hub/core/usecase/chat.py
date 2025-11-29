@@ -34,16 +34,24 @@ class ChatUsecase:
         user_message_id = kwargs.get("user_message_id")
         if user_message_id is not None:
             query.user_message_id = str(user_message_id)
+
         print(f"Chat Type: {chat_type}, Query: {query.query}")
-        tool_selection, use_chat_history_prompt = await ability_routers.select_ability(label_value=chat_type, query=query)
+        tool_selection, use_chat_history_prompt = await ability_routers.select_ability(
+            label_value=chat_type, 
+            query=query)
 
         if use_chat_history_prompt:
             query = await cls.get_chat_history(query=query, default=default)
 
         print(f"Tool Selection: {tool_selection}")
-        response = await ability_routers.call_router_function(label_value=chat_type, query=query, guided_route=tool_selection)
-        await cls.update_chat_history(query=query, is_change_title=is_change_title)
+        response = await ability_routers.call_router_function(
+            label_value=chat_type, 
+            query=query, 
+            guided_route=tool_selection)
+
         print(f"Response: {response}")
+
+        await cls.update_chat_history(query=query, is_change_title=is_change_title)
 
         return response
 
