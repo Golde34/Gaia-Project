@@ -63,6 +63,15 @@ async def handle_sse_stream(
                     response = result
             response_payload, response_text = _extract_response_payload(response)
 
+            # Extract dialogue_id FIRST before any potential errors
+            dialogue_id = None
+            if isinstance(response_payload, dict):
+                dialogue_id = response_payload.get("dialogue_id", None)
+                
+            if not dialogue_id and meta:
+                dialogue_id = meta.get("dialogue_id", None)
+            
+            # Now stream the chunks
             chunks, normalized_response = _chunk_response(response_text)
             for index, chunk in enumerate(chunks):
                 await enqueue_event(
@@ -76,18 +85,13 @@ async def handle_sse_stream(
                 )
                 await asyncio.sleep(0.1)
 
-            # Include dialogue_id from response or meta
-            dialogue_id = None
-            if isinstance(response, dict):
-                dialogue_id = response.get("dialogue_id")
-            if not dialogue_id and meta:
-                dialogue_id = meta.get("dialogue_id")
-            
+            # Send message_complete with dialogue_id
+            response_type = response_payload.get("type") if isinstance(response_payload, dict) else None
             await enqueue_event(
                 "message_complete",
                 {
                     "message": "Stream completed",
-                    "type": response_payload.get("type"),
+                    "type": response_type,
                     "full_response": normalized_response,
                     "dialogue_id": dialogue_id,
                 },
