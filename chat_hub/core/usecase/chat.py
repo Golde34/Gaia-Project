@@ -6,7 +6,7 @@ from core.domain.enums import redis_enum, kafka_enum
 from core.domain.request.query_request import QueryRequest
 from core.domain.request.memory_request import MemoryRequest
 from core.semantic_router import router_registry
-from core.service import chat_service
+from core.service import memory_service
 from infrastructure.kafka.producer import send_kafka_message
 from infrastructure.redis.redis import get_key, set_key, increase_key, decrease_key
 from kernel.config.config import RECURSIVE_SUMMARY_MAX_LENGTH, LONG_TERM_MEMORY_MAX_LENGTH
@@ -62,11 +62,11 @@ class ChatUsecase:
         """
         if default == False:
             chat_history_semantic_router = await router_registry.chat_history_route(query=query.query)
-            recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query, chat_history_semantic_router)
+            recent_history, recursive_summary, long_term_memory = await memory_service.query_chat_history(query, chat_history_semantic_router)
         else:
-            recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query)
+            recent_history, recursive_summary, long_term_memory = await memory_service.query_chat_history(query)
 
-        new_query = await chat_service.reflection_chat_history(
+        new_query = await memory_service.reflection_chat_history(
             recent_history=recent_history,
             recursive_summary=recursive_summary,
             long_term_memory=long_term_memory,

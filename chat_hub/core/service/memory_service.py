@@ -1,9 +1,7 @@
 import datetime
 import json
-from pyexpat import model
 import uuid
 
-from infrastructure.repository.dialogue_repository import user_dialogue_repository
 from core.domain.entities.recursive_summary import RecursiveSummary
 from core.domain.enums.redis_enum import RedisEnum
 from core.domain.request.chat_hub_request import RecentHistoryRequest
@@ -13,9 +11,9 @@ from core.domain.response.model_output_schema import LongTermMemorySchema
 from core.prompts.system_prompt import CHAT_HISTORY_PROMPT, LONGTERM_MEMORY_PROMPT, RECURSIVE_SUMMARY_PROMPT
 from core.validation import milvus_validation
 from core.service.integration.message_service import message_service
+from infrastructure.repository.dialogue_repository import user_dialogue_repository
 from infrastructure.repository.recursive_summary_repository import recursive_summary_repo
 from infrastructure.redis.redis import set_key, get_key
-from infrastructure.search.google_search import run_search
 from infrastructure.vector_db.milvus import milvus_db
 from infrastructure.embedding.base_embedding import embedding_model
 from kernel.config import llm_models, config
@@ -249,19 +247,3 @@ async def build_long_term_memory(prompt: str, user_id: int) -> LongTermMemorySch
         long_term_memory = LongTermMemorySchema(content=[], new_title=None)
 
     return long_term_memory
-
-
-async def search(query: QueryRequest) -> dict:
-    """
-    Ability handler for web search. Defaults to link-first (no LLM) mode.
-    """
-    return await run_search(
-        user_query=query.query,
-        user_id=query.user_id,
-        model=query.model,
-        top_k=config.SEARCH_DEFAULT_TOP_K,
-        summarize=False,
-        depth="shallow",
-        lang="vi",
-        safe_search="active",
-    )
