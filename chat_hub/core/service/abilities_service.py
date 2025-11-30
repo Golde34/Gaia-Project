@@ -3,7 +3,7 @@ from core.domain.request.query_request import LLMModel, QueryRequest
 from core.prompts.abilities_prompt import CHITCHAT_PROMPT, CHITCHAT_WITH_HISTORY_PROMPT
 from core.service import memory_service
 from core.service.orchestrator_service import orchestrator_service
-from core.service.task_service import handle_task_service_response
+from core.service.integration.task_service import handle_task_service_response
 from infrastructure.search.google_search import run_search
 from kernel.config import llm_models, config
 

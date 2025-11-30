@@ -1,5 +1,5 @@
 from core.domain.enums import enum
-from core.service.task_service import create_task, create_task_result
+from core.service.integration.task_service import create_task, create_task_result
 from core.service.abilities_service import search
 
 
