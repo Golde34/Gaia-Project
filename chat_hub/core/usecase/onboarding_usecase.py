@@ -6,8 +6,8 @@ from langdetect import detect
 from core.domain.enums import enum
 from core.domain.response.base_response import return_response
 from core.domain.response.model_output_schema import DailyRoutineSchema
-from core.domain.request.query_request import LLMModel, QueryRequest
-from core.service import chat_service, onboarding_service
+from core.domain.request.query_request import QueryRequest
+from core.service import memory_service, onboarding_service
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
 from core.prompts import onboarding_prompt
@@ -71,7 +71,7 @@ async def generate_calendar_schedule(query: QueryRequest) -> Dict:
     # query_text = await _detect_language(query_text)
     # query.query = query_text
 
-    recent_history, _, long_term_memory = await chat_service.query_chat_history(query)
+    recent_history, _, long_term_memory = await memory_service.query_chat_history(query)
     print(f"Retrieved recent history: {recent_history}")
 
     schedule_dto: DailyRoutineSchema = await onboarding_service.llm_generate_calendar_schedule(

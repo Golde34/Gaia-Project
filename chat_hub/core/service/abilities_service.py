@@ -1,10 +1,10 @@
-from pyexpat import model
 from core.domain.enums import enum
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.prompts.abilities_prompt import CHITCHAT_PROMPT, CHITCHAT_WITH_HISTORY_PROMPT
-from core.service import chat_service
+from core.service import memory_service
 from core.service.orchestrator_service import orchestrator_service
-from core.service.task_service import handle_task_service_response
+from core.service.integration.task_service import handle_task_service_response
+from infrastructure.search.google_search import run_search
 from kernel.config import llm_models, config
 
 
@@ -81,7 +81,7 @@ async def chitchat_with_history(query: QueryRequest) -> str:
         str: Short response to the request
     """
     try:
-        recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query)
+        recent_history, recursive_summary, long_term_memory = await memory_service.query_chat_history(query)
         prompt = CHITCHAT_WITH_HISTORY_PROMPT.format(
             query=query.query,
             recent_history=recent_history,
@@ -93,3 +93,18 @@ async def chitchat_with_history(query: QueryRequest) -> str:
         return response
     except Exception as e:
         raise e
+
+async def search(query: QueryRequest) -> dict:
+    """
+    Ability handler for web search. Defaults to link-first (no LLM) mode.
+    """
+    return await run_search(
+        user_query=query.query,
+        user_id=query.user_id,
+        model=query.model,
+        top_k=config.SEARCH_DEFAULT_TOP_K,
+        summarize=False,
+        depth="shallow",
+        lang="vi",
+        safe_search="active",
+    )

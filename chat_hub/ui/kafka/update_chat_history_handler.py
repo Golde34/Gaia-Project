@@ -2,7 +2,7 @@ import json
 from aiokafka import ConsumerRecord
 
 from core.domain.request.memory_request import MemoryRequest
-from core.service.chat_service import update_recursive_summary, update_long_term_memory
+from core.service.memory_service import update_recursive_summary, update_long_term_memory
 
 
 async def update_recursive_summary_handler(msg: ConsumerRecord):

@@ -11,7 +11,7 @@ from core.domain.response.base_response import return_response
 from core.domain.response.model_output_schema import DailyRoutineSchema, TimeBubbleDTO
 from core.prompts import onboarding_prompt
 from core.prompts.abilities_prompt import CHITCHAT_WITH_HISTORY_PROMPT
-from core.service import chat_service
+from core.service import memory_service
 from core.validation import milvus_validation
 from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.kafka.producer import publish_message
@@ -22,7 +22,7 @@ from kernel.utils.background_loop import log_background_task_error
 
 
 async def handle_onboarding_action(query: QueryRequest, selection: str) -> dict:
-    recent_history, recursive_summary, long_term_memory = await chat_service.query_chat_history(query)
+    recent_history, recursive_summary, long_term_memory = await memory_service.query_chat_history(query)
 
     handlers = {
         enum.SemanticRoute.GAIA_INTRODUCTION.value:

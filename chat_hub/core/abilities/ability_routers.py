@@ -6,7 +6,7 @@ from core.domain.request.query_request import QueryRequest
 from core.prompts.system_prompt import CLASSIFY_PROMPT
 from core.semantic_router import router_registry
 from core.usecase.onboarding_usecase import introduce, register_schedule_calendar
-from core.service.gaia_abilities_service import abilities_handler
+from core.service.abilities_service import abilities_handler
 from kernel.config import llm_models
 
 

@@ -8,7 +8,7 @@ from core.service import sse_stream_service
 from core.service.integration import auth_service
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
-from core.usecase.chat import ChatUsecase as chat_usecase
+from core.usecase.thinking_usecase import ChatUsecase as chat_usecase
 from kernel.utils import build_header
 
 

@@ -1,15 +1,14 @@
 import traceback
 from fastapi import APIRouter, HTTPException, Request
 
-from core.domain.request.chat_hub_request import SendMessageRequest
 from core.domain.response.base_response import return_success_response
-from core.usecase.chat_interact_usecase import chat_interaction_usecase as usecase
-from kernel.utils import build_header
+from core.usecase.chat_usecase import chat_interaction_usecase as usecase
 
 ChatInteractionRouter = APIRouter(
     prefix="/chat-interaction",
     tags=["chat-interaction"],
 )
+
 
 @ChatInteractionRouter.post("/initiate-chat")
 async def initiate_chat(request: Request):
@@ -22,12 +21,14 @@ async def initiate_chat(request: Request):
         print("ERROR:", stack_trace)
         raise HTTPException(status_code=500, detail=str(e))
 
+
 def _user_info_from_middleware(request: Request):
     user_info = getattr(request.state, "user", None)
     if not user_info:
         raise HTTPException(
             status_code=401, detail="Unauthorized: User info missing")
     return user_info
+
 
 @ChatInteractionRouter.get("/history")
 async def get_chat_history(request: Request):
@@ -50,6 +51,7 @@ async def get_chat_history(request: Request):
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @ChatInteractionRouter.get("/dialogues")
 async def get_user_dialogues(request: Request):
