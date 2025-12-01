@@ -42,43 +42,74 @@ class OrchestratorService:
         results: List[Dict[str, Any]] = []
         sequential_tasks = [task for task in tasks if task.get("is_sequential")]
         parallel_tasks = [task for task in tasks if not task.get("is_sequential")]
+        recommend_message = ""
 
-        for task in sequential_tasks:
-            result = await self._execute_task(task, query)
-            results.append(self._build_task_result(task, result))
+        if sequential_tasks:
+            for task in sequential_tasks:
+                result = await self._execute_task(task, query)
+                results.append(self._build_task_result(task, result))
 
-        recommendation_snapshot = [copy.deepcopy(item) for item in results]
-        fingerprint = self._compose_fingerprint(query, recommendation_snapshot)
-        recommendation_future: Optional[asyncio.Task[str]] = None
-        if await recommendation_history_repo.should_recommend(
-            user_id=query.user_id, fingerprint=fingerprint):
-            recommendation_future = asyncio.create_task(
-                self._call_recommendation(
+            recommendation_snapshot = [copy.deepcopy(item) for item in results]
+            fingerprint = self._compose_fingerprint(query, recommendation_snapshot)
+            should_recommend = await recommendation_history_repo.should_recommend(
+                user_id=query.user_id, fingerprint=fingerprint
+            )
+            if should_recommend:
+                recommend_message = await self._call_recommendation(
                     query,
                     recommendation_snapshot,
                     fingerprint,
                 )
-            )
 
-        if parallel_tasks:
-            parallel_futures = [
-                asyncio.create_task(self._execute_task(task, query))
-                for task in parallel_tasks
-            ]
-            parallel_results = await asyncio.gather(
-                *parallel_futures, return_exceptions=True
-            )
-            for task, result in zip(parallel_tasks, parallel_results):
-                if isinstance(result, Exception):
-                    print(
-                        f"Orchestrator: task {task.get('ability')} failed: {result}"
+            if parallel_tasks:
+                parallel_futures = [
+                    asyncio.create_task(self._execute_task(task, query))
+                    for task in parallel_tasks
+                ]
+                parallel_results = await asyncio.gather(
+                    *parallel_futures, return_exceptions=True
+                )
+                for task, result in zip(parallel_tasks, parallel_results):
+                    if isinstance(result, Exception):
+                        print(
+                            f"Orchestrator: task {task.get('ability')} failed: {result}"
+                        )
+                        continue
+                    results.append(self._build_task_result(task, result))
+        else:
+            recommendation_snapshot = [copy.deepcopy(item) for item in results]
+            fingerprint = self._compose_fingerprint(query, recommendation_snapshot)
+            recommendation_future: Optional[asyncio.Task[str]] = None
+            if await recommendation_history_repo.should_recommend(
+                user_id=query.user_id, fingerprint=fingerprint
+            ):
+                recommendation_future = asyncio.create_task(
+                    self._call_recommendation(
+                        query,
+                        recommendation_snapshot,
+                        fingerprint,
                     )
-                    continue
-                results.append(self._build_task_result(task, result))
+                )
 
-        recommend_message = ""
-        if recommendation_future:
-            recommend_message = await recommendation_future
+            if parallel_tasks:
+                parallel_futures = [
+                    asyncio.create_task(self._execute_task(task, query))
+                    for task in parallel_tasks
+                ]
+                parallel_results = await asyncio.gather(
+                    *parallel_futures, return_exceptions=True
+                )
+                for task, result in zip(parallel_tasks, parallel_results):
+                    if isinstance(result, Exception):
+                        print(
+                            f"Orchestrator: task {task.get('ability')} failed: {result}"
+                        )
+                        continue
+                    results.append(self._build_task_result(task, result))
+
+            if recommendation_future:
+                recommend_message = await recommendation_future
+
         primary = results[0] if results else None
         return {"primary": primary, "tasks": results, "recommend": recommend_message}
 

@@ -1,9 +1,12 @@
 from core.domain.enums import enum
+from core.domain.enums.enum import SenderTypeEnum
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.prompts.abilities_prompt import CHITCHAT_PROMPT, CHITCHAT_WITH_HISTORY_PROMPT
 from core.service import memory_service
 from core.service.orchestrator_service import orchestrator_service
 from core.service.integration.task_service import handle_task_service_response
+from core.service.integration.dialogue_service import dialogue_service
+from core.service.integration.message_service import message_service
 from infrastructure.search.google_search import run_search
 from kernel.config import llm_models, config
 
@@ -39,6 +42,7 @@ async def abilities_handler(query: QueryRequest, guided_route: str) -> str:
             response_payload["data"] = {}
         response_payload["data"]["tasks"] = formatted_tasks
         response_payload["recommend"] = orchestration_result.get("recommend", "")
+        await persist_recommendation_message(query, response_payload["recommend"])
 
         print("Result: ", response_payload)
         return response_payload
@@ -107,4 +111,26 @@ async def search(query: QueryRequest) -> dict:
         depth="shallow",
         lang="vi",
         safe_search="active",
+    )
+
+
+async def persist_recommendation_message(query: QueryRequest, recommend_message: str) -> None:
+    if not recommend_message:
+        return
+    if not query.dialogue_id or not query.user_message_id:
+        return
+
+    dialogue, _ = await dialogue_service.get_dialogue_by_id(
+        user_id=query.user_id, dialogue_id=query.dialogue_id
+    )
+    if not dialogue:
+        return
+
+    await message_service.create_message(
+        dialogue=dialogue,
+        user_id=query.user_id,
+        message=recommend_message,
+        message_type=query.type,
+        sender_type=SenderTypeEnum.BOT.value,
+        user_message_id=query.user_message_id,
     )
