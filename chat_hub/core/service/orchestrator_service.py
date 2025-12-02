@@ -42,43 +42,87 @@ class OrchestratorService:
         results: List[Dict[str, Any]] = []
         sequential_tasks = [task for task in tasks if task.get("is_sequential")]
         parallel_tasks = [task for task in tasks if not task.get("is_sequential")]
+        recommend_message = ""
 
-        for task in sequential_tasks:
-            result = await self._execute_task(task, query)
-            results.append(self._build_task_result(task, result))
-
-        recommendation_snapshot = [copy.deepcopy(item) for item in results]
-        fingerprint = self._compose_fingerprint(query, recommendation_snapshot)
-        recommendation_future: Optional[asyncio.Task[str]] = None
-        if await recommendation_history_repo.should_recommend(
-            user_id=query.user_id, fingerprint=fingerprint):
-            recommendation_future = asyncio.create_task(
-                self._call_recommendation(
-                    query,
-                    recommendation_snapshot,
-                    fingerprint,
-                )
-            )
-
-        if parallel_tasks:
-            parallel_futures = [
-                asyncio.create_task(self._execute_task(task, query))
-                for task in parallel_tasks
-            ]
-            parallel_results = await asyncio.gather(
-                *parallel_futures, return_exceptions=True
-            )
-            for task, result in zip(parallel_tasks, parallel_results):
-                if isinstance(result, Exception):
-                    print(
-                        f"Orchestrator: task {task.get('ability')} failed: {result}"
-                    )
-                    continue
+        if sequential_tasks:
+            for task in sequential_tasks:
+                result = await self._execute_task(task, query)
                 results.append(self._build_task_result(task, result))
 
-        recommend_message = ""
-        if recommendation_future:
-            recommend_message = await recommendation_future
+            finalized_snapshot = [
+                item
+                for item in results
+                if item.get("is_sequential")
+                and self._is_task_finalized(item.get("result"))
+            ]
+
+            if len(finalized_snapshot) == len(sequential_tasks):
+                recommendation_snapshot = [copy.deepcopy(item) for item in finalized_snapshot]
+                fingerprint = self._compose_fingerprint(query, recommendation_snapshot)
+                should_recommend = await recommendation_history_repo.should_recommend(
+                    user_id=query.user_id, fingerprint=fingerprint
+                )
+                if should_recommend:
+                    recommend_message = await self._call_recommendation(
+                        query,
+                        recommendation_snapshot,
+                        fingerprint,
+                    )
+            else:
+                print(
+                    "Orchestrator: skip recommendation because sequential tasks"
+                    " are not finalized"
+                )
+
+            if parallel_tasks:
+                parallel_futures = [
+                    asyncio.create_task(self._execute_task(task, query))
+                    for task in parallel_tasks
+                ]
+                parallel_results = await asyncio.gather(
+                    *parallel_futures, return_exceptions=True
+                )
+                for task, result in zip(parallel_tasks, parallel_results):
+                    if isinstance(result, Exception):
+                        print(
+                            f"Orchestrator: task {task.get('ability')} failed: {result}"
+                        )
+                        continue
+                    results.append(self._build_task_result(task, result))
+        else:
+            recommendation_snapshot = [copy.deepcopy(item) for item in results]
+            fingerprint = self._compose_fingerprint(query, recommendation_snapshot)
+            recommendation_future: Optional[asyncio.Task[str]] = None
+            if await recommendation_history_repo.should_recommend(
+                user_id=query.user_id, fingerprint=fingerprint
+            ):
+                recommendation_future = asyncio.create_task(
+                    self._call_recommendation(
+                        query,
+                        recommendation_snapshot,
+                        fingerprint,
+                    )
+                )
+
+            if parallel_tasks:
+                parallel_futures = [
+                    asyncio.create_task(self._execute_task(task, query))
+                    for task in parallel_tasks
+                ]
+                parallel_results = await asyncio.gather(
+                    *parallel_futures, return_exceptions=True
+                )
+                for task, result in zip(parallel_tasks, parallel_results):
+                    if isinstance(result, Exception):
+                        print(
+                            f"Orchestrator: task {task.get('ability')} failed: {result}"
+                        )
+                        continue
+                    results.append(self._build_task_result(task, result))
+
+            if recommendation_future:
+                recommend_message = await recommendation_future
+
         primary = results[0] if results else None
         return {"primary": primary, "tasks": results, "recommend": recommend_message}
 
@@ -153,6 +197,17 @@ class OrchestratorService:
             "result": result,
             "is_sequential": task.get("is_sequential", False),
         }
+
+    def _is_task_finalized(self, result: Any) -> bool:
+        if not isinstance(result, dict):
+            return True
+
+        status = str(result.get("status", "")).upper()
+        if not status:
+            return True
+
+        non_final_statuses = {"PENDING", "IN_PROGRESS"}
+        return status not in non_final_statuses
 
     def format_task_payload(self, task_result: Dict[str, Any]) -> Dict[str, Any]:
         payload = task_result.get("result")
