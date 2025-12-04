@@ -66,3 +66,13 @@ Node Retrieval = semantic neighbors + activate task chain + active concept trees
 - Task / Milestone nodes từ SLTG
 - Episodic snapshot nodes từ EMG
 - Recursive summary nodes
+
+Các bước cần xem xét nâng cấp:
+- STAG có thể dùng một model llm nhẹ hơn chứ không phải gọi api để giảm chi phí tính toán xuống
+- Di chuyển consolidation layer thành một process chạy nền định kỳ thay vì mỗi lần interaction: Input -> Router -> STAG creation -> Context Builder -> LLM response
+Toàn bộ quá trình consolidation sẽ chạy nền để giảm latency
+- Chỉ kích hoạt quy trình hợp nhất đầy đủ khi đạt đến một milestone nhất định
+- Chỉ add các node/edge thô vào khu vực tạm thời, để quá trình MERGE / REFINE chạy định kì
+- Giảm tần suất Recursive Summary generation, chỉ khi có nhiều episodic nodes mới hoặc theo lịch định kì
+- Trong context bulider không query toàn bộ graph mà chỉ lấy 2-3 bước nhảy sâu nhất
+- Nếu LLM vượt budget thì ưu tiên các node từ active task chains và relevant episodic summaries trước các semantic neighbó ít liên quan hơn
