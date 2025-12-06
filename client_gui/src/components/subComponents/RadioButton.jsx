@@ -7,6 +7,7 @@ export const RadioButton = (props) => {
     const id = props.id;
     const color = props.color;
     const label = props.label;
+    const textLight = props.textLight === undefined ? 400 : props.textLight;
     return (
         <div className="inline-flex items-center">
             <label className="relative flex cursor-pointer items-center rounded-full p-3"
@@ -23,7 +24,7 @@ export const RadioButton = (props) => {
                     <RadioButtonIcon />
                 </div>
             </label>
-            <label className="text-sm text-gray-400 me-4" htmlFor="profile-radio-public">
+            <label className={`text-sm text-gray-${textLight} me-4`} htmlFor="profile-radio-public">
                 {label}
             </label>
         </div>

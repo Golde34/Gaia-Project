@@ -1,7 +1,7 @@
 import { Dialog, Transition } from '@headlessui/react'
 import { Fragment, useState } from 'react'
-import RadioButtonIcon from '../icons/RadioButtonIcon';
 import { useUpdateColorDispatch } from '../../kernels/utils/dialog-api-requests';
+import { RadioButton } from './RadioButton';
 
 export const ColorDialog = (props) => {
 
@@ -68,120 +68,60 @@ export const ColorDialog = (props) => {
                                         <div className="mt-4">
                                             <p className="block text-md font-medium text-gray-700 mb-3">Status</p>
                                             <div className="grid grid-cols-3 m-2">
-                                                <div className="inline-flex items-center">
-                                                    <label className="relative flex cursor-pointer items-center rounded-full p-3"
-                                                        htmlFor="status-radio-red" data-ripple-dark="true">
-                                                        <input
-                                                            id="status-radio-red"
-                                                            type="radio"
-                                                            value="red"
-                                                            checked={color === 'red'}
-                                                            onChange={(e) => setColor(e.target.value)}
-                                                            className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-full border border-blue-gray-200 text-pink-500 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-red-500 checked:before:bg-red-500 hover:before:opacity-10"
-                                                        />
-                                                        <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-red-500 opacity-0 transition-opacity peer-checked:opacity-100">
-                                                            <RadioButtonIcon />
-                                                        </div>
-                                                    </label>
-                                                    <label className="text-sm text-gray-700" htmlFor="status-radio-red">
-                                                        Red
-                                                    </label>
-                                                </div>
-                                                <div className="inline-flex items-center">
-                                                    <label className="relative flex cursor-pointer items-center rounded-full p-3"
-                                                        htmlFor="status-radio-pink" data-ripple-dark="true">
-                                                        <input
-                                                            id="status-radio-pink"
-                                                            type="radio"
-                                                            value="pink"
-                                                            checked={color === 'pink'}
-                                                            onChange={(e) => setColor(e.target.value)}
-                                                            className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-full border border-blue-gray-200 text-pink-500 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-pink-500 checked:before:bg-pink-500 hover:before:opacity-10"
-                                                        />
-                                                        <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-pink-500 opacity-0 transition-opacity peer-checked:opacity-100">
-                                                            <RadioButtonIcon />
-                                                        </div>
-                                                    </label>
-                                                    <label className="text-sm text-gray-700" htmlFor="status-radio-pink">
-                                                        Pink
-                                                    </label>
-                                                </div>
-                                                <div className="inline-flex items-center">
-                                                    <label className="relative flex cursor-pointer items-center rounded-full p-3"
-                                                        htmlFor="status-radio-green" data-ripple-dark="true">
-                                                        <input
-                                                            id="status-radio-green"
-                                                            type="radio"
-                                                            value="green"
-                                                            checked={color === 'green'}
-                                                            onChange={(e) => setColor(e.target.value)}
-                                                            className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-full border border-blue-gray-200 text-pink-500 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-green-500 checked:before:bg-green-500 hover:before:opacity-10"
-                                                        />
-                                                        <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-green-500 opacity-0 transition-opacity peer-checked:opacity-100">
-                                                            <RadioButtonIcon />
-                                                        </div>
-                                                    </label>
-                                                    <label className="text-sm text-gray-700" htmlFor="status-radio-green">
-                                                        Green
-                                                    </label>
-                                                </div>
-                                                <div className="inline-flex items-center">
-                                                    <label className="relative flex cursor-pointer items-center rounded-full p-3"
-                                                        htmlFor="status-radio-blue" data-ripple-dark="true">
-                                                        <input
-                                                            id="status-radio-blue"
-                                                            type="radio"
-                                                            value="blue"
-                                                            checked={color === 'blue'}
-                                                            onChange={(e) => setColor(e.target.value)}
-                                                            className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-full border border-blue-gray-200 text-pink-500 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-blue-500 checked:before:bg-blue-500 hover:before:opacity-10"
-                                                        />
-                                                        <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-blue-500 opacity-0 transition-opacity peer-checked:opacity-100">
-                                                            <RadioButtonIcon />
-                                                        </div>
-                                                    </label>
-                                                    <label className="text-sm text-gray-700" htmlFor="status-radio-blue">
-                                                        Blue
-                                                    </label>
-                                                </div>
-                                                <div className="inline-flex items-center">
-                                                    <label className="relative flex cursor-pointer items-center rounded-full p-3"
-                                                        htmlFor="status-radio-yellow" data-ripple-dark="true">
-                                                        <input
-                                                            id="status-radio-yellow"
-                                                            type="radio"
-                                                            value="yellow"
-                                                            checked={color === 'yellow'}
-                                                            onChange={(e) => setColor(e.target.value)}
-                                                            className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-full border border-blue-gray-200 text-pink-500 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-yellow-500 checked:before:bg-yellow-500 hover:before:opacity-10"
-                                                        />
-                                                        <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-yellow-500 opacity-0 transition-opacity peer-checked:opacity-100">
-                                                            <RadioButtonIcon />
-                                                        </div>
-                                                    </label>
-                                                    <label className="text-sm text-gray-700" htmlFor="status-radio-yellow">
-                                                        Yellow
-                                                    </label>
-                                                </div>
-                                                <div className="inline-flex items-center">
-                                                    <label className="relative flex cursor-pointer items-center rounded-full p-3"
-                                                        htmlFor="status-radio-white" data-ripple-dark="true">
-                                                        <input
-                                                            id="status-radio-white"
-                                                            type="radio"
-                                                            value="white"
-                                                            checked={color === 'white'}
-                                                            onChange={(e) => setColor(e.target.value)}
-                                                            className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-full border border-blue-gray-200 text-pink-500 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-black-500 checked:before:bg-black-500 hover:before:opacity-10"
-                                                        />
-                                                        <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-black-500 opacity-0 transition-opacity peer-checked:opacity-100">
-                                                            <RadioButtonIcon />
-                                                        </div>
-                                                    </label>
-                                                    <label className="text-sm text-gray-700" htmlFor="status-radio-white">
-                                                        White
-                                                    </label>
-                                                </div>
+                                                <RadioButton
+                                                    id="status-radio-red"
+                                                    value="red"
+                                                    getter={color}
+                                                    setter={setColor}
+                                                    color="red"
+                                                    label="Red"
+                                                    textLight={700}
+                                                />
+                                                <RadioButton
+                                                    id="status-radio-pink"
+                                                    value="pink"
+                                                    getter={color}
+                                                    setter={setColor}
+                                                    color="pink"
+                                                    label="Pink"
+                                                    textLight={700}
+                                                />
+                                                <RadioButton
+                                                    id="status-radio-green"
+                                                    value="green"
+                                                    getter={color}
+                                                    setter={setColor}
+                                                    color="green"
+                                                    label="Green"
+                                                    textLight={700}
+                                                />
+                                                <RadioButton
+                                                    id="status-radio-blue"
+                                                    value="blue"
+                                                    getter={color}
+                                                    setter={setColor}
+                                                    color="blue"
+                                                    label="Blue"
+                                                    textLight={700}
+                                                />
+                                                <RadioButton
+                                                    id="status-radio-yellow"
+                                                    value="yellow"
+                                                    getter={color}
+                                                    setter={setColor}
+                                                    color="yellow"
+                                                    label="Yellow"
+                                                    textLight={700}
+                                                />
+                                                <RadioButton
+                                                    id="status-radio-white"
+                                                    value="white"
+                                                    getter={color}
+                                                    setter={setColor}
+                                                    color="black"
+                                                    label="White"
+                                                    textLight={700}
+                                                />
                                             </div>
                                         </div>
                                     </div>
