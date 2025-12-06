@@ -2,7 +2,7 @@ class ContextBuilder:
     def __init__(self):
         pass
 
-    def build_context(self, query: str) -> dict:
+    def generate_response(self, query: str) -> dict:
         # Build context for the given query
         pass
 

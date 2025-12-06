@@ -1,14 +1,50 @@
-from typing import Any
+from typing import Any, Optional
 
 from core.abilities import ability_routers
+from core.domain.enums.enum import ChatType
 from core.domain.request.query_request import QueryRequest
+from core.service.graph_memory_model.consolidation import ConsolidationLayer
+from core.service.graph_memory_model.context_builder import ContextBuilder
+from core.service.graph_memory_model.episodic_memory_graph import EMG
+from core.service.graph_memory_model.memory_store import MemoryStore
+from core.service.graph_memory_model.semantic_long_term_graph import SLTG
+from core.service.graph_memory_model.short_term_activation_graph import STAG
+from core.service.graph_memory_model.switching_engine import SwitchingEngine
 from core.service import memory_service
 
 
 class ThinkingUsecase:
 
     @classmethod
-    async def chat(cls, query: QueryRequest, chat_type: str, default=True, **kwargs: Any):
+    async def chat(
+        cls,
+        query: QueryRequest,
+        chat_type: Optional[str] = None,
+        **kwargs: Any,
+    ):
+        """
+        Gaia categorizes the chat flow based on the user's query.
+        It retrieves the chat history and generates a categorized response.
+
+        Args:
+            query (QueryRequest): The user's query containing user_id, dialogue_id, and model_name
+            chat_type (str, optional): Chat type override; defaults to abilities.
+            **kwargs: Additional optional arguments for downstream handlers.
+        Returns:
+            dict: The categorized response from Gaia.
+        """
+        user_config = kwargs.get("user_config", "Default Model")
+        effective_chat_type = chat_type or kwargs.get("chat_type") or ChatType.ABILITIES.value
+
+        if user_config == "Default Model":
+            return await cls.chat_with_normal_flow(query=query, chat_type=effective_chat_type, **kwargs)
+        if user_config == "Graph Model":
+            return await cls.chat_with_graph_flow(query=query, chat_type=effective_chat_type, **kwargs)
+
+        raise ValueError(f"Unsupported user_config: {user_config}")
+
+    @classmethod
+    async def chat_with_normal_flow(cls, query: QueryRequest, chat_type: str, default=True, **kwargs: Any):
         """
         Gaia selects the appropriate ability based on the chat type and query.
         It retrieves the chat history, generates a new query based on the context,
@@ -46,4 +82,28 @@ class ThinkingUsecase:
 
         await memory_service.memorize_info(query=query, is_change_title=is_change_title)
 
+        return response
+
+    @classmethod
+    async def chat_with_graph_flow(cls, query: QueryRequest, chat_type: str, **kwargs: Any):
+        """
+        Gaia handles chat interactions using a graph-based approach.
+        It retrieves the chat history, generates a new query based on the context,
+        and processes the request using graph-based methods.
+
+        Args:
+            query (QueryRequest): The user's query containing user_id, dialogue_id, and model_name
+            chat_type (str): The type of chat to handle, e.g., abilities, introduction, etc.
+            **kwargs: Additional optional arguments for downstream handlers.
+        Returns:
+            dict: The response from the graph-based handler.
+
+        """
+        switching_engine = SwitchingEngine().switch(query)
+        stag = STAG(query).build_temporary_graph()
+        sltg = SLTG(query).build_long_term_graph()
+        emg = EMG(query).build_episodic_memory_graph()
+        retrieval_memory = MemoryStore(query, stag, sltg, emg).get_memory()
+        consolidation = ConsolidationLayer(query, retrieval_memory).consolidate()
+        response = await ContextBuilder(query, consolidation).generate_response()
         return response
