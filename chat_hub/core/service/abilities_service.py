@@ -98,22 +98,6 @@ async def chitchat_with_history(query: QueryRequest) -> str:
     except Exception as e:
         raise e
 
-async def search(query: QueryRequest) -> dict:
-    """
-    Ability handler for web search. Defaults to link-first (no LLM) mode.
-    """
-    return await run_search(
-        user_query=query.query,
-        user_id=query.user_id,
-        model=query.model,
-        top_k=config.SEARCH_DEFAULT_TOP_K,
-        summarize=False,
-        depth="shallow",
-        lang="vi",
-        safe_search="active",
-    )
-
-
 async def persist_recommendation_message(query: QueryRequest, recommend_message: str) -> None:
     if not recommend_message:
         return
