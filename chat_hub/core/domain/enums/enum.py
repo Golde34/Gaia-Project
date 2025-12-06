@@ -27,6 +27,12 @@ class GaiaAbilities(Enum):
     REGISTER_SCHEDULE_CALENDAR = "register_schedule_calendar"
     SEARCH = "search"
 
+
+class TaskStatus(str, Enum):
+    PENDING = "PENDING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+
 class VectorDBContext(Enum):
     GAIA_INTRODUCTION = "Gaia Introduction"
 

@@ -1,21 +1,17 @@
-import asyncio
-import copy
-import hashlib
-import json
-from typing import Any, Dict, List, Optional
+import uuid
+from typing import Any, Dict, List
 
 from core.abilities.function_handlers import FUNCTIONS
+from core.domain.enums.enum import TaskStatus
+from core.domain.enums.kafka_enum import KafkaTopic
 from core.domain.request.query_request import QueryRequest
-from infrastructure.client.recommendation_service_client import (
-    recommendation_service_client,
-)
-from infrastructure.repository.recommendation_history_repo import (
-    recommendation_history_repo,
-)
+from infrastructure.kafka.producer import publish_message
+from infrastructure.repository.task_status_repo import task_status_repo
+from kernel.utils.background_loop import background_loop_pool, log_background_task_error
 
 
 class OrchestratorService:
-    """Coordinate ability handlers and recommendation requests."""
+    """Coordinate ability handlers and dispatch parallel tasks."""
 
     def resolve_tasks(self, guided_route: str) -> List[Dict[str, Any]]:
         """Return ability metadata that matches the guided route."""
@@ -26,188 +22,109 @@ class OrchestratorService:
         tasks: List[Dict[str, Any]] = []
         for ability, metadata in FUNCTIONS.items():
             if ability in guided_route:
-                tasks.append({
-                    "ability": ability,
-                    "handler": metadata.get("handler"),
-                    "is_sequential": metadata.get("is_sequential", False),
-                })
+                tasks.append(
+                    {
+                        "ability": ability,
+                        "handler": metadata.get("handler"),
+                        "is_sequential": metadata.get("is_sequential", False),
+                    }
+                )
         return tasks
 
     async def execute(self, query: QueryRequest, tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Execute ability handlers and fetch recommendation messages."""
+        """Dispatch only parallel tasks and mark them as pending."""
 
         if not tasks:
             return {"primary": None, "tasks": [], "recommend": ""}
 
         results: List[Dict[str, Any]] = []
-        sequential_tasks = [task for task in tasks if task.get("is_sequential")]
-        parallel_tasks = [task for task in tasks if not task.get("is_sequential")]
-        recommend_message = ""
 
-        if sequential_tasks:
-            for task in sequential_tasks:
-                result = await self._execute_task(task, query)
-                results.append(self._build_task_result(task, result))
+        for task in tasks:
+            if task.get("is_sequential"):
+                print("Sequential tasks are not handled in the parallel dispatcher yet.")
+                continue
 
-            finalized_snapshot = [
-                item
-                for item in results
-                if item.get("is_sequential")
-                and self._is_task_finalized(item.get("result"))
-            ]
-
-            if len(finalized_snapshot) == len(sequential_tasks):
-                recommendation_snapshot = [copy.deepcopy(item) for item in finalized_snapshot]
-                fingerprint = self._compose_fingerprint(query, recommendation_snapshot)
-                should_recommend = await recommendation_history_repo.should_recommend(
-                    user_id=query.user_id, fingerprint=fingerprint
-                )
-                if should_recommend:
-                    recommend_message = await self._call_recommendation(
-                        query,
-                        recommendation_snapshot,
-                        fingerprint,
-                    )
-            else:
-                print(
-                    "Orchestrator: skip recommendation because sequential tasks"
-                    " are not finalized"
-                )
-
-            if parallel_tasks:
-                parallel_futures = [
-                    asyncio.create_task(self._execute_task(task, query))
-                    for task in parallel_tasks
-                ]
-                parallel_results = await asyncio.gather(
-                    *parallel_futures, return_exceptions=True
-                )
-                for task, result in zip(parallel_tasks, parallel_results):
-                    if isinstance(result, Exception):
-                        print(
-                            f"Orchestrator: task {task.get('ability')} failed: {result}"
-                        )
-                        continue
-                    results.append(self._build_task_result(task, result))
-        else:
-            recommendation_snapshot = [copy.deepcopy(item) for item in results]
-            fingerprint = self._compose_fingerprint(query, recommendation_snapshot)
-            recommendation_future: Optional[asyncio.Task[str]] = None
-            if await recommendation_history_repo.should_recommend(
-                user_id=query.user_id, fingerprint=fingerprint
-            ):
-                recommendation_future = asyncio.create_task(
-                    self._call_recommendation(
-                        query,
-                        recommendation_snapshot,
-                        fingerprint,
-                    )
-                )
-
-            if parallel_tasks:
-                parallel_futures = [
-                    asyncio.create_task(self._execute_task(task, query))
-                    for task in parallel_tasks
-                ]
-                parallel_results = await asyncio.gather(
-                    *parallel_futures, return_exceptions=True
-                )
-                for task, result in zip(parallel_tasks, parallel_results):
-                    if isinstance(result, Exception):
-                        print(
-                            f"Orchestrator: task {task.get('ability')} failed: {result}"
-                        )
-                        continue
-                    results.append(self._build_task_result(task, result))
-
-            if recommendation_future:
-                recommend_message = await recommendation_future
+            pending_result = await self._dispatch_parallel_task(task, query)
+            results.append(pending_result)
 
         primary = results[0] if results else None
-        return {"primary": primary, "tasks": results, "recommend": recommend_message}
+        return {"primary": primary, "tasks": results, "recommend": ""}
 
-    async def _execute_task(self, task: Dict[str, Any], query: QueryRequest) -> Any:
-        handler = task.get("handler")
-        if not handler:
-            raise ValueError(f"No handler found for task {task.get('ability')}")
-        return await handler(query=query)
-
-    async def _call_recommendation(
-        self,
-        query: QueryRequest,
-        task_results: List[Dict[str, Any]],
-        fingerprint: str,
-    ) -> str:
-        try:
-            context = self._compose_recommendation_context(query, task_results)
-            recommendation = await recommendation_service_client.recommend(
-                query=context,
-                user_id=query.user_id,
-                dialogue_id=query.dialogue_id,
-                fingerprint=fingerprint,
-            )
-            if recommendation:
-                await recommendation_history_repo.register(
-                    user_id=query.user_id,
-                    fingerprint=fingerprint,
-                    recommendation=recommendation,
-                    dialogue_id=query.dialogue_id,
-                )
-            return recommendation
-        except Exception as exc:
-            print(f"Recommendation call failed: {exc}")
-            return ""
-
-    def _compose_fingerprint(
-        self, query: QueryRequest, task_results: List[Dict[str, Any]]
-    ) -> str:
-        context = self._compose_recommendation_context(query, task_results)
-        digest = hashlib.sha256(context.encode("utf-8")).hexdigest()
-        return digest
-
-    def _compose_recommendation_context(
-        self, query: QueryRequest, task_results: List[Dict[str, Any]]
-    ) -> str:
-        if not task_results:
-            return query.query
-
-        formatted_results = [
-            self._stringify_task_result(result) for result in task_results
-        ]
-        joined_results = "\n".join(formatted_results)
-        return f"{query.query}\n\nTask results:\n{joined_results}"
-
-    def _stringify_task_result(self, task_result: Dict[str, Any]) -> str:
-        ability = task_result.get("ability") or task_result.get("type")
-        payload = task_result.get("result")
-        if isinstance(payload, dict):
-            try:
-                serialized = json.dumps(payload, ensure_ascii=False)
-            except TypeError:
-                serialized = str(payload)
-        else:
-            serialized = str(payload)
-        return f"{ability}: {serialized}"
-
-    def _build_task_result(
-        self, task: Dict[str, Any], result: Any
+    async def _dispatch_parallel_task(
+        self, task: Dict[str, Any], query: QueryRequest
     ) -> Dict[str, Any]:
+        task_id = uuid.uuid4().hex
+        pending_record = {
+            "task_id": task_id,
+            "user_id": query.user_id,
+            "ability": task.get("ability"),
+            "query": query.query,
+            "dialogue_id": query.dialogue_id,
+            "status": TaskStatus.PENDING.value,
+        }
+        task_status_repo.save_task(query.user_id, task_id, pending_record)
+
+        background_loop_pool.schedule(
+            lambda: self._run_parallel_task(task, query, pending_record),
+            callback=log_background_task_error,
+        )
+
         return {
             "type": task.get("ability"),
-            "result": result,
-            "is_sequential": task.get("is_sequential", False),
+            "result": {
+                "taskId": task_id,
+                "status": TaskStatus.PENDING.value,
+                "response": "",
+                "query": query.query,
+            },
+            "is_sequential": False,
         }
 
-    def _is_task_finalized(self, result: Any) -> bool:
-        if not isinstance(result, dict):
-            return True
+    async def _run_parallel_task(
+        self, task: Dict[str, Any], query: QueryRequest, pending_record: Dict[str, Any]
+    ) -> None:
+        handler = task.get("handler")
+        status = TaskStatus.SUCCESS
+        result: Any
 
-        status = str(result.get("status", "")).upper()
-        if not status:
-            return True
+        try:
+            if not handler:
+                raise ValueError(f"No handler found for task {task.get('ability')}")
+            result = await handler(query=query)
+        except Exception as exc:
+            status = TaskStatus.FAILED
+            result = {"response": str(exc)}
 
-        non_final_statuses = {"PENDING", "IN_PROGRESS"}
-        return status not in non_final_statuses
+        await self._publish_task_result(pending_record, result, status)
+
+    async def _publish_task_result(
+        self, pending_record: Dict[str, Any], result: Any, status: TaskStatus
+    ) -> None:
+        normalized_result = result if isinstance(result, dict) else {"response": str(result)}
+        task_status_repo.update_status(
+            pending_record.get("user_id"),
+            pending_record.get("task_id"),
+            status.value,
+            normalized_result,
+        )
+
+        payload = {
+            "taskId": pending_record.get("task_id"),
+            "userId": pending_record.get("user_id"),
+            "ability": pending_record.get("ability"),
+            "query": pending_record.get("query"),
+            "status": status.value,
+            "result": normalized_result,
+        }
+
+        try:
+            await publish_message(
+                KafkaTopic.ABILITY_TASK_RESULT.value,
+                pending_record.get("ability") or "",
+                payload,
+            )
+        except Exception as exc:
+            print(f"Failed to publish task result: {exc}")
 
     def format_task_payload(self, task_result: Dict[str, Any]) -> Dict[str, Any]:
         payload = task_result.get("result")
