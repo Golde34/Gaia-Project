@@ -38,6 +38,8 @@ Sau đó các activation hoặc node mới sẽ:
 Mục tiêu là tái tạo neural activation pattern giống như con người
 * Biến: confidence score dùng để xác định mức độ quan trọng của conepts với tasks
 
+* Biến: confidence score dùng để xác định mức độ quan trọng của conepts với tasks
+
 3. Memory Engines
 Semantic Long-Term Graph (SLTG)
 + Enduring concepts (user preferences, facts)
