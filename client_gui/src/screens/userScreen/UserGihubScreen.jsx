@@ -63,7 +63,7 @@ const UserGithubScreen = (props) => {
                 <>
                     <div className="grid md:grid-cols-5 grid-cols-1 w-full">
                         <div className="col-span-2">
-                            <div className="w-full flex flex-col justify-between p-2">
+                            <div className="w-full flex flex-col justify-between">
                                 <div className="flex-auto w-full">
                                     <Card>
                                         <Flex justifyContent="center" alignItems="center" className="mb-4">
@@ -101,7 +101,7 @@ const UserGithubScreen = (props) => {
                             </div>
                         </div>
                         <div className="col-span-3 w-full">
-                            <div className='w-full p-2'>
+                            <div className='w-full ms-4'>
                                 <GithubSyncProjectScreen />
                             </div>
                         </div>

@@ -2,8 +2,8 @@ import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@
 import { Input, Textarea } from "@material-tailwind/react";
 import { Card, Title } from "@tremor/react";
 import { Fragment, useState } from "react";
-import RadioButtonIcon from "../../components/icons/RadioButtonIcon";
 import { useCreateProjectDispatch } from "../../kernels/utils/write-dialog-api-requests";
+import { RadioButton } from "../../components/subComponents/RadioButton";
 
 export const CreateNewProject = () => {
     let [isOpen, setIsOpen] = useState(false);
@@ -98,44 +98,24 @@ export const CreateNewProject = () => {
                                     <div className="mt-4">
                                         <p className="block text-md font-medium text-gray-700 mb-3">Status</p>
                                         <div className="grid grid-cols-3 m-2">
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex cursor-pointer items-center rounded-full p-3"
-                                                    htmlFor="status-radio-todo" data-ripple-dark="true">
-                                                    <input
-                                                        id="status-radio-todo"
-                                                        type="radio"
-                                                        value="TODO"
-                                                        checked={status === 'TODO'}
-                                                        onChange={(e) => setStatus(e.target.value)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-full border border-blue-gray-200 text-pink-500 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-blue-500 checked:before:bg-blue-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-blue-500 opacity-0 transition-opacity peer-checked:opacity-100">
-                                                        <RadioButtonIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700" htmlFor="status-radio-todo">
-                                                    TO DO
-                                                </label>
-                                            </div>
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex cursor-pointer items-center rounded-full p-3"
-                                                    htmlFor="status-radio-doing" data-ripple-dark="true">
-                                                    <input
-                                                        id="status-radio-doing"
-                                                        type="radio"
-                                                        value="IN_PROGRESS"
-                                                        checked={status === 'IN_PROGRESS'}
-                                                        onChange={(e) => setStatus(e.target.value)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-full border border-blue-gray-200 text-pink-500 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-blue-500 checked:before:bg-blue-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-blue-500 opacity-0 transition-opacity peer-checked:opacity-100">
-                                                        <RadioButtonIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700" htmlFor="status-radio-doing">
-                                                    IN PROGRESS
-                                                </label>
-                                            </div>
+                                            <RadioButton
+                                                id="status-radio-todo"
+                                                value="TODO"
+                                                getter={status}
+                                                setter={setStatus}
+                                                color="blue"
+                                                label="TO DO"
+                                                textLight={700}
+                                            />
+                                            <RadioButton
+                                                id="status-radio-doing"
+                                                value="IN_PROGRESS"
+                                                getter={status}
+                                                setter={setStatus}
+                                                color="blue"
+                                                label="IN PROGRESS"
+                                                textLight={700}
+                                            />
                                         </div>
                                     </div>
 

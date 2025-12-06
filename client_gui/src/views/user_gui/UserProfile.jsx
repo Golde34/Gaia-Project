@@ -1,6 +1,6 @@
 import Template from "../../components/template/Template"
-import { Card, Col, Grid, Metric, Tab, TabGroup, TabList, TabPanel, TabPanels } from "@tremor/react";
-import { useCallback, useEffect, useRef } from "react";
+import { Metric, Tab, TabGroup, TabList, TabPanel, TabPanels } from "@tremor/react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { userProfile } from "../../api/store/actions/auth_service/user.actions";
 import MessageBox from "../../components/subComponents/MessageBox";
@@ -8,12 +8,56 @@ import UserSettingScreen from "../../screens/userScreen/UserSettingScreen";
 import UserProfileInfoScreen from "../../screens/userScreen/UserProfileScreen";
 import UserGithubScreen from "../../screens/userScreen/UserGihubScreen";
 import LLMModelSettingScreen from "../../screens/userScreen/LLMModelSetting";
+import SettingsSectionLayout from "../../components/SettingsSectionLayout";
+import { ComingSoonComponent } from "../../components/subComponents/ComingSoonComponent";
 
 function ContentArea() {
     const dispatch = useDispatch();
 
     const profile = useSelector(state => state.userDetail);
     const { loading, error, user } = profile;
+
+    const profileTitle = "User Profile";
+    const profileSections = useMemo(() => ([
+        {
+            id: "profile-overview",
+            label: "Profile overview",
+            description: "Personal and account information",
+            content: <UserProfileInfoScreen user={user} />,
+        },
+        {
+            id: "user-preferences",
+            label: "User settings",
+            description: "Privacy preferences and task optimization",
+            content: <UserSettingScreen user={user} />,
+        },
+    ]), [user]);
+
+    const llmSettingTitle = "LLM Model Settings";
+    const llmSections = useMemo(() => ([
+        {
+            id: "llm-models",
+            label: "LLM models",
+            description: "Select and manage the active model",
+            renderContent: () => user?.llmModels?.[0] ? <LLMModelSettingScreen user={user} model={user.llmModels[0].modelName} /> : null,
+        },
+        {
+            id: "tuning-memory",
+            label: "Tunning assistant memory",
+            description: "Configure memory settings for your LLM model",
+            content: <ComingSoonComponent />,
+        },
+    ]), [user]);
+
+    const integrationSettingsTitle = "Integration Settings";
+    const integrationSetting = useMemo(() => ([
+        {
+            id: "github-config",
+            label: "Github settings",
+            description: "Connect and configure Github integration",
+            content: <UserGithubScreen user={user} />,
+        },
+    ]), [user]);
     const getUserProfile = useCallback(() => {
         dispatch(userProfile());
     }, [dispatch]);
@@ -37,34 +81,31 @@ function ContentArea() {
                         className='text-2xl font-bold text-gray-800'>User Profile</Metric>
                     <TabGroup>
                         <TabList className="mt-4" variant="solid">
-                            <Tab>Profile</Tab>
-                            <Tab>LLM Model Settings</Tab>
-                            <Tab>Github Settings</Tab>
+                            <Tab>{profileTitle}</Tab>
+                            <Tab>{llmSettingTitle}</Tab>
+                            <Tab>{integrationSettingsTitle}</Tab>
                         </TabList>
                         <TabPanels>
                             <TabPanel>
-                                <Grid numItems={7} className="mt-4">
-                                    <Col numColSpan={3}>
-                                <div className="flex-auto w-full p-2" >
-                                    <UserProfileInfoScreen user={user} />
-                                </div>
-                                </Col>
-                                <Col numColSpan={4}>
-                                <div className='w-full p-2'>
-                                    <UserSettingScreen user={user} />
-                                </div>
-                                </Col>
-                                </Grid>
+                                <SettingsSectionLayout
+                                    sidebarTitle={profileTitle}
+                                    sections={profileSections}
+                                    contentContainerClassName="w-full p-2"
+                                />
                             </TabPanel>
                             <TabPanel>
-                                <div className="w-full p-2 mt-2">
-                                    <LLMModelSettingScreen user={user} model={user.llmModels[0].modelName} />
-                                </div>
+                                <SettingsSectionLayout
+                                    sidebarTitle={llmSettingTitle}
+                                    sections={llmSections}
+                                    contentContainerClassName="w-full p-2"
+                                />
                             </TabPanel>
                             <TabPanel>
-                                <div className="flex-auto w-full p-2">
-                                    <UserGithubScreen user={user} />
-                                </div>
+                                <SettingsSectionLayout
+                                    sidebarTitle={integrationSettingsTitle}
+                                    sections={integrationSetting}
+                                    contentContainerClassName="flex-auto w-full p-2"
+                                />
                             </TabPanel>
                         </TabPanels>
                     </TabGroup>
