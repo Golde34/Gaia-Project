@@ -1,7 +1,6 @@
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions, Dialog, DialogPanel, DialogTitle, Input, Transition, TransitionChild } from "@headlessui/react";
 import { Button, Col, Grid } from "@tremor/react";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
-import CheckBoxIcon from "../../components/icons/CheckboxIcon";
 import { pushPriority, pushRepeat } from "../../kernels/utils/field-utils";
 import { useCreateScheduletaskDispatch } from "../../kernels/utils/write-dialog-api-requests";
 import { calculateDuration } from "../../kernels/utils/date-picker";
@@ -12,6 +11,7 @@ import clsx from "clsx";
 import MessageBox from "../../components/subComponents/MessageBox";
 import { getGroupTaskList } from "../../api/store/actions/task_manager/group-task.actions";
 import { useNavigate } from "react-router-dom";
+import { CheckBoxComponent } from "../../components/subComponents/CheckBox";
 
 export const CreateScheduleGroupDialog = () => {
     const dispatch = useDispatch();
@@ -57,7 +57,7 @@ export const CreateScheduleGroupDialog = () => {
         scheduleTask.repeat = pushRepeat(isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday);
         scheduleTask.isNotify = true;
         scheduleTask.activeStatus = 'ACTIVE';
-        
+
         createScheduleTask(scheduleTask);
         window.location.reload();
     }
@@ -347,191 +347,105 @@ export const CreateScheduleGroupDialog = () => {
                                     <div className="mt-4">
                                         <p className="block text-md font-medium text-gray-700 mb-1">Priority</p>
                                         <div className="grid grid-cols-4 m-1">
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="priority-checkbox-high" data-ripple-dark="true">
-                                                    <input
-                                                        id="priority-checkbox-high"
-                                                        type="checkbox"
-                                                        checked={isHighPriority}
-                                                        onChange={() => setIsHighPriority(!isHighPriority)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-red-500 checked:bg-red-500 checked:before:bg-red-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700">High</label>
-                                            </div>
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="priority-checkbox-medium" data-ripple-dark="true">
-                                                    <input
-                                                        id="priority-checkbox-medium"
-                                                        type="checkbox"
-                                                        checked={isMediumPriority}
-                                                        onChange={() => setIsMediumPriority(!isMediumPriority)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-pink-500 checked:bg-pink-500 checked:before:bg-pink-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700">Medium</label>
-                                            </div>
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="priority-checkbox-low" data-ripple-dark="true">
-                                                    <input
-                                                        id="priority-checkbox-low"
-                                                        type="checkbox"
-                                                        checked={isLowPriority}
-                                                        onChange={() => setIsLowPriority(!isLowPriority)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-green-500 checked:bg-green-500 checked:before:bg-green-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700">Low</label>
-                                            </div>
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="priority-checkbox-star" data-ripple-dark="true">
-                                                    <input
-                                                        id="priority-checkbox-star"
-                                                        type="checkbox"
-                                                        checked={isStarPriority}
-                                                        onChange={() => setIsStarPriority(!isStarPriority)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-yellow-500 checked:bg-yellow-500 checked:before:bg-yellow-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700">Star</label>
-                                            </div>
+                                            <CheckBoxComponent
+                                                id="priority-checkbox-high"
+                                                getter={isHighPriority}
+                                                setter={setIsHighPriority}
+                                                color="red"
+                                                label="High"
+                                            />
+                                            <CheckBoxComponent
+                                                id="priority-checkbox-medium"
+                                                getter={isMediumPriority}
+                                                setter={setIsMediumPriority}
+                                                color="pink"
+                                                label="Medium"
+                                            />
+                                            <CheckBoxComponent
+                                                id="priority-checkbox-low"
+                                                getter={isLowPriority}
+                                                setter={setIsLowPriority}
+                                                color="green"
+                                                label="Low"
+                                            />
+                                            <CheckBoxComponent
+                                                id="priority-checkbox-star"
+                                                getter={isStarPriority}
+                                                setter={setIsStarPriority}
+                                                color="yellow"
+                                                label="Star"
+                                            />
                                         </div>
                                     </div>
 
                                     <div className="mt-2">
                                         <p className="block text-md font-medium text-gray-700 mb-1">Repeat On</p>
-                                        <div className="grid grid-cols-4 m-1">
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="repeat-checkbox-monday" data-ripple-dark="true">
-                                                    <input
-                                                        id="repeat-checkbox-monday"
-                                                        type="checkbox"
-                                                        checked={isMonday}
-                                                        onChange={() => setIsMonday(!isMonday)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-red-500 checked:bg-red-500 checked:before:bg-red-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700">Monday</label>
-                                            </div>
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="repeat-checkbox-tuesday" data-ripple-dark="true">
-                                                    <input
-                                                        id="repeat-checkbox-tuesday"
-                                                        type="checkbox"
-                                                        checked={isTuesday}
-                                                        onChange={() => setIsTuesday(!isTuesday)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-pink-500 checked:bg-pink-500 checked:before:bg-pink-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700">Tuesday</label>
-                                            </div>
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="repeat-checkbox-wednesday" data-ripple-dark="true">
-                                                    <input
-                                                        id="repeat-checkbox-wednesday"
-                                                        type="checkbox"
-                                                        checked={isWednesday}
-                                                        onChange={() => setIsWednesday(!isWednesday)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-green-500 checked:bg-green-500 checked:before:bg-green-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700">Wednesday</label>
-                                            </div>
-                                            <div></div>
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="repeat-checkbox-thursday" data-ripple-dark="true">
-                                                    <input
-                                                        id="repeat-checkbox-thursday"
-                                                        type="checkbox"
-                                                        checked={isThursday}
-                                                        onChange={() => setIsThursday(!isThursday)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-yellow-500 checked:bg-yellow-500 checked:before:bg-yellow-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700">Thursday</label>
-                                            </div>
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="repeat-checkbox-friday" data-ripple-dark="true">
-                                                    <input
-                                                        id="repeat-checkbox-friday"
-                                                        type="checkbox"
-                                                        checked={isFriday}
-                                                        onChange={() => setIsFriday(!isFriday)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-blue-500 checked:bg-blue-500 checked:before:bg-blue-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700">Friday</label>
-                                            </div>
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="repeat-checkbox-saturday" data-ripple-dark="true">
-                                                    <input
-                                                        id="repeat-checkbox-saturday"
-                                                        type="checkbox"
-                                                        checked={isSaturday}
-                                                        onChange={() => setIsSaturday(!isSaturday)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-indigo-500 checked:bg-indigo-500 checked:before:bg-indigo-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700">Saturday</label>
-                                            </div>
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-
-                                                    htmlFor="repeat-checkbox-sunday" data-ripple-dark="true">
-                                                    <input
-                                                        id="repeat-checkbox-sunday"
-                                                        type="checkbox"
-                                                        checked={isSunday}
-                                                        onChange={() => setIsSunday(!isSunday)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-gray-500 checked:bg-gray-500 checked:before:bg-gray-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700">Sunday</label>
-                                            </div>
-                                        </div>
+                                        <Grid numItems={4}>
+                                            <Col numColSpan={1}>
+                                                <CheckBoxComponent
+                                                    id="repeat-checkbox-monday"
+                                                    getter={isMonday}
+                                                    setter={setIsMonday}
+                                                    color="green"
+                                                    label="Monday"
+                                                />
+                                            </Col>
+                                            <Col numColSpan={1}>
+                                                <CheckBoxComponent
+                                                    id="repeat-checkbox-tuesday"
+                                                    getter={isTuesday}
+                                                    setter={setIsTuesday}
+                                                    color="teal"
+                                                    label="Tuesday"
+                                                />
+                                            </Col>
+                                            <Col numColSpan={1}>
+                                                <CheckBoxComponent
+                                                    id="repeat-checkbox-wednesday"
+                                                    getter={isWednesday}
+                                                    setter={setIsWednesday}
+                                                    color="blue"
+                                                    label="Wednesday"
+                                                />
+                                            </Col>
+                                            <Col numColSpan={1}></Col>
+                                            <Col numColSpan={1}>
+                                                <CheckBoxComponent
+                                                    id="repeat-checkbox-thursday"
+                                                    getter={isThursday}
+                                                    setter={setIsThursday}
+                                                    color="indigo"
+                                                    label="Thursday"
+                                                />
+                                            </Col>
+                                            <Col numColSpan={1}>
+                                                <CheckBoxComponent
+                                                    id="repeat-checkbox-friday"
+                                                    getter={isFriday}
+                                                    setter={setIsFriday}
+                                                    color="pink"
+                                                    label="Friday"
+                                                />
+                                            </Col>
+                                            <Col numColSpan={1}>
+                                                <CheckBoxComponent
+                                                    id="repeat-checkbox-saturday"
+                                                    getter={isSaturday}
+                                                    setter={setIsSaturday}
+                                                    color="red"
+                                                    label="Saturday"
+                                                />
+                                            </Col>
+                                            <Col numColSpan={1}>
+                                                <CheckBoxComponent
+                                                    id="repeat-checkbox-sunday"
+                                                    getter={isSunday}
+                                                    setter={setIsSunday}
+                                                    color="yellow"
+                                                    label="Sunday"
+                                                />
+                                            </Col>
+                                        </Grid>
                                     </div>
 
                                     <div className="mt-4 flex justify-end">

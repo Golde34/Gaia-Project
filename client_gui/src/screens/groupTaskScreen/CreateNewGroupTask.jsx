@@ -4,9 +4,9 @@ import { Input, Textarea } from "@material-tailwind/react";
 import { PlusIcon } from "@heroicons/react/outline";
 import { useParams } from "react-router-dom";
 import { useCreateGroupTaskDispatch } from '../../kernels/utils/write-dialog-api-requests';
-import CheckBoxIcon from "../../components/icons/CheckboxIcon";
 import { Button, DialogPanel } from "@tremor/react";
 import { RadioButton } from "../../components/subComponents/RadioButton";
+import { CheckBoxComponent } from "../../components/subComponents/CheckBox";
 
 export const CreateNewGroupTask = (props) => {
     const useParam = useParams();
@@ -138,72 +138,35 @@ export const CreateNewGroupTask = (props) => {
                                     <div className="mt-4">
                                         <p className="block text-md font-medium text-gray-700 mb-3">Priority</p>
                                         <div className="grid grid-cols-4 m-2">
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="priority-checkbox-high" data-ripple-dark="true">
-                                                    <input
-                                                        id="priority-checkbox-high"
-                                                        type="checkbox"
-                                                        checked={isHighPriority}
-                                                        onChange={() => setIsHighPriority(!isHighPriority)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-red-500 checked:bg-red-500 checked:before:bg-red-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700">High</label>
-                                            </div>
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="priority-checkbox-medium" data-ripple-dark="true">
-                                                    <input
-                                                        id="priority-checkbox-medium"
-                                                        type="checkbox"
-                                                        checked={isMediumPriority}
-                                                        onChange={() => setIsMediumPriority(!isMediumPriority)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-pink-500 checked:bg-pink-500 checked:before:bg-pink-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700">Medium</label>
-                                            </div>
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="priority-checkbox-low" data-ripple-dark="true">
-                                                    <input
-                                                        id="priority-checkbox-low"
-                                                        type="checkbox"
-                                                        checked={isLowPriority}
-                                                        onChange={() => setIsLowPriority(!isLowPriority)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-green-500 checked:bg-green-500 checked:before:bg-green-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700">Low</label>
-                                            </div>
-                                            <div className="inline-flex items-center">
-                                                <label className="relative flex items-center p-3 rounded-full cursor-pointer"
-                                                    htmlFor="priority-checkbox-star" data-ripple-dark="true">
-                                                    <input
-                                                        id="priority-checkbox-star"
-                                                        type="checkbox"
-                                                        checked={isStarPriority}
-                                                        onChange={() => setIsStarPriority(!isStarPriority)}
-                                                        className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-yellow-500 checked:bg-yellow-500 checked:before:bg-yellow-500 hover:before:opacity-10"
-                                                    />
-                                                    <div className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
-                                                        <CheckBoxIcon />
-                                                    </div>
-                                                </label>
-                                                <label className="text-sm text-gray-700">Star</label>
-                                            </div>
+                                            <CheckBoxComponent 
+                                                id="priority-checkbox-high"
+                                                getter={isHighPriority}
+                                                setter={setIsHighPriority}
+                                                color="red"
+                                                label="High"
+                                            />
+                                            <CheckBoxComponent
+                                                id="priority-checkbox-medium"
+                                                getter={isMediumPriority}
+                                                setter={setIsMediumPriority}
+                                                color="pink"
+                                                label="Medium"
+                                            />
+                                            <CheckBoxComponent
+                                                id="priority-checkbox-low"
+                                                getter={isLowPriority}
+                                                setter={setIsLowPriority}
+                                                color="green"
+                                                label="Low"
+                                            />
+                                            <CheckBoxComponent
+                                                id="priority-checkbox-star"
+                                                getter={isStarPriority}
+                                                setter={setIsStarPriority}
+                                                color="yellow"
+                                                label="Star"
+                                            />
                                         </div>
-
                                     </div>
 
                                     {/* Status Checkbox */}
