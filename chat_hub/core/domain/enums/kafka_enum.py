@@ -10,6 +10,7 @@ class KafkaTopic(str, Enum):
     ## Producer topics
     GENERATE_CALENDAR_SCHEDULE = "ai-core.generate-calendar-schedule.topic"
     ABILITY_TASK_RESULT = "ai-core.ability-task-result.topic"
+    PUSH_MESSAGE = "ai-core.push-message.topic"
 
 class KafkaCommand(str, Enum):
     GENERATE_CALENDAR_SCHEDULE = "gaiaRegisterCalendar"

@@ -12,6 +12,7 @@ from infrastructure.client.recommendation_service_client import (
 from infrastructure.kafka.producer import publish_message
 from infrastructure.repository.task_status_repo import task_status_repo
 from kernel.utils.background_loop import background_loop_pool, log_background_task_error
+from kernel.utils.sse_connection_registry import broadcast_to_user
 
 
 class OrchestratorService:
@@ -62,6 +63,7 @@ class OrchestratorService:
     ) -> Tuple[Dict[str, Any], str]:
         result = await self._run_sequential_task(task, query)
         recommendation = await self._fetch_recommendation(query)
+        await self._deliver_sequential_notifications(query, result, recommendation)
         return result, recommendation
 
     async def _dispatch_parallel_task(
@@ -159,6 +161,67 @@ class OrchestratorService:
             )
         except Exception as exc:
             print(f"Failed to publish task result: {exc}")
+
+    async def _deliver_sequential_notifications(
+        self, query: QueryRequest, result: Dict[str, Any], recommendation: str
+    ) -> None:
+        """Notify client GUI about sequential responses via SSE or Kafka."""
+
+        user_id = query.user_id
+        dialogue_id = query.dialogue_id
+
+        if user_id is None:
+            return
+
+        formatted_response = self.format_task_payload(result)
+        response_text = formatted_response.get("response", "")
+
+        await broadcast_to_user(
+            str(user_id),
+            "sequential_response",
+            {
+                "response": response_text,
+                "type": formatted_response.get("type"),
+                "dialogueId": dialogue_id,
+                "isSequential": True,
+            },
+        )
+
+        await broadcast_to_user(
+            str(user_id),
+            "sequential_recommendation",
+            {
+                "recommend": recommendation,
+                "dialogueId": dialogue_id,
+                "isSequential": True,
+            },
+        )
+
+        try:
+            await publish_message(
+                KafkaTopic.PUSH_MESSAGE.value,
+                "sequentialResponse",
+                {
+                    "userId": user_id,
+                    "dialogueId": dialogue_id,
+                    "response": response_text,
+                    "type": formatted_response.get("type"),
+                    "isSequential": True,
+                },
+            )
+
+            await publish_message(
+                KafkaTopic.PUSH_MESSAGE.value,
+                "sequentialRecommendation",
+                {
+                    "userId": user_id,
+                    "dialogueId": dialogue_id,
+                    "recommend": recommendation,
+                    "isSequential": True,
+                },
+            )
+        except Exception as exc:
+            print(f"Failed to push sequential messages: {exc}")
 
     def format_task_payload(self, task_result: Dict[str, Any]) -> Dict[str, Any]:
         payload = task_result.get("result")
