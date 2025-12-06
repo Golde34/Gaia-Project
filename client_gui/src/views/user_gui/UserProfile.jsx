@@ -16,6 +16,7 @@ function ContentArea() {
     const profile = useSelector(state => state.userDetail);
     const { loading, error, user } = profile;
 
+    const profileTitle = "User Profile";
     const profileSections = useMemo(() => ([
         {
             id: "profile-overview",
@@ -31,6 +32,7 @@ function ContentArea() {
         },
     ]), [user]);
 
+    const llmSettingTitle = "LLM Model Settings";
     const llmSections = useMemo(() => ([
         {
             id: "llm-models",
@@ -40,7 +42,8 @@ function ContentArea() {
         },
     ]), [user]);
 
-    const githubSections = useMemo(() => ([
+    const integrationSettingsTitle = "Integration Settings";
+    const integrationSetting = useMemo(() => ([
         {
             id: "github-config",
             label: "Github settings",
@@ -71,29 +74,29 @@ function ContentArea() {
                         className='text-2xl font-bold text-gray-800'>User Profile</Metric>
                     <TabGroup>
                         <TabList className="mt-4" variant="solid">
-                            <Tab>Profile</Tab>
-                            <Tab>LLM Model Settings</Tab>
-                            <Tab>Github Settings</Tab>
+                            <Tab>{profileTitle}</Tab>
+                            <Tab>{llmSettingTitle}</Tab>
+                            <Tab>{integrationSettingsTitle}</Tab>
                         </TabList>
                         <TabPanels>
                             <TabPanel>
                                 <SettingsSectionLayout
-                                    sidebarTitle="User profile"
+                                    sidebarTitle={profileTitle}
                                     sections={profileSections}
                                     contentContainerClassName="w-full p-2"
                                 />
                             </TabPanel>
                             <TabPanel>
                                 <SettingsSectionLayout
-                                    sidebarTitle="LLM models"
+                                    sidebarTitle={llmSettingTitle}
                                     sections={llmSections}
-                                    contentContainerClassName="w-full p-2 mt-2"
+                                    contentContainerClassName="w-full p-2"
                                 />
                             </TabPanel>
                             <TabPanel>
                                 <SettingsSectionLayout
-                                    sidebarTitle="Github"
-                                    sections={githubSections}
+                                    sidebarTitle={integrationSettingsTitle}
+                                    sections={integrationSetting}
                                     contentContainerClassName="flex-auto w-full p-2"
                                 />
                             </TabPanel>

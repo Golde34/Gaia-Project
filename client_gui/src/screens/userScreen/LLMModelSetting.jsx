@@ -71,7 +71,7 @@ const LLMModelSettingScreen = (props) => {
     };
 
     const renderModelSelector = () => (
-        <Table className="mt-6">
+        <Table>
             <TableHead>
                 <TableRow className="border-b border-tremor-border dark:border-dark-tremor-border">
                     <TableHeaderCell>
@@ -139,7 +139,7 @@ const LLMModelSettingScreen = (props) => {
     );
 
     return (
-        <div>
+        <>
             {loading ? (
                 <p>Loading...</p>
             ) : error ? (
@@ -157,7 +157,7 @@ const LLMModelSettingScreen = (props) => {
             ) : (
                 <Text>No model is available right now.</Text>
             )}
-        </div>
+        </>
     );
 };
 

@@ -7,7 +7,7 @@ const SettingsSectionLayout = ({
     sidebarTitle = "Quick navigation",
     defaultSectionId,
     onSectionChange,
-    sidebarCols = 2,
+    sidebarCols = 1,
     contentCols = 4,
     contentContainerClassName = "w-full p-2",
 }) => {
@@ -35,7 +35,7 @@ const SettingsSectionLayout = ({
     return (
         <Grid numItems={sidebarCols + contentCols} className="mt-4 gap-4">
             <Col numColSpan={sidebarCols}>
-                <Card className="h-full bg-slate-900/60 border border-slate-800">
+                <Card className="h-full bg-slate-900/60 mt-2">
                     <Text className="text-gray-300 text-sm mb-3">{sidebarTitle}</Text>
                     <div className="flex flex-col gap-2">
                         {sections.map((section) => {
