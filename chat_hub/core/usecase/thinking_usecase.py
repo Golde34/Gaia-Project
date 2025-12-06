@@ -33,7 +33,7 @@ class ThinkingUsecase:
         Returns:
             dict: The categorized response from Gaia.
         """
-        user_config = kwargs.get("user_config", "Default Model")
+        user_config = "Default Model"
         effective_chat_type = chat_type or kwargs.get("chat_type") or ChatType.ABILITIES.value
 
         if user_config == "Default Model":
