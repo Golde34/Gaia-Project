@@ -36,6 +36,7 @@ Sau đó các activation hoặc node mới sẽ:
 + ADD - nếu concept/episodic mới
 --> Chỉ lưu vào main graph những gì meaningful giống như consolidation của hippocampus
 Mục tiêu là tái tạo neural activation pattern giống như con người
+* Biến: confidence score dùng để xác định mức độ quan trọng của conepts với tasks
 
 * Biến: confidence score dùng để xác định mức độ quan trọng của conepts với tasks
 
