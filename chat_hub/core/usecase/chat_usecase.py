@@ -8,7 +8,7 @@ from core.service import sse_stream_service
 from core.service.integration import auth_service
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
-from core.usecase.thinking_usecase import ChatUsecase as chat_usecase
+from core.usecase.thinking_usecase import ThinkingUsecase as thinking
 from kernel.utils import build_header
 
 
@@ -103,7 +103,7 @@ class ChatInteractionUsecase:
 
         chat_type = MESSAGE_TYPE_CONVERTER.get(
             request.msg_type, ChatType.ABILITIES.value)
-        bot_response = await chat_usecase.chat(
+        bot_response = await thinking.chat(
             query=query_request,
             chat_type=chat_type,
             user_message_id=user_message_id,

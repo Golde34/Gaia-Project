@@ -2,23 +2,132 @@ import datetime
 import json
 import uuid
 
+from core.domain.enums import kafka_enum, redis_enum
 from core.domain.entities.recursive_summary import RecursiveSummary
-from core.domain.enums.redis_enum import RedisEnum
 from core.domain.request.chat_hub_request import RecentHistoryRequest
 from core.domain.request.memory_request import MemoryRequest
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.domain.response.model_output_schema import LongTermMemorySchema
 from core.prompts.system_prompt import CHAT_HISTORY_PROMPT, LONGTERM_MEMORY_PROMPT, RECURSIVE_SUMMARY_PROMPT
+from core.semantic_router import router_registry
 from core.validation import milvus_validation
 from core.service.integration.message_service import message_service
+from infrastructure.embedding.base_embedding import embedding_model
+from infrastructure.kafka.producer import send_kafka_message
 from infrastructure.repository.dialogue_repository import user_dialogue_repository
 from infrastructure.repository.recursive_summary_repository import recursive_summary_repo
-from infrastructure.redis.redis import set_key, get_key
+from infrastructure.redis.redis import decrease_key, increase_key, set_key, get_key
 from infrastructure.vector_db.milvus import milvus_db
-from infrastructure.embedding.base_embedding import embedding_model
 from kernel.config import llm_models, config
 
 
+# Thinking usecase functions
+async def recall_history_info(query: QueryRequest, default=True):
+    """
+    Retrieves the chat history for the user and dialogue ID from Redis.
+    """
+    if default == False:
+        chat_history_semantic_router = await router_registry.chat_history_route(query=query.query)
+        recent_history, recursive_summary, long_term_memory = await query_chat_history(query, chat_history_semantic_router)
+    else:
+        recent_history, recursive_summary, long_term_memory = await query_chat_history(query)
+
+    new_query = await reflection_chat_history(
+        recent_history=recent_history,
+        recursive_summary=recursive_summary,
+        long_term_memory=long_term_memory,
+        query=query,
+    )
+    query.query = new_query
+    return query
+
+
+async def memorize_info(query: QueryRequest, is_change_title: bool):
+    """
+    Updates the chat history with the new query and response, including managing Redis queues.
+    """
+    if is_change_title:
+        await _update_recursive_summary(query.user_id, query.dialogue_id, is_change_title)
+        await _update_long_term_memory(query.user_id, query.dialogue_id, is_change_title)
+
+    rs_len, lt_len = _check_redis(
+        user_id=query.user_id, dialogue_id=query.dialogue_id)
+    if rs_len >= config.RECURSIVE_SUMMARY_MAX_LENGTH:
+        await _update_recursive_summary(query.user_id, query.dialogue_id, is_change_title)
+
+    if lt_len >= config.LONG_TERM_MEMORY_MAX_LENGTH:
+        await _update_long_term_memory(query.user_id, query.dialogue_id, is_change_title)
+
+    _update_redis(rs_len, lt_len, query.user_id, query.dialogue_id)
+
+
+def _check_redis(user_id: int, dialogue_id: str):
+    """
+    Checks the Redis queue lengths for recursive summary and long-term memory, sets TTL if needed.
+    """
+    rs_key = f"{redis_enum.RedisEnum.RECURSIVE_SUMMARY.value}:{user_id}:{dialogue_id}"
+    lt_key = f"{redis_enum.RedisEnum.LONG_TERM_MEMORY.value}:{user_id}:{dialogue_id}"
+
+    # Get the current queue lengths from Redis or set TTL if not found
+    rs_len = get_key(rs_key) or _set_defaultkey(rs_key)
+    lt_len = get_key(lt_key) or _set_defaultkey(lt_key)
+
+    return int(rs_len), int(lt_len)
+
+
+def _set_defaultkey(key: str):
+    set_key(key, value=0, ttl=3600)
+    return 0
+
+
+async def _update_recursive_summary(cls, user_id: int, dialogue_id: str, is_change_title: bool):
+    """
+    Sends a Kafka message to update the recursive summary.
+    """
+    payload: MemoryRequest = MemoryRequest(
+        user_id=user_id,
+        dialogue_id=dialogue_id,
+        is_change_title=is_change_title
+    )
+    # Convert Pydantic model to dict for JSON serialization
+    await send_kafka_message(kafka_enum.KafkaTopic.UPDATE_RECURSIVE_SUMMARY.value, payload.model_dump())
+
+
+async def _update_long_term_memory(cls, user_id: int, dialogue_id: str, is_change_title: bool):
+    """
+    Sends a Kafka message to update the long-term memory.
+    """
+    payload: MemoryRequest = MemoryRequest(
+        user_id=user_id,
+        dialogue_id=dialogue_id,
+        is_change_title=is_change_title
+    )
+    # Convert Pydantic model to dict for JSON serialization
+    await send_kafka_message(kafka_enum.KafkaTopic.UPDATE_LONG_TERM_MEMORY.value, payload.model_dump())
+
+
+def _update_redis(rs_len: int, lt_len: int, user_id: int, dialogue_id: str):
+    """
+    Updates the Redis queues for recursive summary and long-term memory.
+    """
+    rs_key = f"{redis_enum.RedisEnum.RECURSIVE_SUMMARY.value}:{user_id}:{dialogue_id}"
+    lt_key = f"{redis_enum.RedisEnum.LONG_TERM_MEMORY.value}:{user_id}:{dialogue_id}"
+
+    if rs_len + 1 <= config.RECURSIVE_SUMMARY_MAX_LENGTH:
+        increase_key(rs_key, amount=1)
+    else:
+        decrease_key(rs_key, amount=config.RECURSIVE_SUMMARY_MAX_LENGTH)
+
+    if lt_len + 1 <= config.LONG_TERM_MEMORY_MAX_LENGTH:
+        increase_key(lt_key, amount=1)
+    else:
+        decrease_key(lt_key, amount=config.LONG_TERM_MEMORY_MAX_LENGTH)
+
+    print(
+        f"Updated Redis: {rs_key}={get_key(rs_key)}, {lt_key}={get_key(lt_key)}")
+
+
+# Business logic functions
 async def query_chat_history(query: QueryRequest, semantic_response: dict = config.DEFAULT_SEMANTIC_RESPONSE):
     """
     Routes the request based on semantic guidance, querying different memory sources.
@@ -46,7 +155,7 @@ async def get_recursive_summary(user_id: int, dialogue_id: str) -> str:
     Retrieves recursive summary from Redis, falling back to the database if necessary.
     """
     try:
-        recursive_summary_key = f"{RedisEnum.RECURSIVE_SUMMARY_CONTENT.value}:{user_id}:{dialogue_id}"
+        recursive_summary_key = f"{redis_enum.RedisEnum.RECURSIVE_SUMMARY_CONTENT.value}:{user_id}:{dialogue_id}"
         recursive_summary_content = get_key(recursive_summary_key)
         if not recursive_summary_content:
             recursive_summary_content = await recursive_summary_repo.list_by_dialogue(user_id=user_id, dialogue_id=dialogue_id)
@@ -110,7 +219,7 @@ async def reflection_chat_history(recent_history: str, recursive_summary: str, l
     return new_query
 
 
-async def update_recursive_summary(memory_request: MemoryRequest) -> None:
+async def kafka_update_recursive_summary(memory_request: MemoryRequest) -> None:
     """
     Update the recursive summary in Redis.
 
@@ -151,7 +260,7 @@ async def update_recursive_summary(memory_request: MemoryRequest) -> None:
             f"Saving recursive summary for user {user_id} and dialogue {dialogue_id}")
         await recursive_summary_repo.save_summary(summary=recursive_summary)
 
-        recursive_summary_key = RedisEnum.RECURSIVE_SUMMARY_CONTENT.value + \
+        recursive_summary_key = redis_enum.RedisEnum.RECURSIVE_SUMMARY_CONTENT.value + \
             f":{user_id}:{dialogue_id}"
         set_key(recursive_summary_key, recursive_summary.summary)
         print(
@@ -161,7 +270,7 @@ async def update_recursive_summary(memory_request: MemoryRequest) -> None:
         print(f"Error updating recursive summary: {e}")
 
 
-async def update_long_term_memory(memory_request: MemoryRequest) -> None:
+async def kafka_update_long_term_memory(memory_request: MemoryRequest) -> None:
     """
     Update the long term memory in Redis.
 
@@ -187,7 +296,7 @@ async def update_long_term_memory(memory_request: MemoryRequest) -> None:
             is_change_title=memory_request.is_change_title
         )
 
-        long_term_memory = await build_long_term_memory(
+        long_term_memory = await _build_long_term_memory(
             prompt=prompt, user_id=user_id)
 
         if memory_request.is_change_title and long_term_memory.new_title:
@@ -220,12 +329,11 @@ async def update_long_term_memory(memory_request: MemoryRequest) -> None:
             )
             print(f"Saved {len(long_term_memory.content)} long term memory items to Milvus DB")
 
-        
     except Exception as e:
         print(f"Error updating long term memory: {e}")
 
 
-async def build_long_term_memory(prompt: str, user_id: int) -> LongTermMemorySchema:
+async def _build_long_term_memory(prompt: str, user_id: int) -> LongTermMemorySchema:
     model: LLMModel = LLMModel(
         model_name=config.LLM_DEFAULT_MODEL,
         model_key=config.SYSTEM_API_KEY
