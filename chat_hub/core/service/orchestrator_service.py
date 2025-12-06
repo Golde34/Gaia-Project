@@ -1,10 +1,14 @@
+import asyncio
 import uuid
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from core.abilities.function_handlers import FUNCTIONS
 from core.domain.enums.enum import TaskStatus
 from core.domain.enums.kafka_enum import KafkaTopic
 from core.domain.request.query_request import QueryRequest
+from infrastructure.client.recommendation_service_client import (
+    recommendation_service_client,
+)
 from infrastructure.kafka.producer import publish_message
 from infrastructure.repository.task_status_repo import task_status_repo
 from kernel.utils.background_loop import background_loop_pool, log_background_task_error
@@ -19,17 +23,16 @@ class OrchestratorService:
         if not guided_route:
             return []
 
-        tasks: List[Dict[str, Any]] = []
         for ability, metadata in FUNCTIONS.items():
             if ability in guided_route:
-                tasks.append(
+                return [
                     {
                         "ability": ability,
                         "handler": metadata.get("handler"),
                         "is_sequential": metadata.get("is_sequential", False),
                     }
-                )
-        return tasks
+                ]
+        return []
 
     async def execute(self, query: QueryRequest, tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Dispatch only parallel tasks and mark them as pending."""
@@ -37,18 +40,29 @@ class OrchestratorService:
         if not tasks:
             return {"primary": None, "tasks": [], "recommend": ""}
 
-        results: List[Dict[str, Any]] = []
+        task = tasks[0]
+        if task.get("is_sequential"):
+            completed, recommendation = await self._run_sequential_flow(task, query)
+            return {"primary": completed, "tasks": [completed], "recommend": recommendation}
 
-        for task in tasks:
-            if task.get("is_sequential"):
-                print("Sequential tasks are not handled in the parallel dispatcher yet.")
-                continue
+        pending_task, recommendation = await self._run_parallel_flow(task, query)
+        return {"primary": pending_task, "tasks": [pending_task], "recommend": recommendation}
 
-            pending_result = await self._dispatch_parallel_task(task, query)
-            results.append(pending_result)
+    async def _run_parallel_flow(
+        self, task: Dict[str, Any], query: QueryRequest
+    ) -> Tuple[Dict[str, Any], str]:
+        pending_task, recommendation = await asyncio.gather(
+            self._dispatch_parallel_task(task, query),
+            self._fetch_recommendation(query),
+        )
+        return pending_task, recommendation
 
-        primary = results[0] if results else None
-        return {"primary": primary, "tasks": results, "recommend": ""}
+    async def _run_sequential_flow(
+        self, task: Dict[str, Any], query: QueryRequest
+    ) -> Tuple[Dict[str, Any], str]:
+        result = await self._run_sequential_task(task, query)
+        recommendation = await self._fetch_recommendation(query)
+        return result, recommendation
 
     async def _dispatch_parallel_task(
         self, task: Dict[str, Any], query: QueryRequest
@@ -78,6 +92,26 @@ class OrchestratorService:
                 "query": query.query,
             },
             "is_sequential": False,
+        }
+
+    async def _run_sequential_task(
+        self, task: Dict[str, Any], query: QueryRequest
+    ) -> Dict[str, Any]:
+        handler = task.get("handler")
+        result: Any
+
+        try:
+            if not handler:
+                raise ValueError(f"No handler found for task {task.get('ability')}")
+            result = await handler(query=query)
+        except Exception as exc:
+            result = {"response": str(exc)}
+
+        normalized = result if isinstance(result, dict) else {"response": str(result)}
+        return {
+            "type": task.get("ability"),
+            "result": normalized,
+            "is_sequential": True,
         }
 
     async def _run_parallel_task(
@@ -139,6 +173,13 @@ class OrchestratorService:
             "response": response_text,
             "data": payload,
         }
+
+    async def _fetch_recommendation(self, query: QueryRequest) -> str:
+        return await recommendation_service_client.recommend(
+            query=query.query,
+            user_id=query.user_id,
+            dialogue_id=query.dialogue_id,
+        )
 
 
 orchestrator_service = OrchestratorService()
