@@ -9,6 +9,7 @@ import UserProfileInfoScreen from "../../screens/userScreen/UserProfileScreen";
 import UserGithubScreen from "../../screens/userScreen/UserGihubScreen";
 import LLMModelSettingScreen from "../../screens/userScreen/LLMModelSetting";
 import SettingsSectionLayout from "../../components/SettingsSectionLayout";
+import { ComingSoonComponent } from "../../components/subComponents/ComingSoonComponent";
 
 function ContentArea() {
     const dispatch = useDispatch();
@@ -39,6 +40,12 @@ function ContentArea() {
             label: "LLM models",
             description: "Select and manage the active model",
             renderContent: () => user?.llmModels?.[0] ? <LLMModelSettingScreen user={user} model={user.llmModels[0].modelName} /> : null,
+        },
+        {
+            id: "tuning-memory",
+            label: "Tunning assistant memory",
+            description: "Configure memory settings for your LLM model",
+            content: <ComingSoonComponent />,
         },
     ]), [user]);
 
