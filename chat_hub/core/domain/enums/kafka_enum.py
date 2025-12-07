@@ -8,7 +8,9 @@ class KafkaTopic(str, Enum):
     CALLING_LLM_API_TIMES = "ai-core.calling-llm-api-times.topic"
     REGISTER_CALENDAR_SCHEDULE = "ai-core.register-calendar-schedule.topic"
     ## Producer topics
-    GENERATE_CALENDAR_SCHEDULE = "ai-core.generate-calendar-schedule.topic"
+    PUSH_MESSAGE = "ai-core.push-message.topic"
+    ABILITY_TASK_RESULT = "ai-core.ability-task-result.topic"
 
 class KafkaCommand(str, Enum):
     GENERATE_CALENDAR_SCHEDULE = "gaiaRegisterCalendar"
+    ABILITIES_TASK_RESULT = "abilitiesTaskResult"

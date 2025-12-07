@@ -14,10 +14,7 @@ export const levenshteinDistanceProject = (input: string, listProjects: (IProjec
             }
         }
     }
-    if (closeProject) {
-        return closeProject;
-    }
-    return null;
+    return closeProject; 
 }
 
 export const levenshteinDistanceGroupTasks = (input: string, listGroups: (IGroupTaskEntity | null)[]) => {
@@ -33,8 +30,5 @@ export const levenshteinDistanceGroupTasks = (input: string, listGroups: (IGroup
             }
         }
     }
-    if (closeGroup) {
-        return closeGroup;
-    }
-    return null;
+    return closeGroup;
 }
