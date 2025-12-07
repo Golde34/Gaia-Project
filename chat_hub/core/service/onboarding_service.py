@@ -222,7 +222,7 @@ async def return_generated_schedule(user_id: int, payload: DailyRoutineSchema):
     response = _validate_generated_calendar_result(result, user_id, payload)
 
     await publish_message(
-        kafka_enum.KafkaTopic.GENERATE_CALENDAR_SCHEDULE.value,
+        kafka_enum.KafkaTopic.PUSH_MESSAGE.value,
         kafka_enum.KafkaCommand.GENERATE_CALENDAR_SCHEDULE.value,
         response,
     )

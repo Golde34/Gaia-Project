@@ -22,11 +22,11 @@ async def abilities_handler(query: QueryRequest, guided_route: str) -> str:
     """
     print("Abilities Handler called with query:", query)
     try:
-        tasks = orchestrator_service.resolve_tasks(guided_route)
-        if not tasks:
+        task = orchestrator_service.resolve_tasks(guided_route)
+        if not task:
             return await chitchat_with_history(query)
 
-        orchestration_result = await orchestrator_service.execute(query=query, tasks=tasks)
+        orchestration_result = await orchestrator_service.execute(query=query, task=task)
         primary = orchestration_result.get("primary")
         if not primary:
             return handle_task_service_response(enum.GaiaAbilities.CHITCHAT.value, "")
