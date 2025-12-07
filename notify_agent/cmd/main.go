@@ -32,9 +32,9 @@ func main() {
 	log.Println("Kafka Config: ", kafkaCfg.GroupId)
 
 	handlers := map[string]kafka.MessageHandler{
-		"notify-agent.optimize-task-notify.topic":  consumer.NewOptimizeTaskNotifyHandler(dbConnection),
-		"chat-hub.task-result.topic":               consumer.NewTaskResultHandler(dbConnection),
-		"ai-core.generate-calendar-schedule.topic": consumer.NewScheduleResultHandler(),
+		"notify-agent.optimize-task-notify.topic": consumer.NewOptimizeTaskNotifyHandler(dbConnection),
+		"chat-hub.task-result.topic":              consumer.NewTaskResultHandler(dbConnection),
+		"ai-core.push-message.topic":              consumer.NewScheduleResultHandler(),
 	}
 
 	consumerGroupHandler := kafka.NewConsumerGroupHandler(kafkaCfg.Name, handlers)
