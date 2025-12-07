@@ -16,11 +16,9 @@ from kernel.utils.sse_connection_registry import broadcast_to_user
 
 
 class OrchestratorService:
-    """Coordinate ability handlers and dispatch parallel tasks."""
+    """Coordinate ability handlers and dispatch gaia task."""
 
     def resolve_tasks(self, guided_route: str) -> Dict[str, Any]:
-        """Return ability metadata that matches the guided route."""
-
         if not guided_route:
             return None
 
@@ -31,8 +29,6 @@ class OrchestratorService:
         }
 
     async def execute(self, query: QueryRequest, task: Dict[str, Any]) -> Dict[str, Any]:
-        """Dispatch only parallel tasks and mark them as pending."""
-
         if not task:
             return {"primary": None, "task": [], "recommend": ""}
 
