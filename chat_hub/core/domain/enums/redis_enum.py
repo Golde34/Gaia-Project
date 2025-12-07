@@ -12,3 +12,5 @@ class RedisEnum(str, Enum):
     AI_DIALOGUE = "chat_hub:ai_dialogue"
 
     USER_LLM_MODEL = "chat_hub:user_llm_model"
+
+    ABILITY_TASK_STATUS = "chat_hub:ability_task_status"
