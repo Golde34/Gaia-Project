@@ -42,7 +42,8 @@ async def abilities_handler(query: QueryRequest, guided_route: str) -> str:
             response_payload["data"] = {}
         response_payload["data"]["tasks"] = formatted_tasks
         response_payload["recommend"] = orchestration_result.get("recommend", "")
-        await persist_recommendation_message(query, response_payload["recommend"])
+        if not orchestration_result.get("recommend_handled"):
+            await persist_recommendation_message(query, response_payload["recommend"])
 
         print("Result: ", response_payload)
         return response_payload

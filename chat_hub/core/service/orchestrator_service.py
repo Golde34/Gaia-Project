@@ -3,9 +3,11 @@ import uuid
 from typing import Any, Dict, Tuple
 
 from core.abilities.function_handlers import FUNCTIONS
-from core.domain.enums.enum import TaskStatus
+from core.domain.enums.enum import SenderTypeEnum, TaskStatus
 from core.domain.enums.kafka_enum import KafkaCommand, KafkaTopic
 from core.domain.request.query_request import QueryRequest
+from core.service.integration.dialogue_service import dialogue_service
+from core.service.integration.message_service import message_service
 from infrastructure.client.recommendation_service_client import (
     recommendation_service_client,
 )
@@ -33,43 +35,78 @@ class OrchestratorService:
             return {"primary": None, "task": [], "recommend": ""}
 
         if task.get("is_sequential"):
-            completed, recommendation = await self._run_sequential_flow(task, query)
-            return {"primary": completed, "task": [completed], "recommend": recommendation}
+            completed, recommendation, recommend_handled = await self._run_sequential_flow(
+                task, query
+            )
+            return {
+                "primary": completed,
+                "tasks": [completed],
+                "recommend": recommendation,
+                "recommend_handled": recommend_handled,
+            }
 
-        pending_task, recommendation = await self._run_parallel_flow(task, query)
-        return {"primary": pending_task, "task": [pending_task], "recommend": recommendation}
+        pending_task, recommendation, recommend_handled = await self._run_parallel_flow(
+            task, query
+        )
+        return {
+            "primary": pending_task,
+            "tasks": [pending_task],
+            "recommend": recommendation,
+            "recommend_handled": recommend_handled,
+        }
 
     async def _run_sequential_flow(
         self, task: Dict[str, Any], query: QueryRequest
-    ) -> Tuple[Dict[str, Any], str]:
-        result = await self._run_sequential_task(task, query)
-        # If result status is PENDING, return response
-        # If result statis is SUCCESS or FAILED, fetch recommendation and deliver notifications
-        # recommendation = await self._fetch_recommendation(query)
-        # await self._deliver_sequential_notifications(query, result, recommendation)
-        return result
+    ) -> Tuple[Dict[str, Any], str, bool]:
+        result, status = await self._run_sequential_task(task, query)
+
+        if status == TaskStatus.PENDING:
+            await self._persist_pending_command(task, query, result)
+            return result, "", False
+
+        recommendation = await self._handle_recommendation(query)
+        return result, recommendation, True
 
     async def _run_sequential_task(
         self, task: Dict[str, Any], query: QueryRequest
-    ) -> Dict[str, Any]:
+    ) -> Tuple[Dict[str, Any], TaskStatus]:
         handler = task.get("handler")
         result: Any
+        status: TaskStatus = TaskStatus.SUCCESS
 
         try:
             if not handler:
                 raise ValueError(
                     f"No handler found for task {task.get('ability')}")
             result = await handler(query=query)
+            if isinstance(result, tuple) and len(result) >= 2:
+                response_payload, status_value = result[0], result[1]
+                result = response_payload
+                status = self._normalize_status(status_value)
         except Exception as exc:
+            status = TaskStatus.FAILED
             result = {"response": str(exc)}
 
         normalized = result if isinstance(result, dict) else {
             "response": str(result)}
-        return {
-            "type": task.get("ability"),
-            "result": normalized,
-            "is_sequential": True,
-        }
+        return (
+            {
+                "type": task.get("ability"),
+                "result": normalized,
+                "is_sequential": True,
+                "status": status.value,
+            },
+            status,
+        )
+
+    def _normalize_status(self, status_value: Any) -> TaskStatus:
+        if isinstance(status_value, TaskStatus):
+            return status_value
+
+        status_text = str(status_value).upper()
+        if status_text in TaskStatus._value2member_map_:
+            return TaskStatus(status_text)
+        return TaskStatus.FAILED
 
     async def _fetch_recommendation(self, query: QueryRequest) -> str:
         return await recommendation_service_client.recommend(
@@ -77,6 +114,15 @@ class OrchestratorService:
             user_id=query.user_id,
             dialogue_id=query.dialogue_id,
         )
+
+    async def _handle_recommendation(self, query: QueryRequest) -> str:
+        recommendation = await self._fetch_recommendation(query)
+        if not recommendation:
+            return ""
+
+        await self._persist_recommendation_message(query, recommendation)
+        await self._broadcast_recommendation(query, recommendation)
+        return recommendation
 
     async def _deliver_sequential_notifications(
         self, query: QueryRequest, result: Dict[str, Any], recommendation: str
@@ -138,6 +184,44 @@ class OrchestratorService:
             )
         except Exception as exc:
             print(f"Failed to push sequential messages: {exc}")
+
+    async def _persist_recommendation_message(
+        self, query: QueryRequest, recommend_message: str
+    ) -> None:
+        if not recommend_message:
+            return
+        if not query.dialogue_id or not query.user_message_id:
+            return
+
+        dialogue, _ = await dialogue_service.get_dialogue_by_id(
+            user_id=query.user_id, dialogue_id=query.dialogue_id
+        )
+        if not dialogue:
+            return
+
+        await message_service.create_message(
+            dialogue=dialogue,
+            user_id=query.user_id,
+            message=recommend_message,
+            message_type=query.type,
+            sender_type=SenderTypeEnum.BOT.value,
+            user_message_id=query.user_message_id,
+        )
+
+    async def _broadcast_recommendation(
+        self, query: QueryRequest, recommend_message: str
+    ) -> None:
+        if not recommend_message:
+            return
+        await broadcast_to_user(
+            str(query.user_id),
+            "sequential_recommendation",
+            {
+                "recommend": recommend_message,
+                "dialogueId": query.dialogue_id,
+                "isSequential": True,
+            },
+        )
 
     async def _run_parallel_task(
         self, task: Dict[str, Any], query: QueryRequest, pending_record: Dict[str, Any]
@@ -203,12 +287,12 @@ class OrchestratorService:
 
     async def _run_parallel_flow(
         self, task: Dict[str, Any], query: QueryRequest
-    ) -> Tuple[Dict[str, Any], str]:
+    ) -> Tuple[Dict[str, Any], str, bool]:
         pending_task, recommendation = await asyncio.gather(
             self._dispatch_parallel_task(task, query),
             self._fetch_recommendation(query),
         )
-        return pending_task, recommendation
+        return pending_task, recommendation, False
 
     async def _dispatch_parallel_task(
         self, task: Dict[str, Any], query: QueryRequest
@@ -239,6 +323,49 @@ class OrchestratorService:
             },
             "is_sequential": False,
         }
+
+    async def _persist_pending_command(
+        self, task: Dict[str, Any], query: QueryRequest, result: Dict[str, Any]
+    ) -> None:
+        result_payload = result.get("result") or {}
+        task_id = result_payload.get("taskId") or uuid.uuid4().hex
+        pending_record = {
+            "task_id": task_id,
+            "user_id": query.user_id,
+            "ability": task.get("ability"),
+            "query": query.query,
+            "dialogue_id": query.dialogue_id,
+            "status": TaskStatus.PENDING.value,
+            "result": result_payload,
+        }
+        task_status_repo.save_task(query.user_id, task_id, pending_record)
+        await self._persist_pending_message(query, result)
+
+    async def _persist_pending_message(
+        self, query: QueryRequest, task_result: Dict[str, Any]
+    ) -> None:
+        if not query.dialogue_id or not query.user_message_id:
+            return
+
+        dialogue, _ = await dialogue_service.get_dialogue_by_id(
+            user_id=query.user_id, dialogue_id=query.dialogue_id
+        )
+        if not dialogue:
+            return
+
+        formatted = self.format_task_payload(task_result)
+        response_text = formatted.get("response")
+        if not response_text:
+            return
+
+        await message_service.create_message(
+            dialogue=dialogue,
+            user_id=query.user_id,
+            message=response_text,
+            message_type=query.type,
+            sender_type=SenderTypeEnum.BOT.value,
+            user_message_id=query.user_message_id,
+        )
 
 
 orchestrator_service = OrchestratorService()
