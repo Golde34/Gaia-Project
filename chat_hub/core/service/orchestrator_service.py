@@ -8,9 +8,7 @@ from core.domain.enums.kafka_enum import KafkaCommand, KafkaTopic
 from core.domain.request.query_request import QueryRequest
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
-from infrastructure.client.recommendation_service_client import (
-    recommendation_service_client,
-)
+from infrastructure.client.recommendation_service_client import recommendation_service_client
 from infrastructure.kafka.producer import publish_message
 from infrastructure.repository.task_status_repo import task_status_repo
 from kernel.utils.background_loop import background_loop_pool, log_background_task_error
@@ -69,35 +67,15 @@ class OrchestratorService:
 
     async def _run_sequential_task(
         self, task: Dict[str, Any], query: QueryRequest
-    ) -> Tuple[Dict[str, Any], TaskStatus]:
-        handler = task.get("handler")
-        result: Any
-        status: TaskStatus = TaskStatus.SUCCESS
-
+    ): 
         try:
-            if not handler:
-                raise ValueError(
-                    f"No handler found for task {task.get('ability')}")
-            result = await handler(query=query)
-            if isinstance(result, tuple) and len(result) >= 2:
-                response_payload, status_value = result[0], result[1]
-                result = response_payload
-                status = self._normalize_status(status_value)
+            response_payload, status_value = await task.get("handler")(query=query)
+            status = self._normalize_status(status_value) 
         except Exception as exc:
             status = TaskStatus.FAILED
-            result = {"response": str(exc)}
+            response_payload = {"response": str(exc)}
 
-        normalized = result if isinstance(result, dict) else {
-            "response": str(result)}
-        return (
-            {
-                "type": task.get("ability"),
-                "result": normalized,
-                "is_sequential": True,
-                "status": status.value,
-            },
-            status,
-        )
+        return response_payload, status
 
     def _normalize_status(self, status_value: Any) -> TaskStatus:
         if isinstance(status_value, TaskStatus):
