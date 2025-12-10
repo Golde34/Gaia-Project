@@ -1,10 +1,11 @@
 import json
 
-from chat_hub.infrastructure.client.task_manager_client import task_manager_client
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import CreateTaskResultSchema, CreateTaskSchema
 from core.prompts.task_prompt import CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT
+from infrastructure.client.task_manager_client import task_manager_client
+from infrastructure.repository.task_status_repo import task_status_repo
 from kernel.config import llm_models
 from kernel.utils.parse_json import parse_json_string
 
@@ -19,9 +20,16 @@ async def create_personal_task(query: QueryRequest) -> dict:
     """
     try:
         task_data = await _create_personal_task_llm(query)
-        task_result = task_manager_client.create_personal_task(task_data)
-        # Store task result if create task succeeds
-        return task_data
+        response = task_manager_client.create_personal_task(task_data)
+        if response == None:
+            return None, enum.TaskStatus.FAILED.value 
+        else:
+            stored_task = await task_status_repo.save_task(
+                user_id=query.user_id,
+                task_id=task_data.get("taskId"),
+                payload=response
+            ) 
+            return stored_task, enum.TaskStatus.SUCCESS.value
     except Exception as e:
         raise e
 

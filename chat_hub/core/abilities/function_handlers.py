@@ -8,10 +8,10 @@ FUNCTIONS = {
         "handler": create_personal_task,
         "is_sequential": True,
     },
-    enum.GaiaAbilities.CREATE_TASK_RESULT.value: {
-        "handler": create_personal_task_result,
-        "is_sequential": True,
-    },
+    # enum.GaiaAbilities.CREATE_TASK_RESULT.value: {
+    #     "handler": create_personal_task_result,
+    #     "is_sequential": False,
+    # },
     enum.GaiaAbilities.SEARCH.value: {
         "handler": search,
         "is_sequential": False,
