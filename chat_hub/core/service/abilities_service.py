@@ -11,7 +11,7 @@ from infrastructure.search.google_search import run_search
 from kernel.config import llm_models, config
 
 
-async def abilities_handler(query: QueryRequest, guided_route: str) -> str:
+async def abilities_handler(query: QueryRequest, guided_route: str) -> list[str]:
     """
     Handle the service request based on the query type dynamically.
     Args:
@@ -31,20 +31,7 @@ async def abilities_handler(query: QueryRequest, guided_route: str) -> str:
         if not primary:
             return handle_task_service_response(enum.GaiaAbilities.CHITCHAT.value, "")
 
-        primary_type = primary.get("type") or enum.GaiaAbilities.CHITCHAT.value
-        primary_result = primary.get("result") or {"response": ""}
-        response_payload = handle_task_service_response(primary_type, primary_result)
-        formatted_tasks = [
-            orchestrator_service.format_task_payload(task)
-            for task in orchestration_result.get("tasks", [])
-        ]
-        if "data" not in response_payload:
-            response_payload["data"] = {}
-        response_payload["data"]["tasks"] = formatted_tasks
-        response_payload["recommend"] = orchestration_result.get("recommend", "")
-        if not orchestration_result.get("recommend_handled"):
-            await persist_recommendation_message(query, response_payload["recommend"])
-
+        response_payload = orchestration_result.get("payload")
         print("Result: ", response_payload)
         return response_payload
     except Exception as e:

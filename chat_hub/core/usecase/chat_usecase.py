@@ -108,22 +108,48 @@ class ChatInteractionUsecase:
             chat_type=chat_type,
             user_message_id=user_message_id,
             is_change_title=is_change_title)
+        
+        if isinstance(bot_response, list):
+            for response in bot_response:
+                await cls._store_bot_response(
+                    dialogue=dialogue,
+                    user_id=user_id,
+                    message=response,
+                    message_type=request.msg_type,
+                    user_message_id=str(user_message_id),
+                )
+        else:
+            await cls._store_bot_response(
+                dialogue=dialogue,
+                user_id=user_id,
+                message=bot_response,
+                message_type=request.msg_type,
+                user_message_id=str(user_message_id),
+            )
+        
+        return {
+            "responses": bot_response,
+            "dialogue_id": str(dialogue.id)
+        }
 
+    @classmethod
+    async def _store_bot_response(
+            cls,
+            dialogue,
+            user_id: int,
+            message: str,
+            message_type: str,
+            user_message_id: str):
         bot_message_id = await message_service.create_message(
             dialogue=dialogue,
             user_id=user_id,
-            message=bot_response,
-            message_type=request.msg_type,
+            message=message,
+            message_type=message_type,
             sender_type=SenderTypeEnum.BOT.value,
-            user_message_id=str(user_message_id),
+            user_message_id=user_message_id,
         )
         print("Bot response stored with message ID:", bot_message_id)
-        
-        # Return response with dialogue_id
-        return {
-            "response": bot_response,
-            "dialogue_id": str(dialogue.id)
-        }
+        return bot_message_id
 
 
 chat_interaction_usecase = ChatInteractionUsecase()

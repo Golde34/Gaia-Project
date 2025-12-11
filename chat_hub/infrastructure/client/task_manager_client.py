@@ -24,7 +24,7 @@ class TaskManagerClient:
                 print("No response from Task Manager Service for create_task.")
                 return None
 
-            return result["data"]
+            return result["message"]
         except Exception as e:
             print(f"Error in SchedulePlanClient.create_or_update_time_bubble_configs: {e}")
             return None

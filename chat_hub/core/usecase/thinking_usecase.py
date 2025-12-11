@@ -78,7 +78,7 @@ class ThinkingUsecase:
             query=query, 
             guided_route=tool_selection)
 
-        print(f"Response: {response}")
+        print(f"Response(s): {response}")
 
         await memory_service.memorize_info(query=query, is_change_title=is_change_title)
 

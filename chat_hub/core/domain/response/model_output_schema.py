@@ -26,6 +26,7 @@ class CreateTaskResultSchema(BaseModel):
     deadline: Optional[str] = None
     duration: Optional[str] = None
     response: str
+    operationStatus: str
 
 
 class TimeBubbleDTO(BaseModel):

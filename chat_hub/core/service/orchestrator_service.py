@@ -33,9 +33,7 @@ class OrchestratorService:
             return {"primary": None, "task": [], "recommend": ""}
 
         if task.get("is_sequential"):
-            completed, recommendation, recommend_handled = await self._run_sequential_flow(
-                task, query
-            )
+            completed, recommendation, recommend_handled = await self._run_sequential_flow(task, query)
             return {
                 "primary": completed,
                 "tasks": [completed],
@@ -56,26 +54,22 @@ class OrchestratorService:
     async def _run_sequential_flow(
         self, task: Dict[str, Any], query: QueryRequest
     ) -> Tuple[Dict[str, Any], str, bool]:
-        result, status = await self._run_sequential_task(task, query)
+        result, status_value = await task.get("handler")(query=query)
+        status = self._normalize_status(status_value)
 
         if status == TaskStatus.PENDING:
             await self._persist_pending_command(task, query, result)
             return result, "", False
 
         recommendation = await self._handle_recommendation(query)
+
+        stored_task = await task_status_repo.save_task(
+            user_id=query.user_id,
+            payload=result,
+            task_type=task.get("ability")
+        )
+        print("Stored task: ", stored_task)
         return result, recommendation, True
-
-    async def _run_sequential_task(
-        self, task: Dict[str, Any], query: QueryRequest
-    ): 
-        try:
-            response_payload, status_value = await task.get("handler")(query=query)
-            status = self._normalize_status(status_value) 
-        except Exception as exc:
-            status = TaskStatus.FAILED
-            response_payload = {"response": str(exc)}
-
-        return response_payload, status
 
     def _normalize_status(self, status_value: Any) -> TaskStatus:
         if isinstance(status_value, TaskStatus):
