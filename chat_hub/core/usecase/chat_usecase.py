@@ -107,7 +107,8 @@ class ChatInteractionUsecase:
             query=query_request,
             chat_type=chat_type,
             user_message_id=user_message_id,
-            is_change_title=is_change_title)
+            is_change_title=is_change_title,
+            memory_model=user_model.memory_model)
         
         if isinstance(bot_response, list):
             for response in bot_response:
