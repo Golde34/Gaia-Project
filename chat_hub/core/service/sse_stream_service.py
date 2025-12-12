@@ -87,12 +87,16 @@ async def handle_sse_stream(
 
             # Send message_complete with dialogue_id
             response_type = response_payload.get("type") if isinstance(response_payload, dict) else None
+            message_handler_type = response_payload.get("message_handler_type") if isinstance(response_payload, dict) else None
             await enqueue_event(
                 "message_complete",
                 {
                     "message": "Stream completed",
                     "type": response_type,
                     "full_response": normalized_response,
+                    "response": response_payload.get("response") if isinstance(response_payload, dict) else None,
+                    "responses": response_payload.get("responses") if isinstance(response_payload, dict) else None,
+                    "message_handler_type": message_handler_type,
                     "dialogue_id": dialogue_id,
                 },
             )
@@ -168,6 +172,13 @@ async def handle_sse_stream(
 
 def _extract_response_payload(response: Optional[dict]) -> tuple[dict, str]:
     if isinstance(response, dict):
+        if "responses" in response:
+            responses_payload = response["responses"]
+            if isinstance(responses_payload, list):
+                response_text = "\n\n".join(str(item) for item in responses_payload if item is not None)
+            else:
+                response_text = str(responses_payload)
+            return response, str(response_text)
         # Check if response has "response" field directly (new format)
         if "response" in response:
             response_text = response["response"] if isinstance(response["response"], str) else json.dumps(response["response"], ensure_ascii=False)
