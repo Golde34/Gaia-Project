@@ -34,7 +34,7 @@ async def abilities_handler(query: QueryRequest, guided_route: str) -> list[str]
         responses = _extract_task_response(orchestration_result)
         
         print(f"Orchestration result type: {type}, response: {responses}") 
-        return responses
+        return responses, orchestration_result.get("operationStatus", enum.TaskStatus.SUCCESS.value)
     except Exception as e:
         raise e
 

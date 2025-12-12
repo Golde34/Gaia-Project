@@ -73,7 +73,7 @@ class ThinkingUsecase:
             query = await memory_service.recall_history_info(query=query, default=default)
 
         print(f"Tool Selection: {tool_selection}")
-        response = await ability_routers.call_router_function(
+        response, message_handler_type = await ability_routers.call_router_function(
             label_value=chat_type, 
             query=query, 
             guided_route=tool_selection)
@@ -82,7 +82,7 @@ class ThinkingUsecase:
 
         await memory_service.memorize_info(query=query, is_change_title=is_change_title)
 
-        return response
+        return response, message_handler_type
 
     @classmethod
     async def chat_with_graph_flow(cls, query: QueryRequest, chat_type: str, **kwargs: Any):

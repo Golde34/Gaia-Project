@@ -103,7 +103,7 @@ class ChatInteractionUsecase:
 
         chat_type = MESSAGE_TYPE_CONVERTER.get(
             request.msg_type, ChatType.ABILITIES.value)
-        bot_response = await thinking.chat(
+        bot_response, message_handler_type = await thinking.chat(
             query=query_request,
             chat_type=chat_type,
             user_message_id=user_message_id,
@@ -128,6 +128,7 @@ class ChatInteractionUsecase:
             )
         
         return {
+            "message_handler_type": message_handler_type,
             "responses": bot_response,
             "dialogue_id": str(dialogue.id)
         }

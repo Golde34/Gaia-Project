@@ -29,9 +29,9 @@ async def introduce(query: QueryRequest, guided_route: str) -> dict:
     try:
         print("Onboarding Query:", query.query)
         if guided_route == enum.SemanticRoute.GAIA_INTRODUCTION:
-            return await onboarding_service.handle_onboarding_action(query, enum.SemanticRoute.GAIA_INTRODUCTION.value)
+            return await onboarding_service.handle_onboarding_action(query, enum.SemanticRoute.GAIA_INTRODUCTION.value), "onboarding"
         elif guided_route == enum.SemanticRoute.CHITCHAT:
-            return await onboarding_service.handle_onboarding_action(query, enum.SemanticRoute.CHITCHAT.value)
+            return await onboarding_service.handle_onboarding_action(query, enum.SemanticRoute.CHITCHAT.value), "onboarding"
         else:
             raise ValueError("No route found for the query.")
     except Exception as e:
@@ -59,11 +59,10 @@ async def register_schedule_calendar(query: QueryRequest, guided_route: Optional
         function = await llm_models.get_model_generate_content(query.model, query.user_id, prompt=selection_prompt)
         selection = function(prompt=selection_prompt, model=query.model) 
         print(f"Selected action: {selection}")
-        return await onboarding_service.handle_onboarding_action(query, selection)
+        return await onboarding_service.handle_onboarding_action(query, selection), "register_schedule_calendar"
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
-        return return_response(status="error", status_message="Unexpected error occurred",
-                               error_code=400, error_message=str(e), data=None)
+        raise e 
 
 
 async def generate_calendar_schedule(query: QueryRequest) -> Dict:
