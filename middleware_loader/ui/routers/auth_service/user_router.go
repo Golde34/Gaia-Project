@@ -42,6 +42,12 @@ func NewUserRouter(userService *services.UserService, db database_mongo.Database
 		r.Delete("/llm-models/{id}", func(w http.ResponseWriter, r *http.Request) {
 			controller.DeleteUserModel(w, r, userService)
 		})
+		r.Put("/memory-model", func(w http.ResponseWriter, r *http.Request) {
+			controller.UpdateUserMemoryModel(w, r, userService)
+		})
+		r.Get("/memory-model", func(w http.ResponseWriter, r *http.Request) {
+			controller.GetUserMemoryModel(w, r, userService)
+		})
 		// r.Delete("/delete-user", func(w http.ResponseWriter, r *http.Request) {
 		// controller_services.DeleteUser(w, r, userService)
 		// })

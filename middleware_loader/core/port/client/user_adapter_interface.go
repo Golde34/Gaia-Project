@@ -16,4 +16,6 @@ type IUserAdapter interface {
 	GetUserModels(userId string) ([]response_dtos.UserLLMModel, error)
 	UpsertUserLLMModel(input request_dtos.UpsertUserLLMModelRequestDTO) (string, error)
 	DeleteUserModel(id string) error
+	UpdateMemoryModel(memoryModel string, userId int) (string, error)
+	GetMemoryModel(userId string) (map[string]interface{}, error)
 }
