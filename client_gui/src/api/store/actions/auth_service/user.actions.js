@@ -2,6 +2,8 @@ import { HttpMethods, serverRequest } from "../../../baseAPI";
 import {
     DELETE_USER_LLM_MODEL_FAILURE, DELETE_USER_LLM_MODEL_REQUEST, DELETE_USER_LLM_MODEL_SUCCESS,
     GET_USER_LLM_MODELS_FAILURE, GET_USER_LLM_MODELS_REQUEST, GET_USER_LLM_MODELS_SUCCESS,
+    GET_USER_MEMORY_MODEL_REQUEST, GET_USER_MEMORY_MODEL_SUCCESS, GET_USER_MEMORY_MODEL_FAILURE,
+    UPDATE_USER_MEMORY_MODEL_REQUEST, UPDATE_USER_MEMORY_MODEL_SUCCESS, UPDATE_USER_MEMORY_MODEL_FAILURE,
     LLM_MODEL_LIST_FAILURE, LLM_MODEL_LIST_REQUEST, LLM_MODEL_LIST_SUCCESS,
     UPSERT_USER_LLM_MODEL_FAILURE, UPSERT_USER_LLM_MODEL_REQUEST, UPSERT_USER_LLM_MODEL_SUCCESS,
     USER_DETAIL_FAIL, USER_DETAIL_REQUEST, USER_DETAIL_SUCCESS,
@@ -166,3 +168,44 @@ export const deleteUserLLMModel = (modelId) => async (dispatch) => {
         });
     }
 };
+
+export const getMemoryModel = () => async (dispatch) => {
+    dispatch({ type: GET_USER_MEMORY_MODEL_REQUEST });
+    try {
+        const { data } = await serverRequest(
+            `/user/memory-model`,
+            HttpMethods.GET,
+            portName.middlewarePort,
+        );
+        dispatch({ type: GET_USER_MEMORY_MODEL_SUCCESS, payload: data });
+    } catch (error) {
+        dispatch({
+            type: GET_USER_MEMORY_MODEL_FAILURE,
+            payload:
+                error.response && error.response.data.message
+                    ? error.response.data.message
+                    : error.message,
+        });
+    }
+}
+
+export const updateMemoryModel = (memoryModel) => async (dispatch) => {
+    dispatch({ type: UPDATE_USER_MEMORY_MODEL_REQUEST, payload: memoryModel });
+    try {
+        const { data } = await serverRequest(
+            `/user/memory-model`,
+            HttpMethods.PUT,
+            portName.middlewarePort,
+            { memoryModel }
+        );
+        dispatch({ type: UPDATE_USER_MEMORY_MODEL_SUCCESS, payload: data });
+    } catch (error) {
+        dispatch({
+            type: UPDATE_USER_MEMORY_MODEL_FAILURE,
+            payload:
+                error.response && error.response.data.message
+                    ? error.response.data.message
+                    : error.message,
+        });
+    }
+}

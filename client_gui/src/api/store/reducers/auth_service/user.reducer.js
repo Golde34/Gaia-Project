@@ -1,6 +1,8 @@
 import { 
     DELETE_USER_LLM_MODEL_FAILURE, DELETE_USER_LLM_MODEL_REQUEST, DELETE_USER_LLM_MODEL_SUCCESS,
     GET_USER_LLM_MODELS_FAILURE, GET_USER_LLM_MODELS_REQUEST, GET_USER_LLM_MODELS_SUCCESS,
+    GET_USER_MEMORY_MODEL_REQUEST, GET_USER_MEMORY_MODEL_SUCCESS, GET_USER_MEMORY_MODEL_FAILURE,
+    UPDATE_USER_MEMORY_MODEL_REQUEST, UPDATE_USER_MEMORY_MODEL_SUCCESS, UPDATE_USER_MEMORY_MODEL_FAILURE,
     LLM_MODEL_LIST_FAILURE, LLM_MODEL_LIST_REQUEST, LLM_MODEL_LIST_SUCCESS, 
     UPSERT_USER_LLM_MODEL_FAILURE, UPSERT_USER_LLM_MODEL_REQUEST, UPSERT_USER_LLM_MODEL_SUCCESS, 
     USER_DETAIL_FAIL, USER_DETAIL_REQUEST, USER_DETAIL_SUCCESS, 
@@ -130,6 +132,34 @@ export const deleteUserLLMModelReducer = (
         case DELETE_USER_LLM_MODEL_SUCCESS:
             return { loading: false, success: true };
         case DELETE_USER_LLM_MODEL_FAILURE:
+            return { loading: false, error: action.payload };
+        default:
+            return state;
+    }
+}
+
+export const getUserMemoryModelReducer = (
+    state = { loading: true, memoryModel: null }, action) => {
+    switch (action.type) {
+        case GET_USER_MEMORY_MODEL_REQUEST:
+            return { ...state, loading: true };
+        case GET_USER_MEMORY_MODEL_SUCCESS:
+            return { ...state, loading: false, memoryModel: action.payload.data.memoryModel };
+        case GET_USER_MEMORY_MODEL_FAILURE:
+            return { ...state, loading: false, error: action.payload };
+        default:
+            return state;
+    }
+}
+
+export const updateUserMemoryModelReducer = (
+    state = {}, action) => {
+    switch (action.type) {
+        case UPDATE_USER_MEMORY_MODEL_REQUEST:
+            return { loading: true };
+        case UPDATE_USER_MEMORY_MODEL_SUCCESS:
+            return { loading: false, success: true };
+        case UPDATE_USER_MEMORY_MODEL_FAILURE:
             return { loading: false, error: action.payload };
         default:
             return state;
