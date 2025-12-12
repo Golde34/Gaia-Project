@@ -2,7 +2,7 @@ import json
 
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
-from core.domain.response.model_output_schema import CreateTaskResultSchema, CreateTaskSchema
+from core.domain.response.model_output_schema import CreateTaskResponseSchema, CreateTaskResultSchema, CreateTaskSchema
 from core.prompts.task_prompt import CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT, TASK_RESULT_PROMPT_2
 from infrastructure.client.task_manager_client import task_manager_client
 from infrastructure.repository.task_status_repo import task_status_repo
@@ -18,7 +18,7 @@ class PersonalTaskService:
     3. Optimize Calendar (line 115-129)
     """
 
-    async def create_personal_task(self, query: QueryRequest) -> dict:
+    async def create_personal_task(self, query: QueryRequest):
         """
         Create task pipeline
         Args:
@@ -30,8 +30,12 @@ class PersonalTaskService:
             task_data = await self._create_personal_task_llm(query)
             created_task = task_manager_client.create_personal_task(task_data)
             task_result_response = await self.create_personal_task_result(task=created_task, query=query) 
-            response: CreateTaskResultSchema = json.loads(task_result_response)
-            return response, response.operationStatus 
+            response: CreateTaskResponseSchema = json.loads(task_result_response)
+            responses = [
+                response.response,
+                response.task
+            ]
+            return responses, response.operationStatus 
         except Exception as e:
             raise e
 
@@ -101,7 +105,7 @@ class PersonalTaskService:
             prompt = TASK_RESULT_PROMPT_2.format(task=task)
             function = await llm_models.get_model_generate_content(query.model, query.user_id)
             response = function(prompt=prompt, model=query.model,
-                                dto=CreateTaskResultSchema)
+                                dto=CreateTaskResponseSchema)
             return json.loads(response)
         except Exception as e:
             raise e

@@ -26,6 +26,10 @@ class CreateTaskResultSchema(BaseModel):
     deadline: Optional[str] = None
     duration: Optional[str] = None
     response: str
+
+class CreateTaskResponseSchema(BaseModel):
+    response: str
+    task: CreateTaskResultSchema
     operationStatus: str
 
 

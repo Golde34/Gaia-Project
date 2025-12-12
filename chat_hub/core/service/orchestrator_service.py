@@ -33,11 +33,11 @@ class OrchestratorService:
             return {"primary": None, "task": [], "recommend": ""}
 
         if task.get("is_sequential"):
-            completed, recommendation, recommend_handled = await self._run_sequential_flow(task, query)
+            response, recommendation, recommend_handled = await self._run_sequential_flow(task, query)
             return {
-                "primary": completed,
-                "tasks": [completed],
-                "recommend": recommendation,
+                "type": task.get("ability"),
+                "response": response,
+                "recommendation": recommendation,
                 "recommend_handled": recommend_handled,
             }
 
@@ -45,8 +45,8 @@ class OrchestratorService:
             task, query
         )
         return {
-            "primary": pending_task,
-            "tasks": [pending_task],
+            "type": task.get("ability"),
+            "response": pending_task,
             "recommend": recommendation,
             "recommend_handled": recommend_handled,
         }
@@ -54,22 +54,22 @@ class OrchestratorService:
     async def _run_sequential_flow(
         self, task: Dict[str, Any], query: QueryRequest
     ) -> Tuple[Dict[str, Any], str, bool]:
-        result, status_value = await task.get("handler")(query=query)
+        response, status_value = await task.get("handler")(query=query)
         status = self._normalize_status(status_value)
 
         if status == TaskStatus.PENDING:
-            await self._persist_pending_command(task, query, result)
-            return result, "", False
+            await self._persist_pending_command(task, query, response)
+            return response, "", False
 
         recommendation = await self._handle_recommendation(query)
 
         stored_task = await task_status_repo.save_task(
             user_id=query.user_id,
-            payload=result,
+            payload=response,
             task_type=task.get("ability")
         )
         print("Stored task: ", stored_task)
-        return result, recommendation, True
+        return response, recommendation, True
 
     def _normalize_status(self, status_value: Any) -> TaskStatus:
         if isinstance(status_value, TaskStatus):

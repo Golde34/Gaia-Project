@@ -142,6 +142,25 @@ your job is response to the user in a friendly way and suggest what to do next.
 (e.g.2. "The task is created, you should check it in the task list, sir/madam")
 (e.g.3. "I have create a task for you, you must do it as soon as possible, sir/madam")
 
+Examples of response:
+{{
+  "response": <You will provide a friendly response to the user here, could be fail, could be success, could be suggest what to do next>,
+  "task": {{
+    "userId": <user id>,
+    "actionType": <action type>,
+    "projectId": <project id>,
+    "groupTaskId": <group task id>,
+    "taskId": <task id>,
+    "title": <title>,
+    "priority": <priority>,
+    "status": <status>,
+    "startDate": <start date>,
+    "deadline": <deadline>,
+    "duration": <duration>
+  }},
+  "operationStatus": <operation status>
+}}
+
 Remember: Your response must contain ONLY the JSON object, nothing else.
 
 Now, analyze the task result JSON and extract the requested information into the JSON format.

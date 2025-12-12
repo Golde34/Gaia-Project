@@ -27,37 +27,14 @@ async def abilities_handler(query: QueryRequest, guided_route: str) -> list[str]
             return await chitchat_with_history(query)
 
         orchestration_result = await orchestrator_service.execute(query=query, task=task)
-        primary = orchestration_result.get("primary")
-        if not primary:
+        type = orchestration_result.get("type")
+        if not type:
             return handle_task_service_response(enum.GaiaAbilities.CHITCHAT.value, "")
-
-        response_payload = orchestration_result.get("payload")
-        print("Result: ", response_payload)
-        return response_payload
-    except Exception as e:
-        raise e
-
-async def chitchat(query: QueryRequest) -> str:
-    """
-    Chitchat pipeline
-    Args:
-        query (str): The user's query containing task information.
-    Returns:
-        str: Short response to the request
-    """
-    try:
-        prompt = CHITCHAT_PROMPT.format(query=query.query)
-        if not query.model:
-            model: LLMModel = LLMModel(
-                model_name=config.LLM_DEFAULT_MODEL,
-                model_key=config.SYSTEM_API_KEY
-            )
-        else:
-            model = query.model
-        function = await llm_models.get_model_generate_content(model=model, user_id=query.user_id)
-        response = function(prompt=prompt, model=model)
-        print("Response:", response)
-        return response
+        
+        responses = _extract_task_response(orchestration_result)
+        
+        print(f"Orchestration result type: {type}, response: {responses}") 
+        return responses
     except Exception as e:
         raise e
 
@@ -86,23 +63,51 @@ async def chitchat_with_history(query: QueryRequest) -> str:
     except Exception as e:
         raise e
 
-async def persist_recommendation_message(query: QueryRequest, recommend_message: str) -> None:
-    if not recommend_message:
-        return
-    if not query.dialogue_id or not query.user_message_id:
-        return
+def _extract_task_response(orchestration_result: dict) -> list[str]:
+    """
+    Extract the response from the orchestration result.
+    Args:
+        orchestration_result (dict): The result from the orchestrator service.
+    Returns:
+        list[str]: The extracted responses.
+    """
+    
+    if orchestration_result.get("recommendation_handled", False):
+        if type(orchestration_result.get("response")) is list:
+            responses: list = orchestration_result.get("response")
+            responses.append(orchestration_result.get("recommendation"))
+            return responses
+        else:
+            return [
+                orchestration_result.get("response"),
+                orchestration_result.get("recommendation")
+            ]
+    else:
+        if type(orchestration_result.get("response")) is list:
+            return orchestration_result.get("response")
+        else:
+            return [orchestration_result.get("response")] 
 
-    dialogue, _ = await dialogue_service.get_dialogue_by_id(
-        user_id=query.user_id, dialogue_id=query.dialogue_id
-    )
-    if not dialogue:
-        return
-
-    await message_service.create_message(
-        dialogue=dialogue,
-        user_id=query.user_id,
-        message=recommend_message,
-        message_type=query.type,
-        sender_type=SenderTypeEnum.BOT.value,
-        user_message_id=query.user_message_id,
-    )
+async def chitchat(query: QueryRequest) -> str:
+    """
+    Chitchat pipeline
+    Args:
+        query (str): The user's query containing task information.
+    Returns:
+        str: Short response to the request
+    """
+    try:
+        prompt = CHITCHAT_PROMPT.format(query=query.query)
+        if not query.model:
+            model: LLMModel = LLMModel(
+                model_name=config.LLM_DEFAULT_MODEL,
+                model_key=config.SYSTEM_API_KEY
+            )
+        else:
+            model = query.model
+        function = await llm_models.get_model_generate_content(model=model, user_id=query.user_id)
+        response = function(prompt=prompt, model=model)
+        print("Response:", response)
+        return response
+    except Exception as e:
+        raise e
