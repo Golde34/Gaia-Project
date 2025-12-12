@@ -36,6 +36,9 @@ public class UserSetting {
 			"2: Optimize in fixed time, 3: Disable auto optimize'")
 	private Integer autoOptimizeConfig;
 
+	@Column(name = "memory_model", columnDefinition = "VARCHAR(255) COMMENT 'The memory model selected by the user'")
+	private String memoryModel;
+
 	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "user_id", referencedColumnName = "id")
 	@JsonIgnore

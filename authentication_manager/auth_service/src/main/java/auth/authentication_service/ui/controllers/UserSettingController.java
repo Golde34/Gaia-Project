@@ -5,6 +5,13 @@ import auth.authentication_service.core.services.interfaces.UserSettingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+
 
 @RestController
 @RequestMapping("/user-setting")
@@ -21,4 +28,15 @@ public class UserSettingController {
     public ResponseEntity<?> getUserSetting(@RequestParam Long userId) {
         return userSettingService.getUserSettings(userId);
     }
+
+    @PutMapping("/update-memory-model/{id}")
+    public ResponseEntity<?> updateMemoryModelSetting(@PathVariable Long id, @RequestBody String memoryModel) {
+        return userSettingService.updateMemoryModelSettings(id, memoryModel);
+    }
+
+    @GetMapping("/get-memory-model")
+    public ResponseEntity<?> getUserMemoryModelSetting(@RequestParam Long userId) {
+        return userSettingService.getUserMemoryModelSetting(userId);
+    } 
+
 }

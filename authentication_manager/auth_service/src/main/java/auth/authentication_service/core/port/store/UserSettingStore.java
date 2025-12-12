@@ -6,4 +6,5 @@ public interface UserSettingStore {
     void save(UserSetting userSetting);
     UserSetting getUserSetting(Long userId);
     UserSetting updateUserSetting(UserSetting userSetting);
+    void updateMemoryModelSetting(long userId, String memoryModel);
 }

@@ -35,4 +35,9 @@ public class UserSettingAdapter implements UserSettingStore {
         log.info("Saving user setting: {}", userSetting);   
         return userSettingRepository.save(userSetting);
     }
+
+    @Override
+    public void updateMemoryModelSetting(long userId, String memoryModel) {
+        userSettingRepository.updateMemoryModelSetting(userId, memoryModel);
+    }
 }
