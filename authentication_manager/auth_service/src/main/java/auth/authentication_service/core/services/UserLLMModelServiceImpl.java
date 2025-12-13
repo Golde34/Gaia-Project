@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import auth.authentication_service.core.domain.entities.LLMModel;
 import auth.authentication_service.core.domain.entities.UserLLMModel;
 import auth.authentication_service.core.domain.enums.ResponseEnum;
+import auth.authentication_service.core.port.client.ChatHubServiceClient;
 import auth.authentication_service.core.port.store.UserLLMModelStore;
 import auth.authentication_service.core.services.interfaces.UserLLMModelService;
 import auth.authentication_service.kernel.utils.BCryptPasswordEncoder;
@@ -22,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 public class UserLLMModelServiceImpl implements UserLLMModelService {
 
     private final UserLLMModelStore userLLMModelStore;
+    private final ChatHubServiceClient chatHubServiceClient;
+
     private final GenericResponse<?> genericResponse;
 
     @Override
@@ -45,8 +48,9 @@ public class UserLLMModelServiceImpl implements UserLLMModelService {
                     .flatMap(userLLMModelStore::findById)
                     .map(existing -> updateExisting(existing, userLLMModel))
                     .orElseGet(() -> createNew(userLLMModel));
-
             userLLMModelStore.save(userModel);
+
+            chatHubServiceClient.clearUserLLMModelCache(userLLMModel.getUserId());
 
             return genericResponse.matchingResponseMessage(
                     new GenericResponse<>("Save user LLM model successfully", ResponseEnum.msg200));
@@ -83,6 +87,7 @@ public class UserLLMModelServiceImpl implements UserLLMModelService {
     public ResponseEntity<?> delete(Long userModelId) {
         try {
             userLLMModelStore.deleteById(userModelId);
+            chatHubServiceClient.clearUserLLMModelCache(userModelId);
 
             return genericResponse.matchingResponseMessage(
                     new GenericResponse<>("Delete user LLM model successfully", ResponseEnum.msg200));

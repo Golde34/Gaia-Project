@@ -13,6 +13,7 @@ import auth.authentication_service.core.domain.dto.request.UpdateUserModelReques
 import auth.authentication_service.core.domain.entities.LLMModel;
 import auth.authentication_service.core.domain.entities.User;
 import auth.authentication_service.core.domain.enums.ResponseEnum;
+import auth.authentication_service.core.port.client.ChatHubServiceClient;
 import auth.authentication_service.core.port.store.LLMModelStore;
 import auth.authentication_service.core.port.store.UserCRUDStore;
 import auth.authentication_service.core.services.interfaces.UserLLMModelService;
@@ -30,6 +31,7 @@ public class UserModelSettingServiceImpl implements UserModelSettingService {
     private final UserLLMModelService userLLMModelService;
     private final LLMModelStore llmModelStore;
     private final UserCRUDStore userStore;
+    private final ChatHubServiceClient chatHubServiceClient;
 
     private final ResponseUtils responseUtils;
     private final GenericResponse<?> genericResponse;
@@ -58,6 +60,7 @@ public class UserModelSettingServiceImpl implements UserModelSettingService {
             updateModels.add(model);
             user.setLlmModels(updateModels);
             userStore.save(user);
+            chatHubServiceClient.clearUserLLMModelCache(updateUserModelRequest.getUserId());
             return genericResponse.matchingResponseMessage(
                     new GenericResponse<>("Save user model successfully", ResponseEnum.msg200));
         } catch (Exception e) {

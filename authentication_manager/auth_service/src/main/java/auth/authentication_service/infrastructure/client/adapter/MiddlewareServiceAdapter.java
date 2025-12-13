@@ -5,13 +5,15 @@ import auth.authentication_service.core.exceptions.BusinessException;
 import auth.authentication_service.core.port.client.MiddlewareServiceClient;
 import auth.authentication_service.infrastructure.client.ClientTemplate;
 import auth.authentication_service.kernel.utils.ClientUtils;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
+@RequiredArgsConstructor
 @Slf4j
 public class MiddlewareServiceAdapter implements MiddlewareServiceClient {
 
@@ -20,11 +22,6 @@ public class MiddlewareServiceAdapter implements MiddlewareServiceClient {
 
     private final ClientTemplate clientTemplate;
     private final ClientUtils clientUtils;
-
-    public MiddlewareServiceAdapter(ClientTemplate clientTemplate, ClientUtils clientUtils) {
-        this.clientTemplate = clientTemplate;
-        this.clientUtils = clientUtils;
-    }
 
     @Override
     public String insertStatus(ServiceStatusRequest request) {
