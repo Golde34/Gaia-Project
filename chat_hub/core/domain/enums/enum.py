@@ -19,6 +19,7 @@ class SemanticRoute(Enum):
     LONG_TERM_MEMORY = "long_term_memory"
     REGISTER_SCHEDULE_CALENDAR = "register_schedule_calendar"
     REGISTER_SCHEDULE_CALENDAR_EXAMPLE = "register_schedule_calendar_example"
+    CHITCHAT_AND_REGISTER_CALENDAR = "chitchat_and_register_calendar"
 
 class GaiaAbilities(Enum):
     CHITCHAT = "chitchat"
