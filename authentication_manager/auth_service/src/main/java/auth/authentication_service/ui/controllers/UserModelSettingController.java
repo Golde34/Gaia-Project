@@ -30,7 +30,7 @@ public class UserModelSettingController {
     }
 
     @GetMapping("/get-model-by-user")
-    public ResponseEntity<?> getModelsByUser(@RequestParam("userId") Long userId) {
+    public ResponseEntity<?> getModelsByUser(@RequestParam Long userId) {
         return userModelSettingService.getModelByUser(userId);
     }
 }

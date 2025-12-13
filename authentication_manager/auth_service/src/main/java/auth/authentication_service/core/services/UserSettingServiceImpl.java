@@ -38,4 +38,26 @@ public class UserSettingServiceImpl implements UserSettingService {
         UserSetting result = userSettingStore.getUserSetting(userId);
         return genericResponse.matchingResponseMessage(new GenericResponse<>(result, ResponseEnum.msg200));
     }
+
+    @Override
+    public ResponseEntity<?> updateMemoryModelSettings(long userId, String memoryModel) {
+        try {
+            userSettingStore.updateMemoryModelSetting(userId, memoryModel);
+            return genericResponse.matchingResponseMessage(
+                new GenericResponse<>("Update memory model setting successful", ResponseEnum.msg200));
+        } catch (Exception e) {
+            log.error("Error updating memory model setting for user {}: {}", userId, e.getMessage());
+            GenericResponse<String> response = new GenericResponse<>(
+                    "Update memory model setting failed: %s".formatted(e.getMessage()),
+                    ResponseEnum.msg400);
+            return genericResponse.matchingResponseMessage(response);
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> getUserMemoryModelSetting(Long userId) {
+        UserSetting result = userSettingStore.getUserSetting(userId);
+        String memoryModel = result.getMemoryModel();
+        return genericResponse.matchingResponseMessage(new GenericResponse<>(memoryModel, ResponseEnum.msg200));
+    }
 }

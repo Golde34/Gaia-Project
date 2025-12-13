@@ -1,6 +1,5 @@
-from chat_hub.core.domain.response.model_output_schema import DailyRoutineSchema
-from chat_hub.kernel.config import config
-from chat_hub.kernel.utils import aiohttp_utils, build_header
+from kernel.config import config
+from kernel.utils import aiohttp_utils, build_header
 
 
 class TaskManagerClient:
@@ -22,11 +21,11 @@ class TaskManagerClient:
             )
             if not result:
                 print("No response from Task Manager Service for create_task.")
-                return {}
+                return None
 
-            return result["data"]
+            return result["data"]["message"]
         except Exception as e:
-            print(f"Error in SchedulePlanClient.create_or_update_time_bubble_configs: {e}")
-            return {} 
+            print(f"Error in TaskManagerClient.create_task: {e}")
+            return None
     
 task_manager_client = TaskManagerClient()

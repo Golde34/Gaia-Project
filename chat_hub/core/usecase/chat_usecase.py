@@ -3,7 +3,7 @@ import functools
 from core.abilities.ability_routers import MESSAGE_TYPE_CONVERTER
 from core.domain.enums.enum import DialogueEnum, SenderTypeEnum, ChatType
 from core.domain.request.chat_hub_request import SendMessageRequest
-from core.domain.request.query_request import QueryRequest
+from core.domain.request.query_request import LLMModel, QueryRequest
 from core.service import sse_stream_service
 from core.service.integration import auth_service
 from core.service.integration.dialogue_service import dialogue_service
@@ -91,7 +91,7 @@ class ChatInteractionUsecase:
             user_message_id=None
         )
 
-        user_model = await auth_service.get_user_model(user_id)
+        user_model: LLMModel = await auth_service.get_user_model(user_id)
 
         query_request: QueryRequest = QueryRequest(
             user_id=user_id,
@@ -103,27 +103,55 @@ class ChatInteractionUsecase:
 
         chat_type = MESSAGE_TYPE_CONVERTER.get(
             request.msg_type, ChatType.ABILITIES.value)
-        bot_response = await thinking.chat(
+        bot_response, message_handler_type = await thinking.chat(
             query=query_request,
             chat_type=chat_type,
             user_message_id=user_message_id,
-            is_change_title=is_change_title)
+            is_change_title=is_change_title,
+            memory_model=user_model.memory_model)
+        
+        if isinstance(bot_response, list):
+            for response in bot_response:
+                await cls._store_bot_response(
+                    dialogue=dialogue,
+                    user_id=user_id,
+                    message=response,
+                    message_type=request.msg_type,
+                    user_message_id=str(user_message_id),
+                )
+        else:
+            await cls._store_bot_response(
+                dialogue=dialogue,
+                user_id=user_id,
+                message=bot_response,
+                message_type=request.msg_type,
+                user_message_id=str(user_message_id),
+            )
+        
+        return {
+            "message_handler_type": message_handler_type,
+            "responses": bot_response,
+            "dialogue_id": str(dialogue.id)
+        }
 
+    @classmethod
+    async def _store_bot_response(
+            cls,
+            dialogue,
+            user_id: int,
+            message: str,
+            message_type: str,
+            user_message_id: str):
         bot_message_id = await message_service.create_message(
             dialogue=dialogue,
             user_id=user_id,
-            message=bot_response,
-            message_type=request.msg_type,
+            message=message,
+            message_type=message_type,
             sender_type=SenderTypeEnum.BOT.value,
-            user_message_id=str(user_message_id),
+            user_message_id=user_message_id,
         )
         print("Bot response stored with message ID:", bot_message_id)
-        
-        # Return response with dialogue_id
-        return {
-            "response": bot_response,
-            "dialogue_id": str(dialogue.id)
-        }
+        return bot_message_id
 
 
 chat_interaction_usecase = ChatInteractionUsecase()

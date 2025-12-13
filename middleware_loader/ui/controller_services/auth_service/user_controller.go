@@ -188,3 +188,52 @@ func DeleteUserModel(w http.ResponseWriter, r *http.Request, userService *servic
 		return
 	}
 }
+
+func UpdateUserMemoryModel(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
+	var body map[string]interface{}
+
+	body, err := controller_utils.MappingBody(w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	userId := int(r.Context().Value(middleware.ContextKeyUserId).(float64)) 
+	val, ok := body["memoryModel"].(string)
+	if !ok || val == "" {
+		http.Error(w, "Invalid memoryModel value", http.StatusBadRequest)
+		return
+	}
+	updateMemoryModel, err := userService.UpdateUserMemoryModel(val, userId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(updateMemoryModel); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}
+
+func GetUserMemoryModel(w http.ResponseWriter, r *http.Request, userService *services.UserService) {
+	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
+	memoryModel, err := userService.GetUserMemoryModel(userId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	response := map[string]interface{}{
+		"data": memoryModel,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}

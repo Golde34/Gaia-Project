@@ -141,7 +141,7 @@ func (adapter *UserAdapter) GetUserModels(userId string) ([]response_dtos.UserLL
 	if err != nil {
 		return []response_dtos.UserLLMModel{}, err
 	}
-	
+
 	bodyResultMap, ok := bodyResult.(map[string]interface{})
 	if !ok {
 		return []response_dtos.UserLLMModel{}, fmt.Errorf("unexpected response format")
@@ -150,7 +150,7 @@ func (adapter *UserAdapter) GetUserModels(userId string) ([]response_dtos.UserLL
 		userModel := mapper_response.ReturnUserLLMModelObjectMapper(userModelElement.(map[string]interface{}))
 		userModels = append(userModels, *userModel)
 	}
-	
+
 	return userModels, nil
 }
 
@@ -178,4 +178,40 @@ func (adapter *UserAdapter) DeleteUserModel(id string) error {
 		return err
 	}
 	return nil
+}
+
+func (adapter *UserAdapter) UpdateMemoryModel(memoryModel string, userId int) (string, error) {
+	userIdStr := fmt.Sprint(userId)
+	updateMemoryModelURL := base.AuthServiceURL + "/user-setting/update-memory-model/" + userIdStr
+	input := map[string]interface{}{
+		"memoryModel": memoryModel,
+	}
+	headers := utils.BuildAuthorizationHeaders(enums.AS, userIdStr)
+	bodyResult, err := utils.BaseAPI(updateMemoryModelURL, "PUT", input, headers)
+	if err != nil {
+		return "", err
+	}
+
+	bodyResultMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return "", fmt.Errorf("unexpected response format")
+	}
+	message := bodyResultMap["message"].(string)
+	return message, nil
+}
+
+func (adapter *UserAdapter) GetMemoryModel(userId string) (string, error) {
+	getMemoryModelURL := base.AuthServiceURL + "/user-setting/get-memory-model?userId=" + userId
+	headers := utils.BuildAuthorizationHeaders(enums.AS, userId)
+	bodyResult, err := utils.BaseAPI(getMemoryModelURL, "GET", nil, headers)
+	if err != nil {
+		return "", err
+	}
+	
+	bodyResultMap, ok := bodyResult.(map[string]interface{})
+	if !ok {
+		return "", fmt.Errorf("unexpected response format")
+	}
+	message, _ := bodyResultMap["message"].(string)
+	return message, nil
 }

@@ -120,3 +120,19 @@ func (s *UserService) DeleteUserModel(id string) error {
 	}
 	return nil
 }
+
+func (s *UserService) UpdateUserMemoryModel(memoryModel string, userId int) (string, error) {
+	userMemoryModel, err := client.IUserAdapter(&adapter.UserAdapter{}).UpdateMemoryModel(memoryModel, userId)
+	if err != nil {
+		return "Something error when update user memory model", err
+	}
+	return userMemoryModel, nil
+}
+
+func (s *UserService) GetUserMemoryModel(userId string) (string, error) {
+	userMemoryModel, err := client.IUserAdapter(&adapter.UserAdapter{}).GetMemoryModel(userId)
+	if err != nil {
+		return "", err
+	}
+	return userMemoryModel, nil
+}

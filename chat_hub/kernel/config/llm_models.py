@@ -6,7 +6,7 @@ from kernel.config.config import session_id_var
 
 
 MODELS_INTERFACE = {
-    "gemini-2.0-flash": gemini_generate_content.generate_content,
+    "gemini-2.5-flash": gemini_generate_content.generate_content,
     "unsloth": "UNSLOTH" 
 }
 
@@ -31,7 +31,7 @@ async def get_model_generate_content(model: LLMModel, user_id: str, prompt: str 
         )
     except Exception as e:
         print(f"Error pushing calling LLM API times message: {e}")
-    return MODELS_INTERFACE.get(model.model_name, "gemini-2.0-flash")
+    return MODELS_INTERFACE.get(model.model_name, "gemini-2.5-flash")
 
 async def push_calling_llm_api_times_message(user_id: str, session_id: str, prompt: str = None):
     payload = {

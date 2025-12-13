@@ -27,6 +27,11 @@ class CreateTaskResultSchema(BaseModel):
     duration: Optional[str] = None
     response: str
 
+class CreateTaskResponseSchema(BaseModel):
+    response: str
+    task: CreateTaskResultSchema
+    operationStatus: str
+
 
 class TimeBubbleDTO(BaseModel):
     start: str = Field(..., description="Start time in HH:MM format")
