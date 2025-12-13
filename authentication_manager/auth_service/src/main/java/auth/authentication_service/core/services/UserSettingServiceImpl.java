@@ -3,6 +3,7 @@ package auth.authentication_service.core.services;
 import auth.authentication_service.core.domain.dto.request.UpdateUserSettingRequest;
 import auth.authentication_service.core.domain.entities.UserSetting;
 import auth.authentication_service.core.domain.enums.ResponseEnum;
+import auth.authentication_service.core.port.client.ChatHubServiceClient;
 import auth.authentication_service.core.port.mapper.UserSettingMapper;
 import auth.authentication_service.core.port.store.UserSettingStore;
 import auth.authentication_service.core.services.interfaces.UserSettingService;
@@ -21,6 +22,8 @@ public class UserSettingServiceImpl implements UserSettingService {
 
     private final UserSettingStore userSettingStore;
     private final UserSettingMapper userSettingMapper;
+    private final ChatHubServiceClient chatHubServiceClient;
+
     private final GenericResponse<?> genericResponse;
 
     @Override
@@ -43,6 +46,7 @@ public class UserSettingServiceImpl implements UserSettingService {
     public ResponseEntity<?> updateMemoryModelSettings(long userId, String memoryModel) {
         try {
             userSettingStore.updateMemoryModelSetting(userId, memoryModel);
+            chatHubServiceClient.clearUserLLMModelCache(userId);
             return genericResponse.matchingResponseMessage(
                 new GenericResponse<>("Update memory model setting successful", ResponseEnum.msg200));
         } catch (Exception e) {
