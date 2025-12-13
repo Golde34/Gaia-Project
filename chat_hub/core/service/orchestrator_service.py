@@ -69,12 +69,12 @@ class OrchestratorService:
 
         recommendation = await self._handle_recommendation(query)
 
-        stored_task = await task_status_repo.save_task(
-            user_id=query.user_id,
-            payload=response,
-            task_type=task.get("ability")
-        )
-        print("Stored task: ", stored_task)
+        # stored_task = await task_status_repo.save_task(
+        #     user_id=query.user_id,
+        #     payload=response,
+        #     task_type=task.get("ability")
+        # )
+        # print("Stored task: ", stored_task)
         return response, recommendation, True
 
     def _normalize_status(self, status_value: Any) -> TaskStatus:

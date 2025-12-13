@@ -2,10 +2,9 @@ import json
 
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
-from core.domain.response.model_output_schema import CreateTaskResponseSchema, CreateTaskResultSchema, CreateTaskSchema
+from core.domain.response.model_output_schema import CreateTaskResponseSchema, CreateTaskSchema
 from core.prompts.task_prompt import CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT, TASK_RESULT_PROMPT_2
 from infrastructure.client.task_manager_client import task_manager_client
-from infrastructure.repository.task_status_repo import task_status_repo
 from kernel.config import llm_models
 from kernel.utils.parse_json import parse_json_string
 
@@ -28,14 +27,34 @@ class PersonalTaskService:
         """
         try:
             task_data = await self._create_personal_task_llm(query)
-            created_task = task_manager_client.create_personal_task(task_data)
-            task_result_response = await self.create_personal_task_result(task=created_task, query=query) 
-            response: CreateTaskResponseSchema = json.loads(task_result_response)
+            # created_task = await task_manager_client.create_personal_task(task_data)
+            # mock this creaded_task response for testing for me
+            created_task = {
+                "id": "68b085c93abd0bb364036682",
+                "title": task_data.get("title"),
+                "description": task_data.get("description"),
+                "priority": task_data.get("priority", []),
+                "status": "TODO",
+                "startDate": task_data.get("startDate"),
+                "deadline": task_data.get("deadline"),
+                "duration": task_data.get("duration"),
+                "createdAt": "2025-08-28T16:37:29.156Z",
+                "updatedAt": "2025-08-28T16:37:29.156Z",
+                "activeStatus": "ACTIVE",
+                "groupTaskId": None,
+                "userId": query.user_id,
+                "__v": 0,
+                "tag": task_data.get("tag", "general"),
+            }
+            task_result_response = await self.create_personal_task_result(task=created_task, query=query)
+            print("Task result response:", task_result_response)
+            response: CreateTaskResponseSchema = task_result_response
+            print("Final response object:", response)
             responses = [
-                response.response,
-                response.task
+                response["response"],
+                response["task"]
             ]
-            return responses, response.operationStatus 
+            return responses, response["operationStatus"]
         except Exception as e:
             raise e
 
@@ -78,6 +97,7 @@ class PersonalTaskService:
                         print("Exception while parsing", expr)
                         task_data[key] = datetime_values[key]
 
+            print("Final task data:", task_data)
             return task_data
 
         except Exception as e:
