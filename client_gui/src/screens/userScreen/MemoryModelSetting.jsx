@@ -15,8 +15,8 @@ import {
     Grid,
     Col 
 } from "@tremor/react";
-import RadioButton from "../../components/subComponents/RadioButton";
-import InformationDialog from "../../components/subComponents/InformationDialog";
+import { RadioButton } from "../../components/subComponents/RadioButton";
+import { InformationDialog } from "../../components/subComponents/InformationDialog";
 
 const MemoryModelSetting = () => {
     const dispatch = useDispatch();
@@ -33,7 +33,7 @@ const MemoryModelSetting = () => {
 
     useEffect(() => {
         if (memoryModel && !selectedMemoryModel) {
-            setSelectedMemoryModel(memoryModel.toString());
+            setSelectedMemoryModel(memoryModel);
         }
     }, [memoryModel, selectedMemoryModel]);
 
@@ -72,7 +72,7 @@ const MemoryModelSetting = () => {
                                             <RadioButton
                                                 id="default-model-radio"
                                                 color="blue"
-                                                value="1"
+                                                value="Default Model"
                                                 getter={selectedMemoryModel}
                                                 setter={setSelectedMemoryModel}
                                                 label="Default Model"
@@ -87,7 +87,7 @@ const MemoryModelSetting = () => {
                                             <RadioButton
                                                 id="graph-model-radio"
                                                 color="red"
-                                                value="2"
+                                                value="Graph Model"
                                                 getter={selectedMemoryModel}
                                                 setter={setSelectedMemoryModel}
                                                 label="Graph Model"

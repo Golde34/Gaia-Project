@@ -144,7 +144,7 @@ export const getUserMemoryModelReducer = (
         case GET_USER_MEMORY_MODEL_REQUEST:
             return { ...state, loading: true };
         case GET_USER_MEMORY_MODEL_SUCCESS:
-            return { ...state, loading: false, memoryModel: action.payload.data.memoryModel };
+            return { ...state, loading: false, memoryModel: action.payload.data };
         case GET_USER_MEMORY_MODEL_FAILURE:
             return { ...state, loading: false, error: action.payload };
         default:
