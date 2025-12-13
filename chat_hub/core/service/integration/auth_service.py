@@ -71,12 +71,14 @@ def _create_system_model(user_model: UserModelResponse, user_id: int) -> LLMMode
     if _is_valid_user_model(user_model, user_id):
         return LLMModel(
             model_name=user_model.model_name,
-            model_key=user_model.model_key
+            model_key=user_model.model_key,
+            memory_model=user_model.memory_model
         )
     
     return LLMModel(
         model_name=LLM_DEFAULT_MODEL,
-        model_key=SYSTEM_API_KEY
+        model_key=SYSTEM_API_KEY,
+        memory_model="Default Model"
     )
 
 
@@ -87,6 +89,7 @@ def _is_valid_user_model(user_model: UserModelResponse | None, user_id: int) -> 
         and user_model.user_id == user_id
         and user_model.model_name is not None
         and user_model.model_key is not None
+        and user_model.memory_model is not None
     )
 
 

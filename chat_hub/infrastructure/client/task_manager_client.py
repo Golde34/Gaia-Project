@@ -1,6 +1,5 @@
-from chat_hub.core.domain.response.model_output_schema import DailyRoutineSchema
-from chat_hub.kernel.config import config
-from chat_hub.kernel.utils import aiohttp_utils, build_header
+from kernel.config import config
+from kernel.utils import aiohttp_utils, build_header
 
 
 class TaskManagerClient:

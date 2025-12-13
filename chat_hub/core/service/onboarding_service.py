@@ -6,9 +6,9 @@ import json
 
 from infrastructure.client.schedule_plan_client import schedule_plan_client
 from core.domain.enums import enum, kafka_enum
-from core.domain.request.query_request import LLMModel, QueryRequest
+from core.domain.request.query_request import QueryRequest
 from core.domain.response.base_response import return_response
-from core.domain.response.model_output_schema import DailyRoutineSchema, TimeBubbleDTO
+from core.domain.response.model_output_schema import DailyRoutineSchema
 from core.prompts import onboarding_prompt
 from core.prompts.abilities_prompt import CHITCHAT_WITH_HISTORY_PROMPT
 from core.service import memory_service
@@ -16,7 +16,7 @@ from core.validation import milvus_validation
 from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.kafka.producer import publish_message
 from infrastructure.vector_db.milvus import milvus_db
-from kernel.config import llm_models, config
+from kernel.config import llm_models
 from kernel.utils.parse_json import bytes_to_str, clean_json_string
 from kernel.utils.background_loop import log_background_task_error
 
@@ -34,7 +34,7 @@ async def handle_onboarding_action(query: QueryRequest, selection: str) -> dict:
         enum.GaiaAbilities.REGISTER_SCHEDULE_CALENDAR.value:
             lambda: _generate_calendar_schedule_response(
                 query, recent_history=recent_history, long_term_memory=long_term_memory),
-        enum.GaiaAbilities.CHITCHAT.value:
+        enum.SemanticRoute.CHITCHAT_AND_REGISTER_CALENDAR.value:
             lambda: _chitchat_and_register_calendar(
                 query, recent_history, recursive_summary, long_term_memory),
     }

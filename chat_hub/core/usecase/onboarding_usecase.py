@@ -1,10 +1,8 @@
 from datetime import datetime
-from turtle import mode
 from typing import Dict, Optional
 
 from langdetect import detect
 from core.domain.enums import enum
-from core.domain.response.base_response import return_response
 from core.domain.response.model_output_schema import DailyRoutineSchema
 from core.domain.request.query_request import QueryRequest
 from core.service import memory_service, onboarding_service
