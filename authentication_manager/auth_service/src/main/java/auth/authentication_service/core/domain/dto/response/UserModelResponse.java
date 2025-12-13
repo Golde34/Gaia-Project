@@ -15,5 +15,5 @@ public class UserModelResponse {
     private Long userId;
     private String modelName;
     private String modelKey;
-
+    private String memoryModel;
 }

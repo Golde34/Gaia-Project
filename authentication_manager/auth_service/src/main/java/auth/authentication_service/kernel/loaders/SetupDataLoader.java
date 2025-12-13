@@ -66,7 +66,7 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
         final Role adminRole = createRoleIfNotFound("ROLE_ADMIN", authAdminPrivileges);
         final Role userTestRole = createRoleIfNotFound("ROLE_USER", serviceUserPrivileges);
 
-        final LLMModel geminiModel = createLLMModelIfNotFound("gemini-2.0-flash");
+        final LLMModel geminiModel = createLLMModelIfNotFound("gemini-2.5-flash");
         final LLMModel unslothModel = createLLMModelIfNotFound("unsloth");
 
         // == create initial user
