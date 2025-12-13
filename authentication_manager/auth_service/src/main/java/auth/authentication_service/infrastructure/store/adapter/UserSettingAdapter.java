@@ -38,6 +38,7 @@ public class UserSettingAdapter implements UserSettingStore {
 
     @Override
     public void updateMemoryModelSetting(long userId, String memoryModel) {
-        userSettingRepository.updateMemoryModelSetting(userId, memoryModel);
+        var updated = userSettingRepository.updateMemoryModel(userId, memoryModel);
+        log.info("Updated {} memory model of userId {}: {}", updated, userId, memoryModel);
     }
 }

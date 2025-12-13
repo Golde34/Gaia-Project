@@ -1,16 +1,13 @@
 package auth.authentication_service.ui.controllers;
 
+import auth.authentication_service.core.domain.dto.request.MemoryModelRequest;
 import auth.authentication_service.core.domain.dto.request.UpdateUserSettingRequest;
 import auth.authentication_service.core.services.interfaces.UserSettingService;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
+import lombok.RequiredArgsConstructor;
 
 
 @RestController
@@ -30,8 +27,8 @@ public class UserSettingController {
     }
 
     @PutMapping("/update-memory-model/{id}")
-    public ResponseEntity<?> updateMemoryModelSetting(@PathVariable Long id, @RequestBody String memoryModel) {
-        return userSettingService.updateMemoryModelSettings(id, memoryModel);
+    public ResponseEntity<?> updateMemoryModelSetting(@PathVariable Long id, @RequestBody MemoryModelRequest memoryModel) {
+        return userSettingService.updateMemoryModelSettings(id, memoryModel.getMemoryModel());
     }
 
     @GetMapping("/get-memory-model")
