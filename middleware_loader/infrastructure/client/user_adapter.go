@@ -181,12 +181,12 @@ func (adapter *UserAdapter) DeleteUserModel(id string) error {
 }
 
 func (adapter *UserAdapter) UpdateMemoryModel(memoryModel string, userId int) (string, error) {
-	updateMemoryModelURL := base.AuthServiceURL + "/user/memory-model"
+	userIdStr := fmt.Sprint(userId)
+	updateMemoryModelURL := base.AuthServiceURL + "/user-setting/update-memory-model/" + userIdStr
 	input := map[string]interface{}{
-		"userId":      userId,
 		"memoryModel": memoryModel,
 	}
-	headers := utils.BuildAuthorizationHeaders(enums.AS, fmt.Sprintf("%d", userId))
+	headers := utils.BuildAuthorizationHeaders(enums.AS, userIdStr)
 	bodyResult, err := utils.BaseAPI(updateMemoryModelURL, "PUT", input, headers)
 	if err != nil {
 		return "", err
@@ -200,18 +200,18 @@ func (adapter *UserAdapter) UpdateMemoryModel(memoryModel string, userId int) (s
 	return message, nil
 }
 
-func (adapter *UserAdapter) GetMemoryModel(userId string) (map[string]interface{}, error) {
-	getMemoryModelURL := base.AuthServiceURL + "/user/memory-model?userId=" + userId
+func (adapter *UserAdapter) GetMemoryModel(userId string) (string, error) {
+	getMemoryModelURL := base.AuthServiceURL + "/user-setting/get-memory-model?userId=" + userId
 	headers := utils.BuildAuthorizationHeaders(enums.AS, userId)
 	bodyResult, err := utils.BaseAPI(getMemoryModelURL, "GET", nil, headers)
 	if err != nil {
-		return map[string]interface{}{}, err
+		return "", err
 	}
 	
 	bodyResultMap, ok := bodyResult.(map[string]interface{})
 	if !ok {
-		return map[string]interface{}{}, fmt.Errorf("unexpected response format")
+		return "", fmt.Errorf("unexpected response format")
 	}
-	message := bodyResultMap["message"].(map[string]interface{})
+	message, _ := bodyResultMap["message"].(string)
 	return message, nil
 }

@@ -227,9 +227,7 @@ func GetUserMemoryModel(w http.ResponseWriter, r *http.Request, userService *ser
 	}
 
 	response := map[string]interface{}{
-		"data": map[string]interface{}{
-			"memoryModel": memoryModel,
-		},
+		"data": memoryModel,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
