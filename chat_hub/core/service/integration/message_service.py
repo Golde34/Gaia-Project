@@ -1,3 +1,4 @@
+import json
 from typing import List
 import uuid
 
@@ -20,13 +21,18 @@ class MessageService:
         return message_id
 
     def _build_message(self, dialogue: UserDialogue, user_id: int, message: str, user_message_id: str, sender_type: str, message_type: str) -> Message:
+        content = (
+            json.dumps(message, ensure_ascii=False)
+            if isinstance(message, dict)
+            else message
+        )
         new_message = Message(
             id=uuid.uuid4(),
             user_id=user_id,
             dialogue_id=dialogue.id,
             user_message_id=user_message_id,
             message_type=message_type,
-            content=message,
+            content=content,
             sender_type=sender_type,
             metadata="",
         )

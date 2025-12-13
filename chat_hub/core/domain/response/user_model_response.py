@@ -8,6 +8,7 @@ class UserModelResponse(BaseModel):
     model_name: str
     model_key: str
     user_id: int
+    memory_model: str
 
     model_config = {
         "alias_generator": to_camel,

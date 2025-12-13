@@ -33,15 +33,17 @@ class ThinkingUsecase:
         Returns:
             dict: The categorized response from Gaia.
         """
-        user_config = "Default Model"
+        memory_model = kwargs.get("memory_model")
+        if memory_model is None:
+            memory_model = "Default Model"
         effective_chat_type = chat_type or kwargs.get("chat_type") or ChatType.ABILITIES.value
 
-        if user_config == "Default Model":
+        if memory_model == "Default Model":
             return await cls.chat_with_normal_flow(query=query, chat_type=effective_chat_type, **kwargs)
-        if user_config == "Graph Model":
+        if memory_model == "Graph Model":
             return await cls.chat_with_graph_flow(query=query, chat_type=effective_chat_type, **kwargs)
 
-        raise ValueError(f"Unsupported user_config: {user_config}")
+        raise ValueError(f"Unsupported user_config: {memory_model}")
 
     @classmethod
     async def chat_with_normal_flow(cls, query: QueryRequest, chat_type: str, default=True, **kwargs: Any):

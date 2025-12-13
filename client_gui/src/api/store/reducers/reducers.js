@@ -31,7 +31,8 @@ import {
 } from './task_manager/comment.reducers'
 import { getOnboardingReducer, microserviceListReducer, screenListReducer } from "./middleware_loader/microservices.reducer";
 import { notificationListReducer } from "./middleware_loader/notification.reducer";
-import { deleteUserLLMModelReducer, getAllLLMModelsReducer, getUserLLMModelsReducer, updateUserModelReducer, 
+import { deleteUserLLMModelReducer, getAllLLMModelsReducer, getUserLLMModelsReducer, 
+    getUserMemoryModelReducer, updateUserMemoryModelReducer, updateUserModelReducer, 
     upsertUserLLMModelReducer, userDetailReducer, userListReducer, 
     userSettingUpdateReducer, userUpdateReducer 
 } from "./auth_service/user.reducer";
@@ -75,6 +76,8 @@ export const reducer = combineReducers({
     userLLMModels: getUserLLMModelsReducer,
     upsertUserLLMModel: upsertUserLLMModelReducer,
     deleteUserLLMModel: deleteUserLLMModelReducer,
+    getUserMemoryModel: getUserMemoryModelReducer,
+    updateUserMemoryModel: updateUserMemoryModelReducer,
     // task manager
     projectList: projectListReducer,
     projectDetail: projectDetailReducer,

@@ -8,6 +8,7 @@ from kernel.utils.parse_json import to_camel
 class LLMModel(BaseModel):
     model_name: str
     model_key: str
+    memory_model: str
 
     model_config = {
         "alias_generator": to_camel,

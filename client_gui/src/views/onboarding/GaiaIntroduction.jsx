@@ -30,6 +30,51 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
     "Why should I use Gaia?",
   ];
 
+  const createMessage = (content, senderType, extra = {}) => ({
+    id: `${senderType}-${Date.now()}-${Math.random()}`,
+    content,
+    senderType,
+    timestamp: new Date().toISOString(),
+    ...extra,
+  });
+
+  const tryParseJson = (value) => {
+    if (typeof value !== "string") return value;
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      return value;
+    }
+  };
+
+  const formatResponseContent = (content, handlerType) => {
+    const parsed = tryParseJson(content);
+    if (parsed && typeof parsed === "object") {
+      if (handlerType && typeof parsed.response === "string") {
+        return parsed.response;
+      }
+      return JSON.stringify(parsed, null, 2);
+    }
+    return parsed ?? "";
+  };
+
+  const getSenderType = (msg) => msg.senderType || msg.sender_type || msg.sender || "";
+
+  const renderMessageContent = (msg) => {
+    const formatted = formatResponseContent(msg.content, msg.messageHandlerType);
+    const hasNewlines = typeof formatted === "string" && formatted.includes("\n");
+    return (
+      <div
+        className={[
+          "whitespace-pre-wrap break-words",
+          hasNewlines ? "font-mono text-sm" : "",
+        ].filter(Boolean).join(" ")}
+      >
+        {formatted}
+      </div>
+    );
+  };
+
   const getChatMessages = useCallback(
     (cursorOverride = "") => {
       const cursorToUse = cursorOverride ?? "";
@@ -97,14 +142,6 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
 
   // Handle sending messages
   const handleSend = async () => {
-    const createMessage = (content, senderType, extra = {}) => ({
-      id: `${senderType}-${Date.now()}-${Math.random()}`,
-      content,
-      senderType,
-      timestamp: new Date().toISOString(),
-      ...extra,
-    });
-
     if (!chatInput.trim()) return;
     const userMessage = createMessage(chatInput, "user");
     setChatHistory((prev) => [...prev, userMessage]);
@@ -128,33 +165,54 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
       );
     };
 
+    const replaceBotWithResponses = (responses, handlerType) => {
+      setChatHistory((prev) => {
+        const responseList = Array.isArray(responses)
+          ? responses.filter((item) => item !== null && item !== undefined)
+          : responses
+            ? [responses]
+            : [];
+
+        const botPlaceholder = prev.find((msg) => msg.id === botMessageId);
+        const fallbackPayload = responseList.length > 0
+          ? responseList
+          : (botPlaceholder?.content ? [botPlaceholder.content] : [""]);
+
+        const filteredHistory = prev.filter((msg) => msg.id !== botMessageId);
+        const botMessages = fallbackPayload.map((resp, index) =>
+          createMessage(formatResponseContent(resp, handlerType), "bot", {
+            isStreaming: false,
+            messageHandlerType: handlerType || undefined,
+            sequence: index,
+          })
+        );
+
+        return [...filteredHistory, ...botMessages];
+      });
+    };
+
     try {
       await sendSSEChatMessage("", chatInput, "gaia_introduction", {
         onChunk: (accumulated) => {
           updateBotMessage({ content: accumulated, isStreaming: true });
         },
         onComplete: (result) => {
-          const finalResponse = typeof result === "string" ? result : result?.response;
-          updateBotMessage({
-            content: finalResponse ?? "",
-            isStreaming: false,
-          });
+          const normalizedResponses = Array.isArray(result?.responses)
+            ? result.responses
+            : result?.response
+              ? [result.response]
+              : [];
+
+          const handlerType = result?.messageHandlerType || result?.message_handler_type || result?.type || null;
+          replaceBotWithResponses(normalizedResponses, handlerType);
         },
         onError: () => {
-          updateBotMessage({
-            content: "Sorry, something went wrong.",
-            isStreaming: false,
-            hasError: true,
-          });
+          replaceBotWithResponses(["Sorry, something went wrong."], null);
         },
       });
     } catch (error) {
       console.error("Failed to send chat message:", error);
-      updateBotMessage({
-        content: "Sorry, something went wrong.",
-        isStreaming: false,
-        hasError: true,
-      });
+      replaceBotWithResponses(["Sorry, something went wrong."], null);
     }
   };
   return (
@@ -207,27 +265,36 @@ const GaiaIntroduction = ({ onNext, onSkip }) => {
                       <div className="text-center text-gray-400 my-2">Loading more...</div>
                     )}
                     {chatHistory && chatHistory.length > 0 ? (
-                      chatHistory.map((msg, idx) => (
-                        <div
-                          key={msg.id || idx}
-                          className={`flex ${msg.senderType === "bot" ? "justify-start" : "justify-end"}`}
-                        >
-                          <Grid numItems={1}>
-                            <Col numColSpan={1}>
-                              <div
-                                className={[
-                                  "max-w-lg px-4 py-2 rounded-3xl break-words",
-                                  msg.senderType === "bot" ? "bg-gray-200 text-gray-800" : "bg-blue-500 text-white",
-                                  msg.isStreaming ? "animate-pulse" : "",
-                                ].filter(Boolean).join(" ")
-                                }
-                              >
-                                {msg.content}
-                              </div>
-                            </Col>
-                          </Grid>
-                        </div>
-                      ))
+                      chatHistory.map((msg, idx) => {
+                        const sender = getSenderType(msg);
+                        const isBot = sender === "bot";
+
+                        return (
+                          <div
+                            key={msg.id || idx}
+                            className={`flex ${isBot ? "justify-start" : "justify-end"}`}
+                          >
+                            <Grid numItems={1}>
+                              <Col numColSpan={1}>
+                                <div
+                                  className={[
+                                    "max-w-lg px-4 py-2 rounded-3xl break-words",
+                                    isBot ? "bg-gray-200 text-gray-800" : "bg-blue-500 text-white",
+                                    msg.isStreaming ? "animate-pulse" : "",
+                                  ].filter(Boolean).join(" ")}
+                                >
+                                  {msg.messageHandlerType && (
+                                    <div className="text-xs text-gray-500 mb-1">
+                                      {`Handler: ${msg.messageHandlerType}`}
+                                    </div>
+                                  )}
+                                  {renderMessageContent(msg)}
+                                </div>
+                              </Col>
+                            </Grid>
+                          </div>
+                        );
+                      })
                     ) : (
                       <div className="text-center text-gray-500">No messages yet</div>
                     )}

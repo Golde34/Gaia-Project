@@ -28,7 +28,11 @@ class OrchestratorService:
             "is_sequential": FUNCTIONS.get(guided_route, {}).get("is_sequential", False),
         }
 
-    async def execute(self, query: QueryRequest, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(
+        self,
+        query: QueryRequest,
+        task: Dict[str, Any]
+    ) -> Dict[str, Any]:
         if not task:
             return {"primary": None, "task": [], "recommend": ""}
 
@@ -52,7 +56,9 @@ class OrchestratorService:
         }
 
     async def _run_sequential_flow(
-        self, task: Dict[str, Any], query: QueryRequest
+        self,
+        task: Dict[str, Any],
+        query: QueryRequest
     ) -> Tuple[Dict[str, Any], str, bool]:
         response, status_value = await task.get("handler")(query=query)
         status = self._normalize_status(status_value)
@@ -63,12 +69,12 @@ class OrchestratorService:
 
         recommendation = await self._handle_recommendation(query)
 
-        stored_task = await task_status_repo.save_task(
-            user_id=query.user_id,
-            payload=response,
-            task_type=task.get("ability")
-        )
-        print("Stored task: ", stored_task)
+        # stored_task = await task_status_repo.save_task(
+        #     user_id=query.user_id,
+        #     payload=response,
+        #     task_type=task.get("ability")
+        # )
+        # print("Stored task: ", stored_task)
         return response, recommendation, True
 
     def _normalize_status(self, status_value: Any) -> TaskStatus:

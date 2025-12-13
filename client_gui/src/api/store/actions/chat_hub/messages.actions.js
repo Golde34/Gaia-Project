@@ -110,9 +110,12 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
             // Safety timeout: if no message_complete after 2 minutes, resolve with what we have
             timeoutId = setTimeout(() => {
                 if (!settled) {
-                    resolveOnce({ 
-                        response: accumulatedResponse || "Request timeout", 
-                        dialogueId: null 
+                    const fallback = accumulatedResponse || "Request timeout";
+                    resolveOnce({
+                        response: fallback,
+                        responses: fallback ? [fallback] : [],
+                        dialogueId: null,
+                        messageHandlerType: null,
                     });
                 }
             }, 120000); // 2 minutes
@@ -146,15 +149,25 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
             eventSource.addEventListener("message_complete", (event) => {
                 let finalResponse = accumulatedResponse;
                 let dialogueIdFromResponse = null;
-                
+                let responsesFromPayload = [];
+                let messageHandlerType = null;
+
                 try {
                     const data = JSON.parse(event.data);
-                    
-                    if (data?.dialogue_id) {
-                        dialogueIdFromResponse = data.dialogue_id;
+
+                    if (data?.dialogue_id || data?.dialogueId) {
+                        dialogueIdFromResponse = data.dialogue_id || data.dialogueId;
                     }
-                    
-                    // Use full_response from event as fallback if accumulated response is empty
+
+                    if (Array.isArray(data?.responses)) {
+                        responsesFromPayload = data.responses;
+                    } else if (data?.responses) {
+                        responsesFromPayload = [data.responses];
+                    }
+
+                    messageHandlerType = data?.message_handler_type || data?.messageHandlerType || data?.type || null;
+
+                    // Use full_response or response from event if accumulated response is empty
                     if (data?.full_response && !finalResponse) {
                         finalResponse = data.full_response;
                     }
@@ -164,8 +177,19 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
                 } catch (parseError) {
                     // Use accumulated response if parsing fails
                 }
-                
-                resolveOnce({ response: finalResponse, dialogueId: dialogueIdFromResponse });
+
+                if (!finalResponse && responsesFromPayload.length) {
+                    finalResponse = responsesFromPayload.join("\n\n");
+                }
+
+                const payload = {
+                    response: finalResponse,
+                    responses: responsesFromPayload.length ? responsesFromPayload : (finalResponse ? [finalResponse] : []),
+                    dialogueId: dialogueIdFromResponse,
+                    messageHandlerType,
+                };
+
+                resolveOnce(payload);
             });
 
             eventSource.addEventListener("error", (event) => {

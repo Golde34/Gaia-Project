@@ -18,7 +18,7 @@ def generate_content(prompt: str, model_name: str = None, dto: any = None) -> st
     """
     try:
         if model_name is None:
-            model_name = "gemini-2.0-flash"
+            model_name = "gemini-2.5-flash"
         if dto:
             response = client.models.generate_content(
                 model=model_name, 
