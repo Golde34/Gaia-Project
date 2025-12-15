@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Dict, Optional
 
 from langdetect import detect
+from core.abilities.ability_routers import llm_route
 from core.domain.enums import enum
 from core.domain.response.model_output_schema import DailyRoutineSchema
 from core.domain.request.query_request import QueryRequest
@@ -15,6 +16,8 @@ from kernel.config import config, llm_models
 default_model = config.LLM_DEFAULT_MODEL
 
 
+@llm_route(label=enum.ChatType.GAIA_INTRODUCTION.value, 
+           description='Introduce GAIA and its capabilities.')
 async def introduce(query: QueryRequest, guided_route: str) -> dict:
     """
     Register task via an user's daily life summary
@@ -36,6 +39,8 @@ async def introduce(query: QueryRequest, guided_route: str) -> dict:
         raise e
 
 
+@llm_route(label=enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value, 
+           description='Register schedule calendar.')
 async def register_schedule_calendar(query: QueryRequest, guided_route: Optional[str] = None) -> Dict:
     """
     Register or modify a task via a user's daily life summary, using Chain of Thought to handle
