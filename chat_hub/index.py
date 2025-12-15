@@ -7,8 +7,7 @@ import asyncio
 import uuid
 import uvicorn
 
-from chat_hub.ui.controller.back import cache_controller
-from ui.controller.back import rag_controller
+from ui.controller.back import rag_controller, cache_controller
 from ui.controller.external import auth_controller, chat_interaction_controller
 from ui.controller.internal import llm_business_handler_controller, chat_system_controller
 from core.middleware.validate_access_token import ValidateAccessTokenMiddleware
