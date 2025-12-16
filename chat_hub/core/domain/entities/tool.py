@@ -18,5 +18,5 @@ class Tool(BaseModel):
 
     model_config = {
         "alias_generator": to_camel,
-        "populate_by_name": True
+        "populate_by_name": True,
     }
