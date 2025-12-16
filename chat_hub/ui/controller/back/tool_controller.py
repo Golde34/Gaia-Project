@@ -29,18 +29,6 @@ async def add_tool(request: ToolRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@ToolRouter.post("/vectordb")
-async def add_tool_vector(request: ToolVectorRequest):
-    try:
-        return await tool_usecase.add_tool_to_vectordb(
-            tool=request.tool,
-            description=request.description,
-            sample_queries=request.sample_queries,
-        )
-    except Exception as e:
-        stack_trace = traceback.format_exc()
-        print("ERROR:", stack_trace)
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @ToolRouter.get("")
