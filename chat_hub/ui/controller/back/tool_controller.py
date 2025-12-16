@@ -6,11 +6,11 @@ from fastapi import APIRouter, HTTPException
 from core.domain.request.tool_request import ToolRequest, ToolVectorRequest
 from core.usecase.tool_usecase import tool_usecase
 
+
 ToolRouter = APIRouter(
     prefix="/tools",
     tags=["tools"],
 )
-
 
 @ToolRouter.post("")
 async def add_tool(request: ToolRequest):
@@ -52,6 +52,45 @@ async def add_tool(request: ToolRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@ToolRouter.post("/vectordb")
+async def add_tool_to_vectordb(request: ToolVectorRequest):
+    """
+    Add a tool to the vector database for semantic search capabilities.
+    
+    This endpoint indexes a tool in the vector database by creating embeddings
+    from its description and sample queries. This enables semantic similarity
+    search for tool discovery.
+    
+    Args:
+        request: ToolVectorRequest containing:
+            - tool: Name of the tool to index
+            - description: Tool description for context
+            - sample_queries: List of example queries demonstrating tool usage
+            
+    Returns:
+        dict: Success message with insertion result
+        
+    Raises:
+        HTTPException: 400 error if validation fails
+        HTTPException: 500 error if vector database insertion fails
+    """
+    try:
+        result = await tool_usecase.add_tool_to_vectordb(
+            tool=request.tool,
+            description=request.description,
+            sample_queries=request.sample_queries,
+        )
+        return {
+            "message": "Tool successfully added to vector database",
+            "tool": request.tool,
+            "result": result
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        stack_trace = traceback.format_exc()
+        print("ERROR:", stack_trace)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @ToolRouter.get("")
@@ -75,3 +114,4 @@ async def get_tools(tool: Optional[str] = None, need_history: Optional[bool] = N
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)
         raise HTTPException(status_code=500, detail=str(e))
+

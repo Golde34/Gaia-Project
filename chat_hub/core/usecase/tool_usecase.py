@@ -130,7 +130,7 @@ class ToolUsecase:
         cls._validate_tool_data(tool, description)
 
         sample_queries = sample_queries or []
-        tool_data = await tool_service.add(
+        return await tool_service.add(
             tool=tool,
             description=description,
             json_schema=json_schema,
@@ -138,11 +138,6 @@ class ToolUsecase:
             need_history=need_history,
             is_active=is_active,
         )
-
-        # Note: Vector DB insertion happens after DB persistence and is not atomic
-        # If this fails, tool will be in DB but not searchable via vector similarity
-        await cls.add_tool_to_vectordb(tool_data.tool, tool_data.description, tool_data.sample_queries)
-        return tool_data
 
     @classmethod
     async def get_tools(
