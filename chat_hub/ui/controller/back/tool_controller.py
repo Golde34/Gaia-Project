@@ -1,26 +1,10 @@
 import traceback
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 
+from core.domain.request.tool_request import ToolRequest, ToolVectorRequest
 from core.usecase.tool_usecase import tool_usecase
-
-
-class ToolRequest(BaseModel):
-    tool: str
-    description: str
-    json_schema: Optional[dict] = None
-    sample_queries: Optional[List[str]] = None
-    need_history: bool = False
-    is_active: bool = True
-
-
-class ToolVectorRequest(BaseModel):
-    tool: str
-    description: str
-    sample_queries: List[str]
-
 
 ToolRouter = APIRouter(
     prefix="/tools",
