@@ -26,6 +26,7 @@ class ToolUsecase:
                 "tool": tool,
                 "description": description,
                 "sample_query": query,
+                "type": "sample_query",
             })
 
         if not contexts:
