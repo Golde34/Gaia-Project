@@ -102,13 +102,16 @@ class ChatInteractionUsecase:
         )
 
         chat_type = MESSAGE_TYPE_CONVERTER.get(
-            request.msg_type, ChatType.ABILITIES.value)
+            request.msg_type, 
+            ChatType.ABILITIES.value
+)
         bot_response, message_handler_type = await thinking.chat(
             query=query_request,
             chat_type=chat_type,
             user_message_id=user_message_id,
             is_change_title=is_change_title,
-            memory_model=user_model.memory_model)
+            memory_model=user_model.memory_model
+        )
         
         if isinstance(bot_response, list):
             for response in bot_response:

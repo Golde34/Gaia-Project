@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from core.abilities import ability_routers
+from core.abilities import ability_routers, tool_selection
 from core.domain.enums.enum import ChatType
 from core.domain.request.query_request import QueryRequest
 from core.service.graph_memory_model.consolidation import ConsolidationLayer
@@ -67,18 +67,19 @@ class ThinkingUsecase:
             query.user_message_id = str(user_message_id)
 
         print(f"Chat Type: {chat_type}, Query: {query.query}")
-        tool_selection, use_chat_history_prompt = await ability_routers.select_ability(
+        tool, use_chat_history_prompt = await tool_selection.select_tool_by_router(
             label_value=chat_type, 
-            query=query)
+            query=query
+        )
 
         if use_chat_history_prompt:
             query = await memory_service.recall_history_info(query=query, default=default)
 
-        print(f"Tool Selection: {tool_selection}")
+        print(f"Selected tool: {tool}")
         response, message_handler_type = await ability_routers.call_router_function(
             label_value=chat_type, 
             query=query, 
-            guided_route=tool_selection)
+            guided_route=tool)
 
         print(f"Response(s): {response}")
 
