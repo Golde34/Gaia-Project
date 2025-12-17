@@ -1,41 +1,8 @@
-from core.abilities.ability_routers import llm_route
-from core.domain.enums import enum
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.prompts.abilities_prompt import CHITCHAT_PROMPT, CHITCHAT_WITH_HISTORY_PROMPT
 from core.service import memory_service
-from core.service.orchestrator_service import orchestrator_service
-from core.service.integration.task_service import handle_task_service_response
-from kernel.config import llm_models, config
+from kernel.config import config, llm_models
 
-
-@llm_route(label=enum.ChatType.ABILITIES.value, 
-           description='Gaia\'s abilities.')
-async def abilities_handler(query: QueryRequest, guided_route: str) -> list[str]:
-    """
-    Handle the service request based on the query type dynamically.
-    Args:
-        query (QueryRequest): The user's query containing task information.
-        response (any): The response content to determine service type.
-    Returns:
-        str: The response from the appropriate service handler.
-    """
-    print("Abilities Handler called with query:", query)
-    try:
-        task = orchestrator_service.resolve_tasks(guided_route)
-        if not task:
-            return await chitchat_with_history(query)
-
-        orchestration_result = await orchestrator_service.execute(query=query, task=task)
-        type = orchestration_result.get("type")
-        if not type:
-            return handle_task_service_response(enum.GaiaAbilities.CHITCHAT.value, "")
-        
-        responses = _extract_task_response(orchestration_result)
-        
-        print(f"Orchestration result type: {type}, response: {responses}") 
-        return responses, orchestration_result.get("operationStatus", enum.TaskStatus.SUCCESS.value)
-    except Exception as e:
-        raise e
 
 async def chitchat_with_history(query: QueryRequest) -> str:
     """
@@ -62,7 +29,7 @@ async def chitchat_with_history(query: QueryRequest) -> str:
     except Exception as e:
         raise e
 
-def _extract_task_response(orchestration_result: dict) -> list[str]:
+def extract_task_response(orchestration_result: dict) -> list[str]:
     """
     Extract the response from the orchestration result.
     Args:

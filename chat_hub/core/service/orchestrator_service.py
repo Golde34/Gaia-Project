@@ -2,17 +2,51 @@ import asyncio
 import uuid
 from typing import Any, Dict, Tuple
 
+
+from core.abilities.ability_routers import llm_route
 from core.abilities.function_handlers import FUNCTIONS
-from core.domain.enums.enum import SenderTypeEnum, TaskStatus
+from core.domain.enums.enum import SenderTypeEnum, TaskStatus, ChatType, GaiaAbilities
 from core.domain.enums.kafka_enum import KafkaCommand, KafkaTopic
 from core.domain.request.query_request import QueryRequest
+from core.service.abilities import chitchat
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
+from core.service.integration.task_service import handle_task_service_response
 from infrastructure.client.recommendation_service_client import recommendation_service_client
 from infrastructure.kafka.producer import publish_message
 from infrastructure.repository.task_status_repo import task_status_repo
 from kernel.utils.background_loop import background_loop_pool, log_background_task_error
 from kernel.utils.sse_connection_registry import broadcast_to_user
+
+
+@llm_route(label=ChatType.ABILITIES.value, 
+           description='Gaia\'s abilities.')
+async def orchestrate(query: QueryRequest, guided_route: str) -> list[str]:
+    """
+    Handle the service request based on the query type dynamically.
+    Args:
+        query (QueryRequest): The user's query containing task information.
+        response (any): The response content to determine service type.
+    Returns:
+        list[str]: The response from the appropriate service handler.
+    """
+    print("Abilities Handler called with query:", query)
+    try:
+        task = orchestrator_service.resolve_tasks(guided_route)
+        if not task:
+            return await chitchat.chitchat_with_history(query)
+
+        orchestration_result = await orchestrator_service.execute(query=query, task=task)
+        type = orchestration_result.get("type")
+        if not type:
+            return handle_task_service_response(GaiaAbilities.CHITCHAT.value, "")
+        
+        responses = chitchat.extract_task_response(orchestration_result)
+        
+        print(f"Orchestration result type: {type}, response: {responses}") 
+        return responses, orchestration_result.get("operationStatus", TaskStatus.SUCCESS.value)
+    except Exception as e:
+        raise e
 
 
 class OrchestratorService:
