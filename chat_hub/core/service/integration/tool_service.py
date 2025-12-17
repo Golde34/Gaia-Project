@@ -1,12 +1,10 @@
 import json
 from typing import List, Optional
 
-from chat_hub.core.domain.request.query_request import QueryRequest
-from chat_hub.core.domain.request.tool_request import ToolRequest
-from chat_hub.core.prompts.system_prompt import SAMPLE_QUERIES_PROMPT
-from chat_hub.kernel.config import config, llm_models
 from core.domain.entities.tool import Tool
+from core.prompts.system_prompt import SAMPLE_QUERIES_PROMPT
 from infrastructure.repository.tool_repository import tool_repository
+from kernel.config import config, llm_models
 
 
 class ToolService:
