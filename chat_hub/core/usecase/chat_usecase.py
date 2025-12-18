@@ -7,7 +7,7 @@ from core.service import sse_stream_service
 from core.service.integration import auth_service
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
-from core.usecase.llm_router.ability_routers import MESSAGE_TYPE_CONVERTER
+from core.usecase.llm_router.chat_routers import MESSAGE_TYPE_CONVERTER
 from core.usecase.thinking_usecase import ThinkingUsecase as thinking
 from kernel.utils import build_header
 

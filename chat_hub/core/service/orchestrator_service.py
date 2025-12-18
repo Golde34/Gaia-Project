@@ -10,7 +10,7 @@ from core.service.abilities import chitchat
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
 from core.service.integration.task_service import handle_task_service_response
-from core.usecase.llm_router.ability_routers import llm_route
+from core.usecase.llm_router.chat_routers import llm_route
 from core.usecase.llm_router.function_handlers import FUNCTIONS
 from infrastructure.client.recommendation_service_client import recommendation_service_client
 from infrastructure.kafka.producer import publish_message

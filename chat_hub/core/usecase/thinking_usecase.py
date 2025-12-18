@@ -10,7 +10,7 @@ from core.service.graph_memory_model.semantic_long_term_graph import SLTG
 from core.service.graph_memory_model.short_term_activation_graph import STAG
 from core.service.graph_memory_model.switching_engine import SwitchingEngine
 from core.service import memory_service
-from core.usecase.llm_router import ability_routers, tool_selection
+from core.usecase.llm_router import chat_routers, tool_selection
 
 
 class ThinkingUsecase:
@@ -76,7 +76,7 @@ class ThinkingUsecase:
             query = await memory_service.recall_history_info(query=query, default=default)
 
         print(f"Selected tool: {tool}")
-        response, message_handler_type = await ability_routers.call_router_function(
+        response, message_handler_type = await chat_routers.call_router_function(
             label_value=chat_type, 
             query=query, 
             guided_route=tool)
