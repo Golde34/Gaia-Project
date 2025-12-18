@@ -1,8 +1,11 @@
+from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
+from core.usecase.llm_router.function_handlers import function_handler
 from infrastructure.search.google_search import run_search
 from kernel.config import config
 
 
+@function_handler(label=enum.GaiaAbilities.SEARCH.value, is_sequential=False)
 async def search(query: QueryRequest) -> dict:
     """
     Ability handler for web search. Defaults to link-first (no LLM) mode.

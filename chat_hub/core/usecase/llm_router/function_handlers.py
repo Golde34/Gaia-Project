@@ -1,19 +1,38 @@
-from core.domain.enums import enum
-from core.service.integration.task_service import personal_task_service
-from core.service.abilities.search import search
+from typing import Callable, Dict, Any
 
 
-FUNCTIONS = {
-    enum.GaiaAbilities.CREATE_TASK.value: {
-        "handler": personal_task_service.create_personal_task,
-        "is_sequential": True,
-    },
-    # enum.GaiaAbilities.CREATE_TASK_RESULT.value: {
-    #     "handler": create_personal_task_result,
-    #     "is_sequential": False,
-    # },
-    enum.GaiaAbilities.SEARCH.value: {
-        "handler": search,
-        "is_sequential": False,
-    },
-}
+# Function registry to store decorated functions
+_FUNCTION_REGISTRY: Dict[str, Dict[str, Any]] = {}
+
+
+def function_handler(label: str, is_sequential: bool = False):
+    """
+    Decorator to register a function handler for LLM routing.
+    
+    Apply this decorator directly to service methods to register them
+    as callable functions for LLM function calling.
+    
+    Args:
+        label (str): The label/identifier for this function (e.g., enum value)
+        is_sequential (bool): Whether the function should be executed sequentially
+        
+    Usage in service file:
+        @function_handler(label=enum.GaiaAbilities.CREATE_TASK.value, is_sequential=True)
+        async def create_personal_task(self, query):
+            # implementation
+            pass
+    """
+    def decorator(func: Callable):
+        _FUNCTION_REGISTRY[label] = {
+            'handler': func,
+            'is_sequential': is_sequential,
+        }
+        return func
+    return decorator
+
+
+def get_functions():
+    """Get all registered function handlers."""
+    return _FUNCTION_REGISTRY
+
+FUNCTIONS = _FUNCTION_REGISTRY
