@@ -1,6 +1,5 @@
 from typing import Any, Optional
 
-from core.abilities import ability_routers, tool_selection
 from core.domain.enums.enum import ChatType
 from core.domain.request.query_request import QueryRequest
 from core.service.graph_memory_model.consolidation import ConsolidationLayer
@@ -11,6 +10,7 @@ from core.service.graph_memory_model.semantic_long_term_graph import SLTG
 from core.service.graph_memory_model.short_term_activation_graph import STAG
 from core.service.graph_memory_model.switching_engine import SwitchingEngine
 from core.service import memory_service
+from core.usecase.llm_router import ability_routers, tool_selection
 
 
 class ThinkingUsecase:

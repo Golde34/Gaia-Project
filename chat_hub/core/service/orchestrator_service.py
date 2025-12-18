@@ -3,8 +3,6 @@ import uuid
 from typing import Any, Dict, Tuple
 
 
-from core.abilities.ability_routers import llm_route
-from core.abilities.function_handlers import FUNCTIONS
 from core.domain.enums.enum import SenderTypeEnum, TaskStatus, ChatType, GaiaAbilities
 from core.domain.enums.kafka_enum import KafkaCommand, KafkaTopic
 from core.domain.request.query_request import QueryRequest
@@ -12,6 +10,8 @@ from core.service.abilities import chitchat
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
 from core.service.integration.task_service import handle_task_service_response
+from core.usecase.llm_router.ability_routers import llm_route
+from core.usecase.llm_router.function_handlers import FUNCTIONS
 from infrastructure.client.recommendation_service_client import recommendation_service_client
 from infrastructure.kafka.producer import publish_message
 from infrastructure.repository.task_status_repo import task_status_repo
