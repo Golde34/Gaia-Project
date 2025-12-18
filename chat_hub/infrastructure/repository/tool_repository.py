@@ -69,4 +69,11 @@ class ToolRepository(BaseRepository[Tool]):
         )
         return Tool(**result) 
 
+    async def query_tool_by_name(self, tool_name: str) -> List[Tool]:
+        results = await self.list(
+            where={"tool": tool_name},
+            to_models=True,
+        )
+        return results
+
 tool_repository = ToolRepository()

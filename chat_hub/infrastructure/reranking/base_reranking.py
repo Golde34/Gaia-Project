@@ -92,3 +92,5 @@ class BaseReranking:
         Placeholder for cloud reranking logic
         """
         raise NotImplementedError("Cloud reranking logic not implemented yet")
+
+reranking_model = BaseReranking()
