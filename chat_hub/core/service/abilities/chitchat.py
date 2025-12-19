@@ -29,30 +29,6 @@ async def chitchat_with_history(query: QueryRequest) -> str:
     except Exception as e:
         raise e
 
-def extract_task_response(orchestration_result: dict) -> list[str]:
-    """
-    Extract the response from the orchestration result.
-    Args:
-        orchestration_result (dict): The result from the orchestrator service.
-    Returns:
-        list[str]: The extracted responses.
-    """
-    
-    if orchestration_result.get("recommendation_handled", False):
-        if type(orchestration_result.get("response")) is list:
-            responses: list = orchestration_result.get("response")
-            responses.append(orchestration_result.get("recommendation"))
-            return responses
-        else:
-            return [
-                orchestration_result.get("response"),
-                orchestration_result.get("recommendation")
-            ]
-    else:
-        if type(orchestration_result.get("response")) is list:
-            return orchestration_result.get("response")
-        else:
-            return [orchestration_result.get("response")] 
 
 async def chitchat(query: QueryRequest) -> str:
     """

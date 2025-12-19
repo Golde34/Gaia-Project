@@ -41,12 +41,37 @@ async def orchestrate(query: QueryRequest, guided_route: str) -> list[str]:
         if not type:
             return handle_task_service_response(GaiaAbilities.CHITCHAT.value, "")
 
-        responses = chitchat.extract_task_response(orchestration_result)
+        responses = extract_task_responses(orchestration_result)
 
         print(f"Orchestration result type: {type}, response: {responses}")
         return responses, orchestration_result.get("operationStatus", TaskStatus.SUCCESS.value)
     except Exception as e:
         raise e
+
+def extract_task_responses(orchestration_result: dict) -> list[str]:
+    """
+    Extract the response from the orchestration result.
+    Args:
+        orchestration_result (dict): The result from the orchestrator service.
+    Returns:
+        list[str]: The extracted responses.
+    """
+    
+    if orchestration_result.get("recommendation_handled", False):
+        if type(orchestration_result.get("response")) is list:
+            responses: list = orchestration_result.get("response")
+            responses.append(orchestration_result.get("recommendation"))
+            return responses
+        else:
+            return [
+                orchestration_result.get("response"),
+                orchestration_result.get("recommendation")
+            ]
+    else:
+        if type(orchestration_result.get("response")) is list:
+            return orchestration_result.get("response")
+        else:
+            return [orchestration_result.get("response")]
 
 
 class OrchestratorService:
@@ -145,8 +170,8 @@ class OrchestratorService:
         if not recommendation:
             return ""
 
-        await self._persist_recommendation_message(query, recommendation)
-        await self._broadcast_recommendation(query, recommendation)
+        # await self._persist_recommendation_message(query, recommendation)
+        # await self._broadcast_recommendation(query, recommendation)
         return recommendation
 
     async def _fetch_recommendation(self, query: QueryRequest) -> str:
@@ -255,17 +280,17 @@ class OrchestratorService:
         except Exception as exc:
             print(f"Failed to push sequential messages: {exc}")
 
-    async def _store_task_execution_log(
-        self, query: QueryRequest, task_result: Dict[str, Any]
-    ) -> None:
-        """Store task execution log for auditing and debugging."""
-        stored_task = await agent_execution_repo.create_agent_execution(
-            user_id=query.user_id,
-            payload=task_result,
-            task_type=task_result.get("ability")
-        )
-        print("Stored task: ", stored_task)
-        return stored_task
+    # async def _store_task_execution_log(
+    #     self, query: QueryRequest, task_result: Dict[str, Any]
+    # ) -> None:
+    #     """Store task execution log for auditing and debugging."""
+    #     stored_task = await agent_execution_repo.create_agent_execution(
+    #         user_id=query.user_id,
+    #         payload=task_result,
+    #         task_type=task_result.get("ability")
+    #     )
+    #     print("Stored task: ", stored_task)
+    #     return stored_task
 
     async def _run_parallel_task(
         self, task: Dict[str, Any], query: QueryRequest, pending_record: Dict[str, Any]

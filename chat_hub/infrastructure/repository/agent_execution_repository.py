@@ -1,7 +1,7 @@
 from typing import Optional
 
-from chat_hub.core.domain.entities.agen_execution import AgentExecution
-from chat_hub.kernel.database.base import BaseRepository
+from core.domain.entities.agen_execution import AgentExecution
+from kernel.database.base import BaseRepository
 
 
 class AgentExecutionRepository(BaseRepository[AgentExecution]):
