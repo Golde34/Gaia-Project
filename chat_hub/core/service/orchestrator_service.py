@@ -14,12 +14,12 @@ from core.usecase.llm_router.chat_routers import llm_route
 from core.usecase.llm_router.function_handlers import FUNCTIONS
 from infrastructure.client.recommendation_service_client import recommendation_service_client
 from infrastructure.kafka.producer import publish_message
-from infrastructure.repository.task_status_repo import task_status_repo
+from infrastructure.repository.agent_execution_repository import agent_execution_repo
 from kernel.utils.background_loop import background_loop_pool, log_background_task_error
 from kernel.utils.sse_connection_registry import broadcast_to_user
 
 
-@llm_route(label=ChatType.ABILITIES.value, 
+@llm_route(label=ChatType.ABILITIES.value,
            description='Gaia\'s abilities.')
 async def orchestrate(query: QueryRequest, guided_route: str) -> list[str]:
     """
@@ -40,10 +40,10 @@ async def orchestrate(query: QueryRequest, guided_route: str) -> list[str]:
         type = orchestration_result.get("type")
         if not type:
             return handle_task_service_response(GaiaAbilities.CHITCHAT.value, "")
-        
+
         responses = chitchat.extract_task_response(orchestration_result)
-        
-        print(f"Orchestration result type: {type}, response: {responses}") 
+
+        print(f"Orchestration result type: {type}, response: {responses}")
         return responses, orchestration_result.get("operationStatus", TaskStatus.SUCCESS.value)
     except Exception as e:
         raise e
@@ -98,17 +98,11 @@ class OrchestratorService:
         status = self._normalize_status(status_value)
 
         if status == TaskStatus.PENDING:
-            await self._persist_pending_command(task, query, response)
+            await self._persist_pending_message(query, response)
             return response, "", False
 
         recommendation = await self._handle_recommendation(query)
 
-        # stored_task = await task_status_repo.save_task(
-        #     user_id=query.user_id,
-        #     payload=response,
-        #     task_type=task.get("ability")
-        # )
-        # print("Stored task: ", stored_task)
         return response, recommendation, True
 
     def _normalize_status(self, status_value: Any) -> TaskStatus:
@@ -120,11 +114,30 @@ class OrchestratorService:
             return TaskStatus(status_text)
         return TaskStatus.FAILED
 
-    async def _fetch_recommendation(self, query: QueryRequest) -> str:
-        return await recommendation_service_client.recommend(
-            query=query.query,
+    async def _persist_pending_message(
+        self, query: QueryRequest, task_result: Dict[str, Any]
+    ) -> None:
+        if not query.dialogue_id or not query.user_message_id:
+            return
+
+        dialogue, _ = await dialogue_service.get_dialogue_by_id(
+            user_id=query.user_id, dialogue_id=query.dialogue_id
+        )
+        if not dialogue:
+            return
+
+        formatted = self.format_task_payload(task_result)
+        response_text = formatted.get("response")
+        if not response_text:
+            return
+
+        await message_service.create_message(
+            dialogue=dialogue,
             user_id=query.user_id,
-            dialogue_id=query.dialogue_id,
+            message=response_text,
+            message_type=query.type,
+            sender_type=SenderTypeEnum.BOT.value,
+            user_message_id=query.user_message_id,
         )
 
     async def _handle_recommendation(self, query: QueryRequest) -> str:
@@ -135,6 +148,51 @@ class OrchestratorService:
         await self._persist_recommendation_message(query, recommendation)
         await self._broadcast_recommendation(query, recommendation)
         return recommendation
+
+    async def _fetch_recommendation(self, query: QueryRequest) -> str:
+        return await recommendation_service_client.recommend(
+            query=query.query,
+            user_id=query.user_id,
+            dialogue_id=query.dialogue_id,
+        )
+
+    async def _persist_recommendation_message(
+        self, query: QueryRequest, recommend_message: str
+    ) -> None:
+        if not recommend_message:
+            return
+        if not query.dialogue_id or not query.user_message_id:
+            return
+
+        dialogue, _ = await dialogue_service.get_dialogue_by_id(
+            user_id=query.user_id, dialogue_id=query.dialogue_id
+        )
+        if not dialogue:
+            return
+
+        await message_service.create_message(
+            dialogue=dialogue,
+            user_id=query.user_id,
+            message=recommend_message,
+            message_type=query.type,
+            sender_type=SenderTypeEnum.BOT.value,
+            user_message_id=query.user_message_id,
+        )
+
+    async def _broadcast_recommendation(
+        self, query: QueryRequest, recommend_message: str
+    ) -> None:
+        if not recommend_message:
+            return
+        await broadcast_to_user(
+            str(query.user_id),
+            "sequential_recommendation",
+            {
+                "recommend": recommend_message,
+                "dialogueId": query.dialogue_id,
+                "isSequential": True,
+            },
+        )
 
     async def _deliver_sequential_notifications(
         self, query: QueryRequest, result: Dict[str, Any], recommendation: str
@@ -197,43 +255,17 @@ class OrchestratorService:
         except Exception as exc:
             print(f"Failed to push sequential messages: {exc}")
 
-    async def _persist_recommendation_message(
-        self, query: QueryRequest, recommend_message: str
+    async def _store_task_execution_log(
+        self, query: QueryRequest, task_result: Dict[str, Any]
     ) -> None:
-        if not recommend_message:
-            return
-        if not query.dialogue_id or not query.user_message_id:
-            return
-
-        dialogue, _ = await dialogue_service.get_dialogue_by_id(
-            user_id=query.user_id, dialogue_id=query.dialogue_id
-        )
-        if not dialogue:
-            return
-
-        await message_service.create_message(
-            dialogue=dialogue,
+        """Store task execution log for auditing and debugging."""
+        stored_task = await agent_execution_repo.create_agent_execution(
             user_id=query.user_id,
-            message=recommend_message,
-            message_type=query.type,
-            sender_type=SenderTypeEnum.BOT.value,
-            user_message_id=query.user_message_id,
+            payload=task_result,
+            task_type=task_result.get("ability")
         )
-
-    async def _broadcast_recommendation(
-        self, query: QueryRequest, recommend_message: str
-    ) -> None:
-        if not recommend_message:
-            return
-        await broadcast_to_user(
-            str(query.user_id),
-            "sequential_recommendation",
-            {
-                "recommend": recommend_message,
-                "dialogueId": query.dialogue_id,
-                "isSequential": True,
-            },
-        )
+        print("Stored task: ", stored_task)
+        return stored_task
 
     async def _run_parallel_task(
         self, task: Dict[str, Any], query: QueryRequest, pending_record: Dict[str, Any]
@@ -258,7 +290,7 @@ class OrchestratorService:
     ) -> None:
         normalized_result = result if isinstance(result, dict) else {
             "response": str(result)}
-        task_status_repo.update_status(
+        agent_execution_repo.update_status(
             pending_record.get("user_id"),
             pending_record.get("task_id"),
             status.value,
@@ -318,7 +350,7 @@ class OrchestratorService:
             "dialogue_id": query.dialogue_id,
             "status": TaskStatus.PENDING.value,
         }
-        task_status_repo.save_task(query.user_id, task_id, pending_record)
+        agent_execution_repo.save_task(query.user_id, task_id, pending_record)
 
         background_loop_pool.schedule(
             lambda: self._run_parallel_task(task, query, pending_record),
@@ -335,49 +367,6 @@ class OrchestratorService:
             },
             "is_sequential": False,
         }
-
-    async def _persist_pending_command(
-        self, task: Dict[str, Any], query: QueryRequest, result: Dict[str, Any]
-    ) -> None:
-        result_payload = result.get("result") or {}
-        task_id = result_payload.get("taskId") or uuid.uuid4().hex
-        pending_record = {
-            "task_id": task_id,
-            "user_id": query.user_id,
-            "ability": task.get("ability"),
-            "query": query.query,
-            "dialogue_id": query.dialogue_id,
-            "status": TaskStatus.PENDING.value,
-            "result": result_payload,
-        }
-        task_status_repo.save_task(query.user_id, task_id, pending_record)
-        await self._persist_pending_message(query, result)
-
-    async def _persist_pending_message(
-        self, query: QueryRequest, task_result: Dict[str, Any]
-    ) -> None:
-        if not query.dialogue_id or not query.user_message_id:
-            return
-
-        dialogue, _ = await dialogue_service.get_dialogue_by_id(
-            user_id=query.user_id, dialogue_id=query.dialogue_id
-        )
-        if not dialogue:
-            return
-
-        formatted = self.format_task_payload(task_result)
-        response_text = formatted.get("response")
-        if not response_text:
-            return
-
-        await message_service.create_message(
-            dialogue=dialogue,
-            user_id=query.user_id,
-            message=response_text,
-            message_type=query.type,
-            sender_type=SenderTypeEnum.BOT.value,
-            user_message_id=query.user_message_id,
-        )
 
 
 orchestrator_service = OrchestratorService()

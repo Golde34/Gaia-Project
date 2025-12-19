@@ -2,7 +2,7 @@ import json
 from aiokafka import ConsumerRecord
 
 from core.domain.enums.enum import TaskStatus
-from infrastructure.repository.task_status_repo import task_status_repo
+from infrastructure.repository.agent_execution_repository import task_status_repo
 
 
 async def update_parallel_task_status_handler(msg: ConsumerRecord):
