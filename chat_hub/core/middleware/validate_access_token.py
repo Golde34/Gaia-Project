@@ -10,6 +10,7 @@ from infrastructure import security
 NO_AUTH_REQUIRED_PATHS = [
     "/chat-system",
     "/auth/refresh-token",
+    "/tools/"
 ]
 
 ACCESS_COOKIE_NAME = "accessToken"
@@ -18,7 +19,6 @@ REFRESH_COOKIE_NAME = "refreshToken"
 
 class ValidateAccessTokenMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        print("Request path:", request.headers)
         if request.method == "OPTIONS":
             return await call_next(request)
 
@@ -95,8 +95,6 @@ async def _validate_private_token(request: Request) -> bool:
     service = request.headers.get("service", "")
     encrypted_token = request.headers.get("service-token", "")
     user_id = request.headers.get("user-id", "")
-
-    print("Validating private token for service:", service)
 
     if not service or not encrypted_token:
         return False
