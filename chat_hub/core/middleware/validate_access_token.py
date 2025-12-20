@@ -23,11 +23,11 @@ class ValidateAccessTokenMiddleware(BaseHTTPMiddleware):
         if any(request.url.path.startswith(p) for p in NO_AUTH_REQUIRED_PATHS):
             return await call_next(request)
 
-        refresh_ok = validate_refresh_token(request)
+        refresh_ok = _validate_refresh_token(request)
         if not refresh_ok:
             return JSONResponse({"detail": "Unauthorized"}, status_code=403)
 
-        access_token, ctx_with_user = await validate_access_token(request)
+        access_token, ctx_with_user = await _validate_access_token(request)
         if not access_token or not ctx_with_user:
             return JSONResponse({"detail": "Unauthorized"}, status_code=401)
 
@@ -41,7 +41,7 @@ class ValidateAccessTokenMiddleware(BaseHTTPMiddleware):
         return response
 
 
-def validate_refresh_token(request: Request) -> bool:
+def _validate_refresh_token(request: Request) -> bool:
     refresh_cookie = request.cookies.get(REFRESH_COOKIE_NAME)
     if refresh_cookie and refresh_cookie.strip():
         return True
@@ -53,7 +53,7 @@ def validate_refresh_token(request: Request) -> bool:
     return False
 
 
-async def validate_access_token(request: Request) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
+async def _validate_access_token(request: Request) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
     token: Optional[str] = None
 
     token = request.cookies.get(ACCESS_COOKIE_NAME)
@@ -84,3 +84,4 @@ async def validate_access_token(request: Request) -> Tuple[Optional[str], Option
         return token, ctx_with_user
     except Exception:
         return None, None
+
