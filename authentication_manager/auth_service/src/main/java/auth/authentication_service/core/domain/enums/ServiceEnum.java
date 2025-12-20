@@ -13,7 +13,8 @@ public enum ServiceEnum {
     TM("task_manager"),
     SP("schedule_plan"),
     GAIA("GAIA"),
-    CMC("camera_cv");
+    CMC("camera_cv"),
+    CH("chat_hub");
 
     private final String serviceName;
 

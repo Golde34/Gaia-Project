@@ -80,6 +80,7 @@ public class Constants {
         public static String SERVICE_HEADER = "Service";
         public static String SERVICE_TOKEN_HEADER = "Service-Token";
         public static String AUTHORIZATION_HEADER = "Authorization";
+        public static String USER_ID_HEADER = "User-Id";
     }
 
     @UtilityClass

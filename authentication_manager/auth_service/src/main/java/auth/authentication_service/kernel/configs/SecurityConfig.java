@@ -3,6 +3,7 @@ package auth.authentication_service.kernel.configs;
 import auth.authentication_service.core.domain.constant.Constants;
 import auth.authentication_service.core.filters.AuthorizationFilter;
 import auth.authentication_service.core.services.GlobalConfigService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,16 +27,12 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 // @ImportResource({ "classpath:webSecurityConfig.xml" })
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 @Slf4j
 public class SecurityConfig {
 
     private final AuthorizationFilter jwtF;
     private final GlobalConfigService globalConfigService;
-
-    public SecurityConfig(AuthorizationFilter jwtF, GlobalConfigService globalConfigService) {
-        this.jwtF = jwtF;
-        this.globalConfigService = globalConfigService;
-    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
