@@ -62,3 +62,7 @@ class ActiveEnum(Enum):
 class SenderTypeEnum(Enum):
     USER = "user"
     BOT = "bot"
+
+class MemoryModel(Enum):
+    DEFAULT = "Default Model"
+    GRAPH = "Graph Model"

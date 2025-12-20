@@ -1,7 +1,6 @@
 from typing import Any, Optional
 
-from core.abilities import ability_routers
-from core.domain.enums.enum import ChatType
+from core.domain.enums.enum import ChatType, MemoryModel
 from core.domain.request.query_request import QueryRequest
 from core.service.graph_memory_model.consolidation import ConsolidationLayer
 from core.service.graph_memory_model.context_builder import ContextBuilder
@@ -11,6 +10,7 @@ from core.service.graph_memory_model.semantic_long_term_graph import SLTG
 from core.service.graph_memory_model.short_term_activation_graph import STAG
 from core.service.graph_memory_model.switching_engine import SwitchingEngine
 from core.service import memory_service
+from core.usecase.llm_router import chat_routers, tool_selection
 
 
 class ThinkingUsecase:
@@ -35,12 +35,12 @@ class ThinkingUsecase:
         """
         memory_model = kwargs.get("memory_model")
         if memory_model is None:
-            memory_model = "Default Model"
+            memory_model = MemoryModel.DEFAULT.value
         effective_chat_type = chat_type or kwargs.get("chat_type") or ChatType.ABILITIES.value
 
-        if memory_model == "Default Model":
+        if memory_model == MemoryModel.DEFAULT.value:
             return await cls.chat_with_normal_flow(query=query, chat_type=effective_chat_type, **kwargs)
-        if memory_model == "Graph Model":
+        if memory_model == MemoryModel.GRAPH.value:
             return await cls.chat_with_graph_flow(query=query, chat_type=effective_chat_type, **kwargs)
 
         raise ValueError(f"Unsupported user_config: {memory_model}")
@@ -67,24 +67,25 @@ class ThinkingUsecase:
             query.user_message_id = str(user_message_id)
 
         print(f"Chat Type: {chat_type}, Query: {query.query}")
-        tool_selection, use_chat_history_prompt = await ability_routers.select_ability(
+        tool, use_chat_history_prompt = await tool_selection.select_tool_by_router(
             label_value=chat_type, 
-            query=query)
+            query=query
+        )
 
         if use_chat_history_prompt:
             query = await memory_service.recall_history_info(query=query, default=default)
 
-        print(f"Tool Selection: {tool_selection}")
-        response, message_handler_type = await ability_routers.call_router_function(
+        print(f"Selected tool: {tool}")
+        responses, message_handler_type = await chat_routers.call_router_function(
             label_value=chat_type, 
             query=query, 
-            guided_route=tool_selection)
+            guided_route=tool)
 
-        print(f"Response(s): {response}")
+        print(f"Response(s): {responses}")
 
         await memory_service.memorize_info(query=query, is_change_title=is_change_title)
 
-        return response, message_handler_type
+        return responses, message_handler_type
 
     @classmethod
     async def chat_with_graph_flow(cls, query: QueryRequest, chat_type: str, **kwargs: Any):

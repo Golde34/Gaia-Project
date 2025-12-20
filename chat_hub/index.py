@@ -7,7 +7,7 @@ import asyncio
 import uuid
 import uvicorn
 
-from ui.controller.back import rag_controller, cache_controller
+from ui.controller.back import cache_controller, rag_controller, tool_controller
 from ui.controller.external import auth_controller, chat_interaction_controller
 from ui.controller.internal import llm_business_handler_controller, chat_system_controller
 from core.middleware.validate_access_token import ValidateAccessTokenMiddleware
@@ -45,6 +45,7 @@ app.include_router(auth_controller.AuthRouter)
 app.include_router(chat_interaction_controller.ChatInteractionRouter)
 app.include_router(chat_system_controller.ChatSystemRouter)
 app.include_router(cache_controller.CacheRouter)
+app.include_router(tool_controller.ToolRouter)
 
 # Middleware
 @app.middleware("http")

@@ -1,6 +1,5 @@
 import functools
 
-from core.abilities.ability_routers import MESSAGE_TYPE_CONVERTER
 from core.domain.enums.enum import DialogueEnum, SenderTypeEnum, ChatType
 from core.domain.request.chat_hub_request import SendMessageRequest
 from core.domain.request.query_request import LLMModel, QueryRequest
@@ -8,6 +7,7 @@ from core.service import sse_stream_service
 from core.service.integration import auth_service
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
+from core.usecase.llm_router.chat_routers import MESSAGE_TYPE_CONVERTER
 from core.usecase.thinking_usecase import ThinkingUsecase as thinking
 from kernel.utils import build_header
 
@@ -102,13 +102,16 @@ class ChatInteractionUsecase:
         )
 
         chat_type = MESSAGE_TYPE_CONVERTER.get(
-            request.msg_type, ChatType.ABILITIES.value)
+            request.msg_type, 
+            ChatType.ABILITIES.value
+)
         bot_response, message_handler_type = await thinking.chat(
             query=query_request,
             chat_type=chat_type,
             user_message_id=user_message_id,
             is_change_title=is_change_title,
-            memory_model=user_model.memory_model)
+            memory_model=user_model.memory_model
+        )
         
         if isinstance(bot_response, list):
             for response in bot_response:
