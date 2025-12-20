@@ -2,7 +2,6 @@ package wo.work_optimization.infrastructure.security;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import wo.work_optimization.core.domain.enums.ServiceEnum;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -28,7 +27,7 @@ public class SecurityEncryption {
 
     private static final String FORMATED_HEADER_TOKEN = "%s::%s::%s";
 
-    public String encrypt(String encryptedPlainText) throws NoSuchAlgorithmException, InvalidKeySpecException,
+    public String encrypt(String encryptedPlainText, String serviceName) throws NoSuchAlgorithmException, InvalidKeySpecException,
             InvalidAlgorithmParameterException, InvalidKeyException, NoSuchPaddingException,
             IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException {
         byte[] publicKeyBytes = Base64.getDecoder().decode(publicKey);
@@ -36,7 +35,7 @@ public class SecurityEncryption {
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         PublicKey publicKey = keyFactory.generatePublic(keySpec);
 
-        String headerToken = String.format(FORMATED_HEADER_TOKEN, ServiceEnum.AS.getServiceName(), serviceToken, encryptedPlainText);
+        String headerToken = String.format(FORMATED_HEADER_TOKEN, serviceName, serviceToken, encryptedPlainText);
 
         Cipher encryptCipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
         OAEPParameterSpec oaepParams = new OAEPParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA256, PSource.PSpecified.DEFAULT);

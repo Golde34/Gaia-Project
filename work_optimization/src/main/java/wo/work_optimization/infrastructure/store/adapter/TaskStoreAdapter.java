@@ -1,6 +1,7 @@
 package wo.work_optimization.infrastructure.store.adapter;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
@@ -17,17 +18,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Slf4j
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class TaskStoreAdapter implements TaskStore {
     
     private final TaskRepository taskRepository;
     private final ParentTaskRepository parentTaskRepository;
-
-    public TaskStoreAdapter(TaskRepository taskRepository, ParentTaskRepository parentTaskRepository) {
-        this.taskRepository = taskRepository;
-        this.parentTaskRepository = parentTaskRepository;
-    } 
 
     @Override
     @Transactional

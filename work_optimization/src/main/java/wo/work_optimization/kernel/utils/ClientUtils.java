@@ -2,6 +2,9 @@ package wo.work_optimization.kernel.utils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -13,15 +16,11 @@ import wo.work_optimization.core.domain.dto.response.base.GeneralResponse;
 import wo.work_optimization.infrastructure.security.SecurityEncryption;
 
 @Service
+@RequiredArgsConstructor
 public class ClientUtils {
 
     private final ObjectMapper objectMapper;
     private final SecurityEncryption securityEncrypt;
-
-    public ClientUtils(ObjectMapper objectMapper, SecurityEncryption securityEncrypt) {
-        this.objectMapper = objectMapper;
-        this.securityEncrypt = securityEncrypt;
-    }
 
     public HttpHeaders buildDefaultHeaders() {
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -32,7 +31,8 @@ public class ClientUtils {
 
     public HttpHeaders buildAuthorizationHeader(String service, Long userId) throws Exception {
         HttpHeaders httpHeaders = buildDefaultHeaders();
-        httpHeaders.add(Constants.CustomHeader.SERVICE_TOKEN_HEADER, securityEncrypt.encrypt(String.valueOf(userId)));
+        httpHeaders.add(Constants.CustomHeader.SERVICE_TOKEN_HEADER, 
+            securityEncrypt.encrypt(String.valueOf(userId), service));
         httpHeaders.add(Constants.CustomHeader.SERVICE_HEADER, service);
         return httpHeaders;
     }

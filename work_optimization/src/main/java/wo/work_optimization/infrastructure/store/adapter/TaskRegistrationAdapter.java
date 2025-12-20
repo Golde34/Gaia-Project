@@ -3,6 +3,7 @@ package wo.work_optimization.infrastructure.store.adapter;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import wo.work_optimization.core.domain.constant.Constants;
 import wo.work_optimization.core.domain.entity.TaskRegistration;
@@ -11,15 +12,12 @@ import wo.work_optimization.infrastructure.store.repository.TaskRegistrationRepo
 
 import java.util.Optional;
 
-@Slf4j
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class TaskRegistrationAdapter implements TaskRegistrationStore {
     
     private final TaskRegistrationRepository taskRegistrationRepository;
-
-    public TaskRegistrationAdapter(TaskRegistrationRepository taskRegistrationRepository) {
-        this.taskRegistrationRepository = taskRegistrationRepository;
-    }
 
     @Override
     @Transactional
