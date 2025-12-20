@@ -66,3 +66,11 @@ class SenderTypeEnum(Enum):
 class MemoryModel(Enum):
     DEFAULT = "Default Model"
     GRAPH = "Graph Model"
+
+class ServiceEnum(Enum):
+    SELF = "chat_hub"
+    AUTHENTICATION_SERVICE = "authentication_service"
+    TASK_MANGER = "task_manager"
+    SCHEDULE_PLAN = "schedule_plan"
+    MIDDLEWARE_LOADER = "middleware_loader"
+    PROACTIVE_RECOMMENDATOR = "proactive_recommendator"

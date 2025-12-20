@@ -1,6 +1,7 @@
 import logging
 from typing import Dict
 
+from core.domain.enums.enum import ServiceEnum
 from core.domain.response.user_model_response import UserModelResponse
 from kernel.config import config
 from kernel.utils import aiohttp_utils, build_header
@@ -31,25 +32,11 @@ class AuthServiceClient:
             print(f"Error in AuthServiceClient.refresh_token: {e}")
             return {}
 
-    async def validate_service_jwt(self, jwt: str) -> str:
-        try:
-            service_name = "ChatHub"
-            auth_service_url = f"{self.base_url}/auth/admin/validate-service-jwt"
-            headers = build_header.build_authorization_headers("authentication_service", "1")
-            body = {
-                "service": service_name,
-                "jwt": jwt
-            }
-            result = await aiohttp_utils.post(endpoint=auth_service_url, payload=body, header=headers)
-            return result.get("message", "")
-        except Exception as e:
-            logging.error(f"Error in validate_service_jwt: {e}")
-            return ""
-
     async def get_user_llm_model_config(self, user_id: int) -> UserModelResponse:
         try:
             user_llm_model_config_url = f"{self.base_url}/user-model-setting/get-model-by-user?userId={user_id}"
-            headers = build_header.build_authorization_headers("authentication_service", user_id)
+            headers = build_header.build_authorization_headers(
+                ServiceEnum.AUTHENTICATION_SERVICE, user_id)
             result = await aiohttp_utils.get(user_llm_model_config_url, header=headers)
             return UserModelResponse.model_validate(result.get("data", {}).get("message", {}))
         except Exception as e:

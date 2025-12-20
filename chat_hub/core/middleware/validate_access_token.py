@@ -4,6 +4,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
 from core.service.integration import auth_service
+from infrastructure import security
 
 
 NO_AUTH_REQUIRED_PATHS = [
@@ -17,11 +18,16 @@ REFRESH_COOKIE_NAME = "refreshToken"
 
 class ValidateAccessTokenMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        print("Request path:", request.headers)
         if request.method == "OPTIONS":
             return await call_next(request)
 
         if any(request.url.path.startswith(p) for p in NO_AUTH_REQUIRED_PATHS):
             return await call_next(request)
+
+        private_service_ok = await _validate_private_token(request)
+        if private_service_ok:
+            return await call_next(request) 
 
         refresh_ok = _validate_refresh_token(request)
         if not refresh_ok:
@@ -85,3 +91,20 @@ async def _validate_access_token(request: Request) -> Tuple[Optional[str], Optio
     except Exception:
         return None, None
 
+async def _validate_private_token(request: Request) -> bool:
+    service = request.headers.get("service", "")
+    encrypted_token = request.headers.get("service-token", "")
+    user_id = request.headers.get("user-id", "")
+
+    print("Validating private token for service:", service)
+
+    if not service or not encrypted_token:
+        return False
+
+    try:
+        is_valid = security.security.validate_token(
+            encrypted_token, service, user_id
+        )
+        return is_valid
+    except Exception:
+        return False
