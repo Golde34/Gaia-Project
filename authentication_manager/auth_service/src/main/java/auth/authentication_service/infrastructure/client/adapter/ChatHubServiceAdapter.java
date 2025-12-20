@@ -5,6 +5,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import auth.authentication_service.core.domain.enums.ServiceEnum;
 import auth.authentication_service.core.port.client.ChatHubServiceClient;
 import auth.authentication_service.infrastructure.client.ClientTemplate;
 import auth.authentication_service.kernel.utils.ClientUtils;
@@ -15,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class ChatHubServiceAdapter implements ChatHubServiceClient {
-    
+
     @Value("${app.service.chathub.api.clear-llm-model-cache}")
     private String clearLlmModelCacheApi;
 
@@ -25,14 +26,17 @@ public class ChatHubServiceAdapter implements ChatHubServiceClient {
     @Override
     public void clearUserLLMModelCache(long userId) {
         try {
-            HttpHeaders requestHeaders = clientUtils.buildDefaultHeaders();
+            HttpHeaders requestHeaders = clientUtils.buildAuthorizationHeader(
+                    ServiceEnum.CH.getServiceName(), userId);
             String url = String.format("%s/%s", clearLlmModelCacheApi, userId);
             log.info("Calling ChatHub API to clear LLM model cache for user: {}", userId);
-            ResponseEntity<String> response = clientTemplate.post(clearLlmModelCacheApi, requestHeaders, null, String.class);
-            clientTemplate.post(url, clientUtils.buildDefaultHeaders(), null, Void.class);
-            log.info("Successfully called ChatHub API to clear LLM model cache for user: {}, response", userId, response);
+            ResponseEntity<String> response = clientTemplate.post(
+                    url, requestHeaders, null, String.class);
+            log.info("Successfully called ChatHub API to clear LLM model cache for user: {}, response: {}", userId,
+                    response);
         } catch (Exception e) {
-            log.error("Error when calling ChatHub API to clear LLM model cache for user {}: {}", userId, e.getMessage());
+            log.error("Error when calling ChatHub API to clear LLM model cache for user {}: {}", userId,
+                    e.getMessage());
         }
     }
 }
