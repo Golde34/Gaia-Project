@@ -4,7 +4,7 @@ from core.domain.enums import enum
 ABILITIES = [
     {
         'label': enum.GaiaAbilities.CREATE_TASK.value,
-        'description': 'Create a new task/job to do in the future.',
+        'description': 'Create personal tasks based on user requests.',
         'need_history': True,
     },
     {

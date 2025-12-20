@@ -1,7 +1,10 @@
 import json
 from typing import List, Optional
 
+from core.domain.enums import enum
 from core.domain.entities.tool import Tool
+from core.domain.request.query_request import LLMModel
+from core.domain.request.tool_request import ToolRequest
 from core.prompts.system_prompt import SAMPLE_QUERIES_PROMPT
 from infrastructure.repository.tool_repository import tool_repository
 from kernel.config import config, llm_models
@@ -15,30 +18,6 @@ class ToolService:
     and database interactions through the repository layer.
     """
 
-    async def generate_sample_queries(
-        self,
-        tool: str,
-        description: str,
-        num_samples: int = 20,
-    ) -> List[str]:
-        prompt = SAMPLE_QUERIES_PROMPT.format(
-            tool=tool,
-            description=description,
-            num_samples=num_samples
-        )
-        
-        response_schema = {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        }
-        
-        function = await llm_models.get_model_generate_content(config.LLM_DEFAULT_MODEL, 0, prompt)
-        result = function(prompt=prompt, model=config.LLM_DEFAULT_MODEL, dto=response_schema)
-        
-        return json.loads(result)
-
     async def add(
         self,
         tool: str,
@@ -48,7 +27,9 @@ class ToolService:
         need_history: bool = False,
         is_active: bool = True,
     ) -> Tool:
-        sample_queries = sample_queries or []
+        existed_tool = await tool_repository.query_tool_by_name(tool)
+        if existed_tool:
+            return existed_tool
 
         tool_entity = Tool(
             tool=tool,
@@ -58,6 +39,35 @@ class ToolService:
             is_active=is_active,
         )
         return await tool_repository.create_tool(tool_entity)
+
+    async def generate_sample_queries(
+        self,
+        tool_request: ToolRequest,
+        num_samples: int = 20,
+    ) -> List[str]:
+        prompt = SAMPLE_QUERIES_PROMPT.format(
+            tool=tool_request.tool,
+            description=tool_request.description,
+            examples=tool_request.sample_queries,
+            num_samples=num_samples
+        )
+        
+        response_schema = {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+
+        llm_model = LLMModel(
+            model_name=config.LLM_DEFAULT_MODEL,
+            model_key=config.SYSTEM_API_KEY,
+            memory_model=enum.MemoryModel.DEFAULT.value,
+        )
+        function = await llm_models.get_model_generate_content(llm_model, 0, prompt)
+        result = function(prompt=prompt, model=llm_model, dto=response_schema)
+        
+        return json.loads(result)
 
     async def get(
         self,

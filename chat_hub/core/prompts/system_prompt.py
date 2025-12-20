@@ -128,6 +128,8 @@ Requirements:
 Tool Information:
 Tool Name: {tool}
 Tool Description: {description}
+Examples of Sample Queries: 
+{examples}
 
 Generate the sample queries as a JSON array of strings.
 """

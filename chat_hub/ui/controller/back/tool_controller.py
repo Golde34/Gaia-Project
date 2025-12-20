@@ -25,11 +25,7 @@ async def add_tool(request: ToolRequest):
 @ToolRouter.post("/samples")
 async def add_tool_to_vectordb(request: ToolVectorRequest):
     try:
-        result = await tool_usecase.add_tool_to_vectordb(
-            tool=request.tool,
-            description=request.description,
-            sample_queries=request.sample_queries,
-        )
+        result = await tool_usecase.add_tool_to_vectordb(request)
         return {
             "message": "Tool successfully added to vector database",
             "tool": request.tool,

@@ -24,7 +24,7 @@ class ToolUsecase:
         sample_queries = await tool_service.generate_sample_queries(tool_request)
 
         return {
-            "sample_queries": sample_queries,
+            "sample_queries_suggestion": sample_queries,
             "tool": added_tool,
         }
 
