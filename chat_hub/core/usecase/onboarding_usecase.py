@@ -2,13 +2,13 @@ from datetime import datetime
 from typing import Dict, Optional
 
 from langdetect import detect
-from core.abilities.ability_routers import llm_route
 from core.domain.enums import enum
 from core.domain.response.model_output_schema import DailyRoutineSchema
 from core.domain.request.query_request import QueryRequest
 from core.service import memory_service, onboarding_service
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
+from core.usecase.llm_router.chat_routers import llm_route
 from core.prompts import onboarding_prompt
 from kernel.config import config, llm_models
 

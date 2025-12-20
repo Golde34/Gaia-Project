@@ -1,5 +1,6 @@
 package wo.work_optimization.infrastructure.client.adapter;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -16,6 +17,7 @@ import wo.work_optimization.infrastructure.client.ClientTemplate;
 import wo.work_optimization.kernel.utils.ClientUtils;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class AuthServiceAdapter implements AuthServiceClient {
 
@@ -27,11 +29,6 @@ public class AuthServiceAdapter implements AuthServiceClient {
 
     private final ClientTemplate clientTemplate;
     private final ClientUtils clientUtils;
-
-    public AuthServiceAdapter(ClientTemplate clientTemplate, ClientUtils clientUtils) {
-        this.clientTemplate = clientTemplate;
-        this.clientUtils = clientUtils;
-    }
 
     public UserResponseDTO getExistedUser(Long userId) {
         try {

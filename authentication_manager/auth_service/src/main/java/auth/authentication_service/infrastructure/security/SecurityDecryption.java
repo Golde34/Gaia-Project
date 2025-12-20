@@ -3,6 +3,7 @@ package auth.authentication_service.infrastructure.security;
 import auth.authentication_service.core.domain.entities.User;
 import auth.authentication_service.core.domain.enums.ServiceEnum;
 import auth.authentication_service.core.services.interfaces.UserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
@@ -23,6 +24,7 @@ import java.util.Base64;
 import java.util.Objects;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class SecurityDecryption {
 
@@ -35,10 +37,6 @@ public class SecurityDecryption {
     private final UserService userService;
 
     private static final String DELIMITER = "::";
-
-    public SecurityDecryption(UserService userService) {
-        this.userService = userService;
-    }
 
     public String decrypt(String encryptedPlainText) throws NoSuchAlgorithmException, InvalidKeySpecException,
             InvalidAlgorithmParameterException, InvalidKeyException, NoSuchPaddingException,

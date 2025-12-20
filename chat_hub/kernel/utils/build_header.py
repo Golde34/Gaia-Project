@@ -1,6 +1,7 @@
 from typing import Dict
 
 from kernel.config.security_config import security_config
+from infrastructure.security import security
 
 
 # Load security configuration
@@ -23,7 +24,7 @@ def build_authorization_headers(service: str, user_id: str) -> Dict[str, str]:
     headers = build_default_headers()
     headers["Service"] = service
     try:
-        token = security_config.encrypt(f"{service}::{private_token}::{user_id}")
+        token = security.encrypt(f"{service}::{private_token}::{user_id}")
         headers["Service-Token"] = token
     except Exception as e:
         print(f"Error encrypting token: {e}")
@@ -36,7 +37,7 @@ def generate_sse_token(user_id: int) -> str:
     try:
         service = "chat_hub"
         plain_text = f"{service}::{private_token}::{user_id}"
-        sse_token = security_config.encrypt_sse(plain_text)
+        sse_token = security.encrypt_sse(plain_text)
         return sse_token
     except Exception as e:
         print(f"Error generating SSE token: {e}")
@@ -47,7 +48,7 @@ def decode_sse_token(encrypted_token: str) -> str:
     Decode the given SSE token to retrieve the original plain text.
     """
     try:
-        plain_text = security_config.decrypt_sse(encrypted_token)
+        plain_text = security.decrypt_sse(encrypted_token)
         parts = plain_text.split("::")
         if len(parts) < 3:
             raise ValueError("Invalid SSE token format")

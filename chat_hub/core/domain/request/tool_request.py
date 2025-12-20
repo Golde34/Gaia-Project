@@ -10,7 +10,7 @@ class ToolRequest(BaseModel):
     description: str = Field(..., min_length=1, description="Tool description")
     json_schema: Optional[dict] = None
     sample_queries: List[str] = Field(..., min_items=1, max_items=50, description="Sample queries for the tool")
-    need_history: bool = False
+    need_history: bool = True
     is_active: bool = True
 
     @field_validator("tool", "description")

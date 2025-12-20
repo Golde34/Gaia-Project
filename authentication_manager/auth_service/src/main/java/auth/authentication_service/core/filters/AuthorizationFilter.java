@@ -7,6 +7,7 @@ import auth.authentication_service.kernel.utils.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,18 +27,13 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class AuthorizationFilter extends OncePerRequestFilter {
 
     private final UserDetailsServices userDetailsServices;
     private final JwtUtil jwtUtil;
     private final SecurityDecryption securityDecryption;
-
-    public AuthorizationFilter(UserDetailsServices userDetailsServices, JwtUtil jwtUtil, SecurityDecryption securityDecryption) {
-        this.userDetailsServices = userDetailsServices;
-        this.jwtUtil = jwtUtil;
-        this.securityDecryption = securityDecryption;
-    }
 
     @SneakyThrows
     @Override

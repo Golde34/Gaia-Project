@@ -3,17 +3,18 @@ from typing import List, Dict, Any
 import traceback
 
 from core.domain.enums.enum import ModelMode
-import reranking_config
+from infrastructure.reranking import reranking_config
 
 
 class BaseReranking:
-    def __init__(self, config: reranking_config.RerankingConfig):
-        self.base_url = config.url
-        self.model_name = config.model_name
+    def __init__(self):
+        self.config = reranking_config.RerankingConfig()
+        self.base_url = self.config.url 
+        self.model_name = self.config.model_name
 
         self.endpoint = f"http://{self.base_url}/rerank"
         self.session_queue = Queue(maxsize=20)
-        self.model_mode = config.model_mode 
+        self.model_mode = self.config.model_mode 
 
     async def rerank(self, query: str, documents: List[Dict[str, Any]], top_n: int, logger=None) -> Dict[str, Any]:
         """
@@ -92,3 +93,5 @@ class BaseReranking:
         Placeholder for cloud reranking logic
         """
         raise NotImplementedError("Cloud reranking logic not implemented yet")
+
+reranking_model = BaseReranking()

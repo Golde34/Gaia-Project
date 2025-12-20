@@ -1,4 +1,4 @@
-package wo.work_optimization.infrastructure.security;
+package auth.authentication_service.infrastructure.security;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -19,10 +19,10 @@ import java.util.Base64;
 @Component
 public class SecurityEncryption {
 
-    @Value("${app.service.security.public-key}")
+    @Value("${app.services.security.public-key}")
     private String publicKey;
 
-    @Value("${app.service.security.service-token}")
+    @Value("${app.services.security.service-token}")
     private String serviceToken;
 
     private static final String FORMATED_HEADER_TOKEN = "%s::%s::%s";

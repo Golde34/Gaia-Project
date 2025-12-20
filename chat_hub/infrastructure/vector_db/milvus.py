@@ -17,8 +17,8 @@ class MilvusDB:
     def __init__(self):
         if self._initialized:
             return
-            
-        self.config = MilvusConfig() 
+
+        self.config = MilvusConfig()
         self.dim = self.config.index_config.index_params.nlist
         self.index_params = {
             "index_type": self.config.index_config.index_type,
@@ -29,16 +29,18 @@ class MilvusDB:
         }
 
         self.partition_actors = ["user", 'assistant']
-        
+
         self.client = self._connect()
-        self._create_collection()
-        
-        self.client.load_collection(collection_name=self.config.root_memory_collection)
+        self._create_default_connection()
+
+        self.client.load_collection(
+            collection_name=self.config.root_memory_collection)
         self._initialized = True
 
     def _connect(self) -> MilvusClient:
         try:
-            print(f"Connecting to Milvus at {self.config.host}:{self.config.port} with user {self.config.user}")
+            print(
+                f"Connecting to Milvus at {self.config.host}:{self.config.port} with user {self.config.user}")
             # First connect to default database
             client = MilvusClient(
                 uri=f'http://{self.config.host}:{self.config.port}',
@@ -50,7 +52,7 @@ class MilvusDB:
             if self.config.database not in databases:
                 client.create_database(self.config.database)
                 print(f"Database {self.config.database} created successfully.")
-                
+
             client = MilvusClient(
                 uri=f'http://{self.config.host}:{self.config.port}',
                 token=f"{self.config.user}:{self.config.password}",
@@ -62,18 +64,27 @@ class MilvusDB:
         except Exception as e:
             raise e
 
-    def _create_collection(self):
+    def _create_default_connection(self) -> MilvusClient:
+        schema = MilvusClient.create_schema(
+            auto_id=True, enable_dynamic_field=True)
+        schema.add_field(
+            field_name="id", datatype=DataType.INT64, is_primary=True)
+        schema.add_field(field_name="vector",
+                         datatype=DataType.FLOAT_VECTOR, dim=self.dim)
+        schema.add_field(field_name="content",
+                         datatype=DataType.VARCHAR, max_length=65535)
+        schema.add_field(field_name="metadata", datatype=DataType.JSON)
+
+        return self.create_collection_if_not_exists(self.config.root_memory_collection, schema)
+
+    def create_collection_if_not_exists(self, collection_name: str, schema):
+        """
+        Create collection if it does not exist.
+        """
         try:
-            if not self.client.has_collection(self.config.root_memory_collection):
-                schema = MilvusClient.create_schema(auto_id=True, enable_dynamic_field=True)
-
-                schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
-                schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim=self.dim)
-                schema.add_field(field_name="content", datatype=DataType.VARCHAR, max_length=65535)
-                schema.add_field(field_name="metadata", datatype=DataType.JSON)
-
+            if not self.client.has_collection(collection_name=collection_name):
                 self.client.create_collection(
-                    collection_name=self.config.root_memory_collection,
+                    collection_name=collection_name,
                     schema=schema,
                     consistency_level="Strong",
                 )
@@ -89,16 +100,18 @@ class MilvusDB:
                 )
 
                 self.client.create_index(
-                    collection_name=self.config.root_memory_collection,
+                    collection_name=collection_name,
                     index_params=index_params
                 )
-                print(f"Collection {self.config.root_memory_collection} created successfully.")
+                print(
+                    f"Collection {collection_name} created successfully.")
+
+                self.client.load_collection(collection_name=collection_name)
             else:
-                print(f"Collection {self.config.root_memory_collection} already exists.")
+                print(
+                    f"Collection {collection_name} already exists.")
         except Exception as e:
-            print(f"Error creating collection: {e}")
-            traceback.print_exc()
-            raise e 
+            print(f"Collection '{collection_name}' error.")
 
     def _create_partition(self, partition_name: str):
         try:
@@ -121,26 +134,28 @@ class MilvusDB:
     def insert_data(self, vectors: list, contents: list, metadata_list: list, partition_name: str = None):
         try:
             if not (len(vectors) == len(contents) == len(metadata_list)):
-                raise ValueError("Vectors, contents, and metadata must have the same length.")
+                raise ValueError(
+                    "Vectors, contents, and metadata must have the same length.")
 
             data = [
                 {
                     "vector":  vector,
                     "content": content,
-                    "metadata": metadata 
+                    "metadata": metadata
                 }
                 for vector, content, metadata in zip(vectors, contents, metadata_list)
             ]
 
             if partition_name:
                 self._create_partition(partition_name)
-            
+
             result = self.client.insert(
                 collection_name=self.config.root_memory_collection,
                 data=data,
                 partition_name=partition_name
             )
-            print(f"Inserted result: {result} into collection {self.config.root_memory_collection}.")
+            print(
+                f"Inserted result: {result} into collection {self.config.root_memory_collection}.")
 
             if partition_name:
                 print(f"Inserted into partition {partition_name}.")
@@ -158,7 +173,7 @@ class MilvusDB:
                 partition_name=partition_name
             ):
                 return []
-            
+
             search_params = {
                 "metric_type": self.index_params["metric_type"],
                 "params": {
@@ -167,7 +182,7 @@ class MilvusDB:
             }
 
             output_fields = ["content", "metadata"]
-            
+
             search_results = self.client.search(
                 collection_name=self.config.root_memory_collection,
                 data=query_embeddings,
@@ -177,7 +192,7 @@ class MilvusDB:
                 limit=top_k,
                 partition_names=[partition_name] if partition_name else None
             )
-            
+
             formatted_results = []
             for hits in search_results:
                 matches = []
@@ -187,7 +202,7 @@ class MilvusDB:
                         "distance": hit["distance"],
                         "content": hit["entity"].get("content"),
                         "metadata": hit["entity"].get("metadata")
-                    } 
+                    }
                     matches.append(match)
                 formatted_results.append(matches)
 
@@ -199,7 +214,7 @@ class MilvusDB:
 
     def search_by_user_id(self, user_id: str, query_embeddings: List[float], top_n: int, suffix: str = "archived"):
         result = {}
-        
+
         for actor in self.partition_actors:
             partition_name = f"{user_id}_{actor}_{suffix}"
             try:
@@ -222,7 +237,7 @@ class MilvusDB:
                 partition_name = f"{user_id}_{actor}_{suffix}"
                 if not self.client.has_partition(self.config.root_memory_collection, partition_name=partition_name):
                     continue
-                
+
                 query_results = self.client.query(
                     collection_name=self.config.root_memory_collection,
                     partition_names=[partition_name],
@@ -234,13 +249,13 @@ class MilvusDB:
                     result.get("content", "") for result in query_results
                 ]
                 all_content[actor] = partition_content
-                
+
             return all_content
         except Exception as e:
             print(f"Error in get_all_user_content: {e}")
             traceback.print_exc()
             raise e
-        
+
     def delete_by_ids(self, ids: List[int], partition_name: str):
         print(f"Deleting id: {ids}")
         if ids:
@@ -249,7 +264,8 @@ class MilvusDB:
                     collection_name=self.config.root_memory_collection,
                     partition_name=partition_name
                 ):
-                    raise ValueError(f"Partition {partition_name} does not exist in collection {self.config.root_memory_collection}.")
+                    raise ValueError(
+                        f"Partition {partition_name} does not exist in collection {self.config.root_memory_collection}.")
 
                 self.client.delete(
                     collection_name=self.config.root_memory_collection,
@@ -257,7 +273,8 @@ class MilvusDB:
                     ids=ids
                 )
 
-                print(f"Deleted {len(ids)} records from partition {partition_name}.")
+                print(
+                    f"Deleted {len(ids)} records from partition {partition_name}.")
             except Exception as e:
                 print(f"Error in delete_by_ids: {e}")
                 traceback.print_exc()
@@ -280,7 +297,7 @@ class MilvusDB:
             print(f"Error in get_all_contexts: {e}")
             traceback.print_exc()
             raise e
-            
+
     def close(self):
         try:
             self.client.close()
@@ -289,6 +306,7 @@ class MilvusDB:
             print(f"Error closing connection: {e}")
             traceback.print_exc()
             raise e
+
 
 # Global instance for easy access across modules
 milvus_db = MilvusDB()

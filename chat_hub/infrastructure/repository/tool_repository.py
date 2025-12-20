@@ -46,6 +46,34 @@ class ToolRepository(BaseRepository[Tool]):
             order_by=self.default_order_by,
             to_models=True,
         )
+    
+    async def update_sample_queries(
+        self,
+        tool_id: str,
+        sample_queries: List[str],
+    ) -> Tool:
+        result = await self.update(
+            where={"tool": tool_id},
+            updates={"sample_queries": sample_queries},
+            returning=(
+                "tool",
+                "description",
+                "json_schema",
+                "sample_queries",
+                "need_history",
+                "is_active",
+                "created_at",
+                "updated_at",
+            ),
+            auto_timestamps=True,
+        )
+        return Tool(**result) 
 
+    async def query_tool_by_name(self, tool_name: str) -> List[Tool]:
+        results = await self.list(
+            where={"tool": tool_name},
+            to_models=True,
+        )
+        return results
 
 tool_repository = ToolRepository()
