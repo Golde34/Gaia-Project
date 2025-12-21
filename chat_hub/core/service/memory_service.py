@@ -184,7 +184,6 @@ async def get_long_term_memory(user_id: int, dialogue_id: str, query: str) -> st
         long_term_memory = long_term_memory_entity.search_top_n(
             query_embeddings=embeddings,
             top_k=5,
-            partition_name="default_memory"
         )
 
         if long_term_memory is None or len(long_term_memory) == 0:
