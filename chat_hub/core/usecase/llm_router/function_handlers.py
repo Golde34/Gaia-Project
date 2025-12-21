@@ -1,5 +1,7 @@
 from typing import Callable, Dict, Any
 
+import core.service 
+
 
 # Function registry to store decorated functions
 _FUNCTION_REGISTRY: Dict[str, Dict[str, Any]] = {}

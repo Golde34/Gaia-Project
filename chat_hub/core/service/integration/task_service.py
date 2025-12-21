@@ -18,7 +18,6 @@ class PersonalTaskService:
     3. Optimize Calendar (line 115-129)
     """
 
-    @function_handler(label=enum.GaiaAbilities.CREATE_TASK.value, is_sequential=True)
     async def create_personal_task(self, query: QueryRequest):
         """
         Create task pipeline
@@ -150,6 +149,11 @@ class PersonalTaskService:
 
 
 personal_task_service = PersonalTaskService()
+
+# Register bound method to function handler registry
+function_handler(label=enum.GaiaAbilities.CREATE_TASK.value, is_sequential=True)(
+    personal_task_service.create_personal_task
+)
 
 
 def handle_task_service_response(matched_type: str, result: any) -> str:

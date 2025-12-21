@@ -375,7 +375,7 @@ class OrchestratorService:
             "dialogue_id": query.dialogue_id,
             "status": TaskStatus.PENDING.value,
         }
-        agent_execution_repo.save_task(query.user_id, task_id, pending_record)
+        # agent_execution_repo.save_task(query.user_id, task_id, pending_record)
 
         background_loop_pool.schedule(
             lambda: self._run_parallel_task(task, query, pending_record),
