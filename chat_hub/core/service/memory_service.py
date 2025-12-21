@@ -80,7 +80,7 @@ def _set_defaultkey(key: str):
     return 0
 
 
-async def _update_recursive_summary(cls, user_id: int, dialogue_id: str, is_change_title: bool):
+async def _update_recursive_summary(user_id: int, dialogue_id: str, is_change_title: bool):
     """
     Sends a Kafka message to update the recursive summary.
     """
@@ -93,7 +93,7 @@ async def _update_recursive_summary(cls, user_id: int, dialogue_id: str, is_chan
     await send_kafka_message(kafka_enum.KafkaTopic.UPDATE_RECURSIVE_SUMMARY.value, payload.model_dump())
 
 
-async def _update_long_term_memory(cls, user_id: int, dialogue_id: str, is_change_title: bool):
+async def _update_long_term_memory(user_id: int, dialogue_id: str, is_change_title: bool):
     """
     Sends a Kafka message to update the long-term memory.
     """

@@ -23,7 +23,7 @@ class SemanticRoute(Enum):
 
 class GaiaAbilities(Enum):
     CHITCHAT = "chitchat"
-    CREATE_TASK = "create_task"
+    CREATE_TASK = "create_personal_task"
     CREATE_TASK_RESULT = "create_task_result"
     REGISTER_SCHEDULE_CALENDAR = "register_schedule_calendar"
     SEARCH = "search"

@@ -33,6 +33,7 @@ async def orchestrate(query: QueryRequest, guided_route: str) -> list[str]:
     print("Abilities Handler called with query:", query)
     try:
         task = orchestrator_service.resolve_tasks(guided_route)
+        print("Resolved task:", task)
         if not task:
             return await chitchat.chitchat_with_history(query)
 
