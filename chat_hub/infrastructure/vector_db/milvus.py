@@ -1,5 +1,5 @@
 from pymilvus import MilvusClient, DataType
-from typing import List
+from typing import Any, Dict, List
 import traceback
 
 from infrastructure.vector_db.milvus_config import MilvusConfig
@@ -131,48 +131,33 @@ class MilvusDB:
             traceback.print_exc()
             raise e
 
-    def insert_data(self, vectors: list, contents: list, metadata_list: list, partition_name: str = None):
+    def insert_data(self, collection_name: str, entities: List[Dict[str, Any]], partition_name: str = None):
+        """
+        Insert data into the collection
+        """
         try:
-            if not (len(vectors) == len(contents) == len(metadata_list)):
-                raise ValueError(
-                    "Vectors, contents, and metadata must have the same length.")
-
-            data = [
-                {
-                    "vector":  vector,
-                    "content": content,
-                    "metadata": metadata
-                }
-                for vector, content, metadata in zip(vectors, contents, metadata_list)
-            ]
-
             if partition_name:
                 self._create_partition(partition_name)
 
             result = self.client.insert(
-                collection_name=self.config.root_memory_collection,
-                data=data,
+                collection_name=collection_name, 
+                data=entities, 
                 partition_name=partition_name
             )
             print(
-                f"Inserted result: {result} into collection {self.config.root_memory_collection}.")
-
-            if partition_name:
-                print(f"Inserted into partition {partition_name}.")
-
-            return result
+                f"Data inserted into collection '{collection_name}' with result: {result}.")
         except Exception as e:
-            print(f"Error in insert_data: {e}")
-            traceback.print_exc()
-            raise e
+            print(f"Error inserting data: {e}")
 
-    def search_top_n(self, query_embeddings: List[List[float]], top_k: int = 5, partition_name: str = None) -> List[dict]:
+    def search_top_n(self, collection_name: str,
+                     query_embeddings: List[List[float]],
+                     output_fields: List[str],
+                     top_k: int = 5,
+                     partition_name: str = None) -> List[dict]:
+        """
+        Search top N similar vectors in the collection
+        """
         try:
-            if not self.client.has_partition(
-                collection_name=self.config.root_memory_collection,
-                partition_name=partition_name
-            ):
-                return []
 
             search_params = {
                 "metric_type": self.index_params["metric_type"],
@@ -181,10 +166,8 @@ class MilvusDB:
                 }
             }
 
-            output_fields = ["content", "metadata"]
-
             search_results = self.client.search(
-                collection_name=self.config.root_memory_collection,
+                collection_name=collection_name,
                 data=query_embeddings,
                 output_fields=output_fields,
                 field_name="vector",
@@ -197,13 +180,7 @@ class MilvusDB:
             for hits in search_results:
                 matches = []
                 for hit in hits:
-                    match = {
-                        "id": hit["id"],
-                        "distance": hit["distance"],
-                        "content": hit["entity"].get("content"),
-                        "metadata": hit["entity"].get("metadata")
-                    }
-                    matches.append(match)
+                    matches.append(hit)
                 formatted_results.append(matches)
 
             return formatted_results

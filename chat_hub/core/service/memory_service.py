@@ -4,6 +4,7 @@ import uuid
 
 from core.domain.enums import kafka_enum, redis_enum
 from core.domain.entities.database.recursive_summary import RecursiveSummary
+from core.domain.entities.vectordb.long_term_memory import long_term_memory_entity
 from core.domain.request.chat_hub_request import RecentHistoryRequest
 from core.domain.request.memory_request import MemoryRequest
 from core.domain.request.query_request import LLMModel, QueryRequest
@@ -17,7 +18,6 @@ from infrastructure.kafka.producer import send_kafka_message
 from infrastructure.repository.dialogue_repository import user_dialogue_repository
 from infrastructure.repository.recursive_summary_repository import recursive_summary_repo
 from infrastructure.redis.redis import decrease_key, increase_key, set_key, get_key
-from infrastructure.vector_db.milvus import milvus_db
 from kernel.config import llm_models, config
 
 
@@ -180,9 +180,9 @@ async def get_long_term_memory(user_id: int, dialogue_id: str, query: str) -> st
     """
     try:
         embeddings = await embedding_model.get_embeddings(texts=[query])
-        long_term_memory = milvus_db.search_top_n(
-            query_embeddings=milvus_validation.validate_milvus_search_top_n(
-                embeddings),
+        embeddings = milvus_validation.validate_milvus_search_top_n(embeddings)
+        long_term_memory = long_term_memory_entity.search_top_n(
+            query_embeddings=embeddings,
             top_k=5,
             partition_name="default_memory"
         )
@@ -321,7 +321,7 @@ async def kafka_update_long_term_memory(memory_request: MemoryRequest) -> None:
             embedding = await embedding_model.get_embeddings(texts=long_term_memory.content)
             query_embeddings = milvus_validation.validate_milvus_insert(embedding)
 
-            milvus_db.insert_data(
+            long_term_memory_entity.insert_data(
                 vectors=query_embeddings,
                 contents=long_term_memory.content,
                 metadata_list=metadata,
