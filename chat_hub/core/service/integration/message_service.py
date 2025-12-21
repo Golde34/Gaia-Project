@@ -2,8 +2,8 @@ import json
 from typing import List
 import uuid
 
-from core.domain.entities.user_dialogue import UserDialogue
-from core.domain.entities.message import Message
+from core.domain.entities.database.user_dialogue import UserDialogue
+from core.domain.entities.database.message import Message
 from core.domain.request.chat_hub_request import RecentHistoryRequest
 from core.domain.response.message_response import MessageResponseDTO, RecentHistory
 from core.service.integration.dialogue_service import dialogue_service

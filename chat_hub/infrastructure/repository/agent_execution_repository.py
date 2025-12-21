@@ -1,6 +1,6 @@
 from typing import Optional
 
-from core.domain.entities.agent_execution import AgentExecution
+from core.domain.entities.database.agent_execution import AgentExecution
 from kernel.database.base import BaseRepository
 
 

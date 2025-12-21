@@ -1,6 +1,6 @@
 from typing import List
 
-from core.domain.entities.recursive_summary import RecursiveSummary
+from core.domain.entities.database.recursive_summary import RecursiveSummary
 from kernel.database.postgres import postgres_db
 
 

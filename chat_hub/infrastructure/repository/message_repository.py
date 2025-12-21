@@ -2,7 +2,7 @@ import datetime
 import uuid
 from typing import List, Tuple
 
-from core.domain.entities.message import Message
+from core.domain.entities.database.message import Message
 from kernel.database.base import BaseRepository
 from kernel.database.postgres import postgres_db
 

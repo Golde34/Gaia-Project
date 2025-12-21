@@ -3,7 +3,7 @@ import json
 import uuid
 
 from core.domain.enums import kafka_enum, redis_enum
-from core.domain.entities.recursive_summary import RecursiveSummary
+from core.domain.entities.database.recursive_summary import RecursiveSummary
 from core.domain.request.chat_hub_request import RecentHistoryRequest
 from core.domain.request.memory_request import MemoryRequest
 from core.domain.request.query_request import LLMModel, QueryRequest

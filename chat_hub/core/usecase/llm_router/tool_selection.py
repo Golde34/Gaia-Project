@@ -2,7 +2,7 @@ import json
 from typing import List, Dict, Any
 
 from core.domain import constant
-from core.domain.entities.tool import Tool
+from core.domain.entities.database.tool import Tool
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
 from core.prompts.system_prompt import CLASSIFY_PROMPT

@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from core.domain.entities.tool import Tool
+from core.domain.entities.database.tool import Tool
 from kernel.database.base import BaseRepository
 
 

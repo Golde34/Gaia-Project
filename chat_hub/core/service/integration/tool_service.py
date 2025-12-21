@@ -2,7 +2,7 @@ import json
 from typing import List, Optional
 
 from core.domain.enums import enum
-from core.domain.entities.tool import Tool
+from core.domain.entities.database.tool import Tool
 from core.domain.request.query_request import LLMModel
 from core.domain.request.tool_request import ToolRequest
 from core.prompts.system_prompt import SAMPLE_QUERIES_PROMPT
