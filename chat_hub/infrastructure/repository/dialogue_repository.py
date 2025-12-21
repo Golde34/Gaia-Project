@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 
-from core.domain.entities.user_dialogue import UserDialogue
+from core.domain.entities.database.user_dialogue import UserDialogue
 from kernel.database.base import BaseRepository, Page
 
 

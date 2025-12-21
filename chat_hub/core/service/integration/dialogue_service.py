@@ -1,7 +1,7 @@
 import uuid
 
 from core.domain.enums.enum import DialogueEnum, ActiveEnum
-from core.domain.entities.user_dialogue import UserDialogue
+from core.domain.entities.database.user_dialogue import UserDialogue
 from infrastructure.repository.dialogue_repository import user_dialogue_repository
 
 

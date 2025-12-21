@@ -1,8 +1,8 @@
 from typing import List
 
+from core.domain.entities.vectordb.root_memory import root_memory_entity
 from core.validation import milvus_validation
 from infrastructure.embedding.base_embedding import embedding_model 
-from infrastructure.vector_db.milvus import milvus_db 
 
 
 async def upload_context_to_vectordb(context_list: List[str], metadata: dict) -> None:
@@ -32,10 +32,10 @@ async def upload_context_to_vectordb(context_list: List[str], metadata: dict) ->
         print("Context to be uploaded:", len(context_list), "characters")
         print("Metadata for context:", len(metadata_list), "fields")
 
-        result = milvus_db.insert_data(
+        result = root_memory_entity.insert_data(
             vectors=query_embeddings,
-            contents=context_list,
-            metadata_list=metadata_list,
+            content=context_list,
+            metadata=metadata_list,
             partition_name="default_context"
         )
 
@@ -61,7 +61,7 @@ async def query_context(query: str, top_k: int = 5, partition_name: str = "defau
         embedding = await embedding_model.get_embeddings(texts=[query])
         query_embeddings = milvus_validation.validate_milvus_search_top_n(embedding)
 
-        results = milvus_db.search_top_n(
+        results = root_memory_entity.search_top_n(
             query_embeddings=query_embeddings,
             top_k=top_k,
             partition_name=partition_name

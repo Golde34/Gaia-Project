@@ -4,7 +4,7 @@ from typing import Dict
 from pydantic import ValidationError
 import json
 
-from infrastructure.client.schedule_plan_client import schedule_plan_client
+from core.domain.entities.vectordb.root_memory import root_memory_entity
 from core.domain.enums import enum, kafka_enum
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.base_response import return_response
@@ -13,9 +13,9 @@ from core.prompts import onboarding_prompt
 from core.prompts.abilities_prompt import CHITCHAT_WITH_HISTORY_PROMPT
 from core.service import memory_service
 from core.validation import milvus_validation
+from infrastructure.client.schedule_plan_client import schedule_plan_client
 from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.kafka.producer import publish_message
-from infrastructure.vector_db.milvus import milvus_db
 from kernel.config import llm_models
 from kernel.utils.parse_json import bytes_to_str, clean_json_string
 from kernel.utils.background_loop import log_background_task_error
@@ -48,7 +48,7 @@ async def _gaia_introduce(query: QueryRequest, recent_history: str, recursive_su
     query_embeddings = milvus_validation.validate_milvus_search_top_n(
         embedding)
 
-    results = milvus_db.search_top_n(
+    results = root_memory_entity.search_top_n(
         query_embeddings=query_embeddings,
         top_k=4,
         partition_name="default_context"

@@ -2,6 +2,8 @@ from asyncio import Queue
 from typing import List, Dict, Any
 import traceback
 
+import aiohttp
+
 from core.domain.enums.enum import ModelMode
 from infrastructure.reranking import reranking_config
 
@@ -56,30 +58,58 @@ class BaseReranking:
             return {"error": str(e)}
 
     async def _rerank_from_api(self, query: str, documents: List[Dict[str, Any]], top_n: int, logger=None):
+        """
+        Rerank documents using infinity rerank API.
+        
+        API expects:
+        {
+            "model": "mixedbread-ai/mxbai-rerank-xsmall-v1",
+            "query": "Where is Munich?",
+            "documents": ["Munich is in Germany.", "The sky is blue."],
+            "top_n": 2,
+            "return_documents": false,
+            "raw_scores": true
+        }
+        
+        API returns:
+        {
+            "results": [
+                {"index": 0, "relevance_score": 0.95},
+                {"index": 1, "relevance_score": 0.23}
+            ]
+        }
+        """
+        # Extract text from documents
+        doc_texts = [doc.get('text', '') for doc in documents]
+        
         payload = {
             "query": query,
-            "documents": documents,
-            "model": self.api_model_name,
+            "documents": doc_texts,  # Send list of strings, not dict
+            "model": self.model_name,
             "top_n": top_n,
             "return_documents": False,
             "raw_scores": True
         }
 
-        session = await self.session_queue.get()
         try:
-            async with session.post(self.endpoint, json=payload) as response:
-                response.raise_for_status()
-                data = await response.json()
-                
-                indices = [result['index'] for result in data['results']]
-                scores = [result['relevance_score'] for result in data['results']]
-                
-                sorted_documents = [documents[idx] for idx in indices]
-                
-                return {
-                    "documents": sorted_documents,
-                    "scores": scores,
-                }
+            print(f"Calling reranking service at {self.endpoint}")
+            async with aiohttp.ClientSession() as session:
+                async with session.post(self.endpoint, json=payload) as response:
+                    response.raise_for_status()
+                    data = await response.json()
+                    
+                    # Parse response: results = [{"index": 0, "relevance_score": 0.95}, ...]
+                    results = data.get('results', [])
+                    indices = [result['index'] for result in results]
+                    scores = [result['relevance_score'] for result in results]
+                    
+                    # Map back to original documents using indices
+                    sorted_documents = [documents[idx] for idx in indices]
+                    
+                    return {
+                        "documents": sorted_documents,
+                        "scores": scores,
+                    } 
         except Exception as e:
             if logger:
                 logger.error(f"Error in _rerank_from_api: {e}")

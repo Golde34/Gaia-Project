@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from core.domain.entities.tool import Tool
+from core.domain.entities.database.tool import Tool
 from kernel.database.base import BaseRepository
 
 
@@ -69,9 +69,16 @@ class ToolRepository(BaseRepository[Tool]):
         )
         return Tool(**result) 
 
-    async def query_tool_by_name(self, tool_name: str) -> List[Tool]:
+    async def query_tool_by_name(self, tool_name: str) -> Tool:
         results = await self.list(
             where={"tool": tool_name},
+            to_models=True,
+        )
+        return results[0] if results else None
+
+    async def query_tools_by_names(self, tool_names: List[str]) -> List[Tool]:
+        results = await self.list(
+            where={"tool IN": tool_names},  # Use "tool IN" not "tool__in"
             to_models=True,
         )
         return results

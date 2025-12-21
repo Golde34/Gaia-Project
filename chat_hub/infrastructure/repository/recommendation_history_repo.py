@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 import uuid
 
-from core.domain.entities.recommendation_history import RecommendationHistory
+from core.domain.entities.database.recommendation_history import RecommendationHistory
 from kernel.database.postgres import postgres_db
 
 
@@ -77,7 +77,7 @@ class RecommendationHistoryRepository:
         if not user_id or not recommendation:
             return
         # lazily import dataclass to avoid circular import at module load
-        from core.domain.entities.recommendation_history import RecommendationHistory as RH
+        from core.domain.entities.database.recommendation_history import RecommendationHistory as RH
         rec = RH(
             id=uuid.uuid4().hex,
             user_id=user_id,

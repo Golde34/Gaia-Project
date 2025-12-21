@@ -1,10 +1,10 @@
-from typing import List, Optional
+from typing import Optional
 
 from core.domain.request.tool_request import ToolRequest, ToolVectorRequest
+from core.domain.entities.vectordb.tool import tool_vector_entity
 from core.service.integration.tool_service import tool_service
 from core.validation import milvus_validation
 from infrastructure.embedding.base_embedding import embedding_model
-from infrastructure.vector_db.milvus import milvus_db
 
 
 class ToolUsecase:
@@ -39,40 +39,14 @@ class ToolUsecase:
     async def add_tool_to_vectordb(cls, tool_request: ToolVectorRequest):
         cls._validate_tool_data(tool_request.tool, tool_request.description)
         
-        contexts: List[str] = []
-        metadata_list: List[dict] = []
-
-        if tool_request.description:
-            contexts.append(f"{tool_request.tool}: {tool_request.description}")
-            metadata_list.append({
-                "tool": tool_request.tool,
-                "description": tool_request.description,
-                "type": "description",
-            })
-
-        for query in tool_request.sample_queries:
-            contexts.append(f"{tool_request.tool} - Sample query: {query}")
-            metadata_list.append({
-                "tool": tool_request.tool,
-                "description": tool_request.description,
-                "sample_query": query,
-                "type": "sample_query",
-            })
-
-        if not contexts:
-            raise ValueError(
-                "Cannot add tool to vector database: both description and sample_queries are empty. "
-                "At least one must be provided."
-            )
-
-        embeddings = await embedding_model.get_embeddings(texts=contexts)
+        embeddings = await embedding_model.get_embeddings(texts=tool_request.sample_queries)
         vectors = milvus_validation.validate_milvus_insert(embeddings)
 
-        result = milvus_db.insert_data(
+        result = tool_vector_entity.insert_data(
             vectors=vectors,
-            contents=contexts,
-            metadata_list=metadata_list,
-            partition_name="tools",
+            tool=tool_request.tool,
+            description=tool_request.description,
+            sample_queries=tool_request.sample_queries,
         )
         return str(result)
 
