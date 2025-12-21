@@ -3,6 +3,7 @@ from typing import List, Dict, Any
 
 from core.domain import constant
 from core.domain.entities.database.tool import Tool
+from core.domain.entities.vectordb.tool import tool_vector_entity
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
 from core.prompts.system_prompt import CLASSIFY_PROMPT
@@ -10,7 +11,6 @@ from core.semantic_router import router_registry
 from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.repository.tool_repository import tool_repository
 from infrastructure.reranking.base_reranking import reranking_model
-from infrastructure.vector_db.milvus import milvus_db
 from kernel.config import llm_models
 
 
@@ -48,7 +48,6 @@ async def select_ability_tool(query: QueryRequest) -> tuple[str, bool]:
         str: The response from the selected ability handler.
     """
     embedding_tools = await _semantic_shortlist_tools(query.query)
-
     tools = await _rerank_tools(
         query.query,
         embedding_tools,
@@ -56,12 +55,13 @@ async def select_ability_tool(query: QueryRequest) -> tuple[str, bool]:
     if not _should_use_llm_selection(tools):
         top_tool = tools[0] if tools else None
         if top_tool:
-            return await tool_repository.query_tool_by_name(top_tool["tool"]) 
+            tool = await tool_repository.query_tool_by_name(top_tool["tool"]) 
+            return tool.tool, tool.need_history
         else:
             raise Exception("No tools found after reranking.")
     else:
         tools_name = [tool["tool"] for tool in tools]
-        tools = tool_repository.query_tool_by_name(tools_name)
+        tools = tool_repository.query_tools_by_names(tools_name)
         tools_string = json.dumps(tools, indent=2)
 
         prompt = CLASSIFY_PROMPT.format(
@@ -76,40 +76,46 @@ async def select_ability_tool(query: QueryRequest) -> tuple[str, bool]:
 
 async def _semantic_shortlist_tools(query_text: str):
     query_embedding = await embedding_model.get_embeddings([query_text])
-    search_results = milvus_db.search_top_n(
+    return tool_vector_entity.search_top_n(
         query_embeddings=query_embedding,
         top_k=constant.SemanticSearch.DEFAULT_TOP_K,
-        partition_name="tools",
     )
-    return search_results
 
-
-async def _rerank_tools(query_text: str, search_results: List[List[Dict[str, Any]]], top_n: int = 3) -> Dict[str, Any]:
+async def _rerank_tools(query_text: str, search_results: List[List[Dict[str, Any]]], top_n: int = 3) -> List[Dict[str, Any]]:
     if not search_results or not search_results[0]:
-        return {"tools": [], "error": "Empty search results"}
+        return []
 
     documents = []
-    tool_metadata_map = {}
+    tool_map = {}
 
     for result in search_results[0]:
-        content = result.get("content", "")
-        metadata = result.get("metadata", {})
-        tool_name = metadata.get("tool")
+        entity = result.get("entity", {})
+        tool_name = entity.get("tool")
+        description = entity.get("description", "")
+        sample_query = entity.get("sample_query", "")
 
         if not tool_name:
             continue
 
+        # Use sample_query as reranking text (since it's most relevant to user queries)
+        doc_text = f"{description}\nExample: {sample_query}" if sample_query else description
+        
         documents.append({
-            "text": content,
+            "text": doc_text,
             "tool_name": tool_name
         })
 
-        if tool_name not in tool_metadata_map:
-            tool_metadata_map[tool_name] = metadata
+        # Store tool info (avoid duplicates)
+        if tool_name not in tool_map:
+            tool_map[tool_name] = {
+                "tool": tool_name,
+                "description": description,
+            }
 
     if not documents:
-        return {"tools": [], "error": "No documents to rerank"}
+        return []
 
+    print("Documents for Reranking:", documents)
     reranked_result = await reranking_model.rerank(
         query=query_text,
         documents=documents,
@@ -117,24 +123,27 @@ async def _rerank_tools(query_text: str, search_results: List[List[Dict[str, Any
     )
 
     if "error" in reranked_result:
-        return {"tools": [], "error": reranked_result["error"]}
+        print(f"Reranking error: {reranked_result['error']}")
+        return []
 
     reranked_docs = reranked_result.get("documents", [])
     scores = reranked_result.get("scores", [])
 
     tools = []
+    seen_tools = set()
+    
     for i, doc in enumerate(reranked_docs):
         tool_name = doc.get("tool_name")
-        if not tool_name:
+        if not tool_name or tool_name in seen_tools:
             continue
 
-        metadata = tool_metadata_map.get(tool_name, {})
+        seen_tools.add(tool_name)
+        tool_info = tool_map.get(tool_name, {})
 
         tools.append({
             "tool": tool_name,
-            "description": metadata.get("description", ""),
+            "description": tool_info.get("description", ""),
             "score": scores[i] if i < len(scores) else 0.0,
-            "need_history": metadata.get("need_history", False)
         })
 
     return tools

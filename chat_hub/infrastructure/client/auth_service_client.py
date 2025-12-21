@@ -36,7 +36,7 @@ class AuthServiceClient:
         try:
             user_llm_model_config_url = f"{self.base_url}/user-model-setting/get-model-by-user?userId={user_id}"
             headers = build_header.build_authorization_headers(
-                ServiceEnum.AUTHENTICATION_SERVICE, user_id)
+                ServiceEnum.AUTHENTICATION_SERVICE.value, user_id)
             result = await aiohttp_utils.get(user_llm_model_config_url, header=headers)
             return UserModelResponse.model_validate(result.get("data", {}).get("message", {}))
         except Exception as e:

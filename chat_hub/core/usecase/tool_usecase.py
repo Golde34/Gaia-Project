@@ -5,7 +5,6 @@ from core.domain.entities.vectordb.tool import tool_vector_entity
 from core.service.integration.tool_service import tool_service
 from core.validation import milvus_validation
 from infrastructure.embedding.base_embedding import embedding_model
-from infrastructure.vector_db.milvus import milvus_db
 
 
 class ToolUsecase:
