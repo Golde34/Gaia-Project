@@ -21,6 +21,13 @@ class LongTermMemory():
                          datatype=DataType.JSON)
         return schema
 
+    def create_collection(self):
+        schema = self.schema_fields()
+        milvus_db.create_collection_if_not_exists(
+            collection_name=self.connection_name,
+            schema=schema
+        )
+
     def insert_data(self, vectors: list, contents: list, metadata_list: list, partition_name: str = None):
         if not (len(vectors) == len(contents) == len(metadata_list)):
             raise ValueError(

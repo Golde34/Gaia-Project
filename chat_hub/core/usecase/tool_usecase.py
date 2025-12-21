@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 from core.domain.request.tool_request import ToolRequest, ToolVectorRequest
 from core.domain.entities.vectordb.tool import tool_vector_entity

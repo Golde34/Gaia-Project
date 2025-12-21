@@ -14,12 +14,19 @@ class RootMemory():
         schema.add_field(field_name="id",
                          datatype=DataType.INT64, is_primary=True)
         schema.add_field(field_name="vector",
-                         datatype=DataType.FLOAT_VECTOR, dim=self.dim)
+                         datatype=DataType.FLOAT_VECTOR, dim=1024)
         schema.add_field(field_name="content",
                          datatype=DataType.VARCHAR, max_length=65535)
         schema.add_field(field_name="metadata", 
                          datatype=DataType.JSON)
         return schema
+
+    def create_collection(self):
+        schema = self.schema_fields()
+        milvus_db.create_collection_if_not_exists(
+            collection_name=self.connection_name,
+            schema=schema
+        )
 
     def insert_data(self, vectors: list, contents: list, metadata_list: list, partition_name: str = None):
         if not (len(vectors) == len(contents) == len(metadata_list)):
