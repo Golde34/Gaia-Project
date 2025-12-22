@@ -1,6 +1,6 @@
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
-from core.usecase.llm_router.function_handlers import function_handler
+from core.service.abilities.function_handlers import function_handler
 from infrastructure.search.google_search import run_search
 from kernel.config import config
 

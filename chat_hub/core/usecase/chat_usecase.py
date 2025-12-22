@@ -130,12 +130,15 @@ class ChatInteractionUsecase:
                 message_type=request.msg_type,
                 user_message_id=str(user_message_id),
             )
-        
-        return {
+
+        data = {
             "message_handler_type": message_handler_type,
             "responses": bot_response,
             "dialogue_id": str(dialogue.id)
-        }
+        } 
+        print("Chat message flow completed with data:", data)
+        
+        return data
 
     @classmethod
     async def _store_bot_response(

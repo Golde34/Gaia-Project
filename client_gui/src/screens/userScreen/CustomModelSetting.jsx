@@ -135,8 +135,9 @@ const CustomModelSetting = ({ allModels = [] }) => {
         setEditingValues({
             userModel: model.userModel || "",
             modelName: model.modelName || "",
-            modelKey: model.modelKey || "",
+            modelKey: "", // Start with empty to indicate no change
             activeStatus: !!model.activeStatus,
+            originalModelKey: model.modelKey || "", // Store original for comparison
         });
         setFormError("");
         setSaveMessage("");
@@ -160,17 +161,20 @@ const CustomModelSetting = ({ allModels = [] }) => {
         setFormError("");
         setSaveMessage("");
 
-        if (!trimmedUserModel || !trimmedModelName || !trimmedKey) {
-            setFormError("User model, LLM model, and API key are required.");
+        if (!trimmedUserModel || !trimmedModelName) {
+            setFormError("User model and LLM model are required.");
             return;
         }
+
+        // If modelKey is empty or unchanged (still masked), send null
+        const modelKeyToSend = trimmedKey === "" ? null : trimmedKey;
 
         dispatch(
             upsertUserLLMModel({
                 id: editingModelId,
                 userModel: trimmedUserModel,
                 modelName: trimmedModelName,
-                modelKey: trimmedKey,
+                modelKey: modelKeyToSend, // null if not changed, actual value if changed
                 activeStatus: editingValues.activeStatus,
             }),
         );
@@ -346,7 +350,7 @@ const CustomModelSetting = ({ allModels = [] }) => {
                                                                 modelKey: e.target.value,
                                                             }))
                                                         }
-                                                        placeholder="API key"
+                                                        placeholder="Leave empty to keep existing key"
                                                     />
                                                 ) : (
                                                     <Text className="font-medium text-tremor-content dark:text-dark-tremor-content">

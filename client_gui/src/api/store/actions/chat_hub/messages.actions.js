@@ -123,6 +123,7 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
             eventSource.addEventListener("message_chunk", (event) => {
                 try {
                     const data = JSON.parse(event.data);
+                    console.log("Received message_chunk data:", data);
                     if (data?.chunk) {
                         accumulatedResponse += data.chunk;
                         if (onChunk) {

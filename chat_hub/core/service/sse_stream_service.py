@@ -171,6 +171,7 @@ async def handle_sse_stream(
 
 
 def _extract_response_payload(response: Optional[dict]) -> tuple[dict, str]:
+    print("Extracting response payload from:", response)
     if isinstance(response, dict):
         if "responses" in response:
             responses_payload = response["responses"]

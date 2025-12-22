@@ -11,7 +11,7 @@ from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
 from core.service.integration.task_service import handle_task_service_response
 from core.usecase.llm_router.chat_routers import llm_route
-from core.usecase.llm_router.function_handlers import FUNCTIONS
+from core.service.abilities.function_handlers import FUNCTIONS
 from infrastructure.client.recommendation_service_client import recommendation_service_client
 from infrastructure.kafka.producer import publish_message
 from infrastructure.repository.agent_execution_repository import agent_execution_repo
@@ -33,6 +33,7 @@ async def orchestrate(query: QueryRequest, guided_route: str) -> list[str]:
     print("Abilities Handler called with query:", query)
     try:
         task = orchestrator_service.resolve_tasks(guided_route)
+        print("Resolved task:", task)
         if not task:
             return await chitchat.chitchat_with_history(query)
 
@@ -44,7 +45,7 @@ async def orchestrate(query: QueryRequest, guided_route: str) -> list[str]:
         responses = extract_task_responses(orchestration_result)
 
         print(f"Orchestration result type: {type}, response: {responses}")
-        return responses, orchestration_result.get("operationStatus", TaskStatus.SUCCESS.value)
+        return responses, type
     except Exception as e:
         raise e
 
@@ -375,7 +376,7 @@ class OrchestratorService:
             "dialogue_id": query.dialogue_id,
             "status": TaskStatus.PENDING.value,
         }
-        agent_execution_repo.save_task(query.user_id, task_id, pending_record)
+        # agent_execution_repo.save_task(query.user_id, task_id, pending_record)
 
         background_loop_pool.schedule(
             lambda: self._run_parallel_task(task, query, pending_record),
