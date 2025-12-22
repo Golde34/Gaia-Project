@@ -45,7 +45,7 @@ async def orchestrate(query: QueryRequest, guided_route: str) -> list[str]:
         responses = extract_task_responses(orchestration_result)
 
         print(f"Orchestration result type: {type}, response: {responses}")
-        return responses, orchestration_result.get("operationStatus", TaskStatus.SUCCESS.value)
+        return responses, type
     except Exception as e:
         raise e
 

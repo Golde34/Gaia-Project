@@ -3,9 +3,8 @@ import json
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import CreateTaskResponseSchema, CreateTaskSchema
-from core.prompts.task_prompt import CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT, TASK_RESULT_PROMPT_2
+from core.prompts.task_prompt import CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT_2
 from core.usecase.llm_router.function_handlers import function_handler
-from infrastructure.client.task_manager_client import task_manager_client
 from kernel.config import llm_models
 from kernel.utils.parse_json import parse_json_string
 
