@@ -2,9 +2,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { getTabId } from "../../kernels/utils/set-interval";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getChatHistory, sendSSEChatMessage } from "../../api/store/actions/chat_hub/messages.actions";
-import { Button, Card, Col, Grid, TextInput } from "@tremor/react";
+import { Card } from "@tremor/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { buildChatHistoryKey, defaultChatHistoryState } from "../../kernels/utils/chat-history-utils";
+import { createMessage, formatResponseContent } from "../../kernels/utils/chat-message-utils";
+import { useNotificationHandler } from "../../kernels/hooks/useNotificationHandler";
+import ChatMessageList from "../../components/subComponents/chat/ChatMessageList";
+import ChatInputArea from "../../components/subComponents/chat/ChatInputArea";
 
 export default function ChatComponent(props) {
     const navigate = useNavigate();
@@ -37,48 +41,20 @@ export default function ChatComponent(props) {
     const prevScrollTopRef = useRef(0);
     const processedWebsocketMessageIdsRef = useRef(new Set());
 
-    const createMessage = (content, senderType, extra = {}) => ({
-        id: `${senderType}-${Date.now()}-${Math.random()}`,
-        content,
-        senderType,
-        timestamp: new Date().toISOString(),
-        ...extra,
-    });
-
-    const tryParseJson = (value) => {
-        if (typeof value !== "string") return value;
-        try {
-            return JSON.parse(value);
-        } catch (error) {
-            return value;
+    const handleNotificationMessages = useCallback((generatedMessages) => {
+        console.log('[ChatComponent] Received generated messages from notification:', generatedMessages);
+        if (generatedMessages && generatedMessages.length > 0) {
+            setChatHistory((prev) => [...prev, ...generatedMessages]);
         }
-    };
+    }, []);
 
-    const formatResponseContent = (content, handlerType) => {
-        const parsed = tryParseJson(content);
-        if (parsed && typeof parsed === "object") {
-            if (handlerType && typeof parsed.response === "string") {
-                return parsed.response;
-            }
-            return JSON.stringify(parsed, null, 2);
-        }
-        return parsed ?? "";
-    };
+    useNotificationHandler(dialogueId, handleNotificationMessages);
 
-    const getSenderType = (msg) => msg.senderType || msg.sender_type || msg.sender || "";
-
-    const renderMessageContent = (msg) => {
-        const formatted = formatResponseContent(msg.content, msg.messageHandlerType);
-        const hasNewlines = typeof formatted === "string" && formatted.includes("\n");
-        return (
-            <div className={[
-                "whitespace-pre-wrap break-words",
-                hasNewlines ? "font-mono text-sm" : "",
-            ].filter(Boolean).join(" ")}>
-                {formatted}
-            </div>
-        );
-    };
+    const scrollRefs = useMemo(() => ({
+        containerRef: messagesContainerRef,
+        prevScrollHeightRef,
+        prevScrollTopRef,
+    }), []);
 
     const getChatMessages = useCallback(
         (cursorOverride = "") => {
@@ -136,7 +112,7 @@ export default function ChatComponent(props) {
     }, [chatHistory]);
 
     useEffect(() => {
-        const container = messagesContainerRef.current;
+        const container = scrollRefs.containerRef.current;
         if (!container) return;
         const handleScroll = () => {
             if (
@@ -154,7 +130,7 @@ export default function ChatComponent(props) {
         };
         container.addEventListener("scroll", handleScroll);
         return () => container.removeEventListener("scroll", handleScroll);
-    }, [hasMore, loading, getChatMessages, nextCursor]);
+    }, [hasMore, loading, getChatMessages, nextCursor, scrollRefs]);
 
     // Handle sending messages
     const handleSend = async () => {
@@ -181,7 +157,7 @@ export default function ChatComponent(props) {
             );
         };
 
-        const replaceBotWithResponses = (responses, handlerType) => {
+        const replaceBotWithResponses = (responses) => {
             setChatHistory((prev) => {
                 const responseList = Array.isArray(responses)
                     ? responses.filter((item) => item !== null && item !== undefined)
@@ -197,9 +173,8 @@ export default function ChatComponent(props) {
 
                 const filteredHistory = prev.filter((msg) => msg.id !== botMessageId);
                 const botMessages = fallbackPayload.map((resp, index) =>
-                    createMessage(formatResponseContent(resp, handlerType), "bot", {
+                    createMessage(formatResponseContent(resp), "bot", {
                         isStreaming: false,
-                        messageHandlerType: handlerType || undefined,
                         sequence: index,
                     })
                 );
@@ -220,10 +195,9 @@ export default function ChatComponent(props) {
                             ? [result.response]
                             : [];
 
-                    const handlerType = result?.messageHandlerType || result?.message_handler_type || result?.type || null;
                     const newDialogueId = typeof result === "object" ? (result?.dialogueId || result?.dialogue_id) : null;
 
-                    replaceBotWithResponses(normalizedResponses, handlerType);
+                    replaceBotWithResponses(normalizedResponses);
 
                     // Update URL with dialogue_id if received and we don't have one yet
                     if (newDialogueId && (!dialogueId || dialogueId === "")) {
@@ -242,12 +216,12 @@ export default function ChatComponent(props) {
                     }
                 },
                 onError: () => {
-                    replaceBotWithResponses(["Sorry, something went wrong."], null);
+                    replaceBotWithResponses(["Sorry, something went wrong."]);
                 },
             });
         } catch (error) {
             console.error("Failed to send chat message:", error);
-            replaceBotWithResponses(["Sorry, something went wrong."], null);
+            replaceBotWithResponses(["Sorry, something went wrong."]);
         }
     };
 
@@ -256,6 +230,10 @@ export default function ChatComponent(props) {
 
     const navigateToOtherChats = () => {
         navigate('/chat');
+    };
+
+    const handleChatInputChange = (value) => {
+        setChatInput(value);
     };
 
     return (
@@ -267,68 +245,21 @@ export default function ChatComponent(props) {
             ) : (
                 <>
                     <Card className={getDashboardClass(isDashboard)}>
-                        <div
-                            ref={messagesContainerRef}
-                            className="flex-1 overflow-auto p-4 space-y-3"
-                            style={{ scrollBehavior: "smooth" }}
-                        >
-                            {loadingMore && (
-                                <div className="text-center text-gray-400 my-2">Loading more...</div>
-                            )}
+                        <ChatMessageList 
+                            messages={chatHistory}
+                            loadingMore={loadingMore}
+                            isLoadingMoreRef={isLoadingMoreRef}
+                            scrollRefs={scrollRefs}
+                            formatContent={formatResponseContent}
+                        />
 
-                            {chatHistory && chatHistory.length > 0 ? (
-                                chatHistory.map((msg, idx) => {
-                                    const sender = getSenderType(msg);
-                                    const isBot = sender === "bot";
-
-                                    return (
-                                        <div
-                                            key={msg.id || idx}
-                                            className={`flex ${isBot ? "justify-start" : "justify-end"}`}
-                                        >
-                                            <Grid numItems={1}>
-                                                <Col numColSpan={1}>
-                                                    <div
-                                                        className={[
-                                                            "max-w-lg px-4 py-2 rounded-3xl break-words",
-                                                            isBot ? "bg-gray-200 text-gray-800" : "bg-blue-500 text-white",
-                                                            msg.isStreaming ? "animate-pulse" : "",
-                                                        ].filter(Boolean).join(" ")}
-                                                    >
-                                                        {msg.messageHandlerType && (
-                                                            <div className="text-xs text-gray-500 mb-1">
-                                                                {`Handler: ${msg.messageHandlerType}`}
-                                                            </div>
-                                                        )}
-                                                        {renderMessageContent(msg)}
-                                                    </div>
-                                                </Col>
-                                            </Grid>
-                                        </div>
-                                    );
-                                })
-                            ) : (
-                                <div className="text-center text-gray-500">No messages yet</div>
-                            )}
-                        </div>
-
-                        <div className="flex items-center p-4 border-t">
-                            <TextInput
-                                placeholder="Type your message here..."
-                                value={chatInput}
-                                onChange={(e) => setChatInput(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                                className="flex-1 mr-2"
-                            />
-                            <Button color="indigo" onClick={handleSend}>Send</Button>
-                        </div>
-                        {isDashboard && (
-                            <div className="mt-2 text-center">
-                                <Button variant="light" size="sm" onClick={navigateToOtherChats}>
-                                    Go to Other Chats
-                                </Button>
-                            </div>
-                        )}
+                        <ChatInputArea 
+                            value={chatInput}
+                            onChange={handleChatInputChange}
+                            onSend={handleSend}
+                            isDashboard={isDashboard}
+                            onNavigateToOtherChats={navigateToOtherChats}
+                        />
                     </Card>
                 </>
             )}

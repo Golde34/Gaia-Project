@@ -115,7 +115,6 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
                         response: fallback,
                         responses: fallback ? [fallback] : [],
                         dialogueId: null,
-                        messageHandlerType: null,
                     });
                 }
             }, 120000); // 2 minutes
@@ -151,7 +150,6 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
                 let finalResponse = accumulatedResponse;
                 let dialogueIdFromResponse = null;
                 let responsesFromPayload = [];
-                let messageHandlerType = null;
 
                 try {
                     const data = JSON.parse(event.data);
@@ -165,8 +163,6 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
                     } else if (data?.responses) {
                         responsesFromPayload = [data.responses];
                     }
-
-                    messageHandlerType = data?.message_handler_type || data?.messageHandlerType || data?.type || null;
 
                     // Use full_response or response from event if accumulated response is empty
                     if (data?.full_response && !finalResponse) {
@@ -187,7 +183,6 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
                     response: finalResponse,
                     responses: responsesFromPayload.length ? responsesFromPayload : (finalResponse ? [finalResponse] : []),
                     dialogueId: dialogueIdFromResponse,
-                    messageHandlerType,
                 };
 
                 resolveOnce(payload);
