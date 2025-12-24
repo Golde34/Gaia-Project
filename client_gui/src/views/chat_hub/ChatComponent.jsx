@@ -45,36 +45,18 @@ export default function ChatComponent(props) {
         ...extra,
     });
 
-    const tryParseJson = (value) => {
-        if (typeof value !== "string") return value;
-        try {
-            return JSON.parse(value);
-        } catch (error) {
-            return value;
-        }
-    };
-
-    const formatResponseContent = (content, handlerType) => {
-        const parsed = tryParseJson(content);
-        if (parsed && typeof parsed === "object") {
-            if (handlerType && typeof parsed.response === "string") {
-                return parsed.response;
-            }
-            return JSON.stringify(parsed, null, 2);
-        }
-        return parsed ?? "";
+    const formatResponseContent = (content) => {
+        if (typeof content === "string") return content;
+        if (Array.isArray(content)) return content.join("\n");
+        return String(content ?? "");
     };
 
     const getSenderType = (msg) => msg.senderType || msg.sender_type || msg.sender || "";
 
     const renderMessageContent = (msg) => {
-        const formatted = formatResponseContent(msg.content, msg.messageHandlerType);
-        const hasNewlines = typeof formatted === "string" && formatted.includes("\n");
+        const formatted = formatResponseContent(msg.content);
         return (
-            <div className={[
-                "whitespace-pre-wrap break-words",
-                hasNewlines ? "font-mono text-sm" : "",
-            ].filter(Boolean).join(" ")}>
+            <div className="whitespace-pre-wrap break-words">
                 {formatted}
             </div>
         );
@@ -181,7 +163,7 @@ export default function ChatComponent(props) {
             );
         };
 
-        const replaceBotWithResponses = (responses, handlerType) => {
+        const replaceBotWithResponses = (responses) => {
             setChatHistory((prev) => {
                 const responseList = Array.isArray(responses)
                     ? responses.filter((item) => item !== null && item !== undefined)
@@ -197,9 +179,8 @@ export default function ChatComponent(props) {
 
                 const filteredHistory = prev.filter((msg) => msg.id !== botMessageId);
                 const botMessages = fallbackPayload.map((resp, index) =>
-                    createMessage(formatResponseContent(resp, handlerType), "bot", {
+                    createMessage(formatResponseContent(resp), "bot", {
                         isStreaming: false,
-                        messageHandlerType: handlerType || undefined,
                         sequence: index,
                     })
                 );
@@ -220,10 +201,9 @@ export default function ChatComponent(props) {
                             ? [result.response]
                             : [];
 
-                    const handlerType = result?.messageHandlerType || result?.message_handler_type || result?.type || null;
                     const newDialogueId = typeof result === "object" ? (result?.dialogueId || result?.dialogue_id) : null;
 
-                    replaceBotWithResponses(normalizedResponses, handlerType);
+                    replaceBotWithResponses(normalizedResponses);
 
                     // Update URL with dialogue_id if received and we don't have one yet
                     if (newDialogueId && (!dialogueId || dialogueId === "")) {
@@ -242,12 +222,12 @@ export default function ChatComponent(props) {
                     }
                 },
                 onError: () => {
-                    replaceBotWithResponses(["Sorry, something went wrong."], null);
+                    replaceBotWithResponses(["Sorry, something went wrong."]);
                 },
             });
         } catch (error) {
             console.error("Failed to send chat message:", error);
-            replaceBotWithResponses(["Sorry, something went wrong."], null);
+            replaceBotWithResponses(["Sorry, something went wrong."]);
         }
     };
 
@@ -295,11 +275,6 @@ export default function ChatComponent(props) {
                                                             msg.isStreaming ? "animate-pulse" : "",
                                                         ].filter(Boolean).join(" ")}
                                                     >
-                                                        {msg.messageHandlerType && (
-                                                            <div className="text-xs text-gray-500 mb-1">
-                                                                {`Handler: ${msg.messageHandlerType}`}
-                                                            </div>
-                                                        )}
                                                         {renderMessageContent(msg)}
                                                     </div>
                                                 </Col>
