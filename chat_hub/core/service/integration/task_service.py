@@ -1,11 +1,12 @@
 import asyncio
 import json
 
-from core.domain.enums import enum
+from core.domain.enums import enum, kafka_enum
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import CreateTaskResponseSchema, CreateTaskSchema
 from core.prompts.task_prompt import CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT_2
 from core.service.abilities.function_handlers import function_handler
+from infrastructure.kafka.producer import publish_message
 from kernel.config import llm_models
 from kernel.utils.background_loop import log_background_task_error
 from kernel.utils.parse_json import parse_json_string
@@ -62,15 +63,18 @@ class PersonalTaskService:
                 "__v": 0,
                 "tag": task_data.get("tag", "general"),
             }
-            task_result_response = await self.create_personal_task_result(task=created_task, query=query)
-            print("Task result response:", task_result_response)
-            response: CreateTaskResponseSchema = task_result_response
-            print("Final response object:", response)
-            responses = [
-                response["response"],
-                response["task"]
-            ]
-            return responses, response["operationStatus"]
+            try:
+                await publish_message(
+                    kafka_enum.KafkaTopic.ABILITY_TASK_RESULT.value,
+                    kafka_enum.KafkaCommand.GENERATE_TASK_RESULT.value,
+                    {
+                        "task": created_task,
+                        "query": query.model_dump()
+                    },
+                )
+            except Exception as exc:
+                print(f"Failed to dispatch register calendar request: {exc}")
+            
         except Exception as e:
             raise e
 
@@ -127,6 +131,18 @@ class PersonalTaskService:
             return parse_json_string(response)
         except Exception as e:
             raise e
+
+    async def handle_task_result(self, task: dict, query: QueryRequest) -> dict:
+        task_result_response = await self.create_personal_task_result(task=task, query=query)
+        print("Task result response:", task_result_response)
+        response: CreateTaskResponseSchema = task_result_response
+        print("Final response object:", response)
+        return {
+            "response": response["response"],
+            "task": response["task"],
+            "operationStatus": response["operationStatus"],
+            "dialogueId": query.dialogue_id
+        }
 
     async def create_personal_task_result(self, task: dict, query: QueryRequest) -> str:
         """

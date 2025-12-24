@@ -45,7 +45,7 @@ async def orchestrate(query: QueryRequest, guided_route: str) -> list[str]:
         responses = extract_task_responses(orchestration_result)
 
         print(f"Orchestration result type: {type}, response: {responses}")
-        return responses, type
+        return responses
     except Exception as e:
         raise e
 
@@ -124,7 +124,6 @@ class OrchestratorService:
         status = self._normalize_status(status_value)
 
         if status == TaskStatus.PENDING:
-            await self._persist_pending_message(query, response)
             return response, "", False
 
         recommendation = await self._handle_recommendation(query)
@@ -139,32 +138,6 @@ class OrchestratorService:
         if status_text in TaskStatus._value2member_map_:
             return TaskStatus(status_text)
         return TaskStatus.FAILED
-
-    async def _persist_pending_message(
-        self, query: QueryRequest, task_result: Dict[str, Any]
-    ) -> None:
-        if not query.dialogue_id or not query.user_message_id:
-            return
-
-        dialogue, _ = await dialogue_service.get_dialogue_by_id(
-            user_id=query.user_id, dialogue_id=query.dialogue_id
-        )
-        if not dialogue:
-            return
-
-        formatted = self.format_task_payload(task_result)
-        response_text = formatted.get("response")
-        if not response_text:
-            return
-
-        await message_service.create_message(
-            dialogue=dialogue,
-            user_id=query.user_id,
-            message=response_text,
-            message_type=query.type,
-            sender_type=SenderTypeEnum.BOT.value,
-            user_message_id=query.user_message_id,
-        )
 
     async def _handle_recommendation(self, query: QueryRequest) -> str:
         recommendation = await self._fetch_recommendation(query)

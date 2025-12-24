@@ -2,8 +2,8 @@ from functools import wraps
 from re import A
 from typing import Callable, Dict, Any, Optional
 
-from chat_hub.core.domain.entities.database.agent_execution import AgentExecution
-from chat_hub.core.domain.enums import enum
+from core.domain.entities.database.agent_execution import AgentExecution
+from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
 from infrastructure.repository.agent_execution_repository import agent_execution_repo
 

@@ -14,3 +14,4 @@ class KafkaTopic(str, Enum):
 class KafkaCommand(str, Enum):
     GENERATE_CALENDAR_SCHEDULE = "gaiaRegisterCalendar"
     ABILITIES_TASK_RESULT = "abilitiesTaskResult"
+    GENERATE_TASK_RESULT = "generateTaskResult"
