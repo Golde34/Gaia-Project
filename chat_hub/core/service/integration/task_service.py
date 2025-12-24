@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 from core.domain.enums import enum
@@ -6,6 +7,7 @@ from core.domain.response.model_output_schema import CreateTaskResponseSchema, C
 from core.prompts.task_prompt import CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT_2
 from core.service.abilities.function_handlers import function_handler
 from kernel.config import llm_models
+from kernel.utils.background_loop import log_background_task_error
 from kernel.utils.parse_json import parse_json_string
 
 
@@ -26,7 +28,21 @@ class PersonalTaskService:
             str: Short response to the request
         """
         try:
-            task_data = await self._create_personal_task_llm(query)
+            task_data = await self._generate_personal_task_llm(query)
+            background_task = asyncio.create_task(
+                self._dispatch_create_personal_task_request(
+                    query=query,
+                    task_data=task_data
+                )
+            )
+            background_task.add_done_callback(log_background_task_error)
+            return task_data["response"], enum.TaskStatus.PENDING.value
+
+        except Exception as e:
+            raise e
+
+    async def _dispatch_create_personal_task_request(self, query: QueryRequest, task_data: dict):
+        try:
             # created_task = await task_manager_client.create_personal_task(task_data)
             # mock this creaded_task response for testing for me
             created_task = {
@@ -58,7 +74,7 @@ class PersonalTaskService:
         except Exception as e:
             raise e
 
-    async def _create_personal_task_llm(self, query: QueryRequest) -> dict:
+    async def _generate_personal_task_llm(self, query: QueryRequest) -> dict:
         """
         Create task information extraction prompt for Gemini API.
         Args:
