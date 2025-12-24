@@ -2,9 +2,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { getTabId } from "../../kernels/utils/set-interval";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getChatHistory, sendSSEChatMessage } from "../../api/store/actions/chat_hub/messages.actions";
-import { Button, Card, Col, Grid, TextInput } from "@tremor/react";
+import { Card } from "@tremor/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { buildChatHistoryKey, defaultChatHistoryState } from "../../kernels/utils/chat-history-utils";
+import { createMessage, formatResponseContent } from "../../kernels/utils/chat-message-utils";
+import ChatMessageList from "../../components/subComponents/chat/ChatMessageList";
+import ChatInputArea from "../../components/subComponents/chat/ChatInputArea";
 
 export default function ChatComponent(props) {
     const navigate = useNavigate();
@@ -37,30 +40,11 @@ export default function ChatComponent(props) {
     const prevScrollTopRef = useRef(0);
     const processedWebsocketMessageIdsRef = useRef(new Set());
 
-    const createMessage = (content, senderType, extra = {}) => ({
-        id: `${senderType}-${Date.now()}-${Math.random()}`,
-        content,
-        senderType,
-        timestamp: new Date().toISOString(),
-        ...extra,
-    });
-
-    const formatResponseContent = (content) => {
-        if (typeof content === "string") return content;
-        if (Array.isArray(content)) return content.join("\n");
-        return String(content ?? "");
-    };
-
-    const getSenderType = (msg) => msg.senderType || msg.sender_type || msg.sender || "";
-
-    const renderMessageContent = (msg) => {
-        const formatted = formatResponseContent(msg.content);
-        return (
-            <div className="whitespace-pre-wrap break-words">
-                {formatted}
-            </div>
-        );
-    };
+    const scrollRefs = useMemo(() => ({
+        containerRef: messagesContainerRef,
+        prevScrollHeightRef,
+        prevScrollTopRef,
+    }), []);
 
     const getChatMessages = useCallback(
         (cursorOverride = "") => {
@@ -118,7 +102,7 @@ export default function ChatComponent(props) {
     }, [chatHistory]);
 
     useEffect(() => {
-        const container = messagesContainerRef.current;
+        const container = scrollRefs.containerRef.current;
         if (!container) return;
         const handleScroll = () => {
             if (
@@ -136,7 +120,7 @@ export default function ChatComponent(props) {
         };
         container.addEventListener("scroll", handleScroll);
         return () => container.removeEventListener("scroll", handleScroll);
-    }, [hasMore, loading, getChatMessages, nextCursor]);
+    }, [hasMore, loading, getChatMessages, nextCursor, scrollRefs]);
 
     // Handle sending messages
     const handleSend = async () => {
@@ -238,6 +222,10 @@ export default function ChatComponent(props) {
         navigate('/chat');
     };
 
+    const handleChatInputChange = (value) => {
+        setChatInput(value);
+    };
+
     return (
         <>
             {loading && !chatHistory.length ? (
@@ -247,63 +235,21 @@ export default function ChatComponent(props) {
             ) : (
                 <>
                     <Card className={getDashboardClass(isDashboard)}>
-                        <div
-                            ref={messagesContainerRef}
-                            className="flex-1 overflow-auto p-4 space-y-3"
-                            style={{ scrollBehavior: "smooth" }}
-                        >
-                            {loadingMore && (
-                                <div className="text-center text-gray-400 my-2">Loading more...</div>
-                            )}
+                        <ChatMessageList 
+                            messages={chatHistory}
+                            loadingMore={loadingMore}
+                            isLoadingMoreRef={isLoadingMoreRef}
+                            scrollRefs={scrollRefs}
+                            formatContent={formatResponseContent}
+                        />
 
-                            {chatHistory && chatHistory.length > 0 ? (
-                                chatHistory.map((msg, idx) => {
-                                    const sender = getSenderType(msg);
-                                    const isBot = sender === "bot";
-
-                                    return (
-                                        <div
-                                            key={msg.id || idx}
-                                            className={`flex ${isBot ? "justify-start" : "justify-end"}`}
-                                        >
-                                            <Grid numItems={1}>
-                                                <Col numColSpan={1}>
-                                                    <div
-                                                        className={[
-                                                            "max-w-lg px-4 py-2 rounded-3xl break-words",
-                                                            isBot ? "bg-gray-200 text-gray-800" : "bg-blue-500 text-white",
-                                                            msg.isStreaming ? "animate-pulse" : "",
-                                                        ].filter(Boolean).join(" ")}
-                                                    >
-                                                        {renderMessageContent(msg)}
-                                                    </div>
-                                                </Col>
-                                            </Grid>
-                                        </div>
-                                    );
-                                })
-                            ) : (
-                                <div className="text-center text-gray-500">No messages yet</div>
-                            )}
-                        </div>
-
-                        <div className="flex items-center p-4 border-t">
-                            <TextInput
-                                placeholder="Type your message here..."
-                                value={chatInput}
-                                onChange={(e) => setChatInput(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                                className="flex-1 mr-2"
-                            />
-                            <Button color="indigo" onClick={handleSend}>Send</Button>
-                        </div>
-                        {isDashboard && (
-                            <div className="mt-2 text-center">
-                                <Button variant="light" size="sm" onClick={navigateToOtherChats}>
-                                    Go to Other Chats
-                                </Button>
-                            </div>
-                        )}
+                        <ChatInputArea 
+                            value={chatInput}
+                            onChange={handleChatInputChange}
+                            onSend={handleSend}
+                            isDashboard={isDashboard}
+                            onNavigateToOtherChats={navigateToOtherChats}
+                        />
                     </Card>
                 </>
             )}
