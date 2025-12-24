@@ -87,7 +87,6 @@ async def handle_sse_stream(
 
             # Send message_complete with dialogue_id
             response_type = response_payload.get("type") if isinstance(response_payload, dict) else None
-            message_handler_type = response_payload.get("message_handler_type") if isinstance(response_payload, dict) else None
             await enqueue_event(
                 "message_complete",
                 {
@@ -96,7 +95,6 @@ async def handle_sse_stream(
                     "full_response": normalized_response,
                     "response": response_payload.get("response") if isinstance(response_payload, dict) else None,
                     "responses": response_payload.get("responses") if isinstance(response_payload, dict) else None,
-                    "message_handler_type": message_handler_type,
                     "dialogue_id": dialogue_id,
                 },
             )
