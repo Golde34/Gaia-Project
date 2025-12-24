@@ -1,4 +1,6 @@
 import { Col, Grid } from "@tremor/react";
+import TaskResultMessage from "./TaskResultMessage";
+import { MESSAGE_TYPES } from "../../../kernels/utils/chat-message-utils";
 
 /**
  * ChatMessageItem - Renders a single chat message bubble
@@ -7,6 +9,8 @@ import { Col, Grid } from "@tremor/react";
  * @param {string} msg.content - Message content (string or array)
  * @param {string} msg.senderType - 'user' or 'bot'
  * @param {boolean} msg.isStreaming - Whether message is currently streaming
+ * @param {string} msg.messageType - Optional message type (use MESSAGE_TYPES constants)
+ * @param {Object} msg.taskData - Optional task data for task_result messages
  * @param {function} formatContent - Function to format message content
  */
 export default function ChatMessageItem({ msg, formatContent }) {
@@ -15,12 +19,24 @@ export default function ChatMessageItem({ msg, formatContent }) {
     const isBot = sender === "bot";
 
     const renderMessageContent = (msg) => {
-        const formatted = formatContent(msg.content);
-        return (
-            <div className="whitespace-pre-wrap break-words">
-                {formatted}
-            </div>
-        );
+        // Route to appropriate component based on messageType
+        switch (msg.messageType) {
+            case MESSAGE_TYPES.TASK_RESULT:
+                return msg.taskData ? <TaskResultMessage taskData={msg.taskData} /> : null;
+            
+            // Add more message types here:
+            // case MESSAGE_TYPES.CALENDAR_EVENT:
+            //     return <CalendarEventMessage eventData={msg.eventData} />;
+            
+            default:
+                // Default text message rendering
+                const formatted = formatContent(msg.content);
+                return (
+                    <div className="whitespace-pre-wrap break-words">
+                        {formatted}
+                    </div>
+                );
+        }
     };
 
     return (
@@ -29,8 +45,12 @@ export default function ChatMessageItem({ msg, formatContent }) {
                 <Col numColSpan={1}>
                     <div
                         className={[
-                            "max-w-lg px-4 py-2 rounded-3xl break-words",
-                            isBot ? "bg-gray-200 text-gray-800" : "bg-blue-500 text-white",
+                            msg.messageType === MESSAGE_TYPES.TASK_RESULT
+                                ? "max-w-2xl" 
+                                : "max-w-lg px-4 py-2 rounded-3xl break-words",
+                            msg.messageType === MESSAGE_TYPES.TASK_RESULT
+                                ? ""
+                                : isBot ? "bg-gray-200 text-gray-800" : "bg-blue-500 text-white",
                             msg.isStreaming ? "animate-pulse" : "",
                         ].filter(Boolean).join(" ")}
                     >

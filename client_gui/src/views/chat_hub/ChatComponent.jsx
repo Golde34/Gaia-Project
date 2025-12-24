@@ -6,6 +6,7 @@ import { Card } from "@tremor/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { buildChatHistoryKey, defaultChatHistoryState } from "../../kernels/utils/chat-history-utils";
 import { createMessage, formatResponseContent } from "../../kernels/utils/chat-message-utils";
+import { useNotificationHandler } from "../../kernels/hooks/useNotificationHandler";
 import ChatMessageList from "../../components/subComponents/chat/ChatMessageList";
 import ChatInputArea from "../../components/subComponents/chat/ChatInputArea";
 
@@ -39,6 +40,15 @@ export default function ChatComponent(props) {
     const prevScrollHeightRef = useRef(0);
     const prevScrollTopRef = useRef(0);
     const processedWebsocketMessageIdsRef = useRef(new Set());
+
+    const handleNotificationMessages = useCallback((generatedMessages) => {
+        console.log('[ChatComponent] Received generated messages from notification:', generatedMessages);
+        if (generatedMessages && generatedMessages.length > 0) {
+            setChatHistory((prev) => [...prev, ...generatedMessages]);
+        }
+    }, []);
+
+    useNotificationHandler(dialogueId, handleNotificationMessages);
 
     const scrollRefs = useMemo(() => ({
         containerRef: messagesContainerRef,
