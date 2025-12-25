@@ -84,7 +84,7 @@ class OrchestratorService:
 
         return {
             "ability": guided_route,
-            "handler": FUNCTIONS.get(guided_route, {}).get("handler"),
+            "executor": FUNCTIONS.get(guided_route, {}).get("executor"),
             "is_sequential": FUNCTIONS.get(guided_route, {}).get("is_sequential", False),
         }
 
@@ -120,7 +120,7 @@ class OrchestratorService:
         task: Dict[str, Any],
         query: QueryRequest
     ) -> Tuple[Dict[str, Any], str, bool]:
-        response, status_value = await task.get("handler")(query=query)
+        response, status_value = await task.get("executor")(query=query)
         status = self._normalize_status(status_value)
 
         if status == TaskStatus.PENDING:
@@ -254,30 +254,18 @@ class OrchestratorService:
         except Exception as exc:
             print(f"Failed to push sequential messages: {exc}")
 
-    # async def _store_task_execution_log(
-    #     self, query: QueryRequest, task_result: Dict[str, Any]
-    # ) -> None:
-    #     """Store task execution log for auditing and debugging."""
-    #     stored_task = await agent_execution_repo.create_agent_execution(
-    #         user_id=query.user_id,
-    #         payload=task_result,
-    #         task_type=task_result.get("ability")
-    #     )
-    #     print("Stored task: ", stored_task)
-    #     return stored_task
-
     async def _run_parallel_task(
         self, task: Dict[str, Any], query: QueryRequest, pending_record: Dict[str, Any]
     ) -> None:
-        handler = task.get("handler")
+        executor = task.get("executor")
         status = TaskStatus.SUCCESS
         result: Any
 
         try:
-            if not handler:
+            if not executor:
                 raise ValueError(
                     f"No handler found for task {task.get('ability')}")
-            result = await handler(query=query)
+            result = await executor(query=query)
         except Exception as exc:
             status = TaskStatus.FAILED
             result = {"response": str(exc)}

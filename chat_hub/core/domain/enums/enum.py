@@ -30,7 +30,9 @@ class GaiaAbilities(Enum):
 
 
 class TaskStatus(str, Enum):
+    INIT = "INIT"
     PENDING = "PENDING"
+    IN_PROGRESS = "IN_PROGRESS"
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
 
