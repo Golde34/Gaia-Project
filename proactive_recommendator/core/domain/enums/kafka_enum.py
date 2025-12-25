@@ -11,3 +11,6 @@ class KafkaTopic(str, Enum):
 class KafkaCommand(str, Enum):
     TEST = "test"
     PROJECT_LIST = "projectListCommand"
+    GROUP_TASK_LIST = "groupTaskListCommand"
+    DAILY_CALENDAR = "dailyCalendarCommand"
+    TASK_LIST = "taskListCommand"
