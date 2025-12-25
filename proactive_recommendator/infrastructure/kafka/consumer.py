@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 
 from core.domain.enums.kafka_enum import KafkaTopic
 from kernel.config.kafka_config import KafkaConfig, convert_topics_to_list
-from ui.kafka.test import analyze_message 
+from ui.kafka.task_handler import get_personal_task_handler
+from ui.kafka.test import analyze_message  
 
 
 load_dotenv()
@@ -34,4 +35,5 @@ async def consume():
 
 kafka_actions = {
     KafkaTopic.TEST.value: analyze_message,
+    KafkaTopic.PERSONAL_TASK.value: get_personal_task_handler,
 }

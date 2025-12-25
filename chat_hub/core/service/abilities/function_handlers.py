@@ -1,5 +1,5 @@
+import datetime
 from functools import wraps
-from re import A
 from typing import Callable, Dict, Any, Optional
 
 from core.domain.entities.database.agent_execution import AgentExecution
@@ -35,18 +35,27 @@ def function_handler(label: str, is_sequential: bool = False):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             query = _extract_agent_execution(args, kwargs, label)
-            # execution = await agent_execution_repo.create_agent_execution(query)
+            execution: AgentExecution = await agent_execution_repo.create_agent_execution(query)
             try:
                 result = await func(*args, **kwargs)
             except Exception as exc:
-                # agent execution update failed 
-                raise
+                execution_result = await agent_execution_repo.update_agent_execution_status(
+                    execution_id=execution.id,
+                    status=enum.TaskStatus.FAILED.value,
+                    tool_output=str(exc),
+                )
+                raise exc
 
-            # agent execution update by result status
+            execution_result = await agent_execution_repo.update_agent_execution_status(
+                execution_id=execution.id,
+                status=enum.TaskStatus.SUCCESS.value,
+                tool_output=str(result),
+            ) 
+            print("Execution result:", execution_result)
             return result
 
         _FUNCTION_REGISTRY[label] = {
-            'handler': wrapper,
+            'executor': wrapper,
             'is_sequential': is_sequential,
         }
         return wrapper
@@ -60,12 +69,20 @@ def get_functions():
 
 def _extract_agent_execution(args: tuple, kwargs: dict, label: str) -> Optional[AgentExecution]:
     query: QueryRequest = _extract_query(args, kwargs)
+    confidence_score = kwargs.get('confidence_score', None)
+    tool_input = kwargs.get('tool_input', None)
+    tool_output = kwargs.get('tool_output', None)
     return AgentExecution(
         user_id=query.user_id,
         message_id=query.user_message_id,
         selected_tool_id=label,
         user_query=query.query,
-        status=enum.TaskStatus.PENDING.value
+        status=enum.TaskStatus.INIT.value,
+        confidence_score=confidence_score,
+        tool_input=tool_input,
+        tool_output=tool_output,
+        created_at=datetime.datetime.today(),
+        updated_at=datetime.datetime.today(),
     )
 
 
@@ -76,7 +93,7 @@ def _extract_query(args: tuple, kwargs: dict) -> Optional[QueryRequest]:
     for arg in args:
         if isinstance(arg, QueryRequest):
             return arg
+    print("No QueryRequest found in function arguments. This case cannot happen.")
     return None
-
 
 FUNCTIONS = _FUNCTION_REGISTRY

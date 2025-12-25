@@ -13,10 +13,12 @@ class AgentExecution(BaseModel):
     message_id: uuid.UUID
     selected_tool_id: Optional[str] = None 
     user_query: str
-    confidence_score: Optional[float] = None
+    # if bot score confidence low, we may not use the tool 
+    # or ask user, or pending and do task again
+    confidence_score: Optional[float] = None 
     tool_input: Optional[str] = None
     tool_output: Optional[str] = None
-    status: str
+    status: str # Init, Pending, In-Progress, Success, Failed
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
