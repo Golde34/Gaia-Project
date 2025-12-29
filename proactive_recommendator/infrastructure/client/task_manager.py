@@ -47,5 +47,14 @@ class TaskManagerClient:
             print(e)
             return None
 
+    async def get_project_list(self, user_id: int) -> BaseResponse:
+        try:
+            endpoint = f"{self.base_url}/project/get-all/"+str(user_id)
+            result = await aiohttp_utils.get(endpoint=endpoint)
+            return client_return(result=result)
+        except Exception as e:
+            print(e)
+            return None
 
-auth_service_client = TaskManagerClient()
+
+task_manager_client = TaskManagerClient()
