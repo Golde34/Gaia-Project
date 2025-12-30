@@ -52,15 +52,17 @@ async def select_ability_tool(query: QueryRequest) -> tuple[str, bool]:
         query.query,
         embedding_tools,
         top_n=constant.SemanticSearch.DEFAULT_TOP_N)
+
     if not _should_use_llm_selection(tools):
         top_tool = tools[0] if tools else None
         if top_tool:
             tool = await tool_repository.query_tool_by_name(top_tool["tool"]) 
             return tool.tool, tool.need_history
         else:
-            raise Exception("No tools found after reranking.")
+            return enum.GaiaAbilities.CHITCHAT.value, True
     else:
         tools_name = [tool["tool"] for tool in tools]
+        tools_name.append(enum.GaiaAbilities.CHITCHAT.value)  # always add chitchat as fallback
         tools = tool_repository.query_tools_by_names(tools_name)
         tools_string = json.dumps(tools, indent=2)
 
