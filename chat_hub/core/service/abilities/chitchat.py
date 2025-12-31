@@ -1,9 +1,12 @@
+from core.domain.enums import enum
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.prompts.abilities_prompt import CHITCHAT_PROMPT, CHITCHAT_WITH_HISTORY_PROMPT
+from core.service.abilities.function_handlers import function_handler
 from core.service import memory_service
 from kernel.config import config, llm_models
 
 
+@function_handler(label=enum.GaiaAbilities.CHITCHAT.value, is_sequential=False)
 async def chitchat_with_history(query: QueryRequest) -> str:
     """
     Chitchat with history pipeline
