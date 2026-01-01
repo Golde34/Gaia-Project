@@ -1,6 +1,7 @@
 import datetime
 from functools import wraps
 from typing import Callable, Dict, Any, Optional
+import uuid
 
 from core.domain.entities.database.agent_execution import AgentExecution
 from core.domain.enums import enum
@@ -73,6 +74,7 @@ def _extract_agent_execution(args: tuple, kwargs: dict, label: str) -> Optional[
     tool_input = kwargs.get('tool_input', None)
     tool_output = kwargs.get('tool_output', None)
     return AgentExecution(
+        id=uuid.uuid4(),
         user_id=query.user_id,
         message_id=query.user_message_id,
         selected_tool_id=label,
