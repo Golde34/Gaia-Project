@@ -3,7 +3,7 @@ from aiokafka import ConsumerRecord
 
 from core.domain.enums import kafka_enum, enum
 from core.domain.request.query_request import QueryRequest
-from core.service.integration.task_service import personal_task_service
+from core.service.abilities.task_service import personal_task_service
 from infrastructure.kafka.producer import publish_message
 # from infrastructure.repository.agent_execution_repository import task_status_repo
 

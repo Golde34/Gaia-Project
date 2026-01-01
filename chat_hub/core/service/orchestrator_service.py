@@ -7,11 +7,11 @@ from core.domain.enums.enum import SenderTypeEnum, TaskStatus, ChatType, GaiaAbi
 from core.domain.enums.kafka_enum import KafkaCommand, KafkaTopic
 from core.domain.request.query_request import QueryRequest
 from core.service.abilities import chitchat
+from core.service.abilities.function_handlers import FUNCTIONS
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
-from core.service.integration.task_service import handle_task_service_response
+from core.service.abilities.task_service import handle_task_service_response
 from core.usecase.llm_router.chat_routers import llm_route
-from core.service.abilities.function_handlers import FUNCTIONS
 from infrastructure.client.recommendation_service_client import recommendation_service_client
 from infrastructure.kafka.producer import publish_message
 from infrastructure.repository.agent_execution_repository import agent_execution_repo
@@ -21,7 +21,7 @@ from kernel.utils.sse_connection_registry import broadcast_to_user
 
 @llm_route(label=ChatType.ABILITIES.value,
            description='Gaia\'s abilities.')
-async def orchestrate(query: QueryRequest, guided_route: str) -> list[str]:
+async def old_orchestrate(query: QueryRequest, guided_route: str) -> list[str]:
     """
     Handle the service request based on the query type dynamically.
     Args:
