@@ -139,89 +139,68 @@ export default function ChatComponent(props) {
         setChatHistory((prev) => [...prev, userMessage]);
         setChatInput("");
 
-        const botMessageId = `bot-${Date.now()}-${Math.random()}`;
-        const botMessage = {
-            ...createMessage("...", "bot", { isStreaming: true }),
-            id: botMessageId,
+        const handleMessageStart = (messageId) => {
+            const botMessage = {
+                ...createMessage("", "bot", { isStreaming: true }),
+                id: messageId,
+            };
+            setChatHistory((prev) => [...prev, botMessage]);
         };
 
-        setChatHistory((prev) => [...prev, botMessage]);
-
-        const updateBotMessage = (updater) => {
+        const handleChunk = (messageId, fullContent) => {
             setChatHistory((prev) =>
-                prev.map((msg) => {
-                    if (msg.id !== botMessageId) return msg;
-                    const updates = typeof updater === "function" ? updater(msg) : updater;
-                    return { ...msg, ...updates };
-                })
+                prev.map((msg) => 
+                    msg.id === messageId 
+                        ? { ...msg, content: fullContent, isStreaming: true }
+                        : msg
+                )
             );
         };
 
-        const replaceBotWithResponses = (responses) => {
-            setChatHistory((prev) => {
-                const responseList = Array.isArray(responses)
-                    ? responses.filter((item) => item !== null && item !== undefined)
-                    : responses
-                        ? [responses]
-                        : [];
+        const handleMessageEnd = (messageId, finalContent) => {
+            setChatHistory((prev) =>
+                prev.map((msg) => 
+                    msg.id === messageId 
+                        ? { ...msg, content: finalContent, isStreaming: false }
+                        : msg
+                )
+            );
+        };
 
-                const botPlaceholder = prev.find((msg) => msg.id === botMessageId);
-                const fallbackPayload =
-                    responseList.length > 0
-                        ? responseList
-                        : (botPlaceholder?.content ? [botPlaceholder.content] : [""]);
+        const handleComplete = (result) => {
+            const newDialogueId = result?.dialogueId;
 
-                const filteredHistory = prev.filter((msg) => msg.id !== botMessageId);
-                const botMessages = fallbackPayload.map((resp, index) =>
-                    createMessage(formatResponseContent(resp), "bot", {
-                        isStreaming: false,
-                        sequence: index,
-                    })
-                );
+            if (newDialogueId && (!dialogueId || dialogueId === "")) {
+                const newSearchParams = new URLSearchParams(searchParams);
+                newSearchParams.set("dialogueId", newDialogueId);
+                if (chatType) {
+                    newSearchParams.set("type", chatType);
+                }
+                navigate(`?${newSearchParams.toString()}`, { replace: true });
+                
+                setTimeout(() => {
+                    setChatHistory([]);
+                    dispatch(getChatHistory(size, "", newDialogueId, chatType));
+                }, 300);
+            }
+        };
 
-                return [...filteredHistory, ...botMessages];
-            });
+        const handleError = () => {
+            const errorMessage = createMessage("Sorry, something went wrong.", "bot", { isStreaming: false });
+            setChatHistory((prev) => [...prev, errorMessage]);
         };
 
         try {
             await sendSSEChatMessage("", chatInput, chatType, {
-                onChunk: (accumulated) => {
-                    updateBotMessage({ content: accumulated, isStreaming: true });
-                },
-                onComplete: (result) => {
-                    const normalizedResponses = Array.isArray(result?.responses)
-                        ? result.responses
-                        : result?.response
-                            ? [result.response]
-                            : [];
-
-                    const newDialogueId = typeof result === "object" ? (result?.dialogueId || result?.dialogue_id) : null;
-
-                    replaceBotWithResponses(normalizedResponses);
-
-                    // Update URL with dialogue_id if received and we don't have one yet
-                    if (newDialogueId && (!dialogueId || dialogueId === "")) {
-                        const newSearchParams = new URLSearchParams(searchParams);
-                        newSearchParams.set("dialogueId", newDialogueId);
-                        if (chatType) {
-                            newSearchParams.set("type", chatType);
-                        }
-                        navigate(`?${newSearchParams.toString()}`, { replace: true });
-                        
-                        // Reload history after URL update to get persisted messages from database
-                        setTimeout(() => {
-                            setChatHistory([]);
-                            dispatch(getChatHistory(size, "", newDialogueId, chatType));
-                        }, 300);
-                    }
-                },
-                onError: () => {
-                    replaceBotWithResponses(["Sorry, something went wrong."]);
-                },
+                onMessageStart: handleMessageStart,
+                onChunk: handleChunk,
+                onMessageEnd: handleMessageEnd,
+                onComplete: handleComplete,
+                onError: handleError,
             });
         } catch (error) {
             console.error("Failed to send chat message:", error);
-            replaceBotWithResponses(["Sorry, something went wrong."]);
+            handleError();
         }
     };
 
