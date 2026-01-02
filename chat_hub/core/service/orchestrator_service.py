@@ -126,7 +126,8 @@ class OrchestratorService:
         if status == TaskStatus.PENDING:
             return response, "", False
 
-        recommendation = await self._handle_recommendation(query)
+        # recommendation = await self._handle_recommendation(query)
+        recommendation = ""
 
         return response, recommendation, True
 

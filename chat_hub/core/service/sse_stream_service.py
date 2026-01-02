@@ -175,3 +175,15 @@ def _extract_response_payload(response: Optional[dict]) -> tuple[dict, str]:
 def _chunk_response(text: str, size: int = 50) -> list[str]:
     text = text.replace("\n\n", " ").replace("\r\n", " ").strip()
     return [text[i:i + size] for i in range(0, len(text), size)] if text else [""]
+
+
+async def push_response_to_client(user_id: str, response_text: str, dialogue_id: Optional[str] = None) -> None:
+    message_id = await broadcast_message_start(user_id, dialogue_id=dialogue_id)
+    
+    chunks = _chunk_response(response_text)
+    
+    for index, chunk in enumerate(chunks):
+        await broadcast_message_chunk(user_id, message_id, chunk, index)
+        await asyncio.sleep(0.05)
+    
+    await broadcast_message_end(user_id, message_id )

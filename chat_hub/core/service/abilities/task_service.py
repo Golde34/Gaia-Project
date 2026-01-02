@@ -1,6 +1,7 @@
 import asyncio
 import json
 
+from core.service import sse_stream_service
 from core.domain.enums import enum, kafka_enum
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import CreateTaskResponseSchema, CreateTaskSchema
@@ -30,6 +31,13 @@ class PersonalTaskService:
         """
         try:
             task_data = await self._generate_personal_task_llm(query)
+            print("Generated task data:", task_data)
+            await sse_stream_service.push_response_to_client(
+                user_id=int(query.user_id),
+                response_text=task_data["response"],
+                dialogue_id=query.dialogue_id
+            )
+            print("Pushed initial response to client.")
             background_task = asyncio.create_task(
                 self._dispatch_create_personal_task_request(
                     query=query,

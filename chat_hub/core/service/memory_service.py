@@ -2,7 +2,7 @@ import datetime
 import json
 import uuid
 
-from core.domain.enums import kafka_enum, redis_enum
+from core.domain.enums import kafka_enum, redis_enum, enum
 from core.domain.entities.database.recursive_summary import RecursiveSummary
 from core.domain.entities.vectordb.long_term_memory import long_term_memory_entity
 from core.domain.request.chat_hub_request import RecentHistoryRequest
@@ -242,7 +242,8 @@ async def kafka_update_recursive_summary(memory_request: MemoryRequest) -> None:
         prompt = RECURSIVE_SUMMARY_PROMPT.format(recent_history=recent_history)
         model: LLMModel = LLMModel(
             model_name=config.LLM_DEFAULT_MODEL,
-            model_key=config.SYSTEM_API_KEY
+            model_key=config.SYSTEM_API_KEY,
+            memory_model=enum.MemoryModel.DEFAULT.value
         )
         function = await llm_models.get_model_generate_content(model=model, user_id=user_id)
         recursive_summary_str = function(prompt=prompt, model=model)
@@ -335,7 +336,8 @@ async def kafka_update_long_term_memory(memory_request: MemoryRequest) -> None:
 async def _build_long_term_memory(prompt: str, user_id: int) -> LongTermMemorySchema:
     model: LLMModel = LLMModel(
         model_name=config.LLM_DEFAULT_MODEL,
-        model_key=config.SYSTEM_API_KEY
+        model_key=config.SYSTEM_API_KEY,
+        memory_model=enum.MemoryModel.DEFAULT.value,
     )
     function = await llm_models.get_model_generate_content(model=model, user_id=user_id)
     long_term_memory_str = function(
