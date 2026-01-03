@@ -33,8 +33,8 @@ class PersonalTaskService:
             task_data = await self._generate_personal_task_llm(query)
             print("Generated task data:", task_data)
             await sse_stream_service.handle_broadcast_mode(
-                user_id=int(query.user_id),
-                response_text=task_data["response"],
+                user_id=str(query.user_id),
+                response=task_data["response"],
                 dialogue_id=query.dialogue_id
             )
             print("Pushed initial response to client.")

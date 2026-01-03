@@ -4,6 +4,7 @@ import inspect
 from typing import Optional, Callable, Any, Dict
 from fastapi.responses import StreamingResponse
 
+from core.domain.enums.enum import DialogueEnum
 from kernel.utils.sse_connection_registry import (
     broadcast_message_start,
     broadcast_message_chunk,
@@ -21,15 +22,12 @@ KEEP_ALIVE_INTERVAL = 15
 async def handle_sse_stream(
     user_id: int,
     func: Optional[Callable[..., Any]] = None,
-    *,
-    meta: Optional[Dict[str, Any]] = None,
-    use_broadcast: bool = True,
 ) -> StreamingResponse:
     """SSE handler with broadcast (chat) or legacy (onboarding) mode"""
     connection_queue: asyncio.Queue[str] = asyncio.Queue()
     connection_closed = asyncio.Event()
 
-    await register_client(user_id, connection_queue)
+    await register_client(str(user_id), connection_queue)
 
     async def enqueue_event(event: str, payload: dict) -> None:
         if not connection_closed.is_set():
@@ -37,22 +35,17 @@ async def handle_sse_stream(
 
     async def stream_initial_response() -> None:
         try:
+            # Call the provided function to get the response
             result = func() if func else None
-            response = await result if inspect.isawaitable(result) else result
 
-            if use_broadcast:
-                await handle_broadcast_mode(response, user_id, meta)
-            else:
-                await _handle_legacy_mode(response, enqueue_event)
+            response = await result if inspect.isawaitable(result) else result
+            print("SSE stream initial response:", response)
 
         except asyncio.CancelledError:
             raise
         except Exception as exc:
             print(f"ERROR in SSE stream: {traceback.format_exc()}")
-            if use_broadcast:
-                await broadcast_error(str(user_id), str(exc))
-            else:
-                await enqueue_event("error", {"error": str(exc)})
+            await enqueue_event("error", {"error": str(exc)})
 
     async def keep_alive() -> None:
         try:
@@ -83,7 +76,7 @@ async def handle_sse_stream(
                 keep_alive_task,
                 return_exceptions=True,
             )
-            await unregister_client(user_id, connection_queue)
+            await unregister_client(str(user_id), connection_queue)
 
     try:
         return StreamingResponse(
@@ -109,13 +102,11 @@ async def handle_sse_stream(
         raise
 
 
-async def handle_broadcast_mode(response: Any, user_id: int, meta: Optional[Dict]) -> None:
+async def handle_broadcast_mode(response: Any, user_id: int, dialogue_id: Optional[Dict]) -> None:
     """
     Broadcast mode: push response to client using broadcast functions
     Abilities use this mode
     """
-    dialogue_id = (isinstance(response, dict) and response.get(
-        "dialogue_id")) or (meta and meta.get("dialogue_id"))
     responses_list = _extract_responses(response)
 
     for item in responses_list:
@@ -129,7 +120,7 @@ async def handle_broadcast_mode(response: Any, user_id: int, meta: Optional[Dict
         await broadcast_message_end(str(user_id), msg_id)
 
     await broadcast_message_complete(str(user_id), dialogue_id)
-
+    
 
 def _extract_responses(response: Any) -> list:
     if isinstance(response, dict):
@@ -141,7 +132,7 @@ def _extract_responses(response: Any) -> list:
     return [str(response)] if response else [""]
 
 
-async def _handle_legacy_mode(response: Any, enqueue_event) -> None:
+async def handle_legacy_mode(response: Any, enqueue_event) -> None:
     """
     Legacy mode: push response to client in chunks
     Onboarding use this mode 
