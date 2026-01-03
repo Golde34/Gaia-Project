@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
 
 from core.domain.request.chat_hub_request import SendMessageRequest
-from core.usecase.chat_usecase import chat_interaction_usecase as usecase
+from core.usecase.chat_interaction_usecase import chat_interaction_usecase as usecase
 from kernel.utils import build_header
 
 
