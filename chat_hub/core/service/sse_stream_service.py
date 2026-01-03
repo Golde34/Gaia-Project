@@ -4,25 +4,16 @@ import inspect
 from typing import Optional, Callable, Any, Dict
 from fastapi.responses import StreamingResponse
 
-<<<<<<< HEAD
-from kernel.utils.sse_connection_registry import format_sse_event, register_client, unregister_client
-from kernel.utils.sse_message_broadcaster import (
-=======
 from core.domain.enums.enum import DialogueEnum
 from kernel.utils.sse_connection_registry import (
->>>>>>> 1c74a05ecf3948c60e8626168e93fc45de00743d
     broadcast_message_start,
     broadcast_message_chunk,
     broadcast_message_end,
     broadcast_message_complete,
-<<<<<<< HEAD
-    broadcast_error
-=======
     broadcast_error,
     format_sse_event, 
     register_client, 
     unregister_client
->>>>>>> 1c74a05ecf3948c60e8626168e93fc45de00743d
 )
 
 KEEP_ALIVE_INTERVAL = 15
@@ -31,12 +22,6 @@ KEEP_ALIVE_INTERVAL = 15
 async def handle_sse_stream(
     user_id: int,
     func: Optional[Callable[..., Any]] = None,
-<<<<<<< HEAD
-    *,
-    meta: Optional[Dict[str, Any]] = None,
-    use_broadcast: bool = True,
-=======
->>>>>>> 1c74a05ecf3948c60e8626168e93fc45de00743d
 ) -> StreamingResponse:
     """SSE handler with broadcast (chat) or legacy (onboarding) mode"""
     connection_queue: asyncio.Queue[str] = asyncio.Queue()
@@ -50,35 +35,17 @@ async def handle_sse_stream(
 
     async def stream_initial_response() -> None:
         try:
-<<<<<<< HEAD
-            result = func() if func else None
-            response = await result if inspect.isawaitable(result) else result
-            
-            if use_broadcast:
-                await _handle_broadcast_mode(response, user_id, meta)
-            else:
-                await _handle_legacy_mode(response, enqueue_event)
-                
-=======
             # Call the provided function to get the response
             result = func() if func else None
 
             response = await result if inspect.isawaitable(result) else result
             print("SSE stream initial response:", response)
 
->>>>>>> 1c74a05ecf3948c60e8626168e93fc45de00743d
         except asyncio.CancelledError:
             raise
         except Exception as exc:
             print(f"ERROR in SSE stream: {traceback.format_exc()}")
-<<<<<<< HEAD
-            if use_broadcast:
-                await broadcast_error(str(user_id), str(exc))
-            else:
-                await enqueue_event("error", {"error": str(exc)})
-=======
             await enqueue_event("error", {"error": str(exc)})
->>>>>>> 1c74a05ecf3948c60e8626168e93fc45de00743d
 
     async def keep_alive() -> None:
         try:
