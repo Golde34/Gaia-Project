@@ -1,7 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Card, Col, Grid, Metric, Badge, Title, Text } from "@tremor/react";
-import TaskRegistration from "./TaskRegistration";
 import ChatComponent from "../chat_hub/ChatComponent";
 import { useMultiWS } from "../../kernels/context/MultiWSContext";
 import { getTimeBubbleConfig } from "../../api/store/actions/schedule_plan/schedule-calendar.action";

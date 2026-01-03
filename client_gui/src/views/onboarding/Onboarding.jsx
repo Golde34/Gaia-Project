@@ -49,7 +49,7 @@ const Onboarding = () => {
   }
 
   const handleSkip = () => {
-    window.location.href = "/dashboard"
+    window.location.href = "/client-gui/dashboard"
   }
 
   const handlePrevious = () => {
