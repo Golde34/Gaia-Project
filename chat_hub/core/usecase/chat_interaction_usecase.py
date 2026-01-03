@@ -29,21 +29,20 @@ class ChatInteractionUsecase:
             size: int,
             cursor: str):
         try:
-            if dialogue_id == "" or not dialogue_id:
-                print("Onboarding flow go here - no dialogue ID provided")
-                dialogue = await dialogue_service.get_dialogue_by_user_id_and_type(
-                    user_id=user_id, dialogue_type=chat_type
-                )
-            else:
-                dialogue, _ = await dialogue_service.get_dialogue_by_id(
-                    user_id=user_id, dialogue_id=dialogue_id)
+            dialogue = await cls._get_dialogue(dialogue_id, chat_type, user_id)
             if dialogue is None:
-                raise Exception(f"Dialogue with ID {dialogue_id} not found")
+                return {
+                    "dialogue": None,
+                    "chatMessages": [],
+                    "nextCursor": None,
+                    "hasMore": False
+                }
             messages, has_more = await message_service.get_messages_by_dialogue_id_with_cursor_pagination(
                 dialogue.id, size, cursor)
             next_cursor = None
             if len(messages) > 0:
                 next_cursor = messages[0].created_at
+
             return {
                 "dialogue": dialogue,
                 "chatMessages": messages,
@@ -52,6 +51,21 @@ class ChatInteractionUsecase:
             }
         except Exception as e:
             raise e
+
+    @classmethod
+    async def _get_dialogue(cls, dialogue_id: str, chat_type: str, user_id: int):
+        if dialogue_id == "" or not dialogue_id: # Onboarding case or new chat case 
+            if chat_type == "undefined" or not chat_type: # New chat case
+                return None
+            dialogue = await dialogue_service.get_dialogue_by_user_id_and_type(
+                user_id=user_id, dialogue_type=chat_type
+            )
+        else:
+            dialogue, _ = await dialogue_service.get_dialogue_by_id(
+                user_id=user_id, dialogue_id=dialogue_id)
+        if dialogue is None:
+            raise Exception(f"Dialogue with ID {dialogue_id} not found")
+        return dialogue
 
     @classmethod
     async def get_chat_dialogues(cls, user_id: int, size: int, cursor: str):

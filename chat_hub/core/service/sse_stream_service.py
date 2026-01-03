@@ -126,7 +126,7 @@ async def handle_broadcast_mode(response: Any, user_id: int, dialogue_id: Option
 
         for idx, chunk in enumerate(chunks):
             await broadcast_message_chunk(str(user_id), msg_id, chunk, idx)
-            await asyncio.sleep(0.05)
+            await asyncio.sleep(0.1)
 
         await broadcast_message_end(str(user_id), msg_id)
 
