@@ -44,17 +44,6 @@ class VectorDBContext(Enum):
     GAIA_INTRODUCTION = "Gaia Introduction"
 
 
-class TagEnum(Enum):
-    WORK = "work",
-    EAT = "eat",
-    RELAX = "relax",
-    TRAVEL = "travel",
-    SLEEP = "sleep"
-
-
-TAG_LIST = ["work", "eat", "sleep", "relax", "travel"]
-
-
 class DialogueEnum(Enum):
     GAIA_INTRODUCTION = "Gaia Introduction"
     GAIA_INTRODUCTION_TYPE = "gaia_introduction"
