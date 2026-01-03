@@ -174,8 +174,7 @@ async def _chitchat_and_register_calendar(query: QueryRequest, recent_history: s
             long_term_memory=long_term_memory
         )
         function = await llm_models.get_model_generate_content(query.model, query.user_id)
-        response = function(prompt=prompt, model=query.model)
-        return response
+        return function(prompt=prompt, model=query.model)
     except Exception as e:
         raise e
 

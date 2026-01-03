@@ -5,7 +5,7 @@ from langdetect import detect
 from core.domain.enums import enum
 from core.domain.response.model_output_schema import DailyRoutineSchema
 from core.domain.request.query_request import QueryRequest
-from core.service import memory_service, onboarding_service
+from core.service import memory_service, onboarding_service, sse_stream_service
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
 from core.usecase.llm_router.chat_routers import llm_route
@@ -29,12 +29,14 @@ async def introduce(query: QueryRequest, guided_route: str) -> dict:
     """
     try:
         print("Onboarding Query:", query.query)
-        if guided_route == enum.SemanticRoute.GAIA_INTRODUCTION:
-            return await onboarding_service.handle_onboarding_action(query, enum.SemanticRoute.GAIA_INTRODUCTION.value), "onboarding"
-        elif guided_route == enum.SemanticRoute.CHITCHAT:
-            return await onboarding_service.handle_onboarding_action(query, enum.SemanticRoute.CHITCHAT.value), "onboarding"
-        else:
-            raise ValueError("No route found for the query.")
+        response = await onboarding_service.handle_onboarding_action(
+            query=query, selection=guided_route,
+        )
+        await sse_stream_service.handle_broadcast_mode(
+                user_id=str(query.user_id),
+                response=response,
+                dialogue_id=query.dialogue_id
+            )
     except Exception as e:
         raise e
 
@@ -62,7 +64,7 @@ async def register_schedule_calendar(query: QueryRequest, guided_route: Optional
         function = await llm_models.get_model_generate_content(query.model, query.user_id, prompt=selection_prompt)
         selection = function(prompt=selection_prompt, model=query.model) 
         print(f"Selected action: {selection}")
-        return await onboarding_service.handle_onboarding_action(query, selection), "register_schedule_calendar"
+        response = await onboarding_service.handle_onboarding_action(query, selection)
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
         raise e 

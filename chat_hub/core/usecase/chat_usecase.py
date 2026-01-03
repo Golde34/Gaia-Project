@@ -1,161 +1,116 @@
-import functools
+from typing import Any, Optional
 
-from core.domain.enums.enum import DialogueEnum, SenderTypeEnum, ChatType
-from core.domain.request.chat_hub_request import SendMessageRequest
-from core.domain.request.query_request import LLMModel, QueryRequest
-from core.service import sse_stream_service
-from core.service.integration import auth_service
-from core.service.integration.dialogue_service import dialogue_service
-from core.service.integration.message_service import message_service
-from core.usecase.llm_router.chat_routers import MESSAGE_TYPE_CONVERTER
-from core.usecase.thinking_usecase import ThinkingUsecase as thinking
-from kernel.utils import build_header
+from core.domain.enums.enum import ChatType, MemoryModel, MessageType
+from core.domain.request.query_request import QueryRequest
+from core.service.graph_memory_model.consolidation import ConsolidationLayer
+from core.service.graph_memory_model.context_builder import ContextBuilder
+from core.service.graph_memory_model.episodic_memory_graph import EMG
+from core.service.graph_memory_model.memory_store import MemoryStore
+from core.service.graph_memory_model.semantic_long_term_graph import SLTG
+from core.service.graph_memory_model.short_term_activation_graph import STAG
+from core.service.graph_memory_model.switching_engine import SwitchingEngine
+from core.service import memory_service
+from core.usecase.llm_router import chat_routers, tool_selection
 
 
-class ChatInteractionUsecase:
-    @classmethod
-    async def initiate_chat(cls, user_id: int):
-        sse_token = build_header.generate_sse_token(user_id=user_id)
-        if sse_token is None:
-            raise Exception("Failed to generate SSE token")
-        return sse_token
+class ChatUsecase:
 
     @classmethod
-    async def get_chat_history_from_db(
-            cls,
-            user_id: int,
-            dialogue_id: str,
-            size: int,
-            cursor: str):
+    async def chat(
+        cls,
+        query: QueryRequest,
+        chat_type: Optional[str] = None,
+        **kwargs: Any,
+    ):
+        """
+        Gaia categorizes the chat flow based on the user's query.
+        It retrieves the chat history and generates a categorized response.
+
+        Args:
+            query (QueryRequest): The user's query containing user_id, dialogue_id, and model_name
+            chat_type (str, optional): Chat type override; defaults to abilities.
+            **kwargs: Additional optional arguments for downstream handlers.
+        Returns:
+            dict: The categorized response from Gaia.
+        """
+        memory_model = query.model.memory_model
+        if memory_model is None:
+            memory_model = MemoryModel.DEFAULT.value
+        effective_chat_type = chat_type or kwargs.get("chat_type") or ChatType.ABILITIES.value
+
+        if memory_model == MemoryModel.DEFAULT.value:
+            return await cls.chat_with_normal_flow(query=query, chat_type=effective_chat_type, **kwargs)
+        if memory_model == MemoryModel.GRAPH.value:
+            return await cls.chat_with_graph_flow(query=query, chat_type=effective_chat_type, **kwargs)
+
+        raise ValueError(f"Unsupported user_config: {memory_model}")
+
+    @classmethod
+    async def chat_with_normal_flow(cls, query: QueryRequest, chat_type: str, default=True, **kwargs: Any):
+        """
+        Gaia selects the appropriate ability based on the chat type and query.
+        It retrieves the chat history, generates a new query based on the context,
+        and calls the appropriate router function to handle the request.
+
+        Args:
+            query (QueryRequest): The user's query containing user_id, dialogue_id, and model_name
+            chat_type (str): The type of chat to handle, e.g., abilities, introduction, etc.
+            default (bool): Whether to use the default semantic response or a custom one.
+            **kwargs: Additional optional arguments (e.g., user_message_id) for downstream handlers.
+        Returns:
+            dict: The response from the selected ability handler.
+
+        """
         try:
-            if dialogue_id == "" or not dialogue_id:
-                return {
-                    "dialogue": None,
-                    "chatMessages": [],
-                    "nextCursor": None,
-                    "hasMore": False
-                }
-            dialogue, _ = await dialogue_service.get_dialogue_by_id(
-                user_id=user_id, dialogue_id=dialogue_id)
-            if dialogue is None:
-                raise Exception(f"Dialogue with ID {dialogue_id} not found")
-            messages, has_more = await message_service.get_messages_by_dialogue_id_with_cursor_pagination(
-                dialogue.id, size, cursor)
-            next_cursor = None
-            if len(messages) > 0:
-                next_cursor = messages[0].created_at
-            return {
-                "dialogue": dialogue,
-                "chatMessages": messages,
-                "nextCursor": next_cursor,
-                "hasMore": has_more
-            }
-        except Exception as e:
-            raise e
+            is_change_title = kwargs.get("is_change_title", False)
+            user_message_id = kwargs.get("user_message_id")
+            if user_message_id is not None:
+                query.user_message_id = str(user_message_id)
 
-    @classmethod
-    async def get_chat_dialogues(cls, user_id: int, size: int, cursor: str):
-        dialogues, has_more = await dialogue_service.get_all_dialogues_by_user_id(user_id, size, cursor)
-        if len(dialogues) > 0:
-            next_cursor = dialogues[0].created_at
-        return {
-            "dialogues": dialogues,
-            "nextCursor": next_cursor,
-            "hasMore": has_more
-        }
-
-    @classmethod
-    async def handle_send_message(cls, user_id: int, request: SendMessageRequest):
-        handler = functools.partial(cls._create_message_flow, user_id, request)
-        return await sse_stream_service.handle_sse_stream(
-            user_id=user_id,
-            func=handler
-        )
-
-    @classmethod
-    async def _create_message_flow(cls, user_id: int, request: SendMessageRequest):
-        if not request.msg_type:
-            request.msg_type = DialogueEnum.CHAT_TYPE.value
-        dialogue, is_change_title = await dialogue_service.get_or_create_dialogue(
-            user_id=user_id, dialogue_id=request.dialogue_id, msg_type=request.msg_type)
-        if dialogue is None:
-            raise Exception("Failed to get or create dialogue")
-
-        user_message_id = await message_service.create_message(
-            dialogue=dialogue,
-            user_id=user_id,
-            message=request.message,
-            message_type=request.msg_type,
-            sender_type=SenderTypeEnum.USER.value,
-            user_message_id=None
-        )
-
-        user_model: LLMModel = await auth_service.get_user_model(user_id)
-
-        query_request: QueryRequest = QueryRequest(
-            user_id=user_id,
-            query=request.message,
-            model=user_model,
-            dialogue_id=str(dialogue.id),
-            type=request.msg_type,
-        )
-
-        chat_type = MESSAGE_TYPE_CONVERTER.get(
-            request.msg_type,
-            ChatType.ABILITIES.value
-        )
-
-        bot_response = await thinking.chat(
-            query=query_request,
-            chat_type=chat_type,
-            user_message_id=user_message_id,
-            is_change_title=is_change_title,
-        )
-
-        if isinstance(bot_response, list):
-            for response in bot_response:
-                await cls._store_bot_response(
-                    dialogue=dialogue,
-                    user_id=user_id,
-                    message=response,
-                    message_type=request.msg_type,
-                    user_message_id=str(user_message_id),
-                )
-        else:
-            await cls._store_bot_response(
-                dialogue=dialogue,
-                user_id=user_id,
-                message=bot_response,
-                message_type=request.msg_type,
-                user_message_id=str(user_message_id),
+            print(f"Chat Type: {chat_type}, Query: {query.query}")
+            tool, use_chat_history_prompt = await tool_selection.select_tool_by_router(
+                label_value=chat_type, 
+                query=query
             )
 
-        data = {
-            "responses": bot_response,
-            "dialogue_id": str(dialogue.id)
-        }
-        print("Chat message flow completed with data:", data)
+            if use_chat_history_prompt:
+                query = await memory_service.recall_history_info(query=query, default=default)
 
-        return data, chat_type
+            print(f"Selected tool: {tool}")
+            responses = await chat_routers.call_router_function(
+                label_value=chat_type, 
+                query=query, 
+                guided_route=tool)
+
+            print(f"Response(s): {responses}")
+
+            await memory_service.memorize_info(query=query, is_change_title=is_change_title)
+
+            return MessageType.SUCCESS_MESSAGE
+        except Exception as e:
+            print(f"Error in chat_with_normal_flow: {e}")
+            return MessageType.FAILURE_MESSAGE
 
     @classmethod
-    async def _store_bot_response(
-            cls,
-            dialogue,
-            user_id: int,
-            message: str,
-            message_type: str,
-            user_message_id: str):
-        bot_message_id = await message_service.create_message(
-            dialogue=dialogue,
-            user_id=user_id,
-            message=message,
-            message_type=message_type,
-            sender_type=SenderTypeEnum.BOT.value,
-            user_message_id=user_message_id,
-        )
-        print("Bot response stored with message ID:", bot_message_id)
-        return bot_message_id
+    async def chat_with_graph_flow(cls, query: QueryRequest, chat_type: str, **kwargs: Any):
+        """
+        Gaia handles chat interactions using a graph-based approach.
+        It retrieves the chat history, generates a new query based on the context,
+        and processes the request using graph-based methods.
 
+        Args:
+            query (QueryRequest): The user's query containing user_id, dialogue_id, and model_name
+            chat_type (str): The type of chat to handle, e.g., abilities, introduction, etc.
+            **kwargs: Additional optional arguments for downstream handlers.
+        Returns:
+            dict: The response from the graph-based handler.
 
-chat_interaction_usecase = ChatInteractionUsecase()
+        """
+        switching_engine = SwitchingEngine().switch(query)
+        stag = STAG(query).build_temporary_graph()
+        sltg = SLTG(query).build_long_term_graph()
+        emg = EMG(query).build_episodic_memory_graph()
+        retrieval_memory = MemoryStore(query, stag, sltg, emg).get_memory()
+        consolidation = ConsolidationLayer(query, retrieval_memory).consolidate()
+        response = await ContextBuilder(query, consolidation).generate_response()
+        return response
