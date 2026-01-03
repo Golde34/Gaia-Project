@@ -39,7 +39,7 @@ async def handle_sse_stream(
             result = func() if func else None
 
             response = await result if inspect.isawaitable(result) else result
-            print("SSE stream initial response:", response)
+            print("SSE stream initial response:", response) # SUCCESS or FAILURE
 
         except asyncio.CancelledError:
             raise

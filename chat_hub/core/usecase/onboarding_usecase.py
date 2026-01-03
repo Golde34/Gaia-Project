@@ -5,7 +5,7 @@ from langdetect import detect
 from core.domain.enums import enum
 from core.domain.response.model_output_schema import DailyRoutineSchema
 from core.domain.request.query_request import QueryRequest
-from core.service import memory_service, onboarding_service, sse_stream_service
+from core.service import chat_service, memory_service, onboarding_service
 from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
 from core.usecase.llm_router.chat_routers import llm_route
@@ -18,7 +18,7 @@ default_model = config.LLM_DEFAULT_MODEL
 
 @llm_route(label=enum.ChatType.GAIA_INTRODUCTION.value, 
            description='Introduce GAIA and its capabilities.')
-async def introduce(query: QueryRequest, guided_route: str) -> dict:
+async def introduce(query: QueryRequest, guided_route: str) -> None:
     """
     Register task via an user's daily life summary
 
@@ -32,18 +32,14 @@ async def introduce(query: QueryRequest, guided_route: str) -> dict:
         response = await onboarding_service.handle_onboarding_action(
             query=query, selection=guided_route,
         )
-        await sse_stream_service.handle_broadcast_mode(
-                user_id=str(query.user_id),
-                response=response,
-                dialogue_id=query.dialogue_id
-            )
+        await chat_service.push_and_save_bot_message(message=response, query=query) 
     except Exception as e:
         raise e
 
 
 @llm_route(label=enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value, 
            description='Register schedule calendar.')
-async def register_schedule_calendar(query: QueryRequest, guided_route: Optional[str] = None) -> Dict:
+async def register_schedule_calendar(query: QueryRequest, guided_route: Optional[str] = None) -> None:
     """
     Register or modify a task via a user's daily life summary, using Chain of Thought to handle
     incomplete or ambiguous inputs in a single LLM call.
@@ -65,6 +61,7 @@ async def register_schedule_calendar(query: QueryRequest, guided_route: Optional
         selection = function(prompt=selection_prompt, model=query.model) 
         print(f"Selected action: {selection}")
         response = await onboarding_service.handle_onboarding_action(query, selection)
+        await chat_service.push_and_save_bot_message(message=response, query=query)
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
         raise e 

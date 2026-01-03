@@ -121,7 +121,7 @@ class ChatInteractionUsecase:
         }
         print("Chat message flow completed with data:", data)
 
-        return data, chat_type
+        return data
 
 
 chat_interaction_usecase = ChatInteractionUsecase()
