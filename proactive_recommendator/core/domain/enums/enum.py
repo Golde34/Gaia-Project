@@ -6,10 +6,12 @@ class ModelMode(Enum):
     VLLM = "vllm"
     CLOUD = "cloud"
 
+
 class SearchMode(Enum):
     VECTOR = "vector"
     # KEYWORD = "keyword"
     HYBRID = "hybrid"
+
 
 class AggregateMode(Enum):
     MAX = "max"
@@ -19,11 +21,13 @@ class AggregateMode(Enum):
     MIN = "min"
     NONE = "none"
 
+
 class GaiaAbilities(Enum):
     CREATE_TASK = "create_task"
     LIST_TASK = "list_task"
     LIST_CALENDAR = "list_calendar"
     SEARCH_INFOR = "search_info"
+
 
 class LabelNodeType(Enum):
     INTENT = "intent"
@@ -33,10 +37,12 @@ class LabelNodeType(Enum):
     FEATURE = "feature"
     FLOW_TAG = "flow-tag"
 
+
 class NodeBundleKind(Enum):
     KIND_FIELD = "kind"
     LABEL = "label"
     PROVIDER = "provider"
+
 
 class GaiaService(Enum):
     CLG = 'client_gui'
@@ -48,4 +54,14 @@ class GaiaService(Enum):
     CH = "chat_hub"
     NA = "notify_agent"
     CT = "contribution_tracker"
-    
+
+
+class TagEnum(Enum):
+    WORK = "work",
+    EAT = "eat",
+    RELAX = "relax",
+    TRAVEL = "travel",
+    SLEEP = "sleep"
+
+
+TAG_LIST = ["work", "eat", "sleep", "relax", "travel"]
