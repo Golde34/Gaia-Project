@@ -36,6 +36,7 @@ async def get_chat_history(request: Request):
         user_info = _user_info_from_middleware(request)
         user_id = int(user_info["user_id"])
         dialogue_id = request.query_params.get("dialogueId", "")
+        chat_type = request.query_params.get("chatType", "")
 
         size = int(request.query_params.get("size", "10"))
         cursor = request.query_params.get("cursor", "")
@@ -44,7 +45,8 @@ async def get_chat_history(request: Request):
             user_id=user_id,
             dialogue_id=dialogue_id,
             size=size,
-            cursor=cursor
+            cursor=cursor,
+            chat_type=chat_type
         )
         return response
     except Exception as e:

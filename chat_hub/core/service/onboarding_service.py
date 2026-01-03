@@ -23,7 +23,7 @@ from kernel.utils.background_loop import log_background_task_error
 
 async def handle_onboarding_action(query: QueryRequest, selection: str) -> dict:
     recent_history, recursive_summary, long_term_memory = await memory_service.query_chat_history(query)
-
+    
     handlers = {
         enum.SemanticRoute.GAIA_INTRODUCTION.value:
             lambda: _gaia_introduce(

@@ -25,18 +25,18 @@ class ChatInteractionUsecase:
             cls,
             user_id: int,
             dialogue_id: str,
+            chat_type: str,
             size: int,
             cursor: str):
         try:
             if dialogue_id == "" or not dialogue_id:
-                return {
-                    "dialogue": None,
-                    "chatMessages": [],
-                    "nextCursor": None,
-                    "hasMore": False
-                }
-            dialogue, _ = await dialogue_service.get_dialogue_by_id(
-                user_id=user_id, dialogue_id=dialogue_id)
+                print("Onboarding flow go here - no dialogue ID provided")
+                dialogue = await dialogue_service.get_dialogue_by_user_id_and_type(
+                    user_id=user_id, dialogue_type=chat_type
+                )
+            else:
+                dialogue, _ = await dialogue_service.get_dialogue_by_id(
+                    user_id=user_id, dialogue_id=dialogue_id)
             if dialogue is None:
                 raise Exception(f"Dialogue with ID {dialogue_id} not found")
             messages, has_more = await message_service.get_messages_by_dialogue_id_with_cursor_pagination(

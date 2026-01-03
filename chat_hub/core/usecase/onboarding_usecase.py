@@ -28,11 +28,15 @@ async def introduce(query: QueryRequest, guided_route: str) -> None:
         user_daily_entries (dict):
     """
     try:
-        print("Onboarding Query:", query.query)
-        response = await onboarding_service.handle_onboarding_action(
-            query=query, selection=guided_route,
-        )
-        await chat_service.push_and_save_bot_message(message=response, query=query) 
+        if guided_route == enum.SemanticRoute.GAIA_INTRODUCTION:
+            response = await onboarding_service.handle_onboarding_action(
+                query, enum.SemanticRoute.GAIA_INTRODUCTION.value)
+        elif guided_route == enum.SemanticRoute.CHITCHAT:
+            response = await onboarding_service.handle_onboarding_action(
+                query, enum.SemanticRoute.CHITCHAT.value)
+        print(f"Onboarding response: {response}")
+        await chat_service.push_and_save_bot_message(message=response, query=query)
+        return response
     except Exception as e:
         raise e
 
@@ -62,6 +66,7 @@ async def register_schedule_calendar(query: QueryRequest, guided_route: Optional
         print(f"Selected action: {selection}")
         response = await onboarding_service.handle_onboarding_action(query, selection)
         await chat_service.push_and_save_bot_message(message=response, query=query)
+        return response
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
         raise e 

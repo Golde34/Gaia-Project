@@ -9,7 +9,7 @@ import uvicorn
 
 from ui.controller.back import config_controller, rag_controller, tool_controller
 from ui.controller.external import auth_controller, chat_interaction_controller
-from ui.controller.internal import llm_business_handler_controller, chat_system_controller
+from ui.controller.internal import chat_system_controller
 from core.middleware.validate_access_token import ValidateAccessTokenMiddleware
 from infrastructure.kafka.consumer import consume
 from kernel.config.config import session_id_var
