@@ -76,3 +76,10 @@ class ServiceEnum(Enum):
     SCHEDULE_PLAN = "schedule_plan"
     MIDDLEWARE_LOADER = "middleware_loader"
     PROACTIVE_RECOMMENDATOR = "proactive_recommendator"
+
+class MessageType:
+    MESSAGE_START = "message_start"
+    MESSAGE_CHUNK = "message_chunk"
+    MESSAGE_END = "message_end"
+    MESSAGE_COMPLETE = "message_complete"
+    ERROR = "error"

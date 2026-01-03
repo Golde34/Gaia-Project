@@ -1,22 +1,19 @@
 import asyncio
-import json
 import traceback
 import inspect
-import uuid
-from typing import Optional, Callable, Any
+from typing import Optional, Callable, Any, Dict
 from fastapi.responses import StreamingResponse
 
-from typing import Dict
-from kernel.utils.sse_connection_registry import format_sse_event, register_client, unregister_client
-from kernel.utils.sse_message_broadcaster import (
+from kernel.utils.sse_connection_registry import (
     broadcast_message_start,
     broadcast_message_chunk,
     broadcast_message_end,
     broadcast_message_complete,
     broadcast_error,
-    MessageType
+    format_sse_event, 
+    register_client, 
+    unregister_client
 )
-
 
 KEEP_ALIVE_INTERVAL = 15
 
@@ -26,90 +23,41 @@ async def handle_sse_stream(
     func: Optional[Callable[..., Any]] = None,
     *,
     meta: Optional[Dict[str, Any]] = None,
+    use_broadcast: bool = True,
 ) -> StreamingResponse:
-    """
-    Shared SSE stream handler that wraps a callable producing a message/response.
-
-    The SSE wrapper is intentionally thin: it does not attempt to construct or
-    inspect parameters for the provided callable. Callers should provide a
-    zero-argument callable (for example `functools.partial(cls.store_message, user_id, request)`)
-    which captures any required arguments. The callable may be async or sync.
-
-    Args:
-        user_id: id of the user for connection registration.
-        func: zero-argument callable producing the response (dict or str).
-        meta: optional metadata that will be ignored by the wrapper but can be
-              used by callers for bookkeeping (not used internally).
-
-    Returns:
-        StreamingResponse streamed back to the client.
-    """
-
+    """SSE handler with broadcast (chat) or legacy (onboarding) mode"""
     connection_queue: asyncio.Queue[str] = asyncio.Queue()
     connection_closed = asyncio.Event()
 
     await register_client(user_id, connection_queue)
 
     async def enqueue_event(event: str, payload: dict) -> None:
-        if connection_closed.is_set():
-            return
-        await connection_queue.put(format_sse_event(event, payload))
+        if not connection_closed.is_set():
+            await connection_queue.put(format_sse_event(event, payload))
 
     async def stream_initial_response() -> None:
         try:
-            response = None
-            if func:
-                result = func()
-                if inspect.isawaitable(result):
-                    response = await result
-                else:
-                    response = result
-            
-            response_payload, response_text = _extract_response_payload(response)
+            result = func() if func else None
+            response = await result if inspect.isawaitable(result) else result
 
-            # Extract dialogue_id
-            dialogue_id = None
-            if isinstance(response_payload, dict):
-                dialogue_id = response_payload.get("dialogue_id")
-            if not dialogue_id and meta:
-                dialogue_id = meta.get("dialogue_id")
-            
-            # Get responses list
-            responses_list = []
-            if isinstance(response_payload, dict) and "responses" in response_payload:
-                responses = response_payload.get("responses")
-                responses_list = responses if isinstance(responses, list) else [responses] if responses else []
-            elif response_text:
-                responses_list = [response_text]
-            
-            # Stream each response as a separate message
-            for response_item in responses_list:
-                message_id = await broadcast_message_start(str(user_id), dialogue_id=dialogue_id)
-                
-                item_text = str(response_item) if response_item else ""
-                chunks = _chunk_response(item_text)
-                
-                for index, chunk in enumerate(chunks):
-                    await broadcast_message_chunk(str(user_id), message_id, chunk, index)
-                    await asyncio.sleep(0.1)
-                
-                await broadcast_message_end(str(user_id), message_id)
+            if use_broadcast:
+                await handle_broadcast_mode(response, user_id, meta)
+            else:
+                await _handle_legacy_mode(response, enqueue_event)
 
-            # Send completion
-            await broadcast_message_complete(str(user_id), dialogue_id)
-            
         except asyncio.CancelledError:
             raise
         except Exception as exc:
             print(f"ERROR in SSE stream: {traceback.format_exc()}")
-            await broadcast_error(str(user_id), str(exc))
+            if use_broadcast:
+                await broadcast_error(str(user_id), str(exc))
+            else:
+                await enqueue_event("error", {"error": str(exc)})
 
     async def keep_alive() -> None:
         try:
             while not connection_closed.is_set():
                 await asyncio.sleep(KEEP_ALIVE_INTERVAL)
-                if connection_closed.is_set():
-                    break
                 await connection_queue.put(": keep-alive\n\n")
         except asyncio.CancelledError:
             pass
@@ -161,29 +109,70 @@ async def handle_sse_stream(
         raise
 
 
-def _extract_response_payload(response: Optional[dict]) -> tuple[dict, str]:
+async def handle_broadcast_mode(response: Any, user_id: int, meta: Optional[Dict]) -> None:
+    """
+    Broadcast mode: push response to client using broadcast functions
+    Abilities use this mode
+    """
+    dialogue_id = (isinstance(response, dict) and response.get(
+        "dialogue_id")) or (meta and meta.get("dialogue_id"))
+    responses_list = _extract_responses(response)
+
+    for item in responses_list:
+        msg_id = await broadcast_message_start(str(user_id), dialogue_id=dialogue_id)
+        chunks = _chunk_text(str(item) if item else "")
+
+        for idx, chunk in enumerate(chunks):
+            await broadcast_message_chunk(str(user_id), msg_id, chunk, idx)
+            await asyncio.sleep(0.05)
+
+        await broadcast_message_end(str(user_id), msg_id)
+
+    await broadcast_message_complete(str(user_id), dialogue_id)
+
+
+def _extract_responses(response: Any) -> list:
     if isinstance(response, dict):
         if "responses" in response:
-            responses = response["responses"]
-            text = "\n\n".join(str(item) for item in responses if item) if isinstance(responses, list) else str(responses)
-            return response, text
+            r = response["responses"]
+            return r if isinstance(r, list) else [r] if r else []
         if "response" in response:
-            return response, str(response["response"])
-    return {"data": str(response)}, str(response)
+            return [response["response"]]
+    return [str(response)] if response else [""]
 
 
-def _chunk_response(text: str, size: int = 50) -> list[str]:
+async def _handle_legacy_mode(response: Any, enqueue_event) -> None:
+    """
+    Legacy mode: push response to client in chunks
+    Onboarding use this mode 
+    """
+    text = _extract_text(response)
+    chunks = _chunk_text(text)
+
+    for idx, chunk in enumerate(chunks):
+        await enqueue_event("message_chunk", {
+            "chunk": chunk,
+            "chunk_index": idx,
+            "is_final": idx == len(chunks) - 1
+        })
+        await asyncio.sleep(0.1)
+
+    await enqueue_event("message_complete", {
+        "message": "Stream completed",
+        "full_response": text,
+        "response": text
+    })
+
+
+def _extract_text(response: Any) -> str:
+    if isinstance(response, dict):
+        if "data" in response and isinstance(response["data"], dict):
+            return response["data"].get("response", str(response))
+        if "response" in response:
+            return str(response["response"])
+    return str(response)
+
+
+def _chunk_text(text: str, size: int = 50) -> list[str]:
     text = text.replace("\n\n", " ").replace("\r\n", " ").strip()
     return [text[i:i + size] for i in range(0, len(text), size)] if text else [""]
-
-
-async def push_response_to_client(user_id: str, response_text: str, dialogue_id: Optional[str] = None) -> None:
-    message_id = await broadcast_message_start(user_id, dialogue_id=dialogue_id)
-    
-    chunks = _chunk_response(response_text)
-    
-    for index, chunk in enumerate(chunks):
-        await broadcast_message_chunk(user_id, message_id, chunk, index)
-        await asyncio.sleep(0.05)
-    
-    await broadcast_message_end(user_id, message_id )
