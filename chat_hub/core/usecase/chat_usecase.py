@@ -69,8 +69,7 @@ class ChatInteractionUsecase:
         handler = functools.partial(cls._create_message_flow, user_id, request)
         return await sse_stream_service.handle_sse_stream(
             user_id=user_id,
-            func=handler,
-            meta={'dialogue_id': request.dialogue_id},
+            func=handler
         )
 
     @classmethod
@@ -102,17 +101,17 @@ class ChatInteractionUsecase:
         )
 
         chat_type = MESSAGE_TYPE_CONVERTER.get(
-            request.msg_type, 
+            request.msg_type,
             ChatType.ABILITIES.value
-)
+        )
+
         bot_response = await thinking.chat(
             query=query_request,
             chat_type=chat_type,
             user_message_id=user_message_id,
             is_change_title=is_change_title,
-            memory_model=user_model.memory_model
         )
-        
+
         if isinstance(bot_response, list):
             for response in bot_response:
                 await cls._store_bot_response(
@@ -134,10 +133,10 @@ class ChatInteractionUsecase:
         data = {
             "responses": bot_response,
             "dialogue_id": str(dialogue.id)
-        } 
+        }
         print("Chat message flow completed with data:", data)
-        
-        return data
+
+        return data, chat_type
 
     @classmethod
     async def _store_bot_response(

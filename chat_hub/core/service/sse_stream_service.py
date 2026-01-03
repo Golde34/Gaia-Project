@@ -4,13 +4,25 @@ import inspect
 from typing import Optional, Callable, Any, Dict
 from fastapi.responses import StreamingResponse
 
+<<<<<<< HEAD
 from kernel.utils.sse_connection_registry import format_sse_event, register_client, unregister_client
 from kernel.utils.sse_message_broadcaster import (
+=======
+from core.domain.enums.enum import DialogueEnum
+from kernel.utils.sse_connection_registry import (
+>>>>>>> 1c74a05ecf3948c60e8626168e93fc45de00743d
     broadcast_message_start,
     broadcast_message_chunk,
     broadcast_message_end,
     broadcast_message_complete,
+<<<<<<< HEAD
     broadcast_error
+=======
+    broadcast_error,
+    format_sse_event, 
+    register_client, 
+    unregister_client
+>>>>>>> 1c74a05ecf3948c60e8626168e93fc45de00743d
 )
 
 KEEP_ALIVE_INTERVAL = 15
@@ -19,15 +31,18 @@ KEEP_ALIVE_INTERVAL = 15
 async def handle_sse_stream(
     user_id: int,
     func: Optional[Callable[..., Any]] = None,
+<<<<<<< HEAD
     *,
     meta: Optional[Dict[str, Any]] = None,
     use_broadcast: bool = True,
+=======
+>>>>>>> 1c74a05ecf3948c60e8626168e93fc45de00743d
 ) -> StreamingResponse:
     """SSE handler with broadcast (chat) or legacy (onboarding) mode"""
     connection_queue: asyncio.Queue[str] = asyncio.Queue()
     connection_closed = asyncio.Event()
 
-    await register_client(user_id, connection_queue)
+    await register_client(str(user_id), connection_queue)
 
     async def enqueue_event(event: str, payload: dict) -> None:
         if not connection_closed.is_set():
@@ -35,6 +50,7 @@ async def handle_sse_stream(
 
     async def stream_initial_response() -> None:
         try:
+<<<<<<< HEAD
             result = func() if func else None
             response = await result if inspect.isawaitable(result) else result
             
@@ -43,14 +59,26 @@ async def handle_sse_stream(
             else:
                 await _handle_legacy_mode(response, enqueue_event)
                 
+=======
+            # Call the provided function to get the response
+            result = func() if func else None
+
+            response = await result if inspect.isawaitable(result) else result
+            print("SSE stream initial response:", response)
+
+>>>>>>> 1c74a05ecf3948c60e8626168e93fc45de00743d
         except asyncio.CancelledError:
             raise
         except Exception as exc:
             print(f"ERROR in SSE stream: {traceback.format_exc()}")
+<<<<<<< HEAD
             if use_broadcast:
                 await broadcast_error(str(user_id), str(exc))
             else:
                 await enqueue_event("error", {"error": str(exc)})
+=======
+            await enqueue_event("error", {"error": str(exc)})
+>>>>>>> 1c74a05ecf3948c60e8626168e93fc45de00743d
 
     async def keep_alive() -> None:
         try:
@@ -81,7 +109,7 @@ async def handle_sse_stream(
                 keep_alive_task,
                 return_exceptions=True,
             )
-            await unregister_client(user_id, connection_queue)
+            await unregister_client(str(user_id), connection_queue)
 
     try:
         return StreamingResponse(
@@ -107,30 +135,25 @@ async def handle_sse_stream(
         raise
 
 
-# ============================================================================
-# HELPER FUNCTIONS - Separated by mode for clarity
-# ============================================================================
-
-async def _execute_func(func: Optional[Callable]) -> Any:
-    """Execute function and await if needed"""
-# ========== BROADCAST MODE (Chat) ==========
-
-async def _handle_broadcast_mode(response: Any, user_id: int, meta: Optional[Dict]) -> None:
-    dialogue_id = (isinstance(response, dict) and response.get("dialogue_id")) or (meta and meta.get("dialogue_id"))
+async def handle_broadcast_mode(response: Any, user_id: int, dialogue_id: Optional[Dict]) -> None:
+    """
+    Broadcast mode: push response to client using broadcast functions
+    Abilities use this mode
+    """
     responses_list = _extract_responses(response)
-    
+
     for item in responses_list:
         msg_id = await broadcast_message_start(str(user_id), dialogue_id=dialogue_id)
         chunks = _chunk_text(str(item) if item else "")
-        
+
         for idx, chunk in enumerate(chunks):
             await broadcast_message_chunk(str(user_id), msg_id, chunk, idx)
-            await asyncio.sleep(0.1)
-        
+            await asyncio.sleep(0.05)
+
         await broadcast_message_end(str(user_id), msg_id)
 
     await broadcast_message_complete(str(user_id), dialogue_id)
-
+    
 
 def _extract_responses(response: Any) -> list:
     if isinstance(response, dict):
@@ -142,12 +165,14 @@ def _extract_responses(response: Any) -> list:
     return [str(response)] if response else [""]
 
 
-# ========== LEGACY MODE (Onboarding) ==========
-
-async def _handle_legacy_mode(response: Any, enqueue_event) -> None:
+async def handle_legacy_mode(response: Any, enqueue_event) -> None:
+    """
+    Legacy mode: push response to client in chunks
+    Onboarding use this mode 
+    """
     text = _extract_text(response)
     chunks = _chunk_text(text)
-    
+
     for idx, chunk in enumerate(chunks):
         await enqueue_event("message_chunk", {
             "chunk": chunk,
@@ -155,7 +180,6 @@ async def _handle_legacy_mode(response: Any, enqueue_event) -> None:
             "is_final": idx == len(chunks) - 1
         })
         await asyncio.sleep(0.1)
-    
     await enqueue_event("message_complete", {
         "message": "Stream completed",
         "full_response": text,
@@ -171,8 +195,6 @@ def _extract_text(response: Any) -> str:
             return str(response["response"])
     return str(response)
 
-
-# ========== SHARED ==========
 
 def _chunk_text(text: str, size: int = 50) -> list[str]:
     text = text.replace("\n\n", " ").replace("\r\n", " ").strip()
