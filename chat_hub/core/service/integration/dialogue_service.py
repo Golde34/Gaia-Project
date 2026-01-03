@@ -49,7 +49,7 @@ class DialogueService:
             self,
             user_id: int,
             dialogue_type: str) -> tuple[UserDialogue, bool]:
-        dialogue = await self._get_dialogue_by_user_id_and_type(user_id, dialogue_type)
+        dialogue = await self.get_dialogue_by_user_id_and_type(user_id, dialogue_type)
         if dialogue is not None and dialogue.id is not None:
             if dialogue.dialogue_type == DialogueEnum.CHAT_TYPE.value:
                 return dialogue, True
@@ -57,7 +57,7 @@ class DialogueService:
 
         return await self._create_dialogue(user_id, dialogue_type)
 
-    async def _get_dialogue_by_user_id_and_type(
+    async def get_dialogue_by_user_id_and_type(
             self,
             user_id: int,
             dialogue_type: str) -> UserDialogue:

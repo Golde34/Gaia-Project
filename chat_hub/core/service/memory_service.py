@@ -186,10 +186,11 @@ async def get_long_term_memory(user_id: int, dialogue_id: str, query: str) -> st
             top_k=5,
         )
 
-        if long_term_memory is None or len(long_term_memory) == 0:
+        # Haven't handle long term memory = [[]]
+        if not long_term_memory or len(long_term_memory) == 0 or len(long_term_memory[0]) == 0:
             print(
                 f"No long term memory found for user {user_id} and dialogue {dialogue_id}")
-            return ''
+            return '' 
 
         filtered_memory = [
             memory for memory in long_term_memory if memory['metadata'].get('user_id') == user_id and memory['metadata'].get('dialogue_id') == dialogue_id

@@ -126,7 +126,7 @@ async def handle_broadcast_mode(response: Any, user_id: int, dialogue_id: Option
 
         for idx, chunk in enumerate(chunks):
             await broadcast_message_chunk(str(user_id), msg_id, chunk, idx)
-            await asyncio.sleep(0.05)
+            await asyncio.sleep(0.1)
 
         await broadcast_message_end(str(user_id), msg_id)
 
@@ -141,37 +141,6 @@ def _extract_responses(response: Any) -> list:
         if "response" in response:
             return [response["response"]]
     return [str(response)] if response else [""]
-
-
-async def handle_legacy_mode(response: Any, enqueue_event) -> None:
-    """
-    Legacy mode: push response to client in chunks
-    Onboarding use this mode 
-    """
-    text = _extract_text(response)
-    chunks = _chunk_text(text)
-
-    for idx, chunk in enumerate(chunks):
-        await enqueue_event("message_chunk", {
-            "chunk": chunk,
-            "chunk_index": idx,
-            "is_final": idx == len(chunks) - 1
-        })
-        await asyncio.sleep(0.1)
-    await enqueue_event("message_complete", {
-        "message": "Stream completed",
-        "full_response": text,
-        "response": text
-    })
-
-
-def _extract_text(response: Any) -> str:
-    if isinstance(response, dict):
-        if "data" in response and isinstance(response["data"], dict):
-            return response["data"].get("response", str(response))
-        if "response" in response:
-            return str(response["response"])
-    return str(response)
 
 
 def _chunk_text(text: str, size: int = 50) -> list[str]:
