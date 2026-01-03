@@ -97,3 +97,19 @@ async def broadcast_error(user_id: str, error: str) -> None:
     await broadcast_to_user(user_id, MessageType.ERROR, {
         "error": error
     })
+
+
+async def broadcast_success(user_id: str) -> None:
+    """Broadcast SUCCESS event - client should close connection after receiving this."""
+    await broadcast_to_user(user_id, MessageType.SUCCESS, {
+        "status": "success",
+        "message": "Request completed successfully"
+    })
+
+
+async def broadcast_failure(user_id: str, error: str = "Request failed") -> None:
+    """Broadcast FAILURE event - client should close connection after receiving this."""
+    await broadcast_to_user(user_id, MessageType.FAILURE, {
+        "status": "failure",
+        "error": error
+    })

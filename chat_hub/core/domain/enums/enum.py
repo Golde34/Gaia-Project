@@ -84,5 +84,7 @@ class MessageType:
     MESSAGE_END = "message_end"
     MESSAGE_COMPLETE = "message_complete"
     ERROR = "error"
-    SUCCESS_MESSAGE = "SUCCESS"
-    FAILURE_MESSAGE = "FAILURE"
+    SUCCESS = "success"  # SSE event for client to close connection
+    FAILURE = "failure"  # SSE event for client to close connection
+    SUCCESS_MESSAGE = "SUCCESS"  # Internal status from chat_usecase
+    FAILURE_MESSAGE = "FAILURE"  # Internal status from chat_usecase

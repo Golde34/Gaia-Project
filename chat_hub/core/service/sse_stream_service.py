@@ -4,13 +4,15 @@ import inspect
 from typing import Optional, Callable, Any, Dict
 from fastapi.responses import StreamingResponse
 
-from core.domain.enums.enum import DialogueEnum
+from core.domain.enums.enum import DialogueEnum, MessageType
 from kernel.utils.sse_connection_registry import (
     broadcast_message_start,
     broadcast_message_chunk,
     broadcast_message_end,
     broadcast_message_complete,
     broadcast_error,
+    broadcast_success,
+    broadcast_failure,
     format_sse_event, 
     register_client, 
     unregister_client
@@ -39,13 +41,22 @@ async def handle_sse_stream(
             result = func() if func else None
 
             response = await result if inspect.isawaitable(result) else result
-            print("SSE stream initial response:", response) # SUCCESS or FAILURE
+            print("SSE stream initial response:", response)  # SUCCESS or FAILURE
+            
+            # Broadcast final status event for client to close connection
+            if response == MessageType.SUCCESS_MESSAGE:
+                await broadcast_success(str(user_id))
+            elif response == MessageType.FAILURE_MESSAGE:
+                await broadcast_failure(str(user_id), "Chat processing failed")
+            else:
+                # Default to success if response is not explicitly FAILURE
+                await broadcast_success(str(user_id))
 
         except asyncio.CancelledError:
             raise
         except Exception as exc:
             print(f"ERROR in SSE stream: {traceback.format_exc()}")
-            await enqueue_event("error", {"error": str(exc)})
+            await broadcast_failure(str(user_id), str(exc))
 
     async def keep_alive() -> None:
         try:
