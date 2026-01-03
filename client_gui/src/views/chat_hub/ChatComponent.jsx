@@ -191,13 +191,20 @@ export default function ChatComponent(props) {
         };
 
         try {
-            await sendSSEChatMessage("", chatInput, chatType, {
+            const result = await sendSSEChatMessage("", chatInput, chatType, {
                 onMessageStart: handleMessageStart,
                 onChunk: handleChunk,
                 onMessageEnd: handleMessageEnd,
                 onComplete: handleComplete,
                 onError: handleError,
             });
+            
+            // Handle SUCCESS event - just close connection silently without displaying anything
+            if (result?.silent && result?.status === "success") {
+                console.log("SSE connection closed successfully");
+                // Don't display anything to the user
+                return;
+            }
         } catch (error) {
             console.error("Failed to send chat message:", error);
             handleError();

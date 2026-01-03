@@ -193,6 +193,42 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
                 }
             });
 
+            eventSource.addEventListener("success", (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log("Received SUCCESS event - closing connection:", data);
+                    
+                    // Close connection silently without triggering onComplete
+                    if (!settled) {
+                        settled = true;
+                        if (timeoutId) clearTimeout(timeoutId);
+                        eventSource.close();
+                        resolve({ silent: true, status: "success", dialogueId: dialogueIdReceived });
+                    }
+                } catch (e) {
+                    console.error("success event error:", e);
+                    if (!settled) {
+                        settled = true;
+                        if (timeoutId) clearTimeout(timeoutId);
+                        eventSource.close();
+                        resolve({ silent: true, status: "success", dialogueId: dialogueIdReceived });
+                    }
+                }
+            });
+
+            eventSource.addEventListener("failure", (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.error("Received FAILURE event:", data);
+                    
+                    // Close connection and trigger onError to display error message
+                    rejectOnce(new Error(data.error || "Chat processing failed"));
+                } catch (e) {
+                    console.error("failure event error:", e);
+                    rejectOnce(new Error("Chat processing failed"));
+                }
+            });
+
             eventSource.addEventListener("error", (event) => {
                 let errorMessage = "EventSource error";
                 try {
