@@ -2,7 +2,7 @@ import traceback
 from fastapi import APIRouter, HTTPException, Request
 
 from core.domain.response.base_response import return_success_response
-from core.usecase.chat_usecase import chat_interaction_usecase as usecase
+from core.usecase.chat_interaction_usecase import chat_interaction_usecase as usecase
 
 ChatInteractionRouter = APIRouter(
     prefix="/chat-interaction",

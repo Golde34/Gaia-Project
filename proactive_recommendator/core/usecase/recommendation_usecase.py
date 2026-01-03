@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from core.abilities.ability_functions import PROVIDER_REGISTRY, PROMPT_CATEGORY
 from core.domain.request.recommendation_request import RecommendationRequest
@@ -12,8 +12,8 @@ from infrastructure.repository.vectordb import command_label_repo
 async def recommend(body: RecommendationRequest) -> str:
     """
     [Query -> seed labels] 
-    -> [Graph Expander]: Expanded Labels (+weight, relations)
-    -> [Fetch Planner]: Label-driven providers with needs/ provides
+    -> [Vector DB]: Rank labels by relevance (Signals)
+    -> [Graph Expander]: Expanded Labels (+weight, relations) (Compat)
     -> [Build Bundle]: JSON feature store, running providers in layers
     -> [Scoring/Policy]: Compat + Signals from bundle
     """
@@ -44,17 +44,20 @@ async def recommend(body: RecommendationRequest) -> str:
 
         return return_success_response("Generate recommendation successfully", {"message": response}) 
     except Exception as e:
-        return "Error: " + e 
+        return "Error: " + str(e) 
 
 
-async def _build_bundle(user_id: str, labels: List[str]) -> Dict[str, Any]:
+async def _build_bundle(user_id: str, labels: List[str]) -> tuple[Dict[str, Any], str]:
     provider_rows = await graph_expander.providers_for_labels(labels)
     bundle: Dict[str, Any] = {}
+    llm_type = None
 
     for p in provider_rows:
         pname = p["name"]
         if pname not in PROVIDER_REGISTRY:
             continue
+        
+        llm_type = PROVIDER_REGISTRY[pname]['llm_type']
         fn = PROVIDER_REGISTRY[pname]['function']
         try:
             result = await fn(user_id=user_id)
@@ -62,7 +65,7 @@ async def _build_bundle(user_id: str, labels: List[str]) -> Dict[str, Any]:
         except Exception as e:
             bundle[pname] = {"error": str(e)}
 
-    return bundle, PROVIDER_REGISTRY[pname]['llm_type']
+    return bundle, llm_type
 
 # async def _validate_labels_information(user_id: int, results: List[str], first: str):
 #     if ABILITIES[first]['is_sync'] == True:

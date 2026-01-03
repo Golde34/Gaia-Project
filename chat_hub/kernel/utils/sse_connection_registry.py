@@ -1,6 +1,10 @@
 import asyncio
 import json
-from typing import Dict, Set
+from typing import Dict, Optional, Set
+import uuid
+
+from core.domain.enums.enum import MessageType
+
 
 _connections: Dict[str, Set[asyncio.Queue]] = {}
 _lock = asyncio.Lock()
@@ -58,3 +62,54 @@ async def _safe_put(queue: asyncio.Queue, message: str) -> None:
 def format_sse_event(event: str, payload: dict) -> str:
     """Expose formatter for modules that need to craft event messages."""
     return _format_event(event, payload)
+
+
+async def broadcast_message_start(user_id: str, message_id: Optional[str] = None, dialogue_id: Optional[str] = None) -> str:
+    message_id = message_id or f"msg-{uuid.uuid4()}"
+    await broadcast_to_user(user_id, MessageType.MESSAGE_START, {
+        "message_id": message_id,
+        "dialogue_id": dialogue_id
+    })
+    return message_id
+
+
+async def broadcast_message_chunk(user_id: str, message_id: str, content: str, chunk_index: int) -> None:
+    await broadcast_to_user(user_id, MessageType.MESSAGE_CHUNK, {
+        "message_id": message_id,
+        "content": content,
+        "chunk_index": chunk_index
+    })
+
+
+async def broadcast_message_end(user_id: str, message_id: str) -> None:
+    await broadcast_to_user(user_id, MessageType.MESSAGE_END, {
+        "message_id": message_id
+    })
+
+
+async def broadcast_message_complete(user_id: str, dialogue_id: Optional[str] = None) -> None:
+    await broadcast_to_user(user_id, MessageType.MESSAGE_COMPLETE, {
+        "dialogue_id": dialogue_id
+    })
+
+
+async def broadcast_error(user_id: str, error: str) -> None:
+    await broadcast_to_user(user_id, MessageType.ERROR, {
+        "error": error
+    })
+
+
+async def broadcast_success(user_id: str) -> None:
+    """Broadcast SUCCESS event - client should close connection after receiving this."""
+    await broadcast_to_user(user_id, MessageType.SUCCESS, {
+        "status": "success",
+        "message": "Request completed successfully"
+    })
+
+
+async def broadcast_failure(user_id: str, error: str = "Request failed") -> None:
+    """Broadcast FAILURE event - client should close connection after receiving this."""
+    await broadcast_to_user(user_id, MessageType.FAILURE, {
+        "status": "failure",
+        "error": error
+    })

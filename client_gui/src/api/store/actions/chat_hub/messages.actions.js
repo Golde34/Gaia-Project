@@ -51,44 +51,37 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
             throw new Error("SSE token not received");
         }
 
-        let params = null;
-        if (chatType === undefined || chatType === null) {
-            params = new URLSearchParams({
-                dialogueId: dialogueId,
-                message: message,
-                sseToken: tokenResponse.data,
-            });
-        } else {
-            params = new URLSearchParams({
-                dialogueId: dialogueId,
-                message: message,
-                type: chatType,
-                sseToken: tokenResponse.data,
-            });
-        }
+        const params = new URLSearchParams({
+            dialogueId: dialogueId,
+            message: message,
+            sseToken: tokenResponse.data,
+            ...(chatType && { type: chatType })
+        });
+        
         const baseUrl = `http://${config.serverHost}:${config.chatHubPort}`;
         const url = `${baseUrl}/chat-system/send-message?${params}`;
 
-        const { onChunk, onComplete, onError } = options ?? {};
+        const { onMessageStart, onChunk, onMessageEnd, onComplete, onError } = options ?? {};
 
         return new Promise((resolve, reject) => {
             const eventSource = new EventSource(url);
-            let accumulatedResponse = "";
+            const messagesMap = new Map();
             let settled = false;
             let timeoutId = null;
+            let dialogueIdReceived = null;
 
             const resolveOnce = (payload) => {
                 if (settled) return;
                 settled = true;
                 if (timeoutId) clearTimeout(timeoutId);
+                eventSource.close();
                 if (onComplete) {
                     try {
                         onComplete(payload);
-                    } catch (callbackError) {
-                        console.error("onComplete callback failed:", callbackError);
+                    } catch (e) {
+                        console.error("onComplete error:", e);
                     }
                 }
-                eventSource.close();
                 resolve(payload);
             };
 
@@ -100,92 +93,140 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
                 if (onError) {
                     try {
                         onError(error);
-                    } catch (callbackError) {
-                        console.error("onError callback failed:", callbackError);
+                    } catch (e) {
+                        console.error("onError error:", e);
                     }
                 }
                 reject(error);
             };
 
-            // Safety timeout: if no message_complete after 2 minutes, resolve with what we have
             timeoutId = setTimeout(() => {
                 if (!settled) {
-                    const fallback = accumulatedResponse || "Request timeout";
+                    const allMessages = Array.from(messagesMap.values()).map(m => m.content);
                     resolveOnce({
-                        response: fallback,
-                        responses: fallback ? [fallback] : [],
-                        dialogueId: null,
+                        responses: allMessages.length > 0 ? allMessages : ["Request timeout"],
+                        dialogueId: dialogueIdReceived
                     });
                 }
-            }, 120000); // 2 minutes
+            }, 120000);
+
+            eventSource.addEventListener("message_start", (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    const messageId = data.message_id;
+                    if (!messageId) return;
+
+                    messagesMap.set(messageId, { id: messageId, content: "", completed: false });
+                    
+                    if (data.dialogue_id) {
+                        dialogueIdReceived = data.dialogue_id;
+                    }
+
+                    if (onMessageStart) {
+                        onMessageStart(messageId);
+                    }
+                } catch (e) {
+                    console.error("message_start error:", e);
+                }
+            });
 
             eventSource.addEventListener("message_chunk", (event) => {
                 try {
                     const data = JSON.parse(event.data);
-                    console.log("Received message_chunk data:", data);
-                    if (data?.chunk) {
-                        accumulatedResponse += data.chunk;
-                        if (onChunk) {
-                            try {
-                                onChunk(accumulatedResponse, data.chunk);
-                            } catch (callbackError) {
-                                console.error("onChunk callback failed:", callbackError);
-                            }
-                        }
-                        // Don't resolve when is_final=true, wait for message_complete to get dialogue_id
-                    }
-                } catch {
-                    accumulatedResponse += event.data || "";
+                    const messageId = data.message_id;
+                    const chunk = data.content || "";
+                    
+                    if (!messageId || !messagesMap.has(messageId)) return;
+
+                    const messageData = messagesMap.get(messageId);
+                    messageData.content += chunk;
+
                     if (onChunk) {
-                        try {
-                            onChunk(accumulatedResponse, event.data || "");
-                        } catch (callbackError) {
-                            console.error("onChunk callback failed:", callbackError);
-                        }
+                        onChunk(messageId, messageData.content, chunk);
                     }
+                } catch (e) {
+                    console.error("message_chunk error:", e);
+                }
+            });
+
+            eventSource.addEventListener("message_end", (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    const messageId = data.message_id;
+                    
+                    if (!messageId || !messagesMap.has(messageId)) return;
+
+                    const messageData = messagesMap.get(messageId);
+                    messageData.completed = true;
+
+                    if (onMessageEnd) {
+                        onMessageEnd(messageId, messageData.content);
+                    }
+                } catch (e) {
+                    console.error("message_end error:", e);
                 }
             });
 
             eventSource.addEventListener("message_complete", (event) => {
-                let finalResponse = accumulatedResponse;
-                let dialogueIdFromResponse = null;
-                let responsesFromPayload = [];
-
                 try {
                     const data = JSON.parse(event.data);
-
-                    if (data?.dialogue_id || data?.dialogueId) {
-                        dialogueIdFromResponse = data.dialogue_id || data.dialogueId;
+                    
+                    if (data.dialogue_id) {
+                        dialogueIdReceived = data.dialogue_id;
                     }
 
-                    if (Array.isArray(data?.responses)) {
-                        responsesFromPayload = data.responses;
-                    } else if (data?.responses) {
-                        responsesFromPayload = [data.responses];
-                    }
+                    const allMessages = Array.from(messagesMap.values())
+                        .filter(m => m.completed)
+                        .map(m => m.content);
 
-                    // Use full_response or response from event if accumulated response is empty
-                    if (data?.full_response && !finalResponse) {
-                        finalResponse = data.full_response;
-                    }
-                    if (data?.response && !finalResponse) {
-                        finalResponse = data.response;
-                    }
-                } catch (parseError) {
-                    // Use accumulated response if parsing fails
+                    resolveOnce({
+                        responses: allMessages.length > 0 ? allMessages : [""],
+                        dialogueId: dialogueIdReceived
+                    });
+                } catch (e) {
+                    console.error("message_complete error:", e);
+                    const allMessages = Array.from(messagesMap.values()).map(m => m.content).filter(c => c);
+                    resolveOnce({
+                        responses: allMessages.length > 0 ? allMessages : [""],
+                        dialogueId: dialogueIdReceived
+                    });
                 }
+            });
 
-                if (!finalResponse && responsesFromPayload.length) {
-                    finalResponse = responsesFromPayload.join("\n\n");
+            eventSource.addEventListener("success", (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log("Received SUCCESS event - closing connection:", data);
+                    
+                    // Close connection silently without triggering onComplete
+                    if (!settled) {
+                        settled = true;
+                        if (timeoutId) clearTimeout(timeoutId);
+                        eventSource.close();
+                        resolve({ silent: true, status: "success", dialogueId: dialogueIdReceived });
+                    }
+                } catch (e) {
+                    console.error("success event error:", e);
+                    if (!settled) {
+                        settled = true;
+                        if (timeoutId) clearTimeout(timeoutId);
+                        eventSource.close();
+                        resolve({ silent: true, status: "success", dialogueId: dialogueIdReceived });
+                    }
                 }
+            });
 
-                const payload = {
-                    response: finalResponse,
-                    responses: responsesFromPayload.length ? responsesFromPayload : (finalResponse ? [finalResponse] : []),
-                    dialogueId: dialogueIdFromResponse,
-                };
-
-                resolveOnce(payload);
+            eventSource.addEventListener("failure", (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.error("Received FAILURE event:", data);
+                    
+                    // Close connection and trigger onError to display error message
+                    rejectOnce(new Error(data.error || "Chat processing failed"));
+                } catch (e) {
+                    console.error("failure event error:", e);
+                    rejectOnce(new Error("Chat processing failed"));
+                }
             });
 
             eventSource.addEventListener("error", (event) => {
@@ -203,31 +244,11 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
                 rejectOnce(new Error(errorMessage));
             });
 
-            // Handle generic connection errors
             eventSource.onerror = () => {
-                // Don't reject immediately on first error, could be temporary network issue
-                // The timeout will handle persistent connection problems
                 if (eventSource.readyState === EventSource.CLOSED) {
-                    rejectOnce(new Error("EventSource connection closed unexpectedly"));
+                    rejectOnce(new Error("Connection closed"));
                 }
             };
-            
-            // Note: We removed onmessage handler because it was catching all events
-            // and resolving prematurely. We now rely on specific event listeners:
-            // - message_chunk: for streaming chunks
-            // - message_complete: for final response with dialogue_id
-            // This ensures we always wait for message_complete to get dialogue_id
-            
-            // Cleanup function (useful if Promise is canceled externally)
-            const cleanup = () => {
-                if (timeoutId) clearTimeout(timeoutId);
-                if (eventSource.readyState !== EventSource.CLOSED) {
-                    eventSource.close();
-                }
-            };
-            
-            // Attach cleanup to Promise (if needed in future for abort capability)
-            resolve.cleanup = cleanup;
         });
     } catch (error) {
         console.error("Error sending chat message:", error);

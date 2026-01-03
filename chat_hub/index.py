@@ -40,7 +40,6 @@ app.add_middleware(
 app.add_middleware(ValidateAccessTokenMiddleware)
 
 app.include_router(rag_controller.RagRouter)
-app.include_router(llm_business_handler_controller.LLMBusinessHandlerRouter)
 app.include_router(auth_controller.AuthRouter)
 app.include_router(chat_interaction_controller.ChatInteractionRouter)
 app.include_router(chat_system_controller.ChatSystemRouter)

@@ -1,15 +1,16 @@
+
 from fastapi import APIRouter, HTTPException
 
 from core.domain.request.tag_schedule_task_request import TagScheduleTaskRequestBody
 from core.domain.response.base_response import return_success_response
 from core.service.llm_business_handler_service import tag_schedule_tasks
 
-LLMBusinessHandlerRouter = APIRouter(
+GaiaBusinessRouter = APIRouter(
     prefix="/llm-business-handler",
     tags=["LLM Business Handler"],
 )
 
-@LLMBusinessHandlerRouter.post("/tag-schedule-task")
+@GaiaBusinessRouter.post("/tag-schedule-task")
 async def tag_schedule_task(body: TagScheduleTaskRequestBody):
     userId = body.user_id
     tasks = body.tasks
