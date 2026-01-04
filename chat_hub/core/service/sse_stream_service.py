@@ -13,7 +13,6 @@ from kernel.utils.sse_connection_registry import (
     broadcast_error,
     broadcast_success,
     broadcast_failure,
-    format_sse_event, 
     register_client, 
     unregister_client
 )
@@ -30,10 +29,6 @@ async def handle_sse_stream(
     connection_closed = asyncio.Event()
 
     await register_client(str(user_id), connection_queue)
-
-    async def enqueue_event(event: str, payload: dict) -> None:
-        if not connection_closed.is_set():
-            await connection_queue.put(format_sse_event(event, payload))
 
     async def stream_initial_response() -> None:
         try:

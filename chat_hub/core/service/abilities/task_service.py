@@ -193,27 +193,3 @@ personal_task_service = PersonalTaskService()
 function_handler(label=enum.GaiaAbilities.CREATE_TASK.value, is_sequential=True)(
     personal_task_service.create_personal_task
 )
-
-
-def handle_task_service_response(matched_type: str, result: any) -> str:
-    if matched_type == enum.GaiaAbilities.CHITCHAT.value:
-        data = {
-            'type': matched_type,
-            'response': result
-        }
-    elif matched_type == enum.GaiaAbilities.SEARCH.value:
-        payload = result if isinstance(result, dict) else {
-            'response': str(result)}
-        data = {
-            'type': matched_type,
-            'response': payload.get('response', ''),
-            'search': payload
-        }
-    else:
-        data = {
-            'type': matched_type,
-            'response': result.get('response'),
-            'task': result
-        }
-
-    return data
