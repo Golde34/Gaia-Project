@@ -22,5 +22,4 @@ var (
 
 var (
 	RegisterCalendarDialogueType = "register_calendar"
-	GenerateTaskResultDialogueType = "generate_task_result"
 )

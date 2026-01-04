@@ -98,7 +98,6 @@ class SwitchingEngine:
         if not documents:
             return []
 
-        print("Documents for Reranking:", documents)
         reranked_result = await reranking_model.rerank(
             query=query_text,
             documents=documents,

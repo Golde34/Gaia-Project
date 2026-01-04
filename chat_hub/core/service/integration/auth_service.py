@@ -1,12 +1,13 @@
 from datetime import datetime, timezone
 import json
 
+from core.domain.enums.enum import MemoryModel
 from core.domain.enums.redis_enum import RedisEnum
 from core.domain.request.query_request import LLMModel
 from core.domain.response.user_model_response import UserModelResponse
 from infrastructure.client.auth_service_client import auth_service_client
 from infrastructure.redis.redis import get_key, set_key
-from kernel.config.config import LLM_DEFAULT_MODEL, SYSTEM_API_KEY
+from kernel.config.config import LLM_DEFAULT_MODEL, SYSTEM_API_KEY, SYSTEM_ORGANIZATION
 
 
 async def refresh_token(refresh_token: str):
@@ -72,13 +73,15 @@ def _create_system_model(user_model: UserModelResponse, user_id: int) -> LLMMode
         return LLMModel(
             model_name=user_model.model_name,
             model_key=user_model.model_key,
-            memory_model=user_model.memory_model
+            memory_model=user_model.memory_model,
+            organization=user_model.organization
         )
     
     return LLMModel(
         model_name=LLM_DEFAULT_MODEL,
         model_key=SYSTEM_API_KEY,
-        memory_model="Default Model"
+        memory_model=MemoryModel.DEFAULT.value,
+        organization=SYSTEM_ORGANIZATION
     )
 
 
@@ -90,6 +93,7 @@ def _is_valid_user_model(user_model: UserModelResponse | None, user_id: int) -> 
         and user_model.model_name is not None
         and user_model.model_key is not None
         and user_model.memory_model is not None
+        and user_model.organization is not None
     )
 
 

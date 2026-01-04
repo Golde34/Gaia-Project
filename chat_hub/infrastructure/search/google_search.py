@@ -7,6 +7,7 @@ from urllib.parse import urlencode
 
 import aiohttp
 
+from core.domain.enums import enum
 from core.domain.request.query_request import LLMModel
 from kernel.config import config
 from kernel.config import llm_models
@@ -208,7 +209,12 @@ async def _summarize(query: str, content: str, model: Optional[LLMModel], user_i
         f"Sources:\n{content[:config.SEARCH_MAX_PROMPT_CHARS]}"
     )
     try:
-        model_to_use = model or LLMModel(model_name=config.LLM_DEFAULT_MODEL, model_key=config.SYSTEM_API_KEY)
+        model_to_use = model or LLMModel(
+            model_name=config.LLM_DEFAULT_MODEL, 
+            model_key=config.SYSTEM_API_KEY,
+            memory_model=enum.MemoryModel.DEFAULT.value,
+            organization=config.SYSTEM_ORGANIZATION    
+        )
         llm_fn = await llm_models.get_model_generate_content(
             model=model_to_use,
             user_id=str(user_id or ""),

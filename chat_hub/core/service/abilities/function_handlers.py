@@ -6,6 +6,7 @@ import uuid
 from core.domain.entities.database.agent_execution import AgentExecution
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
+from core.service.chat_service import push_and_save_bot_message
 from infrastructure.repository.agent_execution_repository import agent_execution_repo
 
 import core.service
@@ -15,7 +16,7 @@ import core.service
 _FUNCTION_REGISTRY: Dict[str, Dict[str, Any]] = {}
 
 
-def function_handler(label: str, is_sequential: bool = False):
+def function_handler(label: str, is_sequential: bool = False, is_executable: bool = False):
     """
     Decorator to register a function handler for LLM routing.
 
@@ -25,51 +26,69 @@ def function_handler(label: str, is_sequential: bool = False):
     Args:
         label (str): The label/identifier for this function (e.g., enum value)
         is_sequential (bool): Whether the function should be executed sequentially
-
-    Usage in service file:
-        @function_handler(label=enum.GaiaAbilities.CREATE_TASK.value, is_sequential=True)
-        async def create_personal_task(self, query):
-            # implementation
-            pass
+        is_executable (bool): Whether the function should be executed as a task
     """
     def decorator(func: Callable):
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            query = _extract_agent_execution(args, kwargs, label)
-            execution: AgentExecution = await agent_execution_repo.create_agent_execution(query)
-            try:
-                result = await func(*args, **kwargs)
-            except Exception as exc:
-                execution_result = await agent_execution_repo.update_agent_execution_status(
-                    execution_id=execution.id,
-                    status=enum.TaskStatus.FAILED.value,
-                    tool_output=str(exc),
-                )
-                raise exc
-
-            execution_result = await agent_execution_repo.update_agent_execution_status(
-                execution_id=execution.id,
-                status=enum.TaskStatus.SUCCESS.value,
-                tool_output=str(result),
-            ) 
-            print("Execution result:", execution_result)
-            return result
+            if is_executable:
+                return await execute_task(label, func, *args, **kwargs)
+            else:
+                return await handle_function(func, *args, **kwargs)
 
         _FUNCTION_REGISTRY[label] = {
             'executor': wrapper,
             'is_sequential': is_sequential,
+            'is_executable': is_executable,
         }
         return wrapper
     return decorator
 
 
-def get_functions():
-    """Get all registered function handlers."""
-    return _FUNCTION_REGISTRY
-
-
-def _extract_agent_execution(args: tuple, kwargs: dict, label: str) -> Optional[AgentExecution]:
+async def execute_task(label: str, func: Callable, *args, **kwargs):
     query: QueryRequest = _extract_query(args, kwargs)
+    execution_entity: AgentExecution = _extract_agent_execution(
+        kwargs, label, query)
+    execution_log: AgentExecution = await agent_execution_repo.create_agent_execution(execution_entity)
+    try:
+        # All function handlers are expected to return a tuple of (result, is_need_recommendation)
+        response, is_need_recommendation = await func(*args, **kwargs)
+        await push_and_save_bot_message(
+            message=response, query=query
+        )
+    except Exception as exc:
+        execution_result = await agent_execution_repo.update_agent_execution_status(
+            execution_id=execution_log.id,
+            status=enum.TaskStatus.FAILED.value,
+            tool_output=str(exc),
+        )
+        raise exc
+
+    execution_result: Optional[AgentExecution] = await agent_execution_repo.update_agent_execution_status(
+        execution_id=execution_log.id,
+        status=enum.TaskStatus.SUCCESS.value,
+        tool_output=str(response),
+    )
+    if not execution_result:
+        print("Failed to update execution result for execution id:", execution_log.id)
+        status = enum.TaskStatus.SUCCESS.value
+    status = execution_result.status
+    print("Execution result:", status)
+
+    return response, status, is_need_recommendation
+
+
+async def handle_function(func: Callable, *args, **kwargs) -> Any:
+    query = _extract_query(args, kwargs)
+    # All function handlers are expected to return a tuple of (result, is_need_recommendation)
+    response, is_need_recommendation = await func(*args, **kwargs)
+    await push_and_save_bot_message(
+        message=response, query=query
+    )
+    return response, enum.TaskStatus.SUCCESS.value, is_need_recommendation
+
+
+def _extract_agent_execution(kwargs: dict, label: str, query: QueryRequest) -> Optional[AgentExecution]:
     confidence_score = kwargs.get('confidence_score', None)
     tool_input = kwargs.get('tool_input', None)
     tool_output = kwargs.get('tool_output', None)
@@ -97,5 +116,6 @@ def _extract_query(args: tuple, kwargs: dict) -> Optional[QueryRequest]:
             return arg
     print("No QueryRequest found in function arguments. This case cannot happen.")
     return None
+
 
 FUNCTIONS = _FUNCTION_REGISTRY

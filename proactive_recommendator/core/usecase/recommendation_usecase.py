@@ -7,6 +7,7 @@ from core.service import user_information_service
 from infrastructure.llm.interface import get_model_generate_content
 from infrastructure.repository.graphdb import graph_expander
 from infrastructure.repository.vectordb import command_label_repo
+from kernel.config.config import Config as config
 
 
 async def recommend(body: RecommendationRequest) -> str:
@@ -39,7 +40,7 @@ async def recommend(body: RecommendationRequest) -> str:
             raise ValueError(f"LLM type {llm_type} not supported")
 
         prompt_template = PROMPT_CATEGORY[llm_type](bundle=str(bundle))
-        function = await get_model_generate_content()
+        function = await get_model_generate_content(model=config.LLM_DEFAULT_MODEL)
         response = function(prompt=prompt_template) 
 
         return return_success_response("Generate recommendation successfully", {"message": response}) 

@@ -9,6 +9,7 @@ class UserModelResponse(BaseModel):
     model_key: str
     user_id: int
     memory_model: str
+    organization: str
 
     model_config = {
         "alias_generator": to_camel,

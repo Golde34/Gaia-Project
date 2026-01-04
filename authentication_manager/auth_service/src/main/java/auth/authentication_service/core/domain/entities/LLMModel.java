@@ -33,6 +33,8 @@ public class LLMModel {
     
     private boolean activeStatus;
 
+    private String organization;
+
     @JsonBackReference
     @ManyToMany(mappedBy = "llmModels")
     private Collection<User> users;

@@ -1,5 +1,6 @@
-from typing import Optional
+from typing import List, Optional
 
+from core.domain.entities.database.recommendation_history import RecommendationHistory
 from kernel.config import config
 from kernel.utils import aiohttp_utils
 
@@ -16,7 +17,7 @@ class RecommendationServiceClient:
         query: str,
         user_id: str,
         dialogue_id: Optional[str] = None,
-        fingerprint: Optional[str] = None,
+        waiting_recommendations: List[RecommendationHistory] | None = None,
     ) -> str:
         payload = {
             "query": query,
@@ -24,8 +25,8 @@ class RecommendationServiceClient:
         }
         if dialogue_id:
             payload["dialogue_id"] = dialogue_id 
-        if fingerprint:
-            payload["fingerprint"] = fingerprint
+        if waiting_recommendations is not None:
+            payload["waiting_recommendations"] = [rec.__dict__ for rec in waiting_recommendations]
 
         endpoint = f"{self.base_url}/recommend"
         try:

@@ -6,7 +6,6 @@ import { Card } from "@tremor/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { buildChatHistoryKey, defaultChatHistoryState } from "../../kernels/utils/chat-history-utils";
 import { createMessage, formatResponseContent } from "../../kernels/utils/chat-message-utils";
-import { useNotificationHandler } from "../../kernels/hooks/useNotificationHandler";
 import ChatMessageList from "../../components/subComponents/chat/ChatMessageList";
 import ChatInputArea from "../../components/subComponents/chat/ChatInputArea";
 
@@ -15,7 +14,6 @@ export default function ChatComponent(props) {
     const isDashboard = props.isDashboard === undefined ? false : props.isDashboard;
     const chatType = (props.chatType === undefined || props.chatType === null)
         ? undefined : props.chatType;
-    const websocketMessageQueue = Array.isArray(props.websocketMessageQueue) ? props.websocketMessageQueue : [];
     const tabId = getTabId();
 
     const dispatch = useDispatch();
@@ -39,16 +37,6 @@ export default function ChatComponent(props) {
     const isLoadingMoreRef = useRef(false);
     const prevScrollHeightRef = useRef(0);
     const prevScrollTopRef = useRef(0);
-    const processedWebsocketMessageIdsRef = useRef(new Set());
-
-    const handleNotificationMessages = useCallback((generatedMessages) => {
-        console.log('[ChatComponent] Received generated messages from notification:', generatedMessages);
-        if (generatedMessages && generatedMessages.length > 0) {
-            setChatHistory((prev) => [...prev, ...generatedMessages]);
-        }
-    }, []);
-
-    useNotificationHandler(dialogueId, handleNotificationMessages);
 
     const scrollRefs = useMemo(() => ({
         containerRef: messagesContainerRef,
@@ -69,7 +57,6 @@ export default function ChatComponent(props) {
         isLoadingMoreRef.current = false;
         prevScrollHeightRef.current = 0;
         prevScrollTopRef.current = 0;
-        processedWebsocketMessageIdsRef.current = new Set();
     }, [conversationKey]);
 
     useEffect(() => {
@@ -85,16 +72,6 @@ export default function ChatComponent(props) {
             return [...newMessages, ...prev];
         });
     }, [chatMessages]);
-
-    useEffect(() => {
-        if (!websocketMessageQueue.length) return;
-        const queuedMessages = websocketMessageQueue.filter(
-            (msg) => msg?.id && !processedWebsocketMessageIdsRef.current.has(msg.id)
-        );
-        if (!queuedMessages.length) return;
-        setChatHistory((prev) => [...prev, ...queuedMessages]);
-        queuedMessages.forEach((msg) => processedWebsocketMessageIdsRef.current.add(msg.id));
-    }, [websocketMessageQueue]);
 
     useEffect(() => {
         const container = messagesContainerRef.current;
@@ -157,13 +134,33 @@ export default function ChatComponent(props) {
             );
         };
 
-        const handleMessageEnd = (messageId, finalContent) => {
+        const handleMessageEnd = (messageId, finalContent, messageType) => {
             setChatHistory((prev) =>
-                prev.map((msg) => 
-                    msg.id === messageId 
-                        ? { ...msg, content: finalContent, isStreaming: false }
-                        : msg
-                )
+                prev.map((msg) => {
+                    if (msg.id !== messageId) return msg;
+                    
+                    // Try to parse as JSON if messageType is provided
+                    let parsedData = null;
+                    let displayContent = finalContent;
+                    
+                    if (messageType) {
+                        try {
+                            parsedData = JSON.parse(finalContent);
+                            displayContent = finalContent;
+                        } catch (e) {
+                            console.warn(`Failed to parse JSON for messageType ${messageType}:`, e);
+                        }
+                    }
+                    
+                    return {
+                        ...msg,
+                        content: displayContent,
+                        messageType: messageType,
+                        taskData: parsedData, // For task_result type
+                        parsedData: parsedData, // Generic parsed data
+                        isStreaming: false
+                    };
+                })
             );
         };
 

@@ -66,8 +66,8 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
         final Role adminRole = createRoleIfNotFound("ROLE_ADMIN", authAdminPrivileges);
         final Role userTestRole = createRoleIfNotFound("ROLE_USER", serviceUserPrivileges);
 
-        final LLMModel geminiModel = createLLMModelIfNotFound("gemini-2.5-flash");
-        final LLMModel unslothModel = createLLMModelIfNotFound("unsloth");
+        final LLMModel geminiModel = createLLMModelIfNotFound("gemini-2.5-flash", "google");
+        final LLMModel unslothModel = createLLMModelIfNotFound("unsloth", "unsloth");
 
         // == create initial user
         createUserIfNotFound("nguyendongducviet2001@gmail.com", "Nguyen Dong Duc Viet", "golde", "123456",
@@ -117,12 +117,13 @@ public class SetupDataLoader implements ApplicationListener<ContextRefreshedEven
     }
 
     @Transactional
-    public LLMModel createLLMModelIfNotFound(final String name) {
+    public LLMModel createLLMModelIfNotFound(final String name, final String organization) {
         LLMModel llmModel = llmModelRepository.findLLMModelByModelNameAndActiveStatus(name, true);
         if (llmModel == null) {
             LLMModel model = LLMModel.builder()
                     .modelName(name)
                     .activeStatus(true)
+                    .organization(organization)
                     .build();
             llmModel = llmModelRepository.save(model);
         }

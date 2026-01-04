@@ -102,9 +102,13 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
 
             timeoutId = setTimeout(() => {
                 if (!settled) {
-                    const allMessages = Array.from(messagesMap.values()).map(m => m.content);
+                    const allMessages = Array.from(messagesMap.values())
+                        .map(m => ({
+                            content: m.content,
+                            messageType: m.messageType
+                        }));
                     resolveOnce({
-                        responses: allMessages.length > 0 ? allMessages : ["Request timeout"],
+                        responses: allMessages.length > 0 ? allMessages : [{ content: "Request timeout", messageType: null }],
                         dialogueId: dialogueIdReceived
                     });
                 }
@@ -153,14 +157,16 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
                 try {
                     const data = JSON.parse(event.data);
                     const messageId = data.message_id;
+                    const messageType = data.message_type; // Get message type from server
                     
                     if (!messageId || !messagesMap.has(messageId)) return;
 
                     const messageData = messagesMap.get(messageId);
                     messageData.completed = true;
+                    messageData.messageType = messageType; // Store message type
 
                     if (onMessageEnd) {
-                        onMessageEnd(messageId, messageData.content);
+                        onMessageEnd(messageId, messageData.content, messageType);
                     }
                 } catch (e) {
                     console.error("message_end error:", e);
@@ -177,17 +183,25 @@ export const sendSSEChatMessage = async (dialogueId, message, chatType, options 
 
                     const allMessages = Array.from(messagesMap.values())
                         .filter(m => m.completed)
-                        .map(m => m.content);
+                        .map(m => ({
+                            content: m.content,
+                            messageType: m.messageType
+                        }));
 
                     resolveOnce({
-                        responses: allMessages.length > 0 ? allMessages : [""],
+                        responses: allMessages.length > 0 ? allMessages : [{ content: "", messageType: null }],
                         dialogueId: dialogueIdReceived
                     });
                 } catch (e) {
                     console.error("message_complete error:", e);
-                    const allMessages = Array.from(messagesMap.values()).map(m => m.content).filter(c => c);
+                    const allMessages = Array.from(messagesMap.values())
+                        .map(m => ({
+                            content: m.content,
+                            messageType: m.messageType
+                        }))
+                        .filter(m => m.content);
                     resolveOnce({
-                        responses: allMessages.length > 0 ? allMessages : [""],
+                        responses: allMessages.length > 0 ? allMessages : [{ content: "", messageType: null }],
                         dialogueId: dialogueIdReceived
                     });
                 }

@@ -1,6 +1,8 @@
 from dotenv import load_dotenv
 import os
 
+from chat_hub.kernel.config.config import LLM_DEFAULT_MODEL
+
 load_dotenv()
 
 
@@ -28,4 +30,5 @@ class Config:
     SCHEDULE_PLAN_URL = os.getenv('SCHEDULE_PLAN_URL', 'http://localhost:3002')
 
     SYSTEM_API_KEY = os.getenv('GEMINI_API_KEY', '')
-    
+    LLM_DEFAULT_MODEL = os.getenv('LLM_DEFAULT_MODEL', 'gemini-2.5-flash')
+    LLM_SUB_MODEL = os.getenv('LLM_SUB_MODEL', 'gemini-2.5-flash-lite')  

@@ -57,6 +57,7 @@ class ActiveEnum(Enum):
     INACTIVE = "inactive"
     ACTIVE_BOOL = True
     INACTIVE_BOOL = False
+    OUTDATE = "outdate"
 
 
 class SenderTypeEnum(Enum):

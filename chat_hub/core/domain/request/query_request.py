@@ -9,6 +9,7 @@ class LLMModel(BaseModel):
     model_name: str
     model_key: str
     memory_model: str
+    organization: str
 
     model_config = {
         "alias_generator": to_camel,

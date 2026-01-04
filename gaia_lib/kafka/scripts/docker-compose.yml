@@ -1,5 +1,3 @@
-version: '3.8'
-
 x-kafka-common: &kafka-common
   image: 'bitnami/kafka:latest'
   ports:

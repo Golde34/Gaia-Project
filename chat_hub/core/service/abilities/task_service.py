@@ -1,15 +1,13 @@
-import asyncio
 import json
 
-from core.service import sse_stream_service
-from core.domain.enums import enum, kafka_enum
+from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import CreateTaskResponseSchema, CreateTaskSchema
 from core.prompts.task_prompt import CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT_2
 from core.service.abilities.function_handlers import function_handler
-from infrastructure.kafka.producer import publish_message
+from core.service.chat_service import push_and_save_bot_message
+from infrastructure.client.task_manager_client import task_manager_client
 from kernel.config import llm_models
-from kernel.utils.background_loop import log_background_task_error
 from kernel.utils.parse_json import parse_json_string
 
 
@@ -31,29 +29,12 @@ class PersonalTaskService:
         """
         try:
             task_data = await self._generate_personal_task_llm(query)
-            print("Generated task data:", task_data)
-            await sse_stream_service.handle_broadcast_mode(
-                user_id=str(query.user_id),
-                response=task_data["response"],
-                dialogue_id=query.dialogue_id
-            )
-            print("Pushed initial response to client.")
-            background_task = asyncio.create_task(
-                self._dispatch_create_personal_task_request(
-                    query=query,
-                    task_data=task_data
-                )
-            )
-            background_task.add_done_callback(log_background_task_error)
-            return task_data["response"], enum.TaskStatus.PENDING.value
 
-        except Exception as e:
-            raise e
-
-    async def _dispatch_create_personal_task_request(self, query: QueryRequest, task_data: dict):
-        try:
+            await push_and_save_bot_message(
+                message=task_data["response"], query=query
+            )
+            
             # created_task = await task_manager_client.create_personal_task(task_data)
-            # mock this creaded_task response for testing for me
             created_task = {
                 "id": "68b085c93abd0bb364036682",
                 "title": task_data.get("title"),
@@ -71,18 +52,20 @@ class PersonalTaskService:
                 "__v": 0,
                 "tag": task_data.get("tag", "general"),
             }
-            try:
-                await publish_message(
-                    kafka_enum.KafkaTopic.ABILITY_TASK_RESULT.value,
-                    kafka_enum.KafkaCommand.GENERATE_TASK_RESULT.value,
-                    {
-                        "task": created_task,
-                        "query": query.model_dump()
-                    },
-                )
-            except Exception as exc:
-                print(f"Failed to dispatch register calendar request: {exc}")
             
+            task_result = await self._handle_task_result(task=created_task, query=query)
+            
+            task_card_data = task_result.get("task")
+            if isinstance(task_card_data, dict) and "response" in task_card_data:
+                task_card_data = {k: v for k, v in task_card_data.items() if k != "response"}
+            await push_and_save_bot_message(
+                message=task_card_data, 
+                query=query,
+                message_type="task_result"
+            )
+
+            return task_result.get("response"), True # Last message
+
         except Exception as e:
             raise e
 
@@ -125,7 +108,6 @@ class PersonalTaskService:
                         print("Exception while parsing", expr)
                         task_data[key] = datetime_values[key]
 
-            print("Final task data:", task_data)
             return task_data
 
         except Exception as e:
@@ -140,9 +122,8 @@ class PersonalTaskService:
         except Exception as e:
             raise e
 
-    async def handle_task_result(self, task: dict, query: QueryRequest) -> dict:
-        task_result_response = await self.create_personal_task_result(task=task, query=query)
-        print("Task result response:", task_result_response)
+    async def _handle_task_result(self, task: dict, query: QueryRequest) -> dict:
+        task_result_response = await self._create_personal_task_result(task=task, query=query)
         response: CreateTaskResponseSchema = task_result_response
         print("Final response object:", response)
         return {
@@ -152,7 +133,7 @@ class PersonalTaskService:
             "dialogueId": query.dialogue_id
         }
 
-    async def create_personal_task_result(self, task: dict, query: QueryRequest) -> str:
+    async def _create_personal_task_result(self, task: dict, query: QueryRequest) -> str:
         """
         Task result pipeline
         Args:
@@ -160,10 +141,12 @@ class PersonalTaskService:
         Returns:
             str: Short response to the request
         """
-
         try:
-            prompt = TASK_RESULT_PROMPT_2.format(task=task)
-            function = await llm_models.get_model_generate_content(query.model, query.user_id)
+            task_str = json.dumps(task)
+            prompt = TASK_RESULT_PROMPT_2.format(task=task_str)
+            function = await llm_models.get_model_generate_content(
+                query.model, query.user_id, prompt=prompt
+            )
             response = function(prompt=prompt, model=query.model,
                                 dto=CreateTaskResponseSchema)
             return json.loads(response)
@@ -190,30 +173,6 @@ class PersonalTaskService:
 personal_task_service = PersonalTaskService()
 
 # Register bound method to function handler registry
-function_handler(label=enum.GaiaAbilities.CREATE_TASK.value, is_sequential=True)(
+function_handler(label=enum.GaiaAbilities.CREATE_TASK.value, is_sequential=True, is_executable=True)(
     personal_task_service.create_personal_task
 )
-
-
-def handle_task_service_response(matched_type: str, result: any) -> str:
-    if matched_type == enum.GaiaAbilities.CHITCHAT.value:
-        data = {
-            'type': matched_type,
-            'response': result
-        }
-    elif matched_type == enum.GaiaAbilities.SEARCH.value:
-        payload = result if isinstance(result, dict) else {
-            'response': str(result)}
-        data = {
-            'type': matched_type,
-            'response': payload.get('response', ''),
-            'search': payload
-        }
-    else:
-        data = {
-            'type': matched_type,
-            'response': result.get('response'),
-            'task': result
-        }
-
-    return data

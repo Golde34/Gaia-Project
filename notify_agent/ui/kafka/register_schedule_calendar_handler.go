@@ -38,8 +38,6 @@ func (handler *ScheduleResultHandler) HandleMessage(topic string, key, value []b
 	switch message.Cmd {
 	case constants.GenerateCalendarScheduleCmd:
 		handler.RegisterCalendarTopic(key, data)
-	case constants.GenerateTaskResultCmd:
-		handler.HandlerGenerateTaskResult(key, data)
 	default:
 		log.Println("Message handled successfully, but the cmd does not match to consumer to process")
 	}
@@ -52,23 +50,6 @@ func (handler *ScheduleResultHandler) RegisterCalendarTopic(key []byte, data map
 	go handler.handleService(data, userId, enums.RegisterCalendarDialogueType )
 
 	fmt.Printf("Register Calendar handled successfully for message ID: %s\n", messageId)
-}
-
-func (handler *ScheduleResultHandler) HandlerGenerateTaskResult(key []byte, data map[string]interface{}) {
-	messageId := string(key)
-	log.Println("Processing Generate Task Result for data:", data)
-	response := data["response"].(string)
-	task := data["task"].(map[string]interface{})
-	userId := task["userId"].(float64)
-	data = map[string]interface{}{
-		"response": response,
-		"task": task,
-		"dialogueId": data["dialogueId"],
-		"operationStatus": data["operationStatus"],
-	}
-	go handler.handleService(data, userId, enums.GenerateTaskResultDialogueType )	
-
-	fmt.Printf("Generate Task Result handled successfully for message ID: %s\n", messageId)
 }
 
 func (handler *ScheduleResultHandler) handleService(messageMap map[string]interface{}, userId float64, messageType string) {

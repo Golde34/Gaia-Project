@@ -59,11 +59,6 @@ async def _safe_put(queue: asyncio.Queue, message: str) -> None:
         pass
 
 
-def format_sse_event(event: str, payload: dict) -> str:
-    """Expose formatter for modules that need to craft event messages."""
-    return _format_event(event, payload)
-
-
 async def broadcast_message_start(user_id: str, message_id: Optional[str] = None, dialogue_id: Optional[str] = None) -> str:
     message_id = message_id or f"msg-{uuid.uuid4()}"
     await broadcast_to_user(user_id, MessageType.MESSAGE_START, {
@@ -81,10 +76,13 @@ async def broadcast_message_chunk(user_id: str, message_id: str, content: str, c
     })
 
 
-async def broadcast_message_end(user_id: str, message_id: str) -> None:
-    await broadcast_to_user(user_id, MessageType.MESSAGE_END, {
+async def broadcast_message_end(user_id: str, message_id: str, message_type: Optional[str] = None) -> None:
+    payload = {
         "message_id": message_id
-    })
+    }
+    if message_type:
+        payload["message_type"] = message_type
+    await broadcast_to_user(user_id, MessageType.MESSAGE_END, payload)
 
 
 async def broadcast_message_complete(user_id: str, dialogue_id: Optional[str] = None) -> None:

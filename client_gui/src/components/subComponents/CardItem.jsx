@@ -28,9 +28,13 @@ const CardItem = (props) => {
                     <Grid numItems={2}>
                         <Col numColSpan={1}>
                             <Flex justifyContent="start">
-                                {task.priority.map((priority) => (
-                                    <Badge key={`${task.id}-${priority}`} className="me-1 mt-1" color={priorityColor(priority)}>{priority}</Badge>
-                                ))}
+                                {typeof task.priority === "string" ? (
+                                    <Badge key={`${task.id}-${task.priority}`} className="me-1 mt-1" color={priorityColor(task.priority)}>{task.priority}</Badge>
+                                ) : (
+                                    task.priority.map((priority) => (
+                                        <Badge key={`${task.id}-${priority}`} className="me-1 mt-1" color={priorityColor(priority)}>{priority}</Badge>
+                                    ))
+                                )}
                             </Flex>
                         </Col>
                         <Col numColSpan={1}>
