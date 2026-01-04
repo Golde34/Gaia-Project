@@ -30,8 +30,9 @@ def function_handler(label: str, is_sequential: bool = False):
     def decorator(func: Callable):
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            query = _extract_agent_execution(args, kwargs, label)
-            execution: AgentExecution = await agent_execution_repo.create_agent_execution(query)
+            query: QueryRequest = _extract_query(args, kwargs)
+            execution_entity: AgentExecution = _extract_agent_execution(args, kwargs, label, query)
+            execution_log: AgentExecution = await agent_execution_repo.create_agent_execution(execution_entity)
             try:
                 # All function handlers are expected to return a tuple of (result, is_need_recommendation)
                 response, is_need_recommendation = await func(*args, **kwargs)
@@ -40,14 +41,14 @@ def function_handler(label: str, is_sequential: bool = False):
                 )
             except Exception as exc:
                 execution_result = await agent_execution_repo.update_agent_execution_status(
-                    execution_id=execution.id,
+                    execution_id=execution_log.id,
                     status=enum.TaskStatus.FAILED.value,
                     tool_output=str(exc),
                 )
                 raise exc
 
             execution_result = await agent_execution_repo.update_agent_execution_status(
-                execution_id=execution.id,
+                execution_id=execution_log.id,
                 status=enum.TaskStatus.SUCCESS.value,
                 tool_output=str(response),
             )
@@ -62,8 +63,7 @@ def function_handler(label: str, is_sequential: bool = False):
     return decorator
 
 
-def _extract_agent_execution(args: tuple, kwargs: dict, label: str) -> Optional[AgentExecution]:
-    query: QueryRequest = _extract_query(args, kwargs)
+def _extract_agent_execution(args: tuple, kwargs: dict, label: str, query: QueryRequest) -> Optional[AgentExecution]:
     confidence_score = kwargs.get('confidence_score', None)
     tool_input = kwargs.get('tool_input', None)
     tool_output = kwargs.get('tool_output', None)
