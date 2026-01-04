@@ -1,6 +1,7 @@
 import asyncio
 import traceback
 import inspect
+import json
 from typing import Optional, Callable, Any, Dict
 from fastapi.responses import StreamingResponse
 
@@ -39,6 +40,7 @@ async def handle_sse_stream(
             response = await result if inspect.isawaitable(result) else result
             print("SSE stream initial response:", response)  # SUCCESS or FAILURE
             
+            await broadcast_message_complete(str(user_id), dialogue_id)
             # Broadcast final status event for client to close connection
             if response == MessageType.SUCCESS_MESSAGE:
                 await broadcast_success(str(user_id))
@@ -47,8 +49,6 @@ async def handle_sse_stream(
             else:
                 # Default to success if response is not explicitly FAILURE
                 await broadcast_success(str(user_id))
-
-            await broadcast_message_complete(str(user_id), dialogue_id)
 
         except asyncio.CancelledError:
             raise
@@ -111,22 +111,41 @@ async def handle_sse_stream(
         raise
 
 
-async def handle_broadcast_mode(response: Any, user_id: int, dialogue_id: Optional[Dict]) -> None:
+async def handle_broadcast_mode(response: Any, user_id: int, dialogue_id: Optional[Dict], message_type: Optional[str] = None) -> None:
     """
     Broadcast mode: push response to client using broadcast functions
     Abilities use this mode
+    
+    Args:
+        response: Message content (string, dict, or list)
+        user_id: User ID to broadcast to
+        dialogue_id: Dialogue ID
+        message_type: Optional message type (e.g., 'task_result', 'calendar_event')
+                     This will be sent to client to determine how to render the message
     """
-    responses_list = _extract_responses(response)
+    # When message_type is specified, treat response as raw data (don't extract nested fields)
+    if message_type:
+        responses_list = [response]  # Send entire response as-is
+    else:
+        responses_list = _extract_responses(response)  # Extract nested "response" or "responses" fields
 
     for item in responses_list:
         msg_id = await broadcast_message_start(str(user_id), dialogue_id=dialogue_id)
-        chunks = _chunk_text(str(item) if item else "")
+        
+        # Convert to JSON string if it's a dict/object and message_type is specified
+        content = item
+        if message_type and isinstance(item, (dict, list)):
+            content = json.dumps(item, ensure_ascii=False)
+        else:
+            content = str(item) if item else ""
+            
+        chunks = _chunk_text(content)
 
         for idx, chunk in enumerate(chunks):
             await broadcast_message_chunk(str(user_id), msg_id, chunk, idx)
             await asyncio.sleep(0.1)
 
-        await broadcast_message_end(str(user_id), msg_id)
+        await broadcast_message_end(str(user_id), msg_id, message_type=message_type)
 
     
 

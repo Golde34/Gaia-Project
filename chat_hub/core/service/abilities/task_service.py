@@ -53,11 +53,15 @@ class PersonalTaskService:
             }
             
             task_result = await self._handle_task_result(task=created_task, query=query)
+            print("Task result response: ", task_result.get("response"))
+            print("Task result task: ", task_result.get("task"))
             await push_and_save_bot_message(
-                message=task_result.get("response"), query=query
+                message=task_result.get("task"), 
+                query=query,
+                message_type="task_result"
             )
 
-            return task_result.get("task"), True # Last message
+            return task_result.get("response"), True # Last message
 
         except Exception as e:
             raise e

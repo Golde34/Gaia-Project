@@ -76,10 +76,13 @@ async def broadcast_message_chunk(user_id: str, message_id: str, content: str, c
     })
 
 
-async def broadcast_message_end(user_id: str, message_id: str) -> None:
-    await broadcast_to_user(user_id, MessageType.MESSAGE_END, {
+async def broadcast_message_end(user_id: str, message_id: str, message_type: Optional[str] = None) -> None:
+    payload = {
         "message_id": message_id
-    })
+    }
+    if message_type:
+        payload["message_type"] = message_type
+    await broadcast_to_user(user_id, MessageType.MESSAGE_END, payload)
 
 
 async def broadcast_message_complete(user_id: str, dialogue_id: Optional[str] = None) -> None:
