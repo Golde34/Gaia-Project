@@ -51,7 +51,8 @@ async def chitchat(query: QueryRequest) -> str:
             model: LLMModel = LLMModel(
                 model_name=config.LLM_DEFAULT_MODEL,
                 model_key=config.SYSTEM_API_KEY,
-                memory_model=enum.MemoryModel.DEFAULT.value
+                memory_model=enum.MemoryModel.DEFAULT.value,
+                organization=config.SYSTEM_ORGANIZATION
             )
         else:
             model = query.model

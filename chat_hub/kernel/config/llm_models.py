@@ -7,6 +7,7 @@ from kernel.config.config import session_id_var
 
 MODELS_INTERFACE = {
     "gemini-2.5-flash": gemini_generate_content.generate_content,
+    "gemini-2.5-flash-lite": gemini_generate_content.generate_content,
     "unsloth": "UNSLOTH" 
 }
 

@@ -7,6 +7,7 @@ load_dotenv()
 
 session_id_var = contextvars.ContextVar("session_id", default=None)
 
+SYSTEM_ORGANIZATION = os.getenv('SYSTEM_ORGANIZATION', 'google')
 SYSTEM_API_KEY = os.getenv('SYSTEM_API_KEY', 'your_system_api_key_here')
 OPENAPI_KEY = os.getenv('OPENAPI_KEY', 'your_openai_api_key_here')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'your_gemini_api_key_here')
