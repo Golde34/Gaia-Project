@@ -90,6 +90,7 @@ public class UserModelSettingServiceImpl implements UserModelSettingService {
                     .modelKey(present.getOriginKey())
                     .userId(present.getUserId())
                     .memoryModel(user.getUserSetting().getMemoryModel())
+                    .organization(model.getOrganization())
                     .build();
             return genericResponse.matchingResponseMessage(
                     new GenericResponse<>(response, ResponseEnum.msg200));

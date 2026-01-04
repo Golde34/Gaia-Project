@@ -16,4 +16,5 @@ public class UserModelResponse {
     private String modelName;
     private String modelKey;
     private String memoryModel;
+    private String organization;
 }
