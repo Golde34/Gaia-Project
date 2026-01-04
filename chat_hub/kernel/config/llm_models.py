@@ -6,8 +6,7 @@ from kernel.config.config import session_id_var
 
 
 MODELS_INTERFACE = {
-    "gemini-2.5-flash": gemini_generate_content.generate_content,
-    "gemini-2.5-flash-lite": gemini_generate_content.generate_content,
+    "google": gemini_generate_content.generate_content,
     "unsloth": "UNSLOTH" 
 }
 
@@ -16,12 +15,12 @@ async def get_model_generate_content(model: LLMModel, user_id: str, prompt: str 
     Get the generate content function for the specified model.
     
     Args:
-        model_name (str): The name of the model.
+        model (LLMModel): The model object.
         
     Returns:
         str: The generate content function for the model.
     """
-    if model.model_name not in MODELS_INTERFACE:
+    if model.organization not in MODELS_INTERFACE:
         raise ValueError(f"Model {model.model_name} is not supported.")
     session_id = session_id_var.get() 
     try:
@@ -32,7 +31,7 @@ async def get_model_generate_content(model: LLMModel, user_id: str, prompt: str 
         )
     except Exception as e:
         print(f"Error pushing calling LLM API times message: {e}")
-    return MODELS_INTERFACE.get(model.model_name, "gemini-2.5-flash")
+    return MODELS_INTERFACE.get(model.organization, "google")
 
 async def push_calling_llm_api_times_message(user_id: str, session_id: str, prompt: str = None):
     payload = {
