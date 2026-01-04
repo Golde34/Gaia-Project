@@ -29,7 +29,7 @@ class PersonalTaskService:
         """
         try:
             task_data = await self._generate_personal_task_llm(query)
-            print("Generated task data:", task_data)
+
             await push_and_save_bot_message(
                 message=task_data["response"], query=query
             )
@@ -108,7 +108,6 @@ class PersonalTaskService:
                         print("Exception while parsing", expr)
                         task_data[key] = datetime_values[key]
 
-            print("Final task data:", task_data)
             return task_data
 
         except Exception as e:
@@ -125,7 +124,6 @@ class PersonalTaskService:
 
     async def _handle_task_result(self, task: dict, query: QueryRequest) -> dict:
         task_result_response = await self._create_personal_task_result(task=task, query=query)
-        print("Task result response:", task_result_response)
         response: CreateTaskResponseSchema = task_result_response
         print("Final response object:", response)
         return {

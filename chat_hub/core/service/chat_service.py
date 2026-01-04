@@ -19,7 +19,7 @@ async def push_and_save_bot_message(
         sender_type=SenderTypeEnum.BOT.value,
         user_message_id=query.user_message_id,
     )
-    print("Bot message created with ID:", bot_message_id)
+
     await sse_stream_service.handle_broadcast_mode(
         user_id=str(query.user_id),
         response=message,
