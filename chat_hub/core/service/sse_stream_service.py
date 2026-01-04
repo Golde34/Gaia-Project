@@ -123,7 +123,6 @@ async def handle_broadcast_mode(response: Any, user_id: int, dialogue_id: Option
         message_type: Optional message type (e.g., 'task_result', 'calendar_event')
                      This will be sent to client to determine how to render the message
     """
-    # When message_type is specified, treat response as raw data (don't extract nested fields)
     if message_type:
         responses_list = [response]  # Send entire response as-is
     else:
@@ -132,7 +131,6 @@ async def handle_broadcast_mode(response: Any, user_id: int, dialogue_id: Option
     for item in responses_list:
         msg_id = await broadcast_message_start(str(user_id), dialogue_id=dialogue_id)
         
-        # Convert to JSON string if it's a dict/object and message_type is specified
         content = item
         if message_type and isinstance(item, (dict, list)):
             content = json.dumps(item, ensure_ascii=False)

@@ -6,6 +6,7 @@ from core.domain.response.model_output_schema import CreateTaskResponseSchema, C
 from core.prompts.task_prompt import CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT_2
 from core.service.abilities.function_handlers import function_handler
 from core.service.chat_service import push_and_save_bot_message
+from infrastructure.client.task_manager_client import task_manager_client
 from kernel.config import llm_models
 from kernel.utils.parse_json import parse_json_string
 
@@ -33,30 +34,15 @@ class PersonalTaskService:
                 message=task_data["response"], query=query
             )
             
-            # created_task = await task_manager_client.create_personal_task(task_data)
-            created_task = {
-                "id": "68b085c93abd0bb364036682",
-                "title": task_data.get("title"),
-                "description": task_data.get("description"),
-                "priority": task_data.get("priority", []),
-                "status": "TODO",
-                "startDate": task_data.get("startDate"),
-                "deadline": task_data.get("deadline"),
-                "duration": task_data.get("duration"),
-                "createdAt": "2025-08-28T16:37:29.156Z",
-                "updatedAt": "2025-08-28T16:37:29.156Z",
-                "activeStatus": "ACTIVE",
-                "groupTaskId": None,
-                "userId": query.user_id,
-                "__v": 0,
-                "tag": task_data.get("tag", "general"),
-            }
+            created_task = await task_manager_client.create_personal_task(task_data)
             
             task_result = await self._handle_task_result(task=created_task, query=query)
-            print("Task result response: ", task_result.get("response"))
-            print("Task result task: ", task_result.get("task"))
+            
+            task_card_data = task_result.get("task")
+            if isinstance(task_card_data, dict) and "response" in task_card_data:
+                task_card_data = {k: v for k, v in task_card_data.items() if k != "response"}
             await push_and_save_bot_message(
-                message=task_result.get("task"), 
+                message=task_card_data, 
                 query=query,
                 message_type="task_result"
             )
