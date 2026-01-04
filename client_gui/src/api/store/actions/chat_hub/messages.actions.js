@@ -1,7 +1,4 @@
 import { config } from "../../../../kernels/configs/configuration";
-import { handleMessageStart, handleMessageChunk, handleMessageEnd, handleMessageComplete,
-    handleSuccess, handleFailure, handleError, handleConnectionClosed, createSettleHandler
-} from "../../../../kernels/utils/sse_handler";
 import { HttpMethods, serverRequest } from "../../../baseAPI";
 import {
     GET_CHAT_HISTORY_FAILURE,
@@ -46,101 +43,231 @@ const buildChatHistoryKey = (dialogueId = "", chatType = "") => {
 
 export const sendSSEChatMessage = async (dialogueId, message, chatType, options = {}) => {
     try {
-        const sseToken = await initiateSSEConnection();
-        const url = buildSSEUrl(dialogueId, message, sseToken, chatType);
+        const tokenResponse = await serverRequest(`/chat-interaction/initiate-chat`, HttpMethods.POST, portName.chatHubPort);
+        if (tokenResponse.status !== 200) {
+            throw new Error("Failed to initiate chat");
+        }
+        if (!tokenResponse.data) {
+            throw new Error("SSE token not received");
+        }
+
+        const params = new URLSearchParams({
+            dialogueId: dialogueId,
+            message: message,
+            sseToken: tokenResponse.data,
+            ...(chatType && { type: chatType })
+        });
         
+        const baseUrl = `http://${config.serverHost}:${config.chatHubPort}`;
+        const url = `${baseUrl}/chat-system/send-message?${params}`;
+
+        const { onMessageStart, onChunk, onMessageEnd, onComplete, onError } = options ?? {};
+
         return new Promise((resolve, reject) => {
             const eventSource = new EventSource(url);
-            const messageStore = createMessageStore();
-            const callbacks = { ...options, resolve, reject };
-            
-            const timeoutId = setTimeout(() => {
-                const response = messageStore.buildResponse();
-                response.responses[0].content = response.responses[0].content || "Request timeout";
-                resolve(response);
+            const messagesMap = new Map();
+            let settled = false;
+            let timeoutId = null;
+            let dialogueIdReceived = null;
+
+            const resolveOnce = (payload) => {
+                if (settled) return;
+                settled = true;
+                if (timeoutId) clearTimeout(timeoutId);
                 eventSource.close();
-            }, 120000);
-
-            const settleHandler = createSettleHandler(eventSource, timeoutId, {
-                onComplete: callbacks.onComplete,
-                onError: callbacks.onError
-            });
-
-            const settleWithPromise = (isSuccess, payload) => {
-                settleHandler.settle(isSuccess, payload);
-                isSuccess ? resolve(payload) : reject(payload);
+                if (onComplete) {
+                    try {
+                        onComplete(payload);
+                    } catch (e) {
+                        console.error("onComplete error:", e);
+                    }
+                }
+                resolve(payload);
             };
 
-            eventSource.addEventListener("message_start", (e) => handleMessageStart(e, messageStore, callbacks));
-            eventSource.addEventListener("message_chunk", (e) => handleMessageChunk(e, messageStore, callbacks));
-            eventSource.addEventListener("message_end", (e) => handleMessageEnd(e, messageStore, callbacks));
-            eventSource.addEventListener("message_complete", (e) => handleMessageComplete(e, messageStore, { settle: settleWithPromise }));
-            eventSource.addEventListener("success", (e) => {
-                const result = handleSuccess(e, eventSource, timeoutId, settleHandler, messageStore);
-                if (result) resolve(result);
+            const rejectOnce = (error) => {
+                if (settled) return;
+                settled = true;
+                if (timeoutId) clearTimeout(timeoutId);
+                eventSource.close();
+                if (onError) {
+                    try {
+                        onError(error);
+                    } catch (e) {
+                        console.error("onError error:", e);
+                    }
+                }
+                reject(error);
+            };
+
+            timeoutId = setTimeout(() => {
+                if (!settled) {
+                    const allMessages = Array.from(messagesMap.values())
+                        .map(m => ({
+                            content: m.content,
+                            messageType: m.messageType
+                        }));
+                    resolveOnce({
+                        responses: allMessages.length > 0 ? allMessages : [{ content: "Request timeout", messageType: null }],
+                        dialogueId: dialogueIdReceived
+                    });
+                }
+            }, 120000);
+
+            eventSource.addEventListener("message_start", (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    const messageId = data.message_id;
+                    if (!messageId) return;
+
+                    messagesMap.set(messageId, { id: messageId, content: "", completed: false });
+                    
+                    if (data.dialogue_id) {
+                        dialogueIdReceived = data.dialogue_id;
+                    }
+
+                    if (onMessageStart) {
+                        onMessageStart(messageId);
+                    }
+                } catch (e) {
+                    console.error("message_start error:", e);
+                }
             });
-            eventSource.addEventListener("failure", (e) => handleFailure(e, { settle: settleWithPromise }));
-            eventSource.addEventListener("error", (e) => handleError(e, { settle: settleWithPromise }));
-            eventSource.onerror = () => handleConnectionClosed(eventSource, { settle: settleWithPromise });
+
+            eventSource.addEventListener("message_chunk", (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    const messageId = data.message_id;
+                    const chunk = data.content || "";
+                    
+                    if (!messageId || !messagesMap.has(messageId)) return;
+
+                    const messageData = messagesMap.get(messageId);
+                    messageData.content += chunk;
+
+                    if (onChunk) {
+                        onChunk(messageId, messageData.content, chunk);
+                    }
+                } catch (e) {
+                    console.error("message_chunk error:", e);
+                }
+            });
+
+            eventSource.addEventListener("message_end", (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    const messageId = data.message_id;
+                    const messageType = data.message_type; // Get message type from server
+                    
+                    if (!messageId || !messagesMap.has(messageId)) return;
+
+                    const messageData = messagesMap.get(messageId);
+                    messageData.completed = true;
+                    messageData.messageType = messageType; // Store message type
+
+                    if (onMessageEnd) {
+                        onMessageEnd(messageId, messageData.content, messageType);
+                    }
+                } catch (e) {
+                    console.error("message_end error:", e);
+                }
+            });
+
+            eventSource.addEventListener("message_complete", (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.dialogue_id) {
+                        dialogueIdReceived = data.dialogue_id;
+                    }
+
+                    const allMessages = Array.from(messagesMap.values())
+                        .filter(m => m.completed)
+                        .map(m => ({
+                            content: m.content,
+                            messageType: m.messageType
+                        }));
+
+                    resolveOnce({
+                        responses: allMessages.length > 0 ? allMessages : [{ content: "", messageType: null }],
+                        dialogueId: dialogueIdReceived
+                    });
+                } catch (e) {
+                    console.error("message_complete error:", e);
+                    const allMessages = Array.from(messagesMap.values())
+                        .map(m => ({
+                            content: m.content,
+                            messageType: m.messageType
+                        }))
+                        .filter(m => m.content);
+                    resolveOnce({
+                        responses: allMessages.length > 0 ? allMessages : [{ content: "", messageType: null }],
+                        dialogueId: dialogueIdReceived
+                    });
+                }
+            });
+
+            eventSource.addEventListener("success", (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log("Received SUCCESS event - closing connection:", data);
+                    
+                    // Close connection silently without triggering onComplete
+                    if (!settled) {
+                        settled = true;
+                        if (timeoutId) clearTimeout(timeoutId);
+                        eventSource.close();
+                        resolve({ silent: true, status: "success", dialogueId: dialogueIdReceived });
+                    }
+                } catch (e) {
+                    console.error("success event error:", e);
+                    if (!settled) {
+                        settled = true;
+                        if (timeoutId) clearTimeout(timeoutId);
+                        eventSource.close();
+                        resolve({ silent: true, status: "success", dialogueId: dialogueIdReceived });
+                    }
+                }
+            });
+
+            eventSource.addEventListener("failure", (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.error("Received FAILURE event:", data);
+                    
+                    // Close connection and trigger onError to display error message
+                    rejectOnce(new Error(data.error || "Chat processing failed"));
+                } catch (e) {
+                    console.error("failure event error:", e);
+                    rejectOnce(new Error("Chat processing failed"));
+                }
+            });
+
+            eventSource.addEventListener("error", (event) => {
+                let errorMessage = "EventSource error";
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data?.error) {
+                        errorMessage = data.error;
+                    }
+                } catch {
+                    if (event?.data) {
+                        errorMessage = event.data;
+                    }
+                }
+                rejectOnce(new Error(errorMessage));
+            });
+
+            eventSource.onerror = () => {
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    rejectOnce(new Error("Connection closed"));
+                }
+            };
         });
     } catch (error) {
         console.error("Error sending chat message:", error);
         throw error;
     }
-};
-
-const initiateSSEConnection = async () => {
-    const tokenResponse = await serverRequest(`/chat-interaction/initiate-chat`, HttpMethods.POST, portName.chatHubPort);
-    if (tokenResponse.status !== 200 || !tokenResponse.data) {
-        throw new Error("Failed to initiate chat or SSE token not received");
-    }
-    return tokenResponse.data;
-};
-
-const buildSSEUrl = (dialogueId, message, sseToken, chatType) => {
-    const params = new URLSearchParams({
-        dialogueId,
-        message,
-        sseToken,
-        ...(chatType && { type: chatType })
-    });
-    return `http://${config.serverHost}:${config.chatHubPort}/chat-system/send-message?${params}`;
-};
-
-const createMessageStore = () => {
-    const messagesMap = new Map();
-    let dialogueIdReceived = null;
-
-    return {
-        addMessage: (messageId) => {
-            messagesMap.set(messageId, { id: messageId, content: "", completed: false });
-        },
-        appendContent: (messageId, content) => {
-            const message = messagesMap.get(messageId);
-            if (message) message.content += content;
-        },
-        markCompleted: (messageId, messageType) => {
-            const message = messagesMap.get(messageId);
-            if (message) {
-                message.completed = true;
-                message.messageType = messageType;
-            }
-        },
-        hasMessage: (messageId) => messagesMap.has(messageId),
-        getMessage: (messageId) => messagesMap.get(messageId),
-        setDialogueId: (dialogueId) => { dialogueIdReceived = dialogueId; },
-        getDialogueId: () => dialogueIdReceived,
-        buildResponse: (filterCompleted = false) => {
-            const messages = Array.from(messagesMap.values())
-                .filter(m => !filterCompleted || m.completed)
-                .map(m => ({ content: m.content, messageType: m.messageType }));
-            
-            return {
-                responses: messages.length > 0 ? messages : [{ content: "", messageType: null }],
-                dialogueId: dialogueIdReceived
-            };
-        }
-    };
 };
 
 export const sendNormalChatMessageNew = async (dialogueId, message, chatType, tabId) => {
