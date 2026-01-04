@@ -56,11 +56,8 @@ class PersonalTaskService:
             await push_and_save_bot_message(
                 message=task_result.get("response"), query=query
             )
-            await push_and_save_bot_message(
-                message=task_result.get("task"), query=query
-            )
 
-            return task_data.get("response"), True
+            return task_result.get("task"), True # Last message
 
         except Exception as e:
             raise e

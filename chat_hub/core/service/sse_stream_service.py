@@ -21,6 +21,7 @@ KEEP_ALIVE_INTERVAL = 15
 
 
 async def handle_sse_stream(
+    dialogue_id: str,
     user_id: int,
     func: Optional[Callable[..., Any]] = None,
 ) -> StreamingResponse:
@@ -46,6 +47,8 @@ async def handle_sse_stream(
             else:
                 # Default to success if response is not explicitly FAILURE
                 await broadcast_success(str(user_id))
+
+            await broadcast_message_complete(str(user_id), dialogue_id)
 
         except asyncio.CancelledError:
             raise
@@ -125,7 +128,6 @@ async def handle_broadcast_mode(response: Any, user_id: int, dialogue_id: Option
 
         await broadcast_message_end(str(user_id), msg_id)
 
-    await broadcast_message_complete(str(user_id), dialogue_id)
     
 
 def _extract_responses(response: Any) -> list:

@@ -82,8 +82,8 @@ class OrchestratorService:
         status: str = result[1]
         is_need_recommendation: bool = result[2]
 
-        if is_need_recommendation and status == TaskStatus.SUCCESS.value:
-            await self._handle_recommendation(query)
+        # if is_need_recommendation and status == TaskStatus.SUCCESS.value:
+        #     await self._handle_recommendation(query)
 
         return response
 

@@ -1,4 +1,4 @@
-from core.domain.enums.enum import SenderTypeEnum, DialogueEnum
+from core.domain.enums.enum import SenderTypeEnum
 from core.domain.request.query_request import QueryRequest
 from core.service import sse_stream_service
 from core.service.integration.message_service import message_service

@@ -82,6 +82,7 @@ class ChatInteractionUsecase:
     async def handle_send_message(cls, user_id: int, request: SendMessageRequest):
         handler = functools.partial(cls._create_message_flow, user_id, request)
         return await sse_stream_service.handle_sse_stream(
+            dialogue_id=request.dialogue_id,
             user_id=user_id,
             func=handler
         )
