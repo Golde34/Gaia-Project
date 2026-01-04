@@ -242,7 +242,7 @@ async def kafka_update_recursive_summary(memory_request: MemoryRequest) -> None:
 
         prompt = RECURSIVE_SUMMARY_PROMPT.format(recent_history=recent_history)
         model: LLMModel = LLMModel(
-            model_name=config.LLM_DEFAULT_MODEL,
+            model_name=config.LLM_SUB_MODEL,
             model_key=config.SYSTEM_API_KEY,
             memory_model=enum.MemoryModel.DEFAULT.value
         )
@@ -336,7 +336,7 @@ async def kafka_update_long_term_memory(memory_request: MemoryRequest) -> None:
 
 async def _build_long_term_memory(prompt: str, user_id: int) -> LongTermMemorySchema:
     model: LLMModel = LLMModel(
-        model_name=config.LLM_DEFAULT_MODEL,
+        model_name=config.LLM_SUB_MODEL,
         model_key=config.SYSTEM_API_KEY,
         memory_model=enum.MemoryModel.DEFAULT.value,
     )

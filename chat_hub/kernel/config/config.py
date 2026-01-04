@@ -13,6 +13,7 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'your_gemini_api_key_here')
 LLAMA_API_KEY = os.getenv('LLAMA_API_KEY', 'your_llama_api_key_here')
 LLAMA_API_URL = os.getenv('LLAMA_API_URL', 'https://api.llama.com/v1/generate')
 LLM_DEFAULT_MODEL = os.getenv('LLM_DEFAULT_MODEL', 'gemini-2.5-flash')
+LLM_SUB_MODEL = os.getenv('LLM_SUB_MODEL', 'gemini-2.5-flash-lite')
 
 EMBEDDING_MODEL = os.getenv('EMBEDDING_MODEL')
 RERANKING_MODEL = os.getenv('RERANKING_MODEL', 'default_reranking_config')
