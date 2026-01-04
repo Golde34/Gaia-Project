@@ -34,7 +34,24 @@ class PersonalTaskService:
                 message=task_data["response"], query=query
             )
             
-            created_task = await task_manager_client.create_personal_task(task_data)
+            # created_task = await task_manager_client.create_personal_task(task_data)
+            created_task = {
+                "id": "68b085c93abd0bb364036682",
+                "title": task_data.get("title"),
+                "description": task_data.get("description"),
+                "priority": task_data.get("priority", []),
+                "status": "TODO",
+                "startDate": task_data.get("startDate"),
+                "deadline": task_data.get("deadline"),
+                "duration": task_data.get("duration"),
+                "createdAt": "2025-08-28T16:37:29.156Z",
+                "updatedAt": "2025-08-28T16:37:29.156Z",
+                "activeStatus": "ACTIVE",
+                "groupTaskId": None,
+                "userId": query.user_id,
+                "__v": 0,
+                "tag": task_data.get("tag", "general"),
+            }
             
             task_result = await self._handle_task_result(task=created_task, query=query)
             
