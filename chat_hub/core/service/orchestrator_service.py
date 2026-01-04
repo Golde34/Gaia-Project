@@ -79,9 +79,8 @@ class OrchestratorService:
     ) -> str:
         result = await task.get("executor")(query=query)
         response = result[0]
-        execution_result: Optional[AgentExecution] = result[1]
+        status: str = result[1]
         is_need_recommendation: bool = result[2]
-        status = execution_result.status
 
         if is_need_recommendation and status == TaskStatus.SUCCESS.value:
             await self._handle_recommendation(query)
@@ -107,7 +106,6 @@ class OrchestratorService:
     ) -> Tuple[Dict[str, Any], str, bool]:
         pending_task, recommendation = await asyncio.gather(
             self._dispatch_parallel_task(task, query),
-            self._fetch_recommendation(query),
         )
         return pending_task, recommendation, False
 

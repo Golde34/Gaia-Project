@@ -5,7 +5,7 @@ from infrastructure.search.google_search import run_search
 from kernel.config import config
 
 
-@function_handler(label=enum.GaiaAbilities.SEARCH.value, is_sequential=False)
+@function_handler(label=enum.GaiaAbilities.SEARCH.value, is_sequential=False, is_executable=True)
 async def search(query: QueryRequest) -> tuple[str, bool]:
     """
     Ability handler for web search. Defaults to link-first (no LLM) mode.

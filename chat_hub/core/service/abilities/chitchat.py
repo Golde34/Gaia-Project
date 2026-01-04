@@ -7,7 +7,7 @@ from core.service import memory_service
 from kernel.config import config, llm_models
 
 
-@function_handler(label=enum.GaiaAbilities.CHITCHAT.value, is_sequential=True)
+@function_handler(label=enum.GaiaAbilities.CHITCHAT.value, is_sequential=True, is_executable=False)
 async def chitchat_with_history(query: QueryRequest) -> tuple[str, bool]:
     """
     Chitchat with history pipeline

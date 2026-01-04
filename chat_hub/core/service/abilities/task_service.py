@@ -1,15 +1,12 @@
-import asyncio
 import json
 
-from core.service import sse_stream_service
 from core.domain.enums import enum, kafka_enum
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import CreateTaskResponseSchema, CreateTaskSchema
 from core.prompts.task_prompt import CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT_2
 from core.service.abilities.function_handlers import function_handler
-from infrastructure.kafka.producer import publish_message
+from core.service.chat_service import push_and_save_bot_message
 from kernel.config import llm_models
-from kernel.utils.background_loop import log_background_task_error
 from kernel.utils.parse_json import parse_json_string
 
 
@@ -32,28 +29,11 @@ class PersonalTaskService:
         try:
             task_data = await self._generate_personal_task_llm(query)
             print("Generated task data:", task_data)
-            await sse_stream_service.handle_broadcast_mode(
-                user_id=str(query.user_id),
-                response=task_data["response"],
-                dialogue_id=query.dialogue_id
+            await push_and_save_bot_message(
+                message=task_data["response"], query=query
             )
-            print("Pushed initial response to client.")
-            background_task = asyncio.create_task(
-                self._dispatch_create_personal_task_request(
-                    query=query,
-                    task_data=task_data
-                )
-            )
-            background_task.add_done_callback(log_background_task_error)
-            return task_data["response"], enum.TaskStatus.PENDING.value
-
-        except Exception as e:
-            raise e
-
-    async def _dispatch_create_personal_task_request(self, query: QueryRequest, task_data: dict):
-        try:
+            
             # created_task = await task_manager_client.create_personal_task(task_data)
-            # mock this creaded_task response for testing for me
             created_task = {
                 "id": "68b085c93abd0bb364036682",
                 "title": task_data.get("title"),
@@ -71,18 +51,24 @@ class PersonalTaskService:
                 "__v": 0,
                 "tag": task_data.get("tag", "general"),
             }
-            try:
-                await publish_message(
-                    kafka_enum.KafkaTopic.ABILITY_TASK_RESULT.value,
-                    kafka_enum.KafkaCommand.GENERATE_TASK_RESULT.value,
-                    {
-                        "task": created_task,
-                        "query": query.model_dump()
-                    },
-                )
-            except Exception as exc:
-                print(f"Failed to dispatch register calendar request: {exc}")
             
+            task_result = await self._handle_task_result(task=created_task, query=query)
+            await push_and_save_bot_message(
+                message=task_result["response"], query=query
+            )
+            await push_and_save_bot_message(
+                message=task_result["task"], query=query
+            )
+
+        #     return {
+        #     "response": response["response"],
+        #     "task": response["task"],
+        #     "operationStatus": response["operationStatus"],
+        #     "dialogueId": query.dialogue_id
+        # }
+
+            return task_data, True
+
         except Exception as e:
             raise e
 
@@ -140,8 +126,8 @@ class PersonalTaskService:
         except Exception as e:
             raise e
 
-    async def handle_task_result(self, task: dict, query: QueryRequest) -> dict:
-        task_result_response = await self.create_personal_task_result(task=task, query=query)
+    async def _handle_task_result(self, task: dict, query: QueryRequest) -> dict:
+        task_result_response = await self._create_personal_task_result(task=task, query=query)
         print("Task result response:", task_result_response)
         response: CreateTaskResponseSchema = task_result_response
         print("Final response object:", response)
@@ -152,7 +138,7 @@ class PersonalTaskService:
             "dialogueId": query.dialogue_id
         }
 
-    async def create_personal_task_result(self, task: dict, query: QueryRequest) -> str:
+    async def _create_personal_task_result(self, task: dict, query: QueryRequest) -> str:
         """
         Task result pipeline
         Args:
@@ -190,6 +176,6 @@ class PersonalTaskService:
 personal_task_service = PersonalTaskService()
 
 # Register bound method to function handler registry
-function_handler(label=enum.GaiaAbilities.CREATE_TASK.value, is_sequential=True)(
+function_handler(label=enum.GaiaAbilities.CREATE_TASK.value, is_sequential=True, is_executable=True)(
     personal_task_service.create_personal_task
 )

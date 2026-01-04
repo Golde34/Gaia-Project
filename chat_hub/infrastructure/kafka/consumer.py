@@ -8,7 +8,7 @@ from ui.kafka.update_chat_history_handler import (
     update_recursive_summary_handler,
 )
 from ui.kafka.message_handler import register_calendar_schedule_handler
-from ui.kafka.task_status_handler import update_task_status_handler
+from ui.kafka.task_status_handler import ability_result_handler
 
 
 load_dotenv()
@@ -53,5 +53,5 @@ kafka_actions = {
     KafkaTopic.UPDATE_RECURSIVE_SUMMARY.value: update_recursive_summary_handler,
     KafkaTopic.UPDATE_LONG_TERM_MEMORY.value: update_long_term_memory_handler,
     KafkaTopic.REGISTER_CALENDAR_SCHEDULE.value: register_calendar_schedule_handler,
-    KafkaTopic.ABILITY_TASK_RESULT.value: update_task_status_handler,
+    KafkaTopic.ABILITY_TASK_RESULT.value: ability_result_handler,
 }
