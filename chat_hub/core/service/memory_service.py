@@ -219,7 +219,26 @@ async def reflection_chat_history(recent_history: str, recursive_summary: str, l
     return new_query
 
 
-async def kafka_update_recursive_summary(memory_request: MemoryRequest) -> None:
+async def kafka_update_memory(memory_request: MemoryRequest, type: str) -> None:
+    recent_history = await message_service.get_recent_history(
+        request=RecentHistoryRequest(
+            user_id=memory_request.user_id,
+            dialogue_id=memory_request.dialogue_id,
+            number_of_messages=config.RECURSIVE_SUMMARY_MAX_LENGTH,
+        )
+    )
+    if not recent_history:
+        recent_history = "No recent history available."
+
+    if type == kafka_enum.KafkaMemoryType.LONG_TERM_MEMORY:
+        return await kafka_update_long_term_memory(memory_request, recent_history)
+    elif type == kafka_enum.KafkaMemoryType.RECURSIVE_SUMMARY:
+        return await kafka_update_recursive_summary(memory_request, recent_history)
+    else:
+        print(f"Unknown memory type: {type}")
+        return
+
+async def kafka_update_recursive_summary(memory_request: MemoryRequest, recent_history: str) -> None:
     """
     Update the recursive summary in Redis.
 
@@ -230,16 +249,6 @@ async def kafka_update_recursive_summary(memory_request: MemoryRequest) -> None:
     user_id = memory_request.user_id
     dialogue_id = memory_request.dialogue_id
     try:
-        recent_history = await message_service.get_recent_history(
-            request=RecentHistoryRequest(
-                user_id=user_id,
-                dialogue_id=dialogue_id,
-                number_of_messages=config.RECURSIVE_SUMMARY_MAX_LENGTH,
-            )
-        )
-        if not recent_history:
-            recent_history = "No recent history available."
-
         prompt = RECURSIVE_SUMMARY_PROMPT.format(recent_history=recent_history)
         model: LLMModel = LLMModel(
             model_name=config.LLM_SUB_MODEL,
@@ -271,7 +280,7 @@ async def kafka_update_recursive_summary(memory_request: MemoryRequest) -> None:
         print(f"Error updating recursive summary: {e}")
 
 
-async def kafka_update_long_term_memory(memory_request: MemoryRequest) -> None:
+async def kafka_update_long_term_memory(memory_request: MemoryRequest, recent_history: str) -> None:
     """
     Update the long term memory in Redis.
 
@@ -282,22 +291,12 @@ async def kafka_update_long_term_memory(memory_request: MemoryRequest) -> None:
     user_id = memory_request.user_id
     dialogue_id = memory_request.dialogue_id
     try:
-        recent_history = await message_service.get_recent_history(
-            request=RecentHistoryRequest(
-                user_id=user_id,
-                dialogue_id=dialogue_id,
-                number_of_messages=config.LONG_TERM_MEMORY_MAX_LENGTH,
-            )
-        )
-        if not recent_history:
-            recent_history = "No recent history available."
-
         prompt = LONGTERM_MEMORY_PROMPT.format(
             recent_history=recent_history,
             is_change_title=memory_request.is_change_title
         )
 
-        long_term_memory = await _build_long_term_memory(
+        long_term_memory = await _generate_long_term_memory(
             prompt=prompt, user_id=user_id)
 
         if memory_request.is_change_title and long_term_memory.new_title:
@@ -334,7 +333,7 @@ async def kafka_update_long_term_memory(memory_request: MemoryRequest) -> None:
         print(f"Error updating long term memory: {e}")
 
 
-async def _build_long_term_memory(prompt: str, user_id: int) -> LongTermMemorySchema:
+async def _generate_long_term_memory(prompt: str, user_id: int) -> LongTermMemorySchema:
     model: LLMModel = LLMModel(
         model_name=config.LLM_SUB_MODEL,
         model_key=config.SYSTEM_API_KEY,
@@ -346,14 +345,12 @@ async def _build_long_term_memory(prompt: str, user_id: int) -> LongTermMemorySc
     print(f"Long Term Memory raw response: {long_term_memory_str}")
 
     try:
-        # Clean JSON string if needed
         long_term_memory_json = json.loads(long_term_memory_str)
         long_term_memory = LongTermMemorySchema(**long_term_memory_json)
         print(f"Long Term Memory parsed: {long_term_memory}")
     except json.JSONDecodeError as e:
         print(f"Failed to parse long term memory JSON: {e}")
         print(f"Raw response: {long_term_memory_str}")
-        # Create empty schema if parsing fails
         long_term_memory = LongTermMemorySchema(content=[], new_title=None)
 
     return long_term_memory

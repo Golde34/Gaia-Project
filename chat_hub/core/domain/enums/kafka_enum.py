@@ -15,3 +15,7 @@ class KafkaCommand(str, Enum):
     GENERATE_CALENDAR_SCHEDULE = "gaiaRegisterCalendar"
     ABILITIES_TASK_RESULT = "abilitiesTaskResult"
     GENERATE_TASK_RESULT = "generateTaskResult"
+
+class KafkaMemoryType(str, Enum):
+    RECURSIVE_SUMMARY = "recursive_summary"
+    LONG_TERM_MEMORY = "long_term_memory"
