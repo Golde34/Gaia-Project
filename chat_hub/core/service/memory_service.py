@@ -139,7 +139,6 @@ async def query_chat_history(query: QueryRequest, semantic_response: dict = conf
                                  dialogue_id=str(query.dialogue_id),
                                  number_of_messages=config.RECENT_HISTORY_MAX_LENGTH)
         )
-        print(f"Recent History: {recent_history}")
 
     if semantic_response.get('recursive_summary'):
         recursive_summary = await get_recursive_summary(query.user_id, query.dialogue_id)

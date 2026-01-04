@@ -1,6 +1,6 @@
 import json
 
-from core.domain.enums import enum, kafka_enum
+from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.model_output_schema import CreateTaskResponseSchema, CreateTaskSchema
 from core.prompts.task_prompt import CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT_2
@@ -54,20 +54,13 @@ class PersonalTaskService:
             
             task_result = await self._handle_task_result(task=created_task, query=query)
             await push_and_save_bot_message(
-                message=task_result["response"], query=query
+                message=task_result.get("response"), query=query
             )
             await push_and_save_bot_message(
-                message=task_result["task"], query=query
+                message=task_result.get("task"), query=query
             )
 
-        #     return {
-        #     "response": response["response"],
-        #     "task": response["task"],
-        #     "operationStatus": response["operationStatus"],
-        #     "dialogueId": query.dialogue_id
-        # }
-
-            return task_data, True
+            return task_data.get("response"), True
 
         except Exception as e:
             raise e
@@ -146,10 +139,12 @@ class PersonalTaskService:
         Returns:
             str: Short response to the request
         """
-
         try:
-            prompt = TASK_RESULT_PROMPT_2.format(task=task)
-            function = await llm_models.get_model_generate_content(query.model, query.user_id)
+            task_str = json.dumps(task)
+            prompt = TASK_RESULT_PROMPT_2.format(task=task_str)
+            function = await llm_models.get_model_generate_content(
+                query.model, query.user_id, prompt=prompt
+            )
             response = function(prompt=prompt, model=query.model,
                                 dto=CreateTaskResponseSchema)
             return json.loads(response)

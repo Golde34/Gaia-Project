@@ -18,18 +18,18 @@ async def consume():
     consumer = AIOKafkaConsumer(
         bootstrap_servers=kafka_config.bootstrap_servers,
         group_id=kafka_config.group_id,
-        # # Heartbeat settings - prevent "member not recognized" errors
-        # heartbeat_interval_ms=3000,  # Send heartbeat every 3s
-        # session_timeout_ms=30000,     # Session expires after 30s of no heartbeat
-        # # Processing timeout - prevent rebalance during long message processing
-        # max_poll_interval_ms=300000,  # 5 minutes - increase if handlers take longer
-        # # Auto commit settings
-        # enable_auto_commit=True,
-        # auto_commit_interval_ms=5000,  # Commit offset every 5s
-        # # Consumer isolation
-        # isolation_level='read_committed',
-        # # Retry settings
-        # request_timeout_ms=40000,  # Request timeout (must be > session_timeout_ms)
+        # Heartbeat settings - prevent "member not recognized" errors
+        heartbeat_interval_ms=3000,  # Send heartbeat every 3s
+        session_timeout_ms=30000,     # Session expires after 30s of no heartbeat
+        # Processing timeout - prevent rebalance during long message processing
+        max_poll_interval_ms=300000,  # 5 minutes - increase if handlers take longer
+        # Auto commit settings
+        enable_auto_commit=True,
+        auto_commit_interval_ms=5000,  # Commit offset every 5s
+        # Consumer isolation
+        isolation_level='read_committed',
+        # Retry settings
+        request_timeout_ms=40000,  # Request timeout (must be > session_timeout_ms)
     )
     consumer.subscribe(topics=convert_topics_to_list(kafka_config.topics))
     try:

@@ -31,11 +31,10 @@ def function_handler(label: str, is_sequential: bool = False, is_executable: boo
     def decorator(func: Callable):
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            query: QueryRequest = _extract_query(args, kwargs)
             if is_executable:
-                return await execute_task(label, query, func, *args, **kwargs)
+                return await execute_task(label, func, *args, **kwargs)
             else:
-                return await handle_function(query, func, *args, **kwargs)
+                return await handle_function(func, *args, **kwargs)
 
         _FUNCTION_REGISTRY[label] = {
             'executor': wrapper,
@@ -46,7 +45,8 @@ def function_handler(label: str, is_sequential: bool = False, is_executable: boo
     return decorator
 
 
-async def execute_task(label: str, query: QueryRequest, func: Callable, *args, **kwargs):
+async def execute_task(label: str, func: Callable, *args, **kwargs):
+    query: QueryRequest = _extract_query(args, kwargs)
     execution_entity: AgentExecution = _extract_agent_execution(
         kwargs, label, query)
     execution_log: AgentExecution = await agent_execution_repo.create_agent_execution(execution_entity)
@@ -78,7 +78,8 @@ async def execute_task(label: str, query: QueryRequest, func: Callable, *args, *
     return response, status, is_need_recommendation
 
 
-async def handle_function(query: QueryRequest, func: Callable, *args, **kwargs) -> Any:
+async def handle_function(func: Callable, *args, **kwargs) -> Any:
+    query = _extract_query(args, kwargs)
     # All function handlers are expected to return a tuple of (result, is_need_recommendation)
     response, is_need_recommendation = await func(*args, **kwargs)
     await push_and_save_bot_message(

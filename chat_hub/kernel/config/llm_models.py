@@ -23,20 +23,29 @@ async def get_model_generate_content(model: LLMModel, user_id: str, prompt: str 
     if model.organization not in MODELS_INTERFACE:
         raise ValueError(f"Model {model.model_name} is not supported.")
     session_id = session_id_var.get() 
-    try:
-        await push_calling_llm_api_times_message(
+    
+    # Push kafka message in background to avoid blocking and ensure proper cleanup
+    import asyncio
+    asyncio.create_task(
+        push_calling_llm_api_times_message(
             user_id=user_id,
             session_id=session_id,
             prompt=prompt
         )
-    except Exception as e:
-        print(f"Error pushing calling LLM API times message: {e}")
+    )
+    
     return MODELS_INTERFACE.get(model.organization, "google")
 
 async def push_calling_llm_api_times_message(user_id: str, session_id: str, prompt: str = None):
-    payload = {
-        "user_id": user_id,
-        "session_id": session_id,
-        "prompt": prompt if prompt else "",
-    } 
-    await send_kafka_message(kafka_enum.KafkaTopic.CALLING_LLM_API_TIMES.value, payload)
+    """Push calling LLM API times message to Kafka with proper error handling."""
+    try:
+        payload = {
+            "user_id": user_id,
+            "session_id": session_id,
+            "prompt": prompt if prompt else "",
+        } 
+        await send_kafka_message(kafka_enum.KafkaTopic.CALLING_LLM_API_TIMES.value, payload)
+    except Exception as e:
+        # Log error but don't raise to avoid blocking main flow
+        print(f"Error pushing calling LLM API times message: {e}")
+
