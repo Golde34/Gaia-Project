@@ -1,15 +1,16 @@
 import asyncio
 import uuid
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 
-from core.domain.entities.database.agent_execution import AgentExecution
+from core.domain.entities.database.recommendation_history import RecommendationHistory
 from core.domain.enums.enum import TaskStatus, ChatType
 from core.domain.enums.kafka_enum import KafkaCommand, KafkaTopic
 from core.domain.request.query_request import QueryRequest
 from core.service.abilities import chitchat
 from core.service.abilities.function_handlers import FUNCTIONS
 from core.service.chat_service import push_and_save_bot_message
+from core.service.integration.recommendation_history_service import recommendation_history_service
 from core.usecase.llm_router.chat_routers import llm_route
 from infrastructure.client.recommendation_service_client import recommendation_service_client
 from infrastructure.kafka.producer import publish_message
@@ -82,16 +83,30 @@ class OrchestratorService:
         status: str = result[1]
         is_need_recommendation: bool = result[2]
 
-        # if is_need_recommendation and status == TaskStatus.SUCCESS.value:
-        #     await self._handle_recommendation(query)
+        if is_need_recommendation and status == TaskStatus.SUCCESS.value:
+            waiting_recommendations = await self._validate_recommendation_history(query)
+            recommendation = await self._handle_recommendation(query, waiting_recommendations)
+            response = {
+                "response": response,
+                "recommendation": recommendation
+            }
 
         return response
 
-    async def _handle_recommendation(self, query: QueryRequest) -> str:
+    async def _validate_recommendation_history(self, query: QueryRequest):
+        waiting_recommendations = await recommendation_history_service.find_waiting_recommendations(
+            user_id=query.user_id,
+            tool=query.type
+        )
+        return waiting_recommendations if waiting_recommendations else None
+
+
+    async def _handle_recommendation(self, query: QueryRequest, waiting_recommendations: List[RecommendationHistory]) -> str:
         recommendation = await recommendation_service_client.recommend(
             query=query.query,
             user_id=query.user_id,
             dialogue_id=query.dialogue_id,
+            waiting_recommendations=waiting_recommendations
         ) 
 
         await push_and_save_bot_message(
