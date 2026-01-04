@@ -1,8 +1,8 @@
 export const MESSAGE_TYPES = {
     TASK_RESULT: 'task_result',
-    // Add more types here:
-    // CALENDAR_EVENT: 'calendar_event',
-    // SYSTEM_NOTIFICATION: 'system_notification',
+    CALENDAR_EVENT: 'calendar_event',
+    SYSTEM_NOTIFICATION: 'system_notification',
+    // Add more types as needed
 };
 
 /**

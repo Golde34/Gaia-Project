@@ -157,13 +157,33 @@ export default function ChatComponent(props) {
             );
         };
 
-        const handleMessageEnd = (messageId, finalContent) => {
+        const handleMessageEnd = (messageId, finalContent, messageType) => {
             setChatHistory((prev) =>
-                prev.map((msg) => 
-                    msg.id === messageId 
-                        ? { ...msg, content: finalContent, isStreaming: false }
-                        : msg
-                )
+                prev.map((msg) => {
+                    if (msg.id !== messageId) return msg;
+                    
+                    // Try to parse as JSON if messageType is provided
+                    let parsedData = null;
+                    let displayContent = finalContent;
+                    
+                    if (messageType) {
+                        try {
+                            parsedData = JSON.parse(finalContent);
+                            displayContent = finalContent;
+                        } catch (e) {
+                            console.warn(`Failed to parse JSON for messageType ${messageType}:`, e);
+                        }
+                    }
+                    
+                    return {
+                        ...msg,
+                        content: displayContent,
+                        messageType: messageType,
+                        taskData: parsedData, // For task_result type
+                        parsedData: parsedData, // Generic parsed data
+                        isStreaming: false
+                    };
+                })
             );
         };
 
