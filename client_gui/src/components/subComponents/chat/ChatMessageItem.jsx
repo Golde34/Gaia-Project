@@ -1,6 +1,6 @@
 import { Col, Grid } from "@tremor/react";
-import TaskResultMessage from "./TaskResultMessage";
 import { MESSAGE_TYPES } from "../../../kernels/utils/chat-message-utils";
+import CardItem from "../CardItem";
 
 /**
  * ChatMessageItem - Renders a single chat message bubble
@@ -22,8 +22,10 @@ export default function ChatMessageItem({ msg, formatContent }) {
         // Route to appropriate component based on messageType
         switch (msg.messageType) {
             case MESSAGE_TYPES.TASK_RESULT:
-                return msg.taskData ? <TaskResultMessage taskData={msg.taskData} /> : null;
-            
+                return msg.taskData ? 
+                    <CardItem task={msg.taskData} taskId={msg.taskData.taskId} /> 
+                    : null;    
+
             // Add more message types here:
             // case MESSAGE_TYPES.CALENDAR_EVENT:
             //     return <CalendarEventMessage eventData={msg.eventData} />;
