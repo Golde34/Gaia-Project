@@ -8,6 +8,7 @@ from core.domain.response.tag_schedule_task_response import TagScheduleTaskRespo
 from infrastructure.llm.interface import get_model_generate_content
 from core.prompt.task_tagging_prompt import TAG_SCHEDULE_TASK_PROMPT
 from kernel.utils.parse_json import parse_json_string
+from kernel.config.config import Config as config
 
 
 async def tag_schedule_tasks(
@@ -20,7 +21,7 @@ async def tag_schedule_tasks(
         tasks_json=tasks_json, allowed_tags=", ".join(TAG_LIST)
     )
 
-    function = await get_model_generate_content()
+    function = await get_model_generate_content(model=config.LLM_SUB_MODEL)
     response = function(prompt=prompt)
 
     try:
