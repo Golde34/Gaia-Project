@@ -33,7 +33,6 @@ func main() {
 
 	handlers := map[string]kafka.MessageHandler{
 		"notify-agent.optimize-task-notify.topic": consumer.NewOptimizeTaskNotifyHandler(dbConnection),
-		"chat-hub.task-result.topic":              consumer.NewTaskResultHandler(dbConnection),
 		"ai-core.push-message.topic":              consumer.NewScheduleResultHandler(),
 	}
 

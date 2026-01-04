@@ -14,31 +14,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
 
     const [scheduleCalendarRegistration, setScheduleCalendarRegistration] = useState(null);
     const [selectedDay, setSelectedDay] = useState('1'); // Default to Monday
-    const [websocketMessageQueue, setWebsocketMessageQueue] = useState([]);
     const lastNotificationIndex = useRef(0);
-
-    const appendResponseToQueue = useCallback((responseText) => {
-        if (!responseText || typeof responseText !== "string") return;
-        setWebsocketMessageQueue((prevQueue) => ([
-            ...prevQueue,
-            {
-                id: `ws-${Date.now()}-${Math.random()}`,
-                content: responseText,
-                senderType: "bot",
-                type: "websocket",
-                timestamp: new Date().toISOString(),
-            }
-        ]));
-    }, []);
-
-    const extractResponseText = useCallback((payload) => {
-        if (!payload || typeof payload !== "object") return "";
-        if (typeof payload.response === "string") return payload.response;
-        if (typeof payload?.data?.response === "string") return payload.data.response;
-        if (typeof payload?.message === "string") return payload.message;
-        if (typeof payload?.data?.message === "string") return payload.data.message;
-        return "";
-    }, []);
 
     useEffect(() => {
         const notificationMessages = messages?.notification;
@@ -51,8 +27,6 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
                 if (data.type === 'register_calendar') {
                     setScheduleCalendarRegistration(data);
                     console.log("Received schedule calendar registration data: ", data);
-                    const responseText = extractResponseText(data);
-                    appendResponseToQueue(responseText);
                 }
             } catch (error) {
                 console.warn("Failed to parse notification message", error);
@@ -60,7 +34,7 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
         });
 
         lastNotificationIndex.current = notificationMessages.length;
-    }, [messages.notification, appendResponseToQueue, extractResponseText])
+    }, [messages.notification])
 
     const timeBubbleConfigList = useSelector((state) => state.getTimeBubbleConfig);
     const { loading, error, config } = timeBubbleConfigList;
@@ -223,7 +197,6 @@ const CalendarRegistration = ({ onNext, onSkip, onPrevious }) => {
                     <div className="m-4">
                         <ChatComponent
                             chatType={'register_calendar'}
-                            websocketMessageQueue={websocketMessageQueue}
                         />
                     </div>
                 </Col>
