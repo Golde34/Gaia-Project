@@ -62,7 +62,7 @@ class OrchestratorService:
     ) -> Dict[str, Any]:
         if task.get("is_sequential"):
             return await self._run_sequential_flow(task, query)
-            
+
         # pending_task, recommendation, recommend_handled = await self._run_parallel_flow(
         #     task, query
         # )
@@ -84,7 +84,10 @@ class OrchestratorService:
         is_need_recommendation: bool = result[2]
 
         if is_need_recommendation and status == TaskStatus.SUCCESS.value:
-            waiting_recommendations = await self._validate_recommendation_history(query)
+            waiting_recommendations = await recommendation_history_service.find_waiting_recommendations(
+                user_id=query.user_id,
+                tool=query.type
+            )
             recommendation = await self._handle_recommendation(query, waiting_recommendations)
             response = {
                 "response": response,
@@ -93,21 +96,15 @@ class OrchestratorService:
 
         return response
 
-    async def _validate_recommendation_history(self, query: QueryRequest):
-        waiting_recommendations = await recommendation_history_service.find_waiting_recommendations(
-            user_id=query.user_id,
-            tool=query.type
-        )
-        return waiting_recommendations if waiting_recommendations else None
-
-
     async def _handle_recommendation(self, query: QueryRequest, waiting_recommendations: List[RecommendationHistory]) -> str:
+        waiting_recommendation_tools = [rec.tool for rec in waiting_recommendations] if waiting_recommendations else []
+
         recommendation = await recommendation_service_client.recommend(
             query=query.query,
             user_id=query.user_id,
             dialogue_id=query.dialogue_id,
-            waiting_recommendations=waiting_recommendations
-        ) 
+            waiting_recommendations=waiting_recommendation_tools
+        )
 
         await push_and_save_bot_message(
             message=recommendation,

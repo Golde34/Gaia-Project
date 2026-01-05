@@ -57,7 +57,6 @@ class ActiveEnum(Enum):
     INACTIVE = "inactive"
     ACTIVE_BOOL = True
     INACTIVE_BOOL = False
-    OUTDATE = "outdate"
 
 
 class SenderTypeEnum(Enum):
@@ -89,3 +88,10 @@ class MessageType:
     FAILURE = "failure"  # SSE event for client to close connection
     SUCCESS_MESSAGE = "SUCCESS"  # Internal status from chat_usecase
     FAILURE_MESSAGE = "FAILURE"  # Internal status from chat_usecase
+
+
+class RecommendationStatusEnum(Enum):
+    WAITING = "waiting"
+    RECOMMENDED = "recommended"
+    SUGGEST = "suggest"
+    OUTDATED = "outdated"
