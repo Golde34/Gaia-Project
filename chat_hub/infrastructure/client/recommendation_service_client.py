@@ -30,10 +30,8 @@ class RecommendationServiceClient:
         try:
             response = await aiohttp_utils.post(endpoint=endpoint, payload=payload)
             data = response.get("data", {})
-            if data.get("skip"):
-                return ""
             print("Recommendation service response data:", data.get("message", ""))
-            return data.get("message", "")
+            return data
         except Exception as exc:
             print(f"Failed to fetch recommendation: {exc}")
             return ""

@@ -99,19 +99,25 @@ class OrchestratorService:
     async def _handle_recommendation(self, query: QueryRequest, waiting_recommendations: List[RecommendationHistory]) -> str:
         waiting_recommendation_tools = [rec.tool for rec in waiting_recommendations] if waiting_recommendations else []
 
-        recommendation = await recommendation_service_client.recommend(
+        recommendation_response = await recommendation_service_client.recommend(
             query=query.query,
             user_id=query.user_id,
             dialogue_id=query.dialogue_id,
             waiting_recommendations=waiting_recommendation_tools
         )
+        message = recommendation_response.get("message", "")
+        await recommendation_history_service.update_waiting_recommendations(
+            query=query,
+            recommendations_response=recommendation_response
+        )
 
         await push_and_save_bot_message(
-            message=recommendation,
+            message=message,
             query=query
         )
 
-        return recommendation
+
+        return recommendation_response
 
     async def _run_parallel_flow(
         self, task: Dict[str, Any], query: QueryRequest
