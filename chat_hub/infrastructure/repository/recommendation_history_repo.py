@@ -20,13 +20,13 @@ class RecommendationHistoryRepository(BaseRepository[RecommendationHistory]):
             pk="id",
             default_order_by="created_at DESC",
         )
-    async def get_by_status(
+    async def get_by_statuses(
         self,
         user_id: int,
-        status: str
+        statuses: list[str]
     ) -> List[RecommendationHistory]:
         rows = await self.list(
-            where={"user_id": user_id, "status": status},
+            where={"user_id": user_id, "status IN": statuses},
             to_models=True,
         )
         return rows

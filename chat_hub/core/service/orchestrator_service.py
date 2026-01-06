@@ -84,7 +84,7 @@ class OrchestratorService:
         is_need_recommendation: bool = result[2]
 
         if is_need_recommendation and status == TaskStatus.SUCCESS.value:
-            waiting_recommendations = await recommendation_history_service.find_waiting_recommendations(
+            waiting_recommendations = await recommendation_history_service.pre_handle_recommendations(
                 user_id=query.user_id,
                 tool=query.type
             )

@@ -12,9 +12,12 @@ class RecommendationHistoryService:
     Service for managing recommendation history tools. 
     """
 
-    async def find_waiting_recommendations(self, user_id: int, tool: str) -> List[RecommendationHistory] | None:
-        waiting_recommendations = await recommendation_history_repo.get_by_status(
-            user_id, RecommendationStatusEnum.WAITING.value)
+    async def pre_handle_recommendations(self, user_id: int, tool: str) -> List[RecommendationHistory] | None:
+        waiting_recommendations = await recommendation_history_repo.get_by_statuses(
+            user_id, 
+            [RecommendationStatusEnum.WAITING.value, 
+             RecommendationStatusEnum.SUGGEST.value]
+        )
             
         for rec in waiting_recommendations:
             if rec.tool == tool:
@@ -22,21 +25,27 @@ class RecommendationHistoryService:
                     rec.id,
                     {"status": RecommendationStatusEnum.RECOMMENDED.value}
                 )
-            if rec.created_at.date() < datetime.datetime.now().date():
+            elif rec.tool != tool and rec.status == RecommendationStatusEnum.SUGGEST.value: 
+                await recommendation_history_repo.update_by_id(
+                    rec.id,
+                    {"status": RecommendationStatusEnum.WAITING.value}
+                )
+            elif rec.created_at.date() < datetime.datetime.now().date():
                 await recommendation_history_repo.update_by_id(
                     rec.id,
                     {"status": RecommendationStatusEnum.OUTDATED.value}
                 )
-        return waiting_recommendations
+        
+        return [rec for rec in waiting_recommendations 
+                if rec.tool == tool
+                and rec.status == RecommendationStatusEnum.WAITING.value]
 
     async def update_waiting_recommendations(self, query: QueryRequest, recommendations_response: Dict[str, Any]):
-        user_id = query.user_id
-        dialogue_id = query.dialogue_id
         message = recommendations_response.get("message", "")
         waiting_bundles = recommendations_response.get("waiting_bundles", [])
         tools = [bundle.get("tool") for bundle in waiting_bundles if bundle.get("tool")]
         tool_recommendations_history = await recommendation_history_repo.get_by_tools(
-            tools=tools, user_id=user_id
+            tools=tools, user_id=query.user_id
         )
 
         for tool in tools:
@@ -48,8 +57,8 @@ class RecommendationHistoryService:
                 )
             else:
                 await self.save_suggest_recommendation(
-                    user_id=user_id,
-                    dialogue_id=dialogue_id,
+                    user_id=query.user_id,
+                    dialogue_id=query.dialogue_id,
                     recommendation=message,
                     tool=tool
                 )
