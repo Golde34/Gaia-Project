@@ -13,29 +13,25 @@ class RecommendationServiceClient:
 
     async def recommend(
         self,
-        *,
         query: str,
         user_id: str,
         dialogue_id: Optional[str] = None,
-        waiting_recommendations: List[RecommendationHistory] | None = None,
+        waiting_recommendations: List[str] = [],
     ) -> str:
         payload = {
             "query": query,
             "user_id": self._parse_user_id(user_id),
+            "waiting_recommendations": waiting_recommendations or []
         }
         if dialogue_id:
             payload["dialogue_id"] = dialogue_id 
-        if waiting_recommendations is not None:
-            payload["waiting_recommendations"] = [rec.__dict__ for rec in waiting_recommendations]
 
         endpoint = f"{self.base_url}/recommend"
         try:
             response = await aiohttp_utils.post(endpoint=endpoint, payload=payload)
             data = response.get("data", {})
-            if data.get("skip"):
-                return ""
             print("Recommendation service response data:", data.get("message", ""))
-            return data.get("message", "")
+            return data
         except Exception as exc:
             print(f"Failed to fetch recommendation: {exc}")
             return ""

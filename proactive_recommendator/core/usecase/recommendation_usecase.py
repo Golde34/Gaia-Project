@@ -36,14 +36,22 @@ async def recommend(body: RecommendationRequest) -> str:
 
         bundle, llm_type = await _build_bundle(body.user_id, expanded_labels)
         print(f"Bundle: {bundle}")
+        
+        prioritized_bundle = _prioritize_waiting_recommendations(bundle, body.waiting_recommendations)
+        
         if llm_type not in PROMPT_CATEGORY:
             raise ValueError(f"LLM type {llm_type} not supported")
 
-        prompt_template = PROMPT_CATEGORY[llm_type](bundle=str(bundle))
+        prompt_template = PROMPT_CATEGORY[llm_type](bundle=str(prioritized_bundle))
         function = await get_model_generate_content(model=config.LLM_DEFAULT_MODEL)
-        response = function(prompt=prompt_template) 
+        response = function(prompt=prompt_template)
+        
+        waiting_bundle_tools = list(prioritized_bundle.keys())
 
-        return return_success_response("Generate recommendation successfully", {"message": response}) 
+        return return_success_response("Generate recommendation successfully", {
+            "message": response,
+            "waiting_bundles": waiting_bundle_tools
+        }) 
     except Exception as e:
         return "Error: " + str(e) 
 
@@ -67,6 +75,20 @@ async def _build_bundle(user_id: str, labels: List[str]) -> tuple[Dict[str, Any]
             bundle[pname] = {"error": str(e)}
 
     return bundle, llm_type
+
+
+def _prioritize_waiting_recommendations(bundle: Dict[str, Any], waiting_recommendations: List[str]) -> Dict[str, Any]:
+    prioritized = {}
+    
+    for tool in waiting_recommendations:
+        if tool in bundle:
+            prioritized[tool] = bundle[tool]
+    
+    for tool, data in bundle.items():
+        if tool not in prioritized:
+            prioritized[tool] = data
+    
+    return prioritized
 
 # async def _validate_labels_information(user_id: int, results: List[str], first: str):
 #     if ABILITIES[first]['is_sync'] == True:

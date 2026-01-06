@@ -1,6 +1,7 @@
-from datetime import datetime
-from typing import List, Optional
+from datetime import date, datetime
+from typing import List
 
+from core.domain.enums import enum
 from core.domain.entities.database.recommendation_history import RecommendationHistory
 from kernel.database.base import BaseRepository
 
@@ -19,16 +20,27 @@ class RecommendationHistoryRepository(BaseRepository[RecommendationHistory]):
             pk="id",
             default_order_by="created_at DESC",
         )
-    async def get_by_status(
+    async def get_by_statuses(
         self,
         user_id: int,
-        status: str
+        statuses: list[str]
     ) -> List[RecommendationHistory]:
         rows = await self.list(
-            where={"user_id": user_id, "status": status},
+            where={"user_id": user_id, "status IN": statuses},
             to_models=True,
         )
         return rows
 
+    async def get_by_tools(
+        self,
+        user_id: int,
+        tools: List[str],
+        status: str = enum.RecommendationStatusEnum.WAITING.value
+    ) -> List[RecommendationHistory]:
+        rows = await self.list(
+            where={"user_id": user_id, "tool IN": tools, "status": status},
+            to_models=True,
+        )
+        return rows
 
 recommendation_history_repo = RecommendationHistoryRepository()
