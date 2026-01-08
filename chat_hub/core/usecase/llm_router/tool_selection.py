@@ -99,7 +99,6 @@ async def _rerank_tools(query_text: str, search_results: List[List[Dict[str, Any
         if not tool_name:
             continue
 
-        # Use sample_query as reranking text (since it's most relevant to user queries)
         doc_text = f"{description}\nExample: {sample_query}" if sample_query else description
         
         documents.append({
@@ -156,42 +155,3 @@ def _should_use_llm_selection(tools: List[Dict[str, Any]], threshold: float = 0.
 
     score_diff = abs(tools[0]["score"] - tools[1]["score"])
     return score_diff < threshold
-
-
-# async def select_ability_tool_2(query: QueryRequest) -> str:
-#     """
-#     Select the appropriate ability based on the label value.
-
-#     Args:
-#         label_value (str): The label to identify the ability.
-#         query (QueryRequest): The user's query containing task information.
-#     Returns:
-#         str: The response from the selected ability handler.
-#     """
-#     tools_string = json.dumps(ABILITIES, indent=2)
-
-#     prompt = CLASSIFY_PROMPT.format(
-#         query=query.query, tools=tools_string)
-
-#     function = await llm_models.get_model_generate_content(
-#         query.model, query.user_id, prompt=prompt)
-#     classify_response = function(prompt=prompt, model=query.model)
-
-#     print("Classify Response:", classify_response)
-#     is_need_history = _need_history(classify_response)
-#     return classify_response, is_need_history
-
-
-# def _need_history(label_value: str) -> bool:
-#     """
-#     Check if the ability requires chat history.
-
-#     Args:
-#         label_value (str): The label to identify the ability.
-#     Returns:
-#         bool: True if the ability requires chat history, False otherwise.
-#     """
-#     for ability in ABILITIES:
-#         if ability['label'] == label_value:
-#             return ability.get('need_history', False)
-#     return False
