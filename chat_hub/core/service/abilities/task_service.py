@@ -14,9 +14,6 @@ from kernel.utils.parse_json import parse_json_string
 class PersonalTaskService:
     """
     MCP to connect with Task Manager Service
-    1. Create Personal Task (line 17-39)
-    2. Create Personal Task Result (line 96-113)
-    3. Optimize Calendar (line 115-129)
     """
 
     async def create_personal_task(self, query: QueryRequest):
@@ -28,12 +25,20 @@ class PersonalTaskService:
             str: Short response to the request
         """
         try:
-            task_data = await self._generate_personal_task_llm(query)
-
+            task_data, valid = await self._generate_personal_task_llm(query)
             await push_and_save_bot_message(
                 message=task_data["response"], query=query
             )
-            
+
+            if not valid:
+                is_valid_group_task = valid.get("groupTask") is None
+                is_valid_project = valid.get("project") is None
+                if not is_valid_group_task:
+                    self.group_task_list(query)
+                if not is_valid_project:
+                    self.project_list(query)
+                return task_data["response"], True
+
             # created_task = await task_manager_client.create_personal_task(task_data)
             created_task = {
                 "id": "68b085c93abd0bb364036682",
@@ -87,6 +92,13 @@ class PersonalTaskService:
 
             task_data = json.loads(response)
 
+            # validate create task schema, if non null fields are missing, 
+            # return response.response to tell user that 
+            # what null fields they need to provide
+            validation = True
+            if not validation:
+                return task_data, False
+
             datetime_values = {
                 key: value for key, value in task_data.items()
                 if key in datetime_parse_col and value
@@ -108,7 +120,7 @@ class PersonalTaskService:
                         print("Exception while parsing", expr)
                         task_data[key] = datetime_values[key]
 
-            return task_data
+            return task_data, True
 
         except Exception as e:
             raise e
@@ -153,6 +165,33 @@ class PersonalTaskService:
         except Exception as e:
             raise e
 
+    async def project_list(self, query: QueryRequest) -> str:
+        """
+        Fetch and return the list of projects for the user.
+        Args:
+            query (QueryRequest): The user's query containing user information.
+        Returns:
+            str: List of projects in string format.
+        """
+        try:
+            return await task_manager_client.project_list(query.user_id)
+        except Exception as e:
+            raise e 
+
+    async def group_task_list(self, query: QueryRequest) -> str:
+        """
+        Fetch and return the list of group tasks for the specified group.
+        Args:
+            query (QueryRequest): The user's query containing group information.
+        Returns:
+            str: List of group tasks in string format.
+        """
+        try:
+            group_id = query.additional_info.get("groupId")
+            return await task_manager_client.group_task_list(group_id)
+        except Exception as e:
+            raise e
+
     def optimize_calendar(self, query: QueryRequest) -> str:
         """
         Optimize calendar entries based on user query.
@@ -175,4 +214,12 @@ personal_task_service = PersonalTaskService()
 # Register bound method to function handler registry
 function_handler(label=enum.GaiaAbilities.CREATE_TASK.value, is_sequential=True, is_executable=True)(
     personal_task_service.create_personal_task
+)
+
+function_handler(label=enum.GaiaAbilities.PROJECT_LIST.value, is_sequential=False, is_executable=True)(
+    personal_task_service.project_list
+)
+
+function_handler(label=enum.GaiaAbilities.GROUP_TASK_LIST.value, is_sequential=False, is_executable=True)(
+    personal_task_service.group_task_list
 )

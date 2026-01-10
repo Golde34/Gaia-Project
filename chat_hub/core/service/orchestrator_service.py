@@ -1,11 +1,8 @@
 import asyncio
-import uuid
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict
 
 
-from core.domain.entities.database.recommendation_history import RecommendationHistory
 from core.domain.enums.enum import TaskStatus, ChatType
-from core.domain.enums.kafka_enum import KafkaCommand, KafkaTopic
 from core.domain.request.query_request import QueryRequest
 from core.service.abilities import chitchat
 from core.service.abilities.function_handlers import FUNCTIONS
@@ -13,8 +10,6 @@ from core.service.chat_service import push_and_save_bot_message
 from core.service.integration.recommendation_history_service import recommendation_history_service
 from core.usecase.llm_router.chat_routers import llm_route
 from infrastructure.client.recommendation_service_client import recommendation_service_client
-from infrastructure.kafka.producer import publish_message
-from infrastructure.repository.agent_execution_repository import agent_execution_repo
 from kernel.utils.background_loop import background_loop_pool, log_background_task_error
 
 
@@ -129,7 +124,7 @@ class OrchestratorService:
         )
         
         recommendation_task = background_loop_pool.schedule(
-            self._dispatch_recommendation(query),
+            self._handle_recommendation(query),
             log_exception=True,
             exception_callback=log_background_task_error
         )
@@ -146,13 +141,5 @@ class OrchestratorService:
             "response": user_response,
             "recommendation": recommendation_response
         } 
-
-    async def _dispatch_recommendation(
-        self,
-        query: QueryRequest
-    ):
-        recommendation = await self._handle_recommendation(query)
-        print("Dispatched recommendation:", recommendation)
-        return recommendation
 
 orchestrator_service = OrchestratorService()

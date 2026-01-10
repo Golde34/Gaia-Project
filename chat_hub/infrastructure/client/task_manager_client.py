@@ -27,5 +27,39 @@ class TaskManagerClient:
         except Exception as e:
             print(f"Error in TaskManagerClient.create_task: {e}")
             return None
+
+    async def project_list(self, user_id: str) -> dict:
+        try:
+            endpoint = f"{self.base_url}/project/list?userId={user_id}"
+            headers = build_header.build_default_headers()
+            result = await aiohttp_utils.get(
+                endpoint=endpoint,
+                header=headers
+            )
+            if not result:
+                print("No response from Task Manager Service for project_list.")
+                return None
+
+            return result["data"]["message"]
+        except Exception as e:
+            print(f"Error in TaskManagerClient.project_list: {e}")
+            return None
+
+    async def group_task_list(self, group_id: str) -> dict:
+        try:
+            endpoint = f"{self.base_url}/task/group/list?groupId={group_id}"
+            headers = build_header.build_default_headers()
+            result = await aiohttp_utils.get(
+                endpoint=endpoint,
+                header=headers
+            )
+            if not result:
+                print("No response from Task Manager Service for group_task_list.")
+                return None
+
+            return result["data"]["message"]
+        except Exception as e:
+            print(f"Error in TaskManagerClient.group_task_list: {e}")
+            return None
     
 task_manager_client = TaskManagerClient()
