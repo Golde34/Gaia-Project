@@ -27,5 +27,5 @@ class TaskManagerClient:
         except Exception as e:
             print(f"Error in TaskManagerClient.create_task: {e}")
             return None
-    
+
 task_manager_client = TaskManagerClient()

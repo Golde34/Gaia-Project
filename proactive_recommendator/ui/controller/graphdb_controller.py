@@ -45,3 +45,13 @@ async def upsert_node_bundle(payload: NodeBundle):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to upsert node bundle: {e}"
         )
+@GraphDBRouter.get("/create-project-node", status_code=status.HTTP_201_CREATED)
+async def add_label(user_id: int):
+    try:
+        record = await user_information_service.get_user_information(user_id)
+        return {"message": "User list successfully", "user": record}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create user: {e}"
+        )

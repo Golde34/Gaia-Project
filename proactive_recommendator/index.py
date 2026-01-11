@@ -10,6 +10,7 @@ from ui.controller import (
     gaia_business_controller,
     graphdb_controller, 
     recommendation_controller,
+    recommendation_info_controller,
     vectordb_controller, 
 )
 
@@ -49,7 +50,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(recommendation_controller.RecommendationRouter)
+app.include_router(recommendation_controller.RecommendationRouter, 
+                   prefix="/proactive-recommendator")
+app.include_router(recommendation_info_controller.RecommendationInfoRouter, 
+                   prefix="/recommend-recommendator")
 app.include_router(graphdb_controller.GraphDBRouter)
 app.include_router(vectordb_controller.VectorDBRouter)
 app.include_router(gaia_business_controller.GaiaBusinessRouter)

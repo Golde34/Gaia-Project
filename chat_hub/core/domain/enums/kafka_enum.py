@@ -9,12 +9,13 @@ class KafkaTopic(str, Enum):
     REGISTER_CALENDAR_SCHEDULE = "ai-core.register-calendar-schedule.topic"
     ## Producer topics
     PUSH_MESSAGE = "ai-core.push-message.topic"
-    ABILITY_TASK_RESULT = "ai-core.ability-task-result.topic"
+    GET_RECOMMENDATIONS_INFO = "chat-hub.get-recommendations-info.topic"
 
 class KafkaCommand(str, Enum):
     GENERATE_CALENDAR_SCHEDULE = "gaiaRegisterCalendar"
     ABILITIES_TASK_RESULT = "abilitiesTaskResult"
-    GENERATE_TASK_RESULT = "generateTaskResult"
+    PROJECT_LIST = "projectList"
+    GROUP_TASK_LIST = "groupTaskList"
 
 class KafkaMemoryType(str, Enum):
     RECURSIVE_SUMMARY = "recursive_summary"

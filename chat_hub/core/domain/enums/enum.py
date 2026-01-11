@@ -30,6 +30,8 @@ class GaiaAbilities(Enum):
     CREATE_TASK_RESULT = "create_task_result"
     REGISTER_SCHEDULE_CALENDAR = "register_schedule_calendar"
     SEARCH = "search"
+    PROJECT_LIST = "project_list"
+    GROUP_TASK_LIST = "group_task_list"
 
 
 class TaskStatus(str, Enum):
