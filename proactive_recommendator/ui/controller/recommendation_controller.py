@@ -5,12 +5,12 @@ from core.domain.request.recommendation_request import RecommendationRequest
 
 
 RecommendationRouter = APIRouter(
-    prefix="/proactive-recommendator",
+    prefix="/recommend",
     tags=["Recommendation"]
 )
 
 
-@RecommendationRouter.post("/recommend", status_code=status.HTTP_201_CREATED)
+@RecommendationRouter.post("/", status_code=status.HTTP_201_CREATED)
 async def recommend(body: RecommendationRequest):
     try:
         return await recommendation_usecase.recommend(body)
