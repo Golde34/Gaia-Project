@@ -13,6 +13,7 @@ from core.prompts.task_prompt import (
 from core.service.abilities.function_handlers import function_handler
 from core.service.chat_service import push_and_save_bot_message
 from infrastructure.client.task_manager_client import task_manager_client
+from infrastructure.kafka.producer import publish_message
 from infrastructure.redis.redis import get_key
 from kernel.config import config, llm_models
 from kernel.utils.parse_json import parse_json_string
@@ -191,6 +192,7 @@ class PersonalTaskService:
             if redis_project_list:
                 return json.loads(redis_project_list)
             # push kafka to load project list in PR if async
+            await publish_message
         except Exception as e:
             raise e
 
