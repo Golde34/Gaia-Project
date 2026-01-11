@@ -14,3 +14,6 @@ class RedisEnum(str, Enum):
     USER_LLM_MODEL = "chat_hub:user_llm_model"
 
     ABILITY_TASK_STATUS = "chat_hub:ability_task_status"
+    
+    USER_PROJECT_LIST = "chat_hub:user_project_list"
+    USER_GROUP_TASK_LIST = "chat_hub:user_group_task_list"

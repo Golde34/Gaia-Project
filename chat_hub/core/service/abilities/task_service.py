@@ -1,14 +1,20 @@
 import json
 
-from chat_hub.kernel.config import config
-from core.domain.enums import enum
+from core.domain.enums import enum, redis_enum
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.domain.response.model_output_schema import CreateTaskResponseSchema, CreateTaskSchema
-from core.prompts.task_prompt import PARSING_DATE_PROMPT, TASK_RESULT_PROMPT_2, UPGRADATION_CREATE_TASK_PROMPT
+from core.prompts.task_prompt import (
+    PARSING_DATE_PROMPT, 
+    TASK_RESULT_PROMPT_2, 
+    UPGRADATION_CREATE_TASK_PROMPT,
+    LIST_PROJECT_PROMPT,
+    LIST_GROUP_TASK_PROMPT
+)
 from core.service.abilities.function_handlers import function_handler
 from core.service.chat_service import push_and_save_bot_message
 from infrastructure.client.task_manager_client import task_manager_client
-from kernel.config import llm_models
+from infrastructure.redis.redis import get_key
+from kernel.config import config, llm_models
 from kernel.utils.parse_json import parse_json_string
 
 
@@ -62,10 +68,11 @@ class PersonalTaskService:
         Returns:
             str: response message to user
         """
+        is_async = True
         if missing_fields.get("project"):
-            await self.project_list(query=query) 
+            await self._list_project(query=query, is_async=is_async) 
         if missing_fields.get("groupTask"):
-            await self.group_task_list(query=query)
+            await self._list_group_task(query=query, is_async=is_async)
     
     async def _generate_personal_task_llm(self, query: QueryRequest) -> dict:
         """
@@ -165,30 +172,47 @@ class PersonalTaskService:
         print("Created task result:", created_task)
         return created_task, response["response"]
 
-    async def project_list(self, query: QueryRequest) -> str:
-        """
-        Fetch and return the list of projects for the user.
-        Args:
-            query (QueryRequest): The user's query containing user information.
-        Returns:
-            str: List of projects in string format.
-        """
+    async def list_project_response(self, query: QueryRequest) -> str:
+        projects = await self._list_project(query=query, is_async=False)
+        prompt = LIST_PROJECT_PROMPT.format(task=json.dumps(projects))
+        function = await llm_models.get_model_generate_content(
+            query.model, query.user_id, prompt=prompt
+        )
+        llm_response = function(
+            prompt=prompt,
+            model=query.model
+        )
+        return llm_response 
+        
+    async def _list_project(self, query: QueryRequest, is_async: bool) -> str:
         try:
-            return await task_manager_client.project_list(query.user_id)
+            redis_key = redis_enum.RedisEnum.USER_PROJECT_LIST.value + f":{query.user_id}"
+            redis_project_list = get_key(redis_key)
+            if redis_project_list:
+                return json.loads(redis_project_list)
+            # push kafka to load project list in PR if async
         except Exception as e:
             raise e
 
-    async def group_task_list(self, query: QueryRequest) -> str:
-        """
-        Fetch and return the list of group tasks for the specified group.
-        Args:
-            query (QueryRequest): The user's query containing group information.
-        Returns:
-            str: List of group tasks in string format.
-        """
+    async def list_group_task_response(self, query: QueryRequest) -> str:
+        group_tasks = await self._list_group_task(query=query, is_async=False)
+        prompt = LIST_GROUP_TASK_PROMPT.format(task=json.dumps(group_tasks))
+        function = await llm_models.get_model_generate_content(
+            query.model, query.user_id, prompt=prompt
+        )
+        llm_response = function(
+            prompt=prompt,
+            model=query.model
+        )
+        return llm_response
+
+    async def _list_group_task(self, query: QueryRequest) -> str:
         try:
-            group_id = query.additional_info.get("groupId")
-            return await task_manager_client.group_task_list(group_id)
+            redis_key = redis_enum.RedisEnum.USER_GROUP_TASK_LIST.value + f":{query.user_id}"
+            redis_group_task_list = get_key(redis_key)
+            if redis_group_task_list:
+                return json.loads(redis_group_task_list)
+            # push kafka to load group task list in PR if async
         except Exception as e:
             raise e
 
@@ -215,11 +239,9 @@ personal_task_service = PersonalTaskService()
 function_handler(label=enum.GaiaAbilities.CREATE_TASK.value, is_sequential=True, is_executable=True)(
     personal_task_service.create_personal_task
 )
-
-function_handler(label=enum.GaiaAbilities.PROJECT_LIST.value, is_sequential=False, is_executable=True)(
-    personal_task_service.project_list
+function_handler(label=enum.GaiaAbilities.PROJECT_LIST.value, is_sequential=False, is_executable=False)(
+    personal_task_service.list_project_response
 )
-
-function_handler(label=enum.GaiaAbilities.GROUP_TASK_LIST.value, is_sequential=False, is_executable=True)(
-    personal_task_service.group_task_list
+function_handler(label=enum.GaiaAbilities.GROUP_TASK_LIST.value, is_sequential=False, is_executable=False)(
+    personal_task_service.list_group_task_response
 )
