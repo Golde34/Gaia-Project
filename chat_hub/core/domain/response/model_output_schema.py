@@ -28,7 +28,6 @@ class CreateTaskResultSchema(BaseModel):
     response: str
 
 class CreateTaskResponseSchema(BaseModel):
-    response: str
     task: CreateTaskResultSchema
     operationStatus: str
 

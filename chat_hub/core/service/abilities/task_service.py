@@ -1,9 +1,10 @@
 import json
 
+from chat_hub.kernel.config import config
 from core.domain.enums import enum
-from core.domain.request.query_request import QueryRequest
+from core.domain.request.query_request import LLMModel, QueryRequest
 from core.domain.response.model_output_schema import CreateTaskResponseSchema, CreateTaskSchema
-from core.prompts.task_prompt import CREATE_TASK_PROMPT, PARSING_DATE_PROMPT, TASK_RESULT_PROMPT_2
+from core.prompts.task_prompt import PARSING_DATE_PROMPT, TASK_RESULT_PROMPT_2, UPGRADATION_CREATE_TASK_PROMPT
 from core.service.abilities.function_handlers import function_handler
 from core.service.chat_service import push_and_save_bot_message
 from infrastructure.client.task_manager_client import task_manager_client
@@ -23,57 +24,49 @@ class PersonalTaskService:
             query (QueryRequest): The user's query containing task information.
         Returns:
             str: Short response to the request
+            bool: Whether further recommendation is needed
         """
+        is_recommendation = False
         try:
-            task_data, valid = await self._generate_personal_task_llm(query)
+            task_data, missing_fields = await self._generate_personal_task_llm(query)
             await push_and_save_bot_message(
                 message=task_data["response"], query=query
             )
 
-            if not valid:
-                is_valid_group_task = valid.get("groupTask") is None
-                is_valid_project = valid.get("project") is None
-                if not is_valid_group_task:
-                    self.group_task_list(query)
-                if not is_valid_project:
-                    self.project_list(query)
-                return task_data["response"], True
+            if not missing_fields:
+                await self.question_missing_fields(missing_fields, query)
+                return task_data["response"], is_recommendation 
 
-            # created_task = await task_manager_client.create_personal_task(task_data)
-            created_task = {
-                "id": "68b085c93abd0bb364036682",
-                "title": task_data.get("title"),
-                "description": task_data.get("description"),
-                "priority": task_data.get("priority", []),
-                "status": "TODO",
-                "startDate": task_data.get("startDate"),
-                "deadline": task_data.get("deadline"),
-                "duration": task_data.get("duration"),
-                "createdAt": "2025-08-28T16:37:29.156Z",
-                "updatedAt": "2025-08-28T16:37:29.156Z",
-                "activeStatus": "ACTIVE",
-                "groupTaskId": None,
-                "userId": query.user_id,
-                "__v": 0,
-                "tag": task_data.get("tag", "general"),
-            }
-            
-            task_result = await self._handle_task_result(task=created_task, query=query)
-            
-            task_card_data = task_result.get("task")
-            if isinstance(task_card_data, dict) and "response" in task_card_data:
-                task_card_data = {k: v for k, v in task_card_data.items() if k != "response"}
+            created_task = await task_manager_client.create_personal_task(task_data)
+
+            created_task, response = await self._create_personal_task_result(task=created_task, query=query)
             await push_and_save_bot_message(
-                message=task_card_data, 
+                message=created_task,
                 query=query,
                 message_type="task_result"
             )
 
-            return task_result.get("response"), True # Last message
+            is_recommendation = True
+
+            return response, is_recommendation  # Last message
 
         except Exception as e:
             raise e
 
+    async def question_missing_fields(self, missing_fields: dict, query: QueryRequest) -> None:
+        """Call recomendation service to get project list and group task list, ready answer user
+
+        Args:
+            missing_fields (dict): missing fields from task generation
+            query (QueryRequest): The user's query containing task information.
+        Returns:
+            str: response message to user
+        """
+        if missing_fields.get("project"):
+            await self.project_list(query=query) 
+        if missing_fields.get("groupTask"):
+            await self.group_task_list(query=query)
+    
     async def _generate_personal_task_llm(self, query: QueryRequest) -> dict:
         """
         Create task information extraction prompt for Gemini API.
@@ -84,7 +77,7 @@ class PersonalTaskService:
         """
         try:
             datetime_parse_col = ['startDate', 'deadline']
-            prompt = CREATE_TASK_PROMPT.format(query=query.query)
+            prompt = UPGRADATION_CREATE_TASK_PROMPT.format(query=query.query)
 
             function = await llm_models.get_model_generate_content(query.model, query.user_id)
             response = function(
@@ -92,12 +85,9 @@ class PersonalTaskService:
 
             task_data = json.loads(response)
 
-            # validate create task schema, if non null fields are missing, 
-            # return response.response to tell user that 
-            # what null fields they need to provide
-            validation = True
-            if not validation:
-                return task_data, False
+            missing_fields = await self._validate_generated_task(task_data)
+            if missing_fields:
+                return task_data, missing_fields
 
             datetime_values = {
                 key: value for key, value in task_data.items()
@@ -120,50 +110,60 @@ class PersonalTaskService:
                         print("Exception while parsing", expr)
                         task_data[key] = datetime_values[key]
 
-            return task_data, True
+            return task_data, None
 
         except Exception as e:
-            raise e
+            raise e  
+
+    async def _validate_generated_task(self, task_data: dict) -> dict:
+        """
+        Validate the generated task data for required fields.
+        Ask user again if group task or project is missing.
+        Maybe ask user to choose optional fields if they are null
+        Args:
+            task_data (dict): The generated task data.
+        Returns:
+            dict: A dictionary indicating missing fields if any.
+        """
+        required_fields = ['project', 'groupTask']
+        missing_fields = {
+            field: True for field in required_fields
+            if not getattr(task_data, field, None)
+        }
+        return missing_fields or None
 
     async def _optimize_datetime(self, datetime_object: dict, query: QueryRequest) -> dict:
         try:
+            llm_model: LLMModel = LLMModel(
+                model_name=config.LLM_SUB_MODEL,
+                model_key=config.SYSTEM_API_KEY,
+                memory_model=enum.MemoryModel.DEFAULT.value,
+                organization=config.SYSTEM_ORGANIZATION
+            )
             prompt = PARSING_DATE_PROMPT.format(input=datetime_object)
-            function = await llm_models.get_model_generate_content(query.model, query.user_id)
+            function = await llm_models.get_model_generate_content(
+                llm_model, 
+                query.user_id
+            )
             response = function(prompt=prompt, model=query.model)
             return parse_json_string(response)
         except Exception as e:
             raise e
 
-    async def _handle_task_result(self, task: dict, query: QueryRequest) -> dict:
-        task_result_response = await self._create_personal_task_result(task=task, query=query)
-        response: CreateTaskResponseSchema = task_result_response
-        print("Final response object:", response)
-        return {
-            "response": response["response"],
-            "task": response["task"],
-            "operationStatus": response["operationStatus"],
-            "dialogueId": query.dialogue_id
-        }
-
-    async def _create_personal_task_result(self, task: dict, query: QueryRequest) -> str:
-        """
-        Task result pipeline
-        Args:
-            query (str): The user's query containing task information.
-        Returns:
-            str: Short response to the request
-        """
-        try:
-            task_str = json.dumps(task)
-            prompt = TASK_RESULT_PROMPT_2.format(task=task_str)
-            function = await llm_models.get_model_generate_content(
-                query.model, query.user_id, prompt=prompt
-            )
-            response = function(prompt=prompt, model=query.model,
-                                dto=CreateTaskResponseSchema)
-            return json.loads(response)
-        except Exception as e:
-            raise e
+    async def _create_personal_task_result(self, task: dict, query: QueryRequest) -> dict:
+        prompt = TASK_RESULT_PROMPT_2.format(task=json.dumps(task))
+        function = await llm_models.get_model_generate_content(
+            query.model, query.user_id, prompt=prompt
+        )
+        llm_response = function(
+            prompt=prompt,
+            model=query.model,
+            dto=CreateTaskResponseSchema
+        )
+        response = json.loads(llm_response)
+        created_task: CreateTaskResponseSchema = response
+        print("Created task result:", created_task)
+        return created_task, response["response"]
 
     async def project_list(self, query: QueryRequest) -> str:
         """
@@ -176,7 +176,7 @@ class PersonalTaskService:
         try:
             return await task_manager_client.project_list(query.user_id)
         except Exception as e:
-            raise e 
+            raise e
 
     async def group_task_list(self, query: QueryRequest) -> str:
         """
