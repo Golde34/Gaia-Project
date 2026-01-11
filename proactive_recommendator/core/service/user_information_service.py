@@ -1,5 +1,6 @@
 import json
 
+from core.domain.entities.graphdb.user_node_entity import UserNode
 from core.domain.enums.redis_enum import RedisEnum
 from core.domain.response.base_response import BaseResponse
 from infrastructure.cache.redis import get_key, set_key
@@ -27,7 +28,19 @@ async def create_user_information(user_id: int, redis_key: str):
     user_information: BaseResponse = await auth_service_client.get_user_information(user_id=user_id)
     if user_information is None:
         raise Exception("Cannot call to auth service to get user information")
-    inserted_user_information = await user_information_repo.create_user_information(user_id, user_information.data['message'])
+    
+    # Create UserNode entity from auth service response
+    user_data = user_information.data['message']
+    user_entity = UserNode(
+        user_id=user_id,
+        username=user_data.get('username', ''),
+        name=user_data.get('name', ''),
+        email=user_data.get('email', ''),
+        active=user_data.get('active', True),
+        metadata=user_data.get('metadata')
+    )
+    
+    inserted_user_information = await user_information_repo.create_user_information(user_entity)
     result = inserted_user_information["u"]
     print("Insert to graphdb: ", dict(result))
     set_key(key=redis_key, value=json.dumps(
