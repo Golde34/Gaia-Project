@@ -41,36 +41,46 @@ class RecommendationServiceClient:
         except (TypeError, ValueError):
             return 0
 
-    async def project_list(self, user_id: str) -> dict:
+    async def project_list(self, user_id: str, query: str) -> dict:
         try:
-            endpoint = f"{self.base_url}/recommend-info/project-list?userId={user_id}"
+            endpoint = f"{self.base_url}/recommend-info/project-list"
             headers = build_header.build_default_headers()
-            result = await aiohttp_utils.get(
+            payload = {
+                "user_id": self._parse_user_id(user_id),
+                "query": query
+            }
+            result = await aiohttp_utils.post(
                 endpoint=endpoint,
+                payload=payload,
                 header=headers
             )
             if not result:
                 print("No response from Task Manager Service for project_list.")
                 return None
 
-            return result["data"]["message"]
+            return result["data"]
         except Exception as e:
             print(f"Error in TaskManagerClient.project_list: {e}")
             return None
 
-    async def group_task_list(self, user_id: str) -> dict:
+    async def group_task_list(self, user_id: str, query: str) -> dict:
         try:
-            endpoint = f"{self.base_url}/recommend-info/group-task-list?userId={user_id}"
+            endpoint = f"{self.base_url}/recommend-info/group-task-list"
             headers = build_header.build_default_headers()
-            result = await aiohttp_utils.get(
+            payload = {
+                "user_id": self._parse_user_id(user_id),
+                "query": query
+            }
+            result = await aiohttp_utils.post(
                 endpoint=endpoint,
-                header=headers
+                payload=payload,
+                headers=headers
             )
             if not result:
                 print("No response from Task Manager Service for group_task_list.")
                 return None
 
-            return result["data"]["message"]
+            return result["data"]
         except Exception as e:
             print(f"Error in TaskManagerClient.group_task_list: {e}")
             return None
