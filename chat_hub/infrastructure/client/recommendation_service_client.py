@@ -1,8 +1,7 @@
 from typing import List, Optional
 
-from core.domain.entities.database.recommendation_history import RecommendationHistory
 from kernel.config import config
-from kernel.utils import aiohttp_utils
+from kernel.utils import aiohttp_utils, build_header
 
 
 class RecommendationServiceClient:
@@ -41,6 +40,40 @@ class RecommendationServiceClient:
             return int(user_id) if user_id is not None else 0
         except (TypeError, ValueError):
             return 0
+
+    async def project_list(self, user_id: str) -> dict:
+        try:
+            endpoint = f"{self.base_url}/recommend-info/project/list?userId={user_id}"
+            headers = build_header.build_default_headers()
+            result = await aiohttp_utils.get(
+                endpoint=endpoint,
+                header=headers
+            )
+            if not result:
+                print("No response from Task Manager Service for project_list.")
+                return None
+
+            return result["data"]["message"]
+        except Exception as e:
+            print(f"Error in TaskManagerClient.project_list: {e}")
+            return None
+
+    async def group_task_list(self, group_id: str) -> dict:
+        try:
+            endpoint = f"{self.base_url}/recommend-info/group-task/list?groupId={group_id}"
+            headers = build_header.build_default_headers()
+            result = await aiohttp_utils.get(
+                endpoint=endpoint,
+                header=headers
+            )
+            if not result:
+                print("No response from Task Manager Service for group_task_list.")
+                return None
+
+            return result["data"]["message"]
+        except Exception as e:
+            print(f"Error in TaskManagerClient.group_task_list: {e}")
+            return None
 
 
 recommendation_service_client = RecommendationServiceClient()

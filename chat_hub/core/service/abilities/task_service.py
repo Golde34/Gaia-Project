@@ -1,6 +1,6 @@
 import json
 
-from core.domain.enums import enum, redis_enum
+from core.domain.enums import enum, kafka_enum, redis_enum
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.domain.response.model_output_schema import CreateTaskResponseSchema, CreateTaskSchema
 from core.prompts.task_prompt import (
@@ -12,6 +12,7 @@ from core.prompts.task_prompt import (
 )
 from core.service.abilities.function_handlers import function_handler
 from core.service.chat_service import push_and_save_bot_message
+from infrastructure.client.recommendation_service_client import recommendation_service_client
 from infrastructure.client.task_manager_client import task_manager_client
 from infrastructure.kafka.producer import publish_message
 from infrastructure.redis.redis import get_key
@@ -191,8 +192,15 @@ class PersonalTaskService:
             redis_project_list = get_key(redis_key)
             if redis_project_list:
                 return json.loads(redis_project_list)
-            # push kafka to load project list in PR if async
-            await publish_message
+
+            if is_async:
+                await publish_message(
+                    kafka_enum.KafkaTopic.GET_RECOMMENDATIONS_INFO.value,
+                    kafka_enum.KafkaCommand.PROJECT_LIST.value,
+                    {"userId": query.user_id}
+                ) 
+            else:
+                return await recommendation_service_client.project_list(query.user_id)
         except Exception as e:
             raise e
 
@@ -208,13 +216,21 @@ class PersonalTaskService:
         )
         return llm_response
 
-    async def _list_group_task(self, query: QueryRequest) -> str:
+    async def _list_group_task(self, query: QueryRequest, is_async: bool) -> str:
         try:
             redis_key = redis_enum.RedisEnum.USER_GROUP_TASK_LIST.value + f":{query.user_id}"
             redis_group_task_list = get_key(redis_key)
             if redis_group_task_list:
                 return json.loads(redis_group_task_list)
-            # push kafka to load group task list in PR if async
+
+            if is_async:
+                await publish_message(
+                    kafka_enum.KafkaTopic.GET_RECOMMENDATIONS_INFO.value,
+                    kafka_enum.KafkaCommand.GROUP_TASK_LIST.value,
+                    {"userId": query.user_id}
+                )
+            else:
+                return await recommendation_service_client.group_task_list(query.user_id)
         except Exception as e:
             raise e
 
