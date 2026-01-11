@@ -1,6 +1,10 @@
 from core.domain.request.recommendation_request import RecommendationInfoRequest
 
 
+# For the reason synchronize projects and group tasks of userId in TM service
+async def synchronize_all_projects(user_id: int):
+    pass
+
 async def get_project_list(request: RecommendationInfoRequest):
     pass
     
