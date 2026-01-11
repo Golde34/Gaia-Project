@@ -1,11 +1,16 @@
 from core.domain.request.recommendation_request import RecommendationInfoRequest
 
 
-# For the reason synchronize projects and group tasks of userId in TM service
 async def synchronize_all_projects(user_id: int):
+    # call task manager to get projects and group tasks
+    # store in graphdb
     pass
 
 async def get_project_list(request: RecommendationInfoRequest):
+    # get vector embedding in graphdb
+    # get top project in graphdb
+    # rerank with recommendation service
+    # return title description, 
     pass
     
 async def get_group_task_list(request: RecommendationInfoRequest):
