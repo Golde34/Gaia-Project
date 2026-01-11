@@ -43,7 +43,7 @@ class RecommendationServiceClient:
 
     async def project_list(self, user_id: str) -> dict:
         try:
-            endpoint = f"{self.base_url}/recommend-info/project/list?userId={user_id}"
+            endpoint = f"{self.base_url}/recommend-info/project-list?userId={user_id}"
             headers = build_header.build_default_headers()
             result = await aiohttp_utils.get(
                 endpoint=endpoint,
@@ -58,9 +58,9 @@ class RecommendationServiceClient:
             print(f"Error in TaskManagerClient.project_list: {e}")
             return None
 
-    async def group_task_list(self, group_id: str) -> dict:
+    async def group_task_list(self, user_id: str) -> dict:
         try:
-            endpoint = f"{self.base_url}/recommend-info/group-task/list?groupId={group_id}"
+            endpoint = f"{self.base_url}/recommend-info/group-task-list?userId={user_id}"
             headers = build_header.build_default_headers()
             result = await aiohttp_utils.get(
                 endpoint=endpoint,
