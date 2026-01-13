@@ -21,6 +21,16 @@ projectRouter.get("/all/:userId", async (req: Request, res: Response, next: Next
     }    
 });
 
+// list all projects with group tasks of the user
+projectRouter.get("/group-task/:userId", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const projectResult = await projectControllerImpl.getProjectsWithGroupTasks(req, next);
+        return returnResult(projectResult, PROJECT_NO_RECORDS, res, next);
+    } catch (err) {
+        next(err);
+    }
+});
+
 // get one project
 projectRouter.get("/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

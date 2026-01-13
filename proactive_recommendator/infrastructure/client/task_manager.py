@@ -56,5 +56,14 @@ class TaskManagerClient:
             print(e)
             return None
 
+    async def get_project_group_task_list(self, user_id: int) -> BaseResponse:
+        try:
+            endpoint = f"{self.base_url}/project/group-task/{user_id}"
+            result = await aiohttp_utils.get(endpoint=endpoint)
+            return client_return(result=result)
+        except Exception as e:
+            print(e)
+            return None
+
 
 task_manager_client = TaskManagerClient()

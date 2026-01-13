@@ -131,6 +131,25 @@ class ProjectService {
         }
     }
 
+    async getProjectsWithGroupTasks(userId: number): Promise<IResponse> {
+        try {
+            const projects = await projectStore.findAllProjectsByOwnerId(userId);
+            const projectsWithGroupTasks = await Promise.all(projects.map(async (project) => {
+                const groupTasksInProject = await projectStore.findAllActiveGroupTasksByProjectId(project._id);
+                return {
+                    project,
+                    groupTasks: groupTasksInProject?.groupTasks ?? []
+                };
+            }));
+
+            return msg200({
+                projects: projectsWithGroupTasks
+            });
+        } catch (err: any) {
+            return msg400(err.message.toString())
+        }
+    }
+
     async updateManyProjects(groupTaskId: string): Promise<IResponse> {
         const updateManyProjects = await projectStore.pullGroupTaskFromAllProjects(groupTaskId);
 
