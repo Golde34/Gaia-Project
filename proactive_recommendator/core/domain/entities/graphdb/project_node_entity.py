@@ -1,37 +1,31 @@
-from typing import Optional, List, Dict
+from typing import Any, Optional, List, Dict
 from datetime import datetime
 from pydantic import BaseModel, Field
 
 
 class ProjectNode(BaseModel):
-    """
-    Project entity for GraphDB
-    Represents a project that contains multiple group tasks
-    """
-    id: str
+    id: str  # project_id
     name: str
-    description: str
     user_id: int
-    description_vector: Optional[List[float]] = None
-    created_at: Optional[datetime] = Field(default_factory=datetime.now)
-    updated_at: Optional[datetime] = Field(default_factory=datetime.now)
+    description: Optional[str] = None
+    category: Optional[str] = None
+    last_action_at: datetime = Field(default_factory=datetime.now)
     active_status: str = "active"
-    metadata: Optional[Dict] = None
-
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
 class GroupTaskNode(BaseModel):
     """
-    GroupTask entity for GraphDB
-    Represents a group of tasks within a project
+    Group activity count increase mechanism:
+    Add task into this group => activity_count += 1
     """
-    id: str
+    id: str  # group_task_id
+    project_id: str
     title: str
-    description: str
-    description_vector: Optional[List[float]] = None
-    created_at: Optional[datetime] = Field(default_factory=datetime.now)
-    updated_at: Optional[datetime] = Field(default_factory=datetime.now)
+    description: Optional[str] = None
+    last_action_at: datetime = Field(default_factory=datetime.now)
+    activity_count: int = 0 
     active_status: str = "active"
-    metadata: Optional[Dict] = None
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 class ProjectOwnershipEdge(BaseModel):

@@ -6,6 +6,16 @@ async def synchronize_all_projects(user_id: int):
     project_response = await project_service.get_all_projects_and_group_tasks(user_id)
     return await project_service.create_projects_and_group_tasks(user_id, project_response) 
 
+async def create_project(request: dict):
+    # action when TM create project successfully
+    # Prompt categorize project into specific domain such as work, personal, health, finance, coding.
+    pass
+
+async def update_project(request: RecommendationInfoRequest):
+    # action when recursive summary of user about project is created/updated
+    # update project node in graphdb with new description or metadata
+    pass
+
 async def get_project_list(request: RecommendationInfoRequest):
     # get vector embedding in graphdb
     # get top project in graphdb

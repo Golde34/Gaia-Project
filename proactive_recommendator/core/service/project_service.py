@@ -9,7 +9,6 @@ async def get_all_projects_and_group_tasks(user_id: int):
 
 
 async def create_projects_and_group_tasks(user_id: int, project_response: BaseResponse):
-    project_response = await task_manager_client.get_project_group_task_list(user_id)
     if project_response is None or project_response.data is None:
         return {
             "projects": 0,

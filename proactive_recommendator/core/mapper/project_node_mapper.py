@@ -7,10 +7,10 @@ def map_project_node(project_data: Dict[str, Any], fallback_user_id: int) -> Pro
     return ProjectNode(
         id=str(project_data.get("_id") or project_data.get("id")),
         name=project_data.get("name") or "",
-        description=project_data.get("description") or "",
         user_id=project_data.get("ownerId") or fallback_user_id,
-        created_at=project_data.get("createdAt"),
-        updated_at=project_data.get("updatedAt"),
+        description=project_data.get("description"),
+        category=project_data.get("category"),
+        last_action_at=project_data.get("updatedAt") or project_data.get("createdAt"),
         active_status=project_data.get("activeStatus", "active"),
         metadata=project_data
     )
@@ -19,13 +19,13 @@ def map_project_node(project_data: Dict[str, Any], fallback_user_id: int) -> Pro
 def map_group_task_node(group_task: Dict[str, Any], project_node: ProjectNode) -> GroupTaskNode:
     return GroupTaskNode(
         id=str(group_task.get("_id") or group_task.get("id")),
+        project_id=project_node.id,
         title=group_task.get("title") or "",
-        description=group_task.get("description") or "",
-        created_at=group_task.get("createdAt"),
-        updated_at=group_task.get("updatedAt"),
+        description=group_task.get("description"),
+        last_action_at=group_task.get("updatedAt") or group_task.get("createdAt"),
+        activity_count=0,
         active_status=group_task.get("activeStatus", "active"),
         metadata={
-            "project_id": project_node.id,
             "project_name": project_node.name,
             "raw": group_task
         }
