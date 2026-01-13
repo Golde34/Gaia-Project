@@ -2,11 +2,11 @@ from enum import Enum
 
 
 class RedisEnum(str, Enum):
-    RECENT_HISTORY = "chat_hub:recent_history"
-    RECURSIVE_SUMMARY = "chat_hub:recursive_summary"
-    LONG_TERM_MEMORY = "chat_hub:long_term_memory"
+    RECENT_HISTORY = "ai_core:recent_history"
+    RECURSIVE_SUMMARY = "ai_core:recursive_summary"
+    LONG_TERM_MEMORY = "ai_core:long_term_memory"
 
-    RECURSIVE_SUMMARY_CONTENT = "chat_hub:recursive_summary_content"
+    RECURSIVE_SUMMARY_CONTENT = "ai_core:recursive_summary_content"
 
     USER_DIALOGUE = "chat_hub:user_dialogue"
     AI_DIALOGUE = "chat_hub:ai_dialogue"
@@ -15,5 +15,5 @@ class RedisEnum(str, Enum):
 
     ABILITY_TASK_STATUS = "chat_hub:ability_task_status"
     
-    USER_PROJECT_LIST = "chat_hub:user_project_list"
-    USER_GROUP_TASK_LIST = "chat_hub:user_group_task_list"
+    USER_PROJECT_LIST = "ai_core:user_project_list"
+    USER_GROUP_TASK_LIST = "ai_core:user_group_task_list"
