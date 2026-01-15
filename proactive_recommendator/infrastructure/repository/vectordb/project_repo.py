@@ -1,105 +1,125 @@
-from typing import List
-from core.mapper import command_label_mapper
+from typing import List, Dict, Any
 from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.vector_db.milvus import milvus_db
 from core.domain.entities.vectordb.project_entity import Project
 
 
-async def insert_project_vector(request: ProjectRequest = None) -> Project:
-    entity = command_label_mapper.map(request)
-    command_label_schema = entity.schema_fields()
+async def insert_project_vector(
+    project_entity: Project,
+    user_id: int,
+    project_id: str,
+    summary: str,
+    status: str = "active"
+) -> Project:
+    """
+    Insert Project vectors into Milvus
+    
+    Args:
+        project_entity: Project entity with keywords and examples
+        user_id: User ID for partition key
+        project_id: Project ID from GraphDB
+        summary: Generated summary for semantic search
+        status: active/inactive status
+        
+    Returns:
+        Project entity after insertion
+    """
+    project_schema = project_entity.schema_fields()
 
     milvus_db.create_collection_if_not_exists(
-        entity.connection_name, schema=command_label_schema)
+        project_entity.connection_name, schema=project_schema)
 
-    texts_to_embed = entity.keywords + entity.example
+    texts_to_embed = project_entity.keywords + project_entity.example
     embeddings = await embedding_model.get_embeddings(texts_to_embed)
 
     data_to_insert = []
     for i, text in enumerate(texts_to_embed):
         data_to_insert.append({
+            "id": f"{project_id}_{i}",  # Unique ID per embedding
             "vector": embeddings[i],
-            "label": entity.label,
-            "name": entity.name,
-            "keywords": ", ".join(entity.keywords),
-            "example": text,
-            "description": entity.description,
+            "user_id": user_id,
+            "status": status,
+            "summary": summary,
+            "metadata": {}  # Empty for now
         })
 
-    milvus_db.insert_data(entity.connection_name,data_to_insert)
+    milvus_db.insert_data(project_entity.connection_name, data_to_insert)
 
-    return entity
-
-
-async def hybrid_search(query: str) -> List[CommandLabel] | None:
-    dense_vec = await embedding_of_texts(query) 
-
-    results = milvus_db.hybrid_search(
-        collection_name=empty_command_label.connection_name,
-        query_vector=dense_vec,
-        query_text=query,
-        top_k=5,
-        candidate_k=50,
-        anns_field="vector",
-        output_fields=["label", "name", "keywords", "description", "example"],
-        alpha=0.6,
-    )
-
-    return results
+    return project_entity
 
 
-async def embedding_of_texts(query: str) -> List[List[float]]:
-    dense_vec_list = await embedding_model.get_embeddings([query])
-    return dense_vec_list[0] if isinstance(
-        dense_vec_list, list) else dense_vec_list
-
-
-async def search_top_n(query: str) -> List[CommandLabel] | None:
-    dense_vec = await embedding_of_texts(query)
-
+async def search_projects_by_vector(
+    query: str,
+    user_id: int,
+    top_k: int = 5
+) -> List[Dict[str, Any]]:
+    """
+    Search projects by semantic similarity
+    
+    Args:
+        query: Search query text
+        user_id: User ID to filter results
+        top_k: Number of results to return
+        
+    Returns:
+        List of matching projects with scores
+    """
+    # Generate query embedding
+    query_embeddings = await embedding_model.get_embeddings([query])
+    query_vector = query_embeddings[0] if isinstance(query_embeddings, list) else query_embeddings
+    
+    # Build filter for user and active status
+    filter_query = f'user_id == {user_id} and status == "active"'
+    
+    # Search
     results = milvus_db.search_top_n(
-        collection_name=empty_command_label.connection_name,
-        query_embeddings=[dense_vec],
-        output_fields=["label", "name", "keywords", "description", "example"],
-        top_k=5
+        collection_name="project",
+        query_embeddings=[query_vector],
+        output_fields=["id", "summary", "metadata"],
+        top_k=top_k,
+        filter_query=filter_query
     )
 
     return results
 
 
-async def get_command_label(label: str) -> List[CommandLabel] | None:
-    query_parts = []
-    query_parts.append(f'label == "{label}"')
-    filter_query = " and ".join(query_parts) if query_parts else None
-
+async def get_user_projects(user_id: int) -> List[Dict[str, Any]]:
+    """
+    Get all projects for a user
+    
+    Args:
+        user_id: User ID for access control
+        
+    Returns:
+        List of projects
+    """
+    filter_query = f'user_id == {user_id} and status == "active"'
+    
     results = milvus_db.search_by_fields(
-        collection_name=empty_command_label.connection_name,
+        collection_name="project",
         filter_query=filter_query,
-        output_fields=["label", "name", "keywords", "description", "example"])
-
-    if not results:
-        return None
-
-    return results
-
-
-async def rank_labels_by_relevance(query: str, query_vecs: List[List[float]] | None) -> List[CommandLabel]:
-    data = []
-    if query_vecs is None:
-        query_vecs = await embedding_of_texts(query)
-    results = milvus_db.rank_labels_hybrid(
-        collection_name=empty_command_label.connection_name,
-        query_vector=query_vecs,
-        query_text=query,
-        top_k=5,
-        candidate_k=300,  # >= 17 + 16 + margin
-        alpha=0.6,
-        agg="max",  # tunning agg to softmax_mean or mean
-        return_per_label=2
+        output_fields=["id", "summary", "metadata"]
     )
-    for r in results:
-        data.append({
-            'label': r['group_key'],
-            'similarity': r['similarity']
-        })
-    return data 
+
+    return results if results else []
+
+
+async def update_project_status(
+    project_id: str,
+    user_id: int,
+    new_status: str
+) -> bool:
+    """
+    Update project status (soft delete)
+    
+    Args:
+        project_id: Project ID to update
+        user_id: User ID for access control
+        new_status: New status (active/inactive)
+        
+    Returns:
+        Success boolean
+    """
+    # TODO: Implement update logic in milvus_db
+    # For now, would need to delete and reinsert with new status
+    pass 
