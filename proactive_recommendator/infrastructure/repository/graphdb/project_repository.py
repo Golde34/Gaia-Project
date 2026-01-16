@@ -1,5 +1,5 @@
 from typing import List, Dict, Any
-from core.domain.entities.graphdb.project_node_entity import ProjectNode
+from core.domain.entities.graphdb.project_node_entity import ProjectNode, GroupTaskNode
 from infrastructure.repository.graphdb import base as graphdb_base
 from kernel.connection.graphdb_connection import get_db_session
 
@@ -10,18 +10,17 @@ async def upsert_project(project: ProjectNode):
     MERGE (p:Project {id: $id})
     ON CREATE SET
         p.name = $name,
-        p.description = $description,
         p.user_id = $user_id,
-        p.description_vector = $description_vector,
-        p.created_at = datetime($created_at),
-        p.updated_at = datetime($updated_at),
+        p.description = $description,
+        p.category = $category,
+        p.last_action_at = datetime($last_action_at),
         p.active_status = $active_status,
         p.metadata = $metadata
     ON MATCH SET
         p.name = $name,
         p.description = $description,
-        p.description_vector = $description_vector,
-        p.updated_at = datetime($updated_at),
+        p.category = $category,
+        p.last_action_at = datetime($last_action_at),
         p.active_status = $active_status,
         p.metadata = $metadata
     WITH p
@@ -33,11 +32,10 @@ async def upsert_project(project: ProjectNode):
     parameters = {
         "id": project.id,
         "name": project.name,
-        "description": project.description,
         "user_id": project.user_id,
-        "description_vector": project.description_vector,
-        "created_at": project.created_at.isoformat() if project.created_at else None,
-        "updated_at": project.updated_at.isoformat() if project.updated_at else None,
+        "description": project.description,
+        "category": project.category,
+        "last_action_at": project.last_action_at.isoformat() if project.last_action_at else None,
         "active_status": project.active_status,
         "metadata": project.metadata
     }
@@ -54,10 +52,10 @@ async def get_user_projects(user_id: int) -> List[Dict[str, Any]]:
         .id,
         .name,
         .description,
-        .created_at,
-        .updated_at
+        .category,
+        .last_action_at
     } as project
-    ORDER BY p.updated_at DESC
+    ORDER BY p.last_action_at DESC
     """
     
     async for session in get_db_session():
@@ -66,11 +64,54 @@ async def get_user_projects(user_id: int) -> List[Dict[str, Any]]:
         return [record["project"] for record in records]
     return []
 
-# async def upsert_group_task(group_task: GroupTaskNode):
-#     """Create or update group task and link to project"""
-#     pass
 
-# async def get_project_with_groups(user_id: int, project_id: str):
+async def upsert_group_task(group_task: GroupTaskNode, project_id: str):
+    """
+    Create or update group task and link to project
+    
+    Args:
+        group_task (GroupTaskNode): GroupTask entity
+        project_id (str): Parent project ID
+        
+    Returns:
+        Neo4j record with group task node
+    """
+    query = """
+    MERGE (gt:GroupTask {id: $id})
+    ON CREATE SET
+        gt.title = $title,
+        gt.description = $description,
+        gt.last_action_at = datetime($last_action_at),
+        gt.activity_count = $activity_count,
+        gt.active_status = $active_status,
+        gt.metadata = $metadata
+    ON MATCH SET
+        gt.title = $title,
+        gt.description = $description,
+        gt.last_action_at = datetime($last_action_at),
+        gt.active_status = $active_status,
+        gt.metadata = $metadata
+    WITH gt
+    MATCH (p:Project {id: $project_id})
+    MERGE (p)-[:HAS_GROUP]->(gt)
+    RETURN gt
+    """
+    
+    parameters = {
+        "id": group_task.id,
+        "title": group_task.title,
+        "description": group_task.description,
+        "last_action_at": group_task.last_action_at.isoformat() if group_task.last_action_at else None,
+        "activity_count": group_task.activity_count,
+        "active_status": group_task.active_status,
+        "metadata": group_task.metadata,
+        "project_id": project_id
+    }
+    
+    return await graphdb_base.run_session(query=query, parameters=parameters)
+    
+
+# async def get_project_with_group_tasks(project_id: str) -> Dict[str, Any]:
 #     """Get project with all its group tasks"""
 #     pass
 

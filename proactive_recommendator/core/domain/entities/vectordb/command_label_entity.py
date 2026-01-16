@@ -12,15 +12,6 @@ class CommandLabel():
         self.example = example
         self.description = description
 
-    def to_dict(self):
-        return {
-            "label": self.label,
-            "name": self.name,
-            "keywords": ", ".join(self.keywords),
-            "example": ", ".join(self.example),
-            "description": self.description
-        }
-
     def schema_fields(self) -> CollectionSchema:
         schema = MilvusClient.create_schema(
             auto_id=True, enable_dynamic_field=True)

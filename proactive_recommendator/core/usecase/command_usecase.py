@@ -1,9 +1,19 @@
 from core.domain.request.recommendation_request import RecommendationInfoRequest
+from proactive_recommendator.core.service import project_service
 
 
 async def synchronize_all_projects(user_id: int):
-    # call task manager to get projects and group tasks
-    # store in graphdb
+    project_response = await project_service.get_all_projects_and_group_tasks(user_id)
+    return await project_service.create_projects_and_group_tasks(user_id, project_response) 
+
+async def create_project(request: dict):
+    # action when TM create project successfully
+    # Prompt categorize project into specific domain such as work, personal, health, finance, coding.
+    pass
+
+async def update_project(request: RecommendationInfoRequest):
+    # action when recursive summary of user about project is created/updated
+    # update project node in graphdb with new description or metadata
     pass
 
 async def get_project_list(request: RecommendationInfoRequest):

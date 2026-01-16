@@ -14,3 +14,4 @@ class KafkaCommand(str, Enum):
     GROUP_TASK_LIST = "groupTaskListCommand"
     DAILY_CALENDAR = "dailyCalendarCommand"
     TASK_LIST = "taskListCommand"
+    CREATE_PROJECT = "createProjectCommand"

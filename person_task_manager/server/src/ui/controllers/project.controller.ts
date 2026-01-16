@@ -63,6 +63,15 @@ class ProjectController {
         }
     }
 
+    async getProjectsWithGroupTasks(req: Request, next: NextFunction): Promise<IResponse | undefined> {
+        try {
+            const userId = Number(req.params.userId);
+            return await projectService.getProjectsWithGroupTasks(userId);
+        } catch (err) {
+            next(err);
+        }
+    }
+
     async updateProjectName(req: Request, next: NextFunction): Promise<IResponse | undefined> {
         try {
             const id = req.params.id;

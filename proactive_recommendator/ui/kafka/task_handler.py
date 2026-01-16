@@ -2,6 +2,7 @@ import json
 from aiokafka import ConsumerRecord
 
 from core.domain.enums import kafka_enum
+from core.usecase import command_usecase
 
 
 async def get_personal_task_handler(msg: ConsumerRecord):
@@ -16,6 +17,8 @@ async def get_personal_task_handler(msg: ConsumerRecord):
         return await get_daily_calendar(data)
     elif cmd == kafka_enum.KafkaCommand.TASK_LIST.value:
         return await get_task_list(data)
+    elif cmd == kafka_enum.KafkaCommand.CREATE_PROJECT.value:
+        return await create_project(data) 
 
 async def get_projects(data: dict):
     # I dont know what to do here yet, how can we predict the projects?
@@ -30,3 +33,6 @@ async def get_daily_calendar(data: dict):
 
 async def get_task_list(data: dict):
     print("Handling task list with data:", data)
+
+async def create_project(data: dict):
+    return await command_usecase.create_project(data)
