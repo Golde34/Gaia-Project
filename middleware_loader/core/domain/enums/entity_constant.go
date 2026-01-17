@@ -7,3 +7,7 @@ const (
 	Onboarding = "onboarding"
 	UserApiQuota = "user_api_quota"
 )
+
+const (
+	SYNC_PROJECT_ACTION = "sync_project"
+)

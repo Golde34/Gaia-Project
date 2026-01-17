@@ -21,6 +21,9 @@ func NewProjectRouter(projectService *services.ProjectService, db database_mongo
 		r.Get("/all", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.ListAll(w, r, projectService)
 		})
+		r.Post("sync-memory", func(w http.ResponseWriter, r *http.Request) {
+			controller_services.SyncProjectMemory(w, r, db, projectService)
+		})
 		r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.GetById(w, r, projectService)
 		})
