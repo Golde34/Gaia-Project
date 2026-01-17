@@ -10,7 +10,7 @@ import {
 
 import {
     projectCreateReducer, projectDeleteReducer, projectDetailReducer,
-    projectListReducer, projectUpdateReducer
+    projectListReducer, projectUpdateReducer, syncProjectMemoryReducer
 } from './task_manager/project.reducers'
 import {
     groupTaskCreateReducer, groupTaskDeleteReducer, groupTaskDetailReducer,
@@ -118,6 +118,7 @@ export const reducer = combineReducers({
     noteUnlock: noteUnlockReducer,
     noteDetail: noteDetailReducer,
     noteDelete: noteDeleteReducer,
+    syncProjectMemoery: syncProjectMemoryReducer,
     // schedule task
     scheduleTaskList: scheduleTaskListReducer,
     taskBatchList: taskBatchListReducer,

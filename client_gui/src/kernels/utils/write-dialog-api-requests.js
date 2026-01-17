@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import { createGroupTask } from '../../api/store/actions/task_manager/group-task.actions';
-import { createProject } from '../../api/store/actions/task_manager/project.actions';
+import { createProject, syncProjectMemory } from '../../api/store/actions/task_manager/project.actions';
 import { createTask, generateTaskFromScratch, updateTask } from '../../api/store/actions/task_manager/task.actions';
 import { updateUser, updateUserModel, updateUserSetting } from '../../api/store/actions/auth_service/user.actions';
 import { createRole } from '../../api/store/actions/auth_service/role.actions';
@@ -168,4 +168,14 @@ export const useDeleteTaskAwayScheduleDispatch = () => {
     };
 
     return deleteTaskAwayScheduleDispatch;
+}
+
+export const useSyncProjectMemoryDispatch = () => {
+    const dispatch = useDispatch();
+    
+    const syncProjectMemoryDispatch = () => {
+        return dispatch(syncProjectMemory()); 
+    };
+
+    return syncProjectMemoryDispatch;
 }
