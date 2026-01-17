@@ -6,7 +6,9 @@ import (
 	"middleware_loader/core/domain/entity"
 	database_mongo "middleware_loader/kernel/database/mongo"
 	"middleware_loader/kernel/utils"
+	"time"
 
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -47,15 +49,30 @@ func (repo *UserApiQuotaRepository) InsertUserApiQuota(
 
 func (repo *UserApiQuotaRepository) DecreaseUserApiQuota(
 	ctx context.Context, userId string, actionType string) error {
-	filter := bson.M{
-        "userId":     userId,
-        "actionType": actionType,
-        "quotaDate":  utils.GetTodayDateString(),
+    
+    today := utils.GetTodayDateString()
+    now := time.Now()
+
+    filter := bson.M{
+        "userid":     userId,
+        "actiontype": actionType,
+        "quotadate":  today,
     }
+
     update := bson.M{
-        "$inc": bson.M{"usedCount": 1}, // Tăng số lần đã dùng
+        "$inc": bson.M{
+            "remainingcount": -1,
+        },
+        "$set": bson.M{
+            "updatedat": now,
+        },
+        "$setOnInsert": bson.M{
+            "_id":       uuid.New().String(),
+            "createdat": now,
+        },
     }
-    opts := options.Update().SetUpsert(true) // Nếu chưa có thì tạo mới
+
+    opts := options.Update().SetUpsert(true)
 
     _, err := repo.Collection.UpdateOne(ctx, filter, update, opts)
     return err

@@ -42,6 +42,7 @@ func (s *UserApiQuotaService) SyncProjectMemory(ctx context.Context, userId stri
 	if err != nil {
 		maxQuota = 1
 	}
+	redisTtl := 4 * 60 * 60 // 4 hours in seconds
 	return s.CheckApiQuota(
 		ctx,
 		maxQuota,
@@ -50,7 +51,8 @@ func (s *UserApiQuotaService) SyncProjectMemory(ctx context.Context, userId stri
 		func(p interface{}) (interface{}, bool, error) {
 			return s.HandleSyncProject(p)
 		},
-		payload)
+		payload,
+		strconv.Itoa(redisTtl))
 }
 
 func (s *UserApiQuotaService) HandleSyncProject(payload interface{}) (interface{}, bool, error) {
@@ -66,17 +68,18 @@ func (s *UserApiQuotaService) CheckApiQuota(
 	maxQuota int,
 	userId, actionType string,
 	function func(interface{}) (interface{}, bool, error),
-	payload map[string]interface{},
+	payload interface{},
+	ttl string,
 ) (base_dtos.ErrorResponse, error) {
+	redisKey := fmt.Sprintf("%s:%s:%s:%s", enums.RedisPrefix, actionType, userId, utils.GetTodayDateString())
 
-	_, err := s.checkAndDecreaseQuota(ctx, userId, actionType, maxQuota, payload)
+	_, err := s.checkAndDecreaseQuota(ctx, userId, actionType, maxQuota, redisKey, ttl)
 	if err != nil {
 		return utils.ReturnErrorResponse(429, "Quota exceeded"), nil
 	}
 
 	response, isAsync, err := function(payload)
 	if err != nil {
-		redisKey := fmt.Sprintf("usage:%s:%s:%s", userId, actionType, utils.GetTodayDateString())
 		s.RollbackQuota(ctx, redisKey)
 		return utils.ReturnErrorResponse(500, fmt.Sprintf("Cannot process %s request", actionType)), nil
 	}
@@ -95,16 +98,15 @@ func (s *UserApiQuotaService) checkAndDecreaseQuota(
 	userId string,
 	actionType string,
 	maxCount int,
-	payload map[string]interface{},
+	redisKey string,
+	ttl string,
 ) (int, error) {
-	today := utils.GetTodayDateString()
-	redisKey := fmt.Sprintf("usage:%s:%s:%s", userId, actionType, today)
-
 	result, err := redis_cache.ExecuteLuaScript(
 		ctx,
 		resource.RateLimitScript,
 		[]string{redisKey},
 		maxCount,
+		ttl,
 	)
 	if err != nil {
 		return -1, fmt.Errorf("failed to execute Lua script: %w", err)
@@ -133,8 +135,7 @@ func (s *UserApiQuotaService) RollbackQuota(ctx context.Context, redisKey string
 }
 
 func (s *UserApiQuotaService) GetQuotaUsage(ctx context.Context, userId string, actionType string) (int, error) {
-	today := utils.GetTodayDateString()
-	redisKey := fmt.Sprintf("usage:%s:%s:%s", userId, actionType, today)
+	redisKey := fmt.Sprintf("%s:%s:%s:%s", enums.RedisPrefix, actionType, userId, utils.GetTodayDateString())
 
 	result, err := redis_cache.GetKey(ctx, redisKey)
 	if err != nil {
@@ -147,12 +148,10 @@ func (s *UserApiQuotaService) GetQuotaUsage(ctx context.Context, userId string, 
 }
 
 func (s *UserApiQuotaService) syncQuotaToDatabase(ctx context.Context, userId string, actionType string) {
-	today := utils.GetTodayDateString()
-
 	query := request_dtos.UserApiQuotaQueryRequest{
 		UserId:     userId,
 		ActionType: actionType,
-		QuotaDate:  today,
+		QuotaDate:  utils.GetTodayDateString(),
 	}
 
 	result := s.quotaStore.GetUserApiQuota(ctx, query)

@@ -65,6 +65,7 @@ func Setup(router *chi.Mux, db database_mongo.Database) {
 	router.Group(func(r chi.Router) {
 		middleware_router.NewMicroserviceRouter(db, router)
 		middleware_router.NewURLPermissionRouter(db, router)
+		middleware_router.NewUserApiQuotaRouter(db, router)
 	})
 
 	router.Group(func(r chi.Router) {

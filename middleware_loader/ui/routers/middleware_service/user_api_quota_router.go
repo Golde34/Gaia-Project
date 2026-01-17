@@ -16,7 +16,7 @@ type UserApiQuotaRouter struct {
 func NewUserApiQuotaRouter(db database_mongo.Database, r *chi.Mux) *UserApiQuotaRouter {
 	userApiQuotaService := services.NewUserApiQuotaService(db)
 	r.Route("/api-quota", func(r chi.Router) {
-		r.Post("sync-project-memory", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/sync-project-memory", func(w http.ResponseWriter, r *http.Request) {
 			controller_services.SyncProjectMemory(w, r, userApiQuotaService)
 		})
 	})

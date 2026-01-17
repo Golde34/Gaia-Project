@@ -6,6 +6,7 @@
 
 local key = KEYS[1]
 local maxCount = tonumber(ARGV[1])
+local ttl = tonumber(ARGV[2])
 
 -- Get current value
 local current = redis.call('GET', key)
