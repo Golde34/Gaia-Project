@@ -11,6 +11,7 @@ import UserGithubScreen from "../../screens/userScreen/UserGihubScreen";
 import LLMModelSettingScreen from "../../screens/userScreen/LLMModelSetting";
 import SettingsSectionLayout from "../../components/SettingsSectionLayout";
 import { ComingSoonComponent } from "../../components/subComponents/ComingSoonComponent";
+import MemorySetting from "../../screens/userScreen/MemorySetting";
 
 function ContentArea() {
     const dispatch = useDispatch();
@@ -60,7 +61,7 @@ function ContentArea() {
             id: "assistant-memory",
             label: "Tunning assistant memory",
             description: "Configure memory settings for your LLM model",
-            content: <ComingSoonComponent />,
+            content: <MemorySetting />,
         },
     ]), [user]);
 
