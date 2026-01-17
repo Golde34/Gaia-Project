@@ -1,9 +1,7 @@
 package controller_services
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
 	base_dtos "middleware_loader/core/domain/dtos/base"
 	"middleware_loader/core/middleware"
 	mapper "middleware_loader/core/port/mapper/request"
@@ -155,21 +153,3 @@ func EnableProject(w http.ResponseWriter, r *http.Request, projectService *servi
 
 	utils.ConnectToGraphQLServer(w, graphqlQuery)
 }
-
-func SyncProjectMemory(w http.ResponseWriter, r *http.Request, projectService *services.ProjectService) {
-	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
-
-	response, err := projectService.SyncProjectMemory(r.Context(), userId)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Printf("Error encoding response: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-}	
-	

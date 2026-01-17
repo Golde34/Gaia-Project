@@ -5,7 +5,10 @@ import (
 	request_dtos "middleware_loader/core/domain/dtos/request"
 	"middleware_loader/core/domain/entity"
 	database_mongo "middleware_loader/kernel/database/mongo"
-	"time"
+	"middleware_loader/kernel/utils"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type UserApiQuotaRepository struct {
@@ -44,19 +47,16 @@ func (repo *UserApiQuotaRepository) InsertUserApiQuota(
 
 func (repo *UserApiQuotaRepository) DecreaseUserApiQuota(
 	ctx context.Context, userId string, actionType string) error {
-	// Get today's date in yyyy-MM-dd format
-	today := time.Now().Format("2006-01-02")
+	filter := bson.M{
+        "userId":     userId,
+        "actionType": actionType,
+        "quotaDate":  utils.GetTodayDateString(),
+    }
+    update := bson.M{
+        "$inc": bson.M{"usedCount": 1}, // Tăng số lần đã dùng
+    }
+    opts := options.Update().SetUpsert(true) // Nếu chưa có thì tạo mới
 
-	filter := map[string]interface{}{
-		"userid":     userId,
-		"actiontype": actionType,
-		"quotadate":  today,
-	}
-	update := map[string]interface{}{
-		"$inc": map[string]interface{}{
-			"remainingcount": -1,
-		},
-	}
-	_, err := repo.Collection.UpdateOne(ctx, filter, update)
-	return err
+    _, err := repo.Collection.UpdateOne(ctx, filter, update, opts)
+    return err
 }

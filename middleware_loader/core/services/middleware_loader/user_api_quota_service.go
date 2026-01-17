@@ -5,40 +5,92 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
+	base_dtos "middleware_loader/core/domain/dtos/base"
 	request_dtos "middleware_loader/core/domain/dtos/request"
 	"middleware_loader/core/domain/entity"
+	"middleware_loader/core/domain/enums"
 	"middleware_loader/core/port/store"
 	redis_cache "middleware_loader/infrastructure/cache"
+	"middleware_loader/kernel/configs"
 	database_mongo "middleware_loader/kernel/database/mongo"
+	"middleware_loader/kernel/resource"
 	"middleware_loader/kernel/utils"
+	"strconv"
 )
 
-var luaScript string
-
-type ActionHandler func(
-	ctx context.Context,
-	userId string,
-	actionType string,
-	payload map[string]interface{}) error
-
 type UserApiQuotaService struct {
-	actionHandlers map[string]ActionHandler
-	quotaStore     store.UserApiQuotaStore
+	quotaStore store.UserApiQuotaStore
+	config     configs.Config
 }
 
 func NewUserApiQuotaService(db database_mongo.Database) *UserApiQuotaService {
-	service := &UserApiQuotaService{
-		actionHandlers: make(map[string]ActionHandler),
-		quotaStore:     store.NewUserApiQuotaStore(db),
+	return &UserApiQuotaService{
+		quotaStore: store.NewUserApiQuotaStore(db),
+		config:     configs.Config{},
 	}
-	return service
 }
 
-func (s *UserApiQuotaService) RegisterActionHandler(actionType string, handler ActionHandler) {
-	s.actionHandlers[actionType] = handler
+// BUSINESS LOGIC FUNCTIONS
+func (s *UserApiQuotaService) SyncProjectMemory(ctx context.Context, userId string) (base_dtos.ErrorResponse, error) {
+	payload := map[string]interface{}{
+		"userId": userId,
+	}
+
+	cfg, _ := s.config.LoadEnv()
+	maxQuotaStr := cfg.SyncProjectQuota
+	maxQuota, err := strconv.Atoi(maxQuotaStr)
+	if err != nil {
+		maxQuota = 1
+	}
+	return s.CheckApiQuota(
+		ctx,
+		maxQuota,
+		userId,
+		enums.SYNC_PROJECT_ACTION,
+		func(p interface{}) (interface{}, bool, error) {
+			return s.HandleSyncProject(p)
+		},
+		payload)
 }
 
-func (s *UserApiQuotaService) CheckAndDecreaseQuota(
+func (s *UserApiQuotaService) HandleSyncProject(payload interface{}) (interface{}, bool, error) {
+	// call kafka
+	log.Print("Sync project ...")
+	response := "ok"
+	return response, false, nil
+}
+
+// GENERIC FUNCTIONS
+func (s *UserApiQuotaService) CheckApiQuota(
+	ctx context.Context,
+	maxQuota int,
+	userId, actionType string,
+	function func(interface{}) (interface{}, bool, error),
+	payload map[string]interface{},
+) (base_dtos.ErrorResponse, error) {
+
+	_, err := s.checkAndDecreaseQuota(ctx, userId, actionType, maxQuota, payload)
+	if err != nil {
+		return utils.ReturnErrorResponse(429, "Quota exceeded"), nil
+	}
+
+	response, isAsync, err := function(payload)
+	if err != nil {
+		redisKey := fmt.Sprintf("usage:%s:%s:%s", userId, actionType, utils.GetTodayDateString())
+		s.RollbackQuota(ctx, redisKey)
+		return utils.ReturnErrorResponse(500, fmt.Sprintf("Cannot process %s request", actionType)), nil
+	}
+
+	if !isAsync {
+		s.syncQuotaToDatabase(context.Background(), userId, actionType)
+		return utils.ReturnSuccessResponse(fmt.Sprintf("%s request success ", actionType), response), nil
+	}
+
+	return utils.ReturnSuccessResponse("Sync project request accepted for processing", response), nil
+
+}
+
+func (s *UserApiQuotaService) checkAndDecreaseQuota(
 	ctx context.Context,
 	userId string,
 	actionType string,
@@ -50,7 +102,7 @@ func (s *UserApiQuotaService) CheckAndDecreaseQuota(
 
 	result, err := redis_cache.ExecuteLuaScript(
 		ctx,
-		luaScript,
+		resource.RateLimitScript,
 		[]string{redisKey},
 		maxCount,
 	)
@@ -68,25 +120,10 @@ func (s *UserApiQuotaService) CheckAndDecreaseQuota(
 		return int(remaining), fmt.Errorf("quota exceeded: too many requests")
 	}
 
-	log.Printf("Quota decreased: user=%s actionType=%s remaining=%d", userId, actionType, remaining)
-
-	// Execute action handler if registered
-	if handler, exists := s.actionHandlers[actionType]; exists {
-		go func() {
-			if err := handler(ctx, userId, actionType, payload); err != nil {
-				log.Printf("❌ Handler failed: %v", err)
-				s.rollbackQuota(context.Background(), redisKey)
-			} else {
-				// Success: Update MongoDB
-				s.syncQuotaToDatabase(context.Background(), userId, actionType)
-			}
-		}()
-	}
-
 	return int(remaining), nil
 }
 
-func (s *UserApiQuotaService) rollbackQuota(ctx context.Context, redisKey string) {
+func (s *UserApiQuotaService) RollbackQuota(ctx context.Context, redisKey string) {
 	_, err := redis_cache.Incr(ctx, redisKey)
 	if err != nil {
 		log.Printf("Failed to rollback quota for key=%s: %v", redisKey, err)
@@ -109,11 +146,9 @@ func (s *UserApiQuotaService) GetQuotaUsage(ctx context.Context, userId string, 
 	return remaining, nil
 }
 
-// syncQuotaToDatabase syncs the quota usage to MongoDB after successful operation
 func (s *UserApiQuotaService) syncQuotaToDatabase(ctx context.Context, userId string, actionType string) {
 	today := utils.GetTodayDateString()
 
-	// Check if quota record exists in MongoDB
 	query := request_dtos.UserApiQuotaQueryRequest{
 		UserId:     userId,
 		ActionType: actionType,
@@ -132,19 +167,10 @@ func (s *UserApiQuotaService) syncQuotaToDatabase(ctx context.Context, userId st
 			ActionType:     actionType,
 			RemainingCount: remaining,
 		}
-		_, err := s.quotaStore.InsertUserApiQuota(ctx, insertRequest)
-		if err != nil {
-			log.Printf("❌ Failed to insert quota to MongoDB: %v", err)
-		} else {
-			log.Printf("✅ Quota synced to MongoDB (new record): user=%s actionType=%s remaining=%d", userId, actionType, remaining)
-		}
+		s.quotaStore.InsertUserApiQuota(ctx, insertRequest)
 	} else {
 		// Record exists, decrease quota in MongoDB
 		err := s.quotaStore.DecreaseUserApiQuota(ctx, userId, actionType)
-		if err != nil {
-			log.Printf("❌ Failed to decrease quota in MongoDB: %v", err)
-		} else {
-			log.Printf("✅ Quota decreased in MongoDB: user=%s actionType=%s", userId, actionType)
-		}
+		println("Decreased quota in MongoDB:", err)
 	}
 }

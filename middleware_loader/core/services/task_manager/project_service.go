@@ -2,32 +2,20 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"strconv"
 	converter_dtos "middleware_loader/core/domain/dtos/converter"
 	response_dtos "middleware_loader/core/domain/dtos/response"
-	"middleware_loader/core/domain/enums"
 	"middleware_loader/core/port/client"
-	middleware_services "middleware_loader/core/services/middleware_loader"
 	"middleware_loader/core/validator"
 	adapter "middleware_loader/infrastructure/client"
 	"middleware_loader/infrastructure/graph/model"
-	database_mongo "middleware_loader/kernel/database/mongo"
-	"middleware_loader/kernel/configs"
 )
 
 type ProjectService struct {
-	quotaService *middleware_services.UserApiQuotaService
 }
 
-func NewProjectService(db database_mongo.Database) *ProjectService {
-	quotaService := middleware_services.NewUserApiQuotaService(db)
-	service := &ProjectService{
-		quotaService: quotaService,
-	}
-	quotaService.RegisterActionHandler(enums.SYNC_PROJECT_ACTION, service.handleSyncProjectAction)
-	return service
+func NewProjectService() *ProjectService {
+	return &ProjectService{}
 }
 
 var projectValidation = validator.NewProjectDTOValidator()
@@ -175,44 +163,4 @@ func (s *ProjectService) EnableProject(ctx context.Context, input model.IDInput)
 		projectModel := projectResponse.MapperToGraphQLModel(project)
 		return projectModel, nil
 	}
-}
-
-func (s *ProjectService) SyncProjectMemory(ctx context.Context, userId string) (interface{}, error) {
-	config := configs.Config{}
-	cfg, _ := config.LoadEnv()
-	maxQuotaStr := cfg.SyncProjectQuota
-	maxQuota, err := strconv.Atoi(maxQuotaStr)
-	if err != nil {
-		maxQuota = 1
-	}
-
-	remaining, err := s.quotaService.CheckAndDecreaseQuota(
-		ctx,
-		userId,
-		enums.SYNC_PROJECT_ACTION,
-		maxQuota,
-		nil,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("quota exceeded: maximum %d sync requests per day", maxQuota)
-	}
-
-	return map[string]interface{}{
-		"message":   "Sync project request accepted for processing",
-		"status":    "accepted",
-		"remaining": remaining,
-		"userId":    userId,
-	}, nil
-}
-
-// handleSyncProjectAction is the callback handler that executes when sync_project is triggered
-// This function runs asynchronously after quota is decreased
-func (s *ProjectService) handleSyncProjectAction(
-	ctx context.Context,
-	userId string,
-	actionType string,
-	payload map[string]interface{},
-) error {
-	log.Printf("🚀 Starting sync project for user=%s", userId)
-	return nil
 }
