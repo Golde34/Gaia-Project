@@ -9,7 +9,6 @@ import (
 	mapper "middleware_loader/core/port/mapper/request"
 	services "middleware_loader/core/services/task_manager"
 	"middleware_loader/infrastructure/graph/model"
-	database_mongo "middleware_loader/kernel/database/mongo"
 	"middleware_loader/kernel/utils"
 	"middleware_loader/ui/controller_services/controller_utils"
 	"net/http"
@@ -157,10 +156,10 @@ func EnableProject(w http.ResponseWriter, r *http.Request, projectService *servi
 	utils.ConnectToGraphQLServer(w, graphqlQuery)
 }
 
-func SyncProjectMemory(w http.ResponseWriter, r *http.Request, db database_mongo.Database, projectService *services.ProjectService) {
+func SyncProjectMemory(w http.ResponseWriter, r *http.Request, projectService *services.ProjectService) {
 	userId := fmt.Sprintf("%.0f", r.Context().Value(middleware.ContextKeyUserId))
 
-	response, err := projectService.SyncProjectMemory(db, userId)
+	response, err := projectService.SyncProjectMemory(r.Context(), userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
