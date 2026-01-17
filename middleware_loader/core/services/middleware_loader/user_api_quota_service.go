@@ -11,6 +11,7 @@ import (
 	"middleware_loader/core/domain/enums"
 	"middleware_loader/core/port/store"
 	redis_cache "middleware_loader/infrastructure/cache"
+	"middleware_loader/infrastructure/kafka"
 	"middleware_loader/kernel/configs"
 	database_mongo "middleware_loader/kernel/database/mongo"
 	"middleware_loader/kernel/resource"
@@ -57,7 +58,8 @@ func (s *UserApiQuotaService) SyncProjectMemory(ctx context.Context, userId stri
 
 func (s *UserApiQuotaService) HandleSyncProject(payload interface{}) (interface{}, bool, error) {
 	// call kafka
-	log.Print("Sync project ...")
+	kafka.ProduceKafkaMessage(payload.(map[string]interface{}),
+		enums.SyncProjectTopic, enums.SyncProjectCmd)
 	response := "ok"
 	return response, false, nil
 }
