@@ -6,7 +6,8 @@ class KafkaTopic(str, Enum):
     TEST = "test"
     ## Producer topics
     ## Consumer topics
-    PERSONAL_TASK = "proactive_recommendator.personal_task.topic"
+    SYNCHRONIZE_MEMORY_TOPIC = "proactive-recommendator.synchronize-memory.topic"
+    PERSONAL_TASK = "proactive-recommendator.personal-task.topic"
 
 class KafkaCommand(str, Enum):
     TEST = "test"
@@ -15,3 +16,5 @@ class KafkaCommand(str, Enum):
     DAILY_CALENDAR = "dailyCalendarCommand"
     TASK_LIST = "taskListCommand"
     CREATE_PROJECT = "createProjectCommand"
+
+    SYNC_PROJECT_MEMORY = "syncProjectMemoryCmd"
