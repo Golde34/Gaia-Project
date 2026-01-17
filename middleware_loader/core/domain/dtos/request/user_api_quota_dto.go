@@ -7,9 +7,9 @@ import (
 )
 
 type UserApiQuotaQueryRequest struct {
-	UserId     float64 `json:"userId"`
-	ActionType string  `json:"actionType"`
-	QuotaDate  string  `json:"quotaDate"`
+	UserId     string `json:"userId"`
+	ActionType string `json:"actionType"`
+	QuotaDate  string `json:"quotaDate"`
 }
 
 func (in *UserApiQuotaQueryRequest) MapperToModel(input model.UpdateUserInput) {

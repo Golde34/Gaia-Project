@@ -32,7 +32,7 @@ func Setup(router *chi.Mux, db database_mongo.Database) {
 	privilegeService := auth_services.NewPrivilegeService()
 	gaiaService := gaia_connector.NewGaiaService()
 	taskService := task_manager.NewTaskService()
-	projectService := task_manager.NewProjectService()
+	projectService := task_manager.NewProjectService(db)
 	groupTaskService := task_manager.NewGroupTaskService()
 	taskRegisterService := work_optim.NewTaskRegisterService()
 	noteService := task_manager.NewNoteService()

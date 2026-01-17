@@ -8,9 +8,9 @@ import (
 	"context"
 	"fmt"
 	auth_services "middleware_loader/core/services/auth_services"
+	contribution_tracker "middleware_loader/core/services/contribution_tracker"
 	task_manager "middleware_loader/core/services/task_manager"
 	work_optim "middleware_loader/core/services/work_optimization"
-	contribution_tracker "middleware_loader/core/services/contribution_tracker"
 	"middleware_loader/infrastructure/graph/model"
 )
 
@@ -24,7 +24,6 @@ var privilegeService = auth_services.NewPrivilegeService()
 var taskRegisterService = work_optim.NewTaskRegisterService()
 var noteService = task_manager.NewNoteService()
 var projectCommitService = contribution_tracker.NewProjectCommitService()
-
 
 // RegisterTaskConfig is the resolver for the registerTaskConfig field.
 func (r *mutationResolver) RegisterTaskConfig(ctx context.Context, input model.RegisterTaskInput) (*model.RegisterTaskConfig, error) {

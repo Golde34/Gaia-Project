@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	converter_dtos "middleware_loader/core/domain/dtos/converter"
 	response_dtos "middleware_loader/core/domain/dtos/response"
 	"middleware_loader/core/domain/enums"
@@ -12,16 +13,16 @@ import (
 	"middleware_loader/core/validator"
 	adapter "middleware_loader/infrastructure/client"
 	"middleware_loader/infrastructure/graph/model"
+	database_mongo "middleware_loader/kernel/database/mongo"
 	"middleware_loader/kernel/configs"
-	"strconv"
 )
 
 type ProjectService struct {
 	quotaService *middleware_services.UserApiQuotaService
 }
 
-func NewProjectService() *ProjectService {
-	quotaService := middleware_services.NewUserApiQuotaService()
+func NewProjectService(db database_mongo.Database) *ProjectService {
+	quotaService := middleware_services.NewUserApiQuotaService(db)
 	service := &ProjectService{
 		quotaService: quotaService,
 	}
