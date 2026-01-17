@@ -124,6 +124,24 @@ async def get_group_tasks_by_project(
     return results if results else []
 
 
+async def delete_user_group_tasks(user_id: int):
+    """
+    Delete all group tasks for a user from VectorDB.
+    
+    Args:
+        user_id: User ID to filter deletion
+    """
+    try:
+        filter_query = f'user_id == {user_id}'
+        milvus_db.delete_by_filter(
+            collection_name="group_task",
+            filter_query=filter_query
+        )
+    except Exception as e:
+        print(f"Error deleting user group tasks from VectorDB: {e}")
+        # Don't raise - allow sync to continue
+
+
 async def update_group_task_status(
     group_task_id: str,
     user_id: int,

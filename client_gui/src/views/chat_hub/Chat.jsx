@@ -18,7 +18,7 @@ export default function Chat() {
           </Card>
         </Col>
         <Col numColSpan={7} className="ms-2">
-          <ChatComponent key={dialogueId} chatType={dialogueType}/>
+          <ChatComponent key={dialogueId} chatType={dialogueType} />
         </Col>
       </Grid>
     </Template>

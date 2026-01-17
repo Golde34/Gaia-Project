@@ -525,6 +525,25 @@ class MilvusDB:
         except Exception as e:
             print(f"Error deleting data: {e}")
 
+    def delete_by_filter(self, collection_name: str, filter_query: str):
+        """
+        Delete data from a collection by filter expression.
+        
+        Args:
+            collection_name: Name of the collection
+            filter_query: Filter expression (e.g., 'user_id == 123')
+        """
+        try:
+            result = self.client.delete(
+                collection_name=collection_name,
+                filter=filter_query
+            )
+            print(f"Deleted data from {collection_name} with filter: {filter_query}")
+            return result
+        except Exception as e:
+            print(f"Error deleting data by filter: {e}")
+            traceback.print_exc()
+
     def close(self):
         try:
             self.client.close()

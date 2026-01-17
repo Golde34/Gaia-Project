@@ -111,6 +111,23 @@ async def upsert_group_task(group_task: GroupTaskNode, project_id: str):
     return await graphdb_base.run_session(query=query, parameters=parameters)
     
 
+async def delete_user_projects_and_tasks(user_id: int):
+    """
+    Delete all projects and group tasks for a user from GraphDB.
+    Uses DETACH DELETE to remove all relationships as well.
+    """
+    query = """
+    MATCH (u:User {user_id: $user_id})-[:OWNS]->(p:Project)
+    OPTIONAL MATCH (p)-[:HAS_GROUP]->(gt:GroupTask)
+    DETACH DELETE p, gt
+    """
+    
+    async for session in get_db_session():
+        result = await session.run(query, {"user_id": user_id})
+        await result.consume()
+        return
+
+
 # async def get_project_with_group_tasks(project_id: str) -> Dict[str, Any]:
 #     """Get project with all its group tasks"""
 #     pass

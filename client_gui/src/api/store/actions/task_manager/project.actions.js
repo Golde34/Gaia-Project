@@ -5,7 +5,8 @@ import { PROJECT_COLOR_UPDATE_FAIL, PROJECT_COLOR_UPDATE_REQUEST, PROJECT_COLOR_
     PROJECT_DETAIL_FAIL, PROJECT_DETAIL_REQUEST, PROJECT_DETAIL_SUCCESS, 
     PROJECT_LIST_FAIL, PROJECT_LIST_REQUEST, PROJECT_LIST_SUCCESS, 
     PROJECT_NAME_UPDATE_FAIL, PROJECT_NAME_UPDATE_REQUEST, PROJECT_NAME_UPDATE_SUCCESS, 
-    PROJECT_UPDATE_FAIL, PROJECT_UPDATE_REQUEST, PROJECT_UPDATE_SUCCESS 
+    PROJECT_UPDATE_FAIL, PROJECT_UPDATE_REQUEST, PROJECT_UPDATE_SUCCESS, 
+    SYNC_PROJECT_MEMORY_FAIL, SYNC_PROJECT_MEMORY_REQUEST, SYNC_PROJECT_MEMORY_SUCCESS
 } from "../../constants/task_manager/project.constants";
 
 const portName = {
@@ -110,6 +111,21 @@ export const updateProjectColor = (projectId, color) => async (dispatch) => {
     } catch (error) {
         dispatch({
             type: PROJECT_COLOR_UPDATE_FAIL,
+            payload: error.response && error.response.data.message
+                ? error.response.data.message
+                : error.message,
+        });
+    }
+}
+
+export const syncProjectMemory = () => async (dispatch) => {
+    dispatch({ type: SYNC_PROJECT_MEMORY_REQUEST });
+    try {
+        const { data } = await serverRequest(`/api-quota/sync-project-memory`, HttpMethods.GET, portName.middlewarePort, {});
+        dispatch({ type: SYNC_PROJECT_MEMORY_SUCCESS, payload: data.data });
+    } catch (error) {
+        dispatch({
+            type: SYNC_PROJECT_MEMORY_FAIL,
             payload: error.response && error.response.data.message
                 ? error.response.data.message
                 : error.message,

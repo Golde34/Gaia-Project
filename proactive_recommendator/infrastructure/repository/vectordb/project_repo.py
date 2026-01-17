@@ -104,6 +104,24 @@ async def get_user_projects(user_id: int) -> List[Dict[str, Any]]:
     return results if results else []
 
 
+async def delete_user_projects(user_id: int):
+    """
+    Delete all projects for a user from VectorDB.
+    
+    Args:
+        user_id: User ID to filter deletion
+    """
+    try:
+        filter_query = f'user_id == {user_id}'
+        milvus_db.delete_by_filter(
+            collection_name="project",
+            filter_query=filter_query
+        )
+    except Exception as e:
+        print(f"Error deleting user projects from VectorDB: {e}")
+        # Don't raise - allow sync to continue
+
+
 async def update_project_status(
     project_id: str,
     user_id: int,

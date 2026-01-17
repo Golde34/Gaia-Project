@@ -32,6 +32,13 @@ func ReturnErrorResponse(statusCode int, message string) base_dtos.ErrorResponse
 			ErrorCode:     404,
 			ErrorMessage:  message,
 		}
+	case 429:
+		return base_dtos.ErrorResponse{
+			Status:        "error",
+			StatusMessage: "Too Many Requests",
+			ErrorCode:     429,
+			ErrorMessage:  message,
+		}
 	case 500:
 		return base_dtos.ErrorResponse{
 			Status:        "error",
