@@ -1,7 +1,8 @@
 import Template from "../../components/template/Template"
 import { Metric, Tab, TabGroup, TabList, TabPanel, TabPanels } from "@tremor/react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 import { userProfile } from "../../api/store/actions/auth_service/user.actions";
 import MessageBox from "../../components/subComponents/MessageBox";
 import UserSettingScreen from "../../screens/userScreen/UserSettingScreen";
@@ -13,6 +14,20 @@ import { ComingSoonComponent } from "../../components/subComponents/ComingSoonCo
 
 function ContentArea() {
     const dispatch = useDispatch();
+    const [searchParams] = useSearchParams();
+
+    const tabParam = searchParams.get("tab");
+    const sectionParam = searchParams.get("section");
+    const tabIndexMap = {
+        "profile": 0,
+        "llm-settings": 1,
+        "integration": 2
+    };
+    const initialTabIndex = tabParam && tabIndexMap[tabParam] !== undefined 
+        ? tabIndexMap[tabParam] 
+        : 0;
+
+    const [selectedTabIndex, setSelectedTabIndex] = useState(initialTabIndex);
 
     const profile = useSelector(state => state.userDetail);
     const { loading, error, user } = profile;
@@ -42,7 +57,7 @@ function ContentArea() {
             renderContent: () => user?.llmModels?.[0] ? <LLMModelSettingScreen user={user} model={user.llmModels[0].modelName} /> : null,
         },
         {
-            id: "tuning-memory",
+            id: "assistant-memory",
             label: "Tunning assistant memory",
             description: "Configure memory settings for your LLM model",
             content: <ComingSoonComponent />,
@@ -69,6 +84,12 @@ function ContentArea() {
         }, 200);
     }, [])
 
+    const getValidSectionId = (sections) => {
+        if (!sectionParam) return undefined;
+        const sectionExists = sections.some(s => s.id === sectionParam);
+        return sectionExists ? sectionParam : undefined;
+    };
+
     return (
         <div>
             {loading ? (
@@ -79,7 +100,7 @@ function ContentArea() {
                 <>
                     <Metric style={{ marginBottom: '30px', marginTop: '30px' }}
                         className='text-2xl font-bold text-gray-800'>User Profile</Metric>
-                    <TabGroup>
+                    <TabGroup index={selectedTabIndex} onIndexChange={setSelectedTabIndex}>
                         <TabList className="mt-4" variant="solid">
                             <Tab>{profileTitle}</Tab>
                             <Tab>{llmSettingTitle}</Tab>
@@ -91,6 +112,7 @@ function ContentArea() {
                                     sidebarTitle={profileTitle}
                                     sections={profileSections}
                                     contentContainerClassName="w-full p-2"
+                                    defaultSectionId={selectedTabIndex === 0 ? getValidSectionId(profileSections) : undefined}
                                 />
                             </TabPanel>
                             <TabPanel>
@@ -98,6 +120,7 @@ function ContentArea() {
                                     sidebarTitle={llmSettingTitle}
                                     sections={llmSections}
                                     contentContainerClassName="w-full p-2"
+                                    defaultSectionId={selectedTabIndex === 1 ? getValidSectionId(llmSections) : undefined}
                                 />
                             </TabPanel>
                             <TabPanel>
@@ -105,6 +128,7 @@ function ContentArea() {
                                     sidebarTitle={integrationSettingsTitle}
                                     sections={integrationSetting}
                                     contentContainerClassName="flex-auto w-full p-2"
+                                    defaultSectionId={selectedTabIndex === 2 ? getValidSectionId(integrationSetting) : undefined}
                                 />
                             </TabPanel>
                         </TabPanels>

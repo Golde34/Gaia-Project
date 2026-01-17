@@ -63,7 +63,7 @@ const DialogueList = ({
                         key={"memory_setting"}
                         icon={"⚙️"}
                         label={"Memory Settings"}
-                        onClick={() => navigate("/chat/memory-settings")}
+                        onClick={() => navigate("/profile?tab=llm-settings&section=assistant-memory")}
                     />
                 </Card>
 

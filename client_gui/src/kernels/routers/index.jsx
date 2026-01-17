@@ -116,14 +116,9 @@ const routeList = [
         element: <NoteDetail />,
     },
     {
-        path: '/chat/memory-settings',
-        key: 'chat',
-        element: <Chat redirect={"MemorySetting"} />,
-    },
-    {
         path: '/chat',
         key: 'chat',
-        element: <Chat redirect={"Default"} />,
+        element: <Chat />,
     },
     {
         path: '/notifications',
