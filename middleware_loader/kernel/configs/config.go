@@ -21,6 +21,8 @@ type Config struct {
 
 	FileDisplayWord string
 	Datalake        string
+
+	SyncProjectQuota string
 }
 
 func (in *Config) LoadEnv() (Config, error) {
@@ -43,6 +45,8 @@ func (in *Config) LoadEnv() (Config, error) {
 	fileDisplayWord := os.Getenv("FILE_DISPLAY_WORD")
 	dataLake := os.Getenv("DATALAKE")
 
+	syncProjectQuota := os.Getenv("SYNC_PROJECT_QUOTA")
+
 	config := Config{
 		Url:                            url,
 		Port:                           port,
@@ -56,6 +60,7 @@ func (in *Config) LoadEnv() (Config, error) {
 		NotifyAgentServicePort: 		notifyAgentServicePort,
 		FileDisplayWord:                fileDisplayWord,
 		Datalake:                       dataLake,
+		SyncProjectQuota:               syncProjectQuota,
 	}
 	return config, nil
 }
