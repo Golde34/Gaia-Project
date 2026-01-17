@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Card, Text, Title, Badge, Metric, Subtitle } from "@tremor/react";
+import { Card, Text, Title, Badge, Metric, Subtitle, Grid } from "@tremor/react";
 import { getAllDialogues } from "../../api/store/actions/chat_hub/dialogue.actions";
 import { useNavigate } from "react-router-dom";
 import { ItemRow } from "../../components/subComponents/ItemRow";
@@ -27,7 +27,7 @@ const DialogueList = ({
     }, [getAllUserDialogues]);
 
     const handleDialogueClick = (dialogueId, dialogueType) => {
-        navigate(`/chat?dialogueId=${encodeURIComponent(dialogueId)}&dialogueType=${encodeURIComponent(dialogueType)}`, { 
+        navigate(`/chat?dialogueId=${encodeURIComponent(dialogueId)}&dialogueType=${encodeURIComponent(dialogueType)}`, {
             replace: false,
             state: { refresh: true }
         });
@@ -37,7 +37,7 @@ const DialogueList = ({
         <div className="flex flex-col gap-3">
             <div>
                 <Metric className="text-xl">Chat Hub</Metric>
-                <Subtitle className="text-sm text-gray-500">Your chats & projects</Subtitle>
+                <Subtitle className="text-sm text-gray-500">Your chats</Subtitle>
             </div>
 
             <div className={`overflow-y-auto p-1 space-y-3 ${maxHeightClass}`}>
@@ -48,7 +48,7 @@ const DialogueList = ({
                         icon={"🆕"}
                         label={"New Chat"}
                         onClick={() => {
-                            navigate("/chat", { 
+                            navigate("/chat", {
                                 replace: false,
                                 state: { refresh: true, newChat: true }
                             });
@@ -58,6 +58,12 @@ const DialogueList = ({
                         key={"search_chat_button"}
                         icon={"🔎"}
                         label={"Search Chats"}
+                    />
+                    <ItemRow
+                        key={"memory_setting"}
+                        icon={"⚙️"}
+                        label={"Memory Settings"}
+                        onClick={() => navigate("/chat/memory-settings")}
                     />
                 </Card>
 

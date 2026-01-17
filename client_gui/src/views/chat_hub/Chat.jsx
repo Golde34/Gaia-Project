@@ -4,11 +4,25 @@ import Template from '../../components/template/Template';
 import DialogueList from './DialogueList';
 import ChatComponent from './ChatComponent';
 
-export default function Chat() {
+export default function Chat(props) {
   const [searchParams] = useSearchParams();
   const dialogueId = searchParams.get("dialogueId");
   const dialogueType = searchParams.get("dialogueType");
 
+  if (props.redirect === "MemorySetting") {
+    return (
+      <ChatTemplate>
+      </ChatTemplate>
+    );
+  }
+  return (
+    <ChatTemplate>
+      <ChatComponent key={dialogueId} chatType={dialogueType} />
+    </ChatTemplate>
+  );
+}
+
+const ChatTemplate = (props) => {
   return (
     <Template>
       <Grid numItems={9}>
@@ -18,9 +32,9 @@ export default function Chat() {
           </Card>
         </Col>
         <Col numColSpan={7} className="ms-2">
-          <ChatComponent key={dialogueId} chatType={dialogueType}/>
+          {props.children}
         </Col>
       </Grid>
     </Template>
-  );
+  )
 }
