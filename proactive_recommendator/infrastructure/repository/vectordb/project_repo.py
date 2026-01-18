@@ -29,19 +29,23 @@ async def insert_project_vector(
     milvus_db.create_collection_if_not_exists(
         project_entity.connection_name, schema=project_schema)
 
+    # Combine all texts into ONE string for single embedding
     texts_to_embed = project_entity.keywords + project_entity.example
-    embeddings = await embedding_model.get_embeddings(texts_to_embed)
+    combined_text = " ".join(texts_to_embed)
+    
+    # Get single embedding for the project
+    embeddings = await embedding_model.get_embeddings([combined_text])
+    embedding_vector = embeddings[0] if isinstance(embeddings, list) else embeddings
 
-    data_to_insert = []
-    for i, text in enumerate(texts_to_embed):
-        data_to_insert.append({
-            "id": f"{project_id}_{i}",  # Unique ID per embedding
-            "vector": embeddings[i],
-            "user_id": user_id,
-            "status": status,
-            "summary": summary,
-            "metadata": {}  # Empty for now
-        })
+    # Insert ONE record per project
+    data_to_insert = [{
+        "id": project_id,  # Use project_id directly as primary key
+        "vector": embedding_vector,
+        "user_id": user_id,
+        "status": status,
+        "summary": summary,
+        "metadata": project_entity.metadata
+    }]
 
     milvus_db.insert_data(project_entity.connection_name, data_to_insert)
 
