@@ -3,7 +3,6 @@ from enum import Enum
 
 class KafkaTopic(str, Enum):
     ## Internal topics
-    TEST = "test"
     ## Producer topics
     ## Consumer topics
     SYNCHRONIZE_MEMORY_TOPIC = "proactive-recommendator.synchronize-memory.topic"
