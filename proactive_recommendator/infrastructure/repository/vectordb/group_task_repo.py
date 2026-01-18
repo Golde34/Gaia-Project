@@ -37,22 +37,24 @@ async def insert_group_task_vector(
         schema=group_task_schema
     )
 
-    # Prepare texts for embedding
+    # Combine all texts into ONE string for single embedding
     texts_to_embed = group_task_entity.keywords + group_task_entity.example
-    embeddings = await embedding_model.get_embeddings(texts_to_embed)
+    combined_text = " ".join(texts_to_embed)
+    
+    # Get single embedding for the group task
+    embeddings = await embedding_model.get_embeddings([combined_text])
+    embedding_vector = embeddings[0] if isinstance(embeddings, list) else embeddings
 
-    # Insert data for each keyword/example
-    data_to_insert = []
-    for i, text in enumerate(texts_to_embed):
-        data_to_insert.append({
-            "id": f"{group_task_id}_{i}",  # Unique ID per embedding
-            "vector": embeddings[i],
-            "user_id": user_id,
-            "project_id": project_id,
-            "status": status,
-            "summary": summary,
-            "metadata": {}  # Empty for now
-        })
+    # Insert ONE record per group task
+    data_to_insert = [{
+        "id": group_task_id,  # Use group_task_id directly as primary key
+        "vector": embedding_vector,
+        "user_id": user_id,
+        "project_id": project_id,
+        "status": status,
+        "summary": summary,
+        "metadata": group_task_entity.metadata
+    }]
 
     milvus_db.insert_data(group_task_entity.connection_name, data_to_insert)
 

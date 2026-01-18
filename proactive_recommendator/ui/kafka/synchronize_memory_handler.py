@@ -13,5 +13,5 @@ async def synchronize_memory_handler(msg: ConsumerRecord):
         return await sync_project_memory(data)
 
 async def sync_project_memory(data: dict):
-    user_id = int(data.get("user_id"))
+    user_id = int(data.get("userId"))
     return await command_usecase.synchronize_all_projects(user_id=user_id)

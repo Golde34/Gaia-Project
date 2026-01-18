@@ -3,6 +3,7 @@ from infrastructure.llm import system_generate_content
 
 MODEL_INTERFACE = {
     "gemini-2.5-flash": system_generate_content.generate_content,
+    "gemini-2.5-flash-lite": system_generate_content.generate_content,
 }
 
 

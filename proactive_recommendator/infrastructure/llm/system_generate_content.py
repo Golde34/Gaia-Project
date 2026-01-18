@@ -16,10 +16,12 @@ def generate_content(prompt: str, model_name: str = None, dto: any = None) -> st
     Returns:
         str: The generated content.
     """
+    print(f"Generating content with model: {model_name}")
     try:
         if model_name is None:
             model_name = "gemini-2.5-flash"
         if dto:
+            print("Using DTO for response schema.", dto)
             response = client.models.generate_content(
                 model=model_name, 
                 contents=[prompt],
@@ -34,8 +36,9 @@ def generate_content(prompt: str, model_name: str = None, dto: any = None) -> st
                 contents=[prompt],
             )
 
-        # print(response)
+        print(response)
         return response.text
     except Exception as e:
+        print(f"Error generating content: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

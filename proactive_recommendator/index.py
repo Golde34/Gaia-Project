@@ -53,7 +53,7 @@ app.add_middleware(
 app.include_router(recommendation_controller.RecommendationRouter, 
                    prefix="/proactive-recommendator")
 app.include_router(recommendation_info_controller.RecommendationInfoRouter, 
-                   prefix="/recommend-recommendator")
+                   prefix="/proactive-recommendator")
 app.include_router(graphdb_controller.GraphDBRouter)
 app.include_router(vectordb_controller.VectorDBRouter)
 app.include_router(gaia_business_controller.GaiaBusinessRouter)

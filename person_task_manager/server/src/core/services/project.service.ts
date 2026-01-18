@@ -136,15 +136,32 @@ class ProjectService {
             const projects = await projectStore.findAllProjectsByOwnerId(userId);
             const projectsWithGroupTasks = await Promise.all(projects.map(async (project) => {
                 const groupTasksInProject = await projectStore.findAllActiveGroupTasksByProjectId(project._id);
+                const groupTasks = (groupTasksInProject?.groupTasks ?? []).map((gt: any) => ({
+                    id: gt._id,
+                    title: gt.title,
+                    description: gt.description,
+                    activeStatus: gt.activeStatus,
+                    createdAt: gt.createdAt,
+                    updatedAt: gt.updatedAt
+                }));
                 return {
-                    project,
-                    groupTasks: groupTasksInProject?.groupTasks ?? []
+                    userId: userId,
+                    project: {
+                        id: project._id,
+                        title: project.name,
+                        description: project.description,
+                        category: project.tag?.join(', ') || null,
+                        activeStatus: project.activeStatus,
+                        createdAt: project.createdAt,
+                        updatedAt: project.updatedAt,
+                        ownerId: project.ownerId,
+                        groupTasks: project.groupTasks
+                    },
+                    groupTasks
                 };
             }));
 
-            return msg200({
-                projects: projectsWithGroupTasks
-            });
+            return msg200( projectsWithGroupTasks );
         } catch (err: any) {
             return msg400(err.message.toString())
         }

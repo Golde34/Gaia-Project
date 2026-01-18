@@ -29,19 +29,23 @@ async def insert_project_vector(
     milvus_db.create_collection_if_not_exists(
         project_entity.connection_name, schema=project_schema)
 
+    # Combine all texts into ONE string for single embedding
     texts_to_embed = project_entity.keywords + project_entity.example
-    embeddings = await embedding_model.get_embeddings(texts_to_embed)
+    combined_text = " ".join(texts_to_embed)
+    
+    # Get single embedding for the project
+    embeddings = await embedding_model.get_embeddings([combined_text])
+    embedding_vector = embeddings[0] if isinstance(embeddings, list) else embeddings
 
-    data_to_insert = []
-    for i, text in enumerate(texts_to_embed):
-        data_to_insert.append({
-            "id": f"{project_id}_{i}",  # Unique ID per embedding
-            "vector": embeddings[i],
-            "user_id": user_id,
-            "status": status,
-            "summary": summary,
-            "metadata": {}  # Empty for now
-        })
+    # Insert ONE record per project
+    data_to_insert = [{
+        "id": project_id,  # Use project_id directly as primary key
+        "vector": embedding_vector,
+        "user_id": user_id,
+        "status": status,
+        "summary": summary,
+        "metadata": project_entity.metadata
+    }]
 
     milvus_db.insert_data(project_entity.connection_name, data_to_insert)
 
@@ -58,20 +62,17 @@ async def search_projects_by_vector(
     
     Args:
         query: Search query text
-        user_id: User ID to filter results
+        user_id: User ID to filter results (uses partition key for efficient search)
         top_k: Number of results to return
         
     Returns:
         List of matching projects with scores
     """
-    # Generate query embedding
     query_embeddings = await embedding_model.get_embeddings([query])
     query_vector = query_embeddings[0] if isinstance(query_embeddings, list) else query_embeddings
     
-    # Build filter for user and active status
     filter_query = f'user_id == {user_id} and status == "active"'
     
-    # Search
     results = milvus_db.search_top_n(
         collection_name="project",
         query_embeddings=[query_vector],
