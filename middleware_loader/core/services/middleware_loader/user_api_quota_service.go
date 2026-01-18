@@ -59,7 +59,7 @@ func (s *UserApiQuotaService) SyncProjectMemory(ctx context.Context, userId stri
 func (s *UserApiQuotaService) HandleSyncProject(payload interface{}) (interface{}, bool, error) {
 	// call kafka
 	kafka.ProduceKafkaMessage(payload.(map[string]interface{}),
-		enums.SyncProjectTopic, enums.SyncProjectCmd)
+		enums.SynchronizeMemoryTopic, enums.SyncProjectCmd)
 	response := "ok"
 	return response, false, nil
 }
