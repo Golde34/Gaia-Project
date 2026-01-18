@@ -27,7 +27,7 @@ async def upsert_project(project: ProjectNode):
     MERGE (u)-[:OWNS]->(p)
     RETURN p
     """
-    
+
     parameters = {
         "id": project.id,
         "name": project.name,
@@ -37,40 +37,18 @@ async def upsert_project(project: ProjectNode):
         "last_action_at": project.last_action_at.isoformat() if project.last_action_at else None,
         "active_status": project.active_status
     }
-    
+
     return await graphdb_base.run_session(query=query, parameters=parameters)
-
-
-async def get_user_projects(user_id: int) -> List[Dict[str, Any]]:
-    """Get all active projects for a user"""
-    query = """
-    MATCH (u:User {user_id: $user_id})-[:OWNS]->(p:Project)
-    WHERE p.active_status = 'active'
-    RETURN p {
-        .id,
-        .name,
-        .description,
-        .category,
-        .last_action_at
-    } as project
-    ORDER BY p.last_action_at DESC
-    """
-    
-    async for session in get_db_session():
-        result = await session.run(query, {"user_id": user_id})
-        records = await result.data()
-        return [record["project"] for record in records]
-    return []
 
 
 async def upsert_group_task(group_task: GroupTaskNode, project_id: str):
     """
     Create or update group task and link to project
-    
+
     Args:
         group_task (GroupTaskNode): GroupTask entity
         project_id (str): Parent project ID
-        
+
     Returns:
         Neo4j record with group task node
     """
@@ -92,7 +70,7 @@ async def upsert_group_task(group_task: GroupTaskNode, project_id: str):
     MERGE (p)-[:HAS_GROUP]->(gt)
     RETURN gt
     """
-    
+
     parameters = {
         "id": group_task.id,
         "title": group_task.title,
@@ -102,9 +80,9 @@ async def upsert_group_task(group_task: GroupTaskNode, project_id: str):
         "active_status": group_task.active_status,
         "project_id": project_id
     }
-    
+
     return await graphdb_base.run_session(query=query, parameters=parameters)
-    
+
 
 async def delete_user_projects_and_tasks(user_id: int):
     """
@@ -116,22 +94,27 @@ async def delete_user_projects_and_tasks(user_id: int):
     OPTIONAL MATCH (p)-[:HAS_GROUP]->(gt:GroupTask)
     DETACH DELETE p, gt
     """
-    
+
     async for session in get_db_session():
         result = await session.run(query, {"user_id": user_id})
         summary = await result.consume()
-        print(f"[GraphDB] Deleted all projects and group tasks for user_id={user_id} summary: {summary}")
+        print(
+            f"[GraphDB] Deleted all projects and group tasks for user_id={user_id} summary: {summary}")
         return
 
 
-# async def get_project_with_group_tasks(project_id: str) -> Dict[str, Any]:
-#     """Get project with all its group tasks"""
-#     pass
+async def get_user_projects(user_id: int, top_k: int) -> List[Dict[str, Any]]:
+    """Get all active projects for a user"""
+    query = """
+    MATCH (u:User)-[owns:OWNS]->(p:Project)-[has:HAS_GROUP]->(gt:GroupTask)
+    WHERE u.user_id = $user_id
+    RETURN u, owns, p, has, gt
+    ORDER BY p.last_action_at DESC
+    LIMIT $top_k
+    """
 
-# async def search_projects_by_vector(user_id: int, query_vector: List[float], top_k: int = 10):
-#     """Search projects by vector similarity (semantic search)"""
-#     pass
-
-# async def soft_delete_project(project_id: str):
-#     """Soft delete a project"""
-#     pass
+    async for session in get_db_session():
+        result = await session.run(query, {"user_id": user_id, "top_k": top_k})
+        records = await result.data()
+        return records
+    return []

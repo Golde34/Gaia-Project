@@ -175,7 +175,8 @@ class MilvusDB:
                      query_embeddings: List[List[float]],
                      output_fields: List[str],
                      top_k: int = 5,
-                     partition_name: str = None) -> List[dict]:
+                     partition_name: str = None,
+                     filter_query: str = None) -> List[dict]:
         try:
 
             search_params = {
@@ -192,7 +193,8 @@ class MilvusDB:
                 field_name="vector",
                 search_params=search_params,
                 limit=top_k,
-                partition_names=[partition_name] if partition_name else None
+                partition_names=[partition_name] if partition_name else None,
+                filter=filter_query  # Add filter support for partition key routing
             )
 
             formatted_results = []
