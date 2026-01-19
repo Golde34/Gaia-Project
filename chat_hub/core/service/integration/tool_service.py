@@ -24,7 +24,6 @@ class ToolService:
         description: str,
         *,
         json_schema: Optional[dict] = None,
-        need_history: bool = False,
         is_active: bool = True,
     ) -> Tool:
         existed_tool = await tool_repository.query_tool_by_name(tool)
@@ -35,7 +34,6 @@ class ToolService:
             tool=tool,
             description=description,
             json_schema=json_schema,
-            need_history=need_history,
             is_active=is_active,
         )
         return await tool_repository.create_tool(tool_entity)

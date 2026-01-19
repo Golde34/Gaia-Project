@@ -134,20 +134,28 @@ async def query_chat_history(query: QueryRequest, semantic_response: dict = conf
     """
     recent_history = recursive_summary = long_term_memory = ''
     if semantic_response.get('recent_history'):
-        recent_history = await message_service.get_recent_history(
-            RecentHistoryRequest(user_id=query.user_id,
-                                 dialogue_id=str(query.dialogue_id),
-                                 number_of_messages=config.RECENT_HISTORY_MAX_LENGTH)
-        )
+        recent_history = await query_recent_history(
+            query.user_id, str(query.dialogue_id)) 
 
     if semantic_response.get('recursive_summary'):
-        recursive_summary = await get_recursive_summary(query.user_id, query.dialogue_id)
+        recursive_summary = await get_recursive_summary(
+            query.user_id, query.dialogue_id)
 
     if semantic_response.get('long_term_memory'):
-        long_term_memory = await get_long_term_memory(query.user_id, query.dialogue_id, query.query)
+        long_term_memory = await get_long_term_memory(
+            query.user_id, query.dialogue_id, query.query)
 
     return recent_history, recursive_summary, long_term_memory
 
+async def query_recent_history(user_id: int, dialogue_id: str) -> str:
+    recent_history = await message_service.get_recent_history(
+        RecentHistoryRequest(
+            user_id=user_id,
+            dialogue_id=dialogue_id,
+            number_of_messages=config.RECENT_HISTORY_MAX_LENGTH,
+        )
+    )
+    return recent_history or ''
 
 async def get_recursive_summary(user_id: int, dialogue_id: str) -> str:
     """
@@ -219,13 +227,9 @@ async def reflection_chat_history(recent_history: str, recursive_summary: str, l
 
 
 async def kafka_update_memory(memory_request: MemoryRequest, type: str) -> None:
-    recent_history = await message_service.get_recent_history(
-        request=RecentHistoryRequest(
-            user_id=memory_request.user_id,
-            dialogue_id=memory_request.dialogue_id,
-            number_of_messages=config.RECURSIVE_SUMMARY_MAX_LENGTH,
-        )
-    )
+    recent_history = await query_recent_history(
+        memory_request.user_id, memory_request.dialogue_id
+    ) 
     if not recent_history:
         recent_history = "No recent history available."
 
