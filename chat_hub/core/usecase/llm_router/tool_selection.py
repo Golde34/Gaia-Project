@@ -14,7 +14,7 @@ from infrastructure.reranking.base_reranking import reranking_model
 from kernel.config import llm_models
 
 
-async def select_tool_by_router(label_value: str, query: QueryRequest) -> tuple[str, bool]:
+async def select_tool_by_router(label_value: str, query: QueryRequest) -> str:
     """
     Select the appropriate ability based on the label value.
 
@@ -26,14 +26,14 @@ async def select_tool_by_router(label_value: str, query: QueryRequest) -> tuple[
     """
     if label_value == enum.ChatType.GAIA_INTRODUCTION.value:
         guided_route = await router_registry.gaia_introduction_route(query.query)
-        return guided_route, False
+        return guided_route
     elif label_value == enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value:
-        return label_value, False
+        return label_value
     elif label_value == enum.ChatType.ABILITIES.value:
         return await select_ability_tool(query)
 
 
-async def select_ability_tool(query: QueryRequest) -> tuple[str, bool]:
+async def select_ability_tool(query: QueryRequest) -> str:
     """
     Select the appropriate ability based on the label value.
     + First semantic search to shortlist top5 tools
@@ -57,9 +57,9 @@ async def select_ability_tool(query: QueryRequest) -> tuple[str, bool]:
         top_tool = tools[0] if tools else None
         if top_tool:
             tool = await tool_repository.query_tool_by_name(top_tool["tool"]) 
-            return tool.tool, tool.need_history
+            return tool.tool
         else:
-            return enum.GaiaAbilities.CHITCHAT.value, True
+            return enum.GaiaAbilities.CHITCHAT.value
     else:
         tools_name = [tool["tool"] for tool in tools]
         tools_name.append(enum.GaiaAbilities.CHITCHAT.value)  # always add chitchat as fallback
@@ -73,7 +73,7 @@ async def select_ability_tool(query: QueryRequest) -> tuple[str, bool]:
             query.model, query.user_id, prompt=prompt)
         tool: Tool = function(prompt=prompt, model=query.model, dto=Tool)
 
-        return tool.tool, tool.need_history
+        return tool.tool
 
 
 async def _semantic_shortlist_tools(query_text: str):

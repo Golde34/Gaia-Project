@@ -41,11 +41,12 @@ class PersonalTaskService:
                 message=task_data["response"], query=query
             )
 
-            if not missing_fields:
+            if missing_fields:
                 await self.question_missing_fields(missing_fields, query)
                 return task_data["response"], is_recommendation 
 
-            created_task = await task_manager_client.create_personal_task(task_data)
+            # created_task = await task_manager_client.create_personal_task(task_data)
+            created_task = task_data  # MOCKED for now
 
             created_task, response = await self._create_personal_task_result(task=created_task, query=query)
             await push_and_save_bot_message(

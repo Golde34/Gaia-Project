@@ -17,7 +17,6 @@ class ToolUsecase:
             tool=tool_request.tool,
             description=tool_request.description,
             json_schema=tool_request.json_schema,
-            need_history=tool_request.need_history,
             is_active=tool_request.is_active,
         )
 

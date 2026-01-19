@@ -31,9 +31,6 @@ class SwitchingEngine:
         self.query = query
 
     async def switch(self) -> dict:
-        # Use semantic search to verify the list of tools
-        # If the tool is not in the list or the list of tools has values lower than threshold
-        # Call LLM to determine the tool and memory model
         embedding_tools = await self._semantic_search(self.query.query)
         tools = await self._rerank_tools(
             self.query.query,
@@ -44,9 +41,9 @@ class SwitchingEngine:
             top_tool = tools[0] if tools else None
             if top_tool:
                 tool = await tool_repository.query_tool_by_name(top_tool["tool"]) 
-                return tool.tool, tool.need_history
+                return tool.tool
             else:
-                return enum.GaiaAbilities.CHITCHAT.value, True
+                return enum.GaiaAbilities.CHITCHAT.value
         else:
             tools_name = [tool["tool"] for tool in tools]
             tools_name.append(enum.GaiaAbilities.CHITCHAT.value)  # always add chitchat as fallback
@@ -55,7 +52,7 @@ class SwitchingEngine:
 
             tool: Tool = await self._call_llm(tools_string)
             
-            return tool.tool, tool.need_history
+            return tool.tool
 
     async def _semantic_search(self, query_text: str) -> dict:
         query_embedding = await embedding_model.get_embeddings([query_text])
@@ -143,7 +140,6 @@ class SwitchingEngine:
         return score_diff < threshold
 
     async def _call_llm(self, tools_string: str) -> dict:
-        # Call LLM to determine the tool and memory model
         prompt = CLASSIFY_PROMPT.format(
             query=self.query.query, tools=tools_string)
 
