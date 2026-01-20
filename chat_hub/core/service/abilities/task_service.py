@@ -83,34 +83,18 @@ class PersonalTaskService:
             str: response message to user
         """
         projects = None
-        group_tasks = None
         
-        if missing_fields.get("project"):
+        if missing_fields.get("project") or missing_fields.get("groupTask"):
             projects = await self._list_project(query=query)
         
-        if missing_fields.get("groupTask"):
-            group_tasks = await self._list_group_task(query=query)
-        
-        if projects or group_tasks:
-            prompt = self._build_missing_fields_prompt(projects, group_tasks)
+            prompt = MISSING_TASK_FIELD_PROMPT.format(
+                context=json.dumps(projects) if projects else "No projects available"
+            )
             function = await llm_models.get_model_generate_content(
                 query.model, query.user_id, prompt=prompt
             )
             response_msg = function(prompt=prompt, model=query.model)
             await push_and_save_bot_message(message=response_msg, query=query)
-    
-    def _build_missing_fields_prompt(self, projects: list = None, group_tasks: list = None) -> str:
-        """Build prompt for LLM to describe available projects and group tasks."""
-        context_parts = []
-        
-        if projects:
-            context_parts.append(f"Available projects: {json.dumps(projects)}")
-        
-        if group_tasks:
-            context_parts.append(f"Available group tasks: {json.dumps(group_tasks)}")
-        
-        context = "\n".join(context_parts)
-        return MISSING_TASK_FIELD_PROMPT.format(context=context)
     
     async def _generate_personal_task_llm(self, query: QueryRequest) -> dict:
         """
