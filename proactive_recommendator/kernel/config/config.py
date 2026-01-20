@@ -32,3 +32,4 @@ class Config:
     SYSTEM_API_KEY = os.getenv('GEMINI_API_KEY', '')
     LLM_DEFAULT_MODEL = os.getenv('LLM_DEFAULT_MODEL', 'gemini-2.5-flash')
     LLM_SUB_MODEL = os.getenv('LLM_SUB_MODEL', 'gemini-2.5-flash-lite')
+    SYSTEM_ORGANIZATION = os.getenv('SYSTEM_ORGANIZATION', 'google')

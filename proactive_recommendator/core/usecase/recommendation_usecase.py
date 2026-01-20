@@ -43,7 +43,7 @@ async def recommend(body: RecommendationRequest) -> str:
             raise ValueError(f"LLM type {llm_type} not supported")
 
         prompt_template = PROMPT_CATEGORY[llm_type](bundle=str(prioritized_bundle))
-        function = await get_model_generate_content(model=config.LLM_DEFAULT_MODEL)
+        function = await get_model_generate_content(organization=config.SYSTEM_ORGANIZATION)
         response = function(prompt=prompt_template)
         
         waiting_bundle_tools = list(prioritized_bundle.keys())

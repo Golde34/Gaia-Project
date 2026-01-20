@@ -68,8 +68,13 @@ async def get_project_list(request: RecommendationInfoRequest):
         semantic_results=str(semantic_projects),
         graph_results=str(graph_projects)
     )
-    function = await get_model_generate_content(model_name=config.LLM_SUB_MODEL)
-    response = function(prompt=prompt_template, model_name=config.LLM_SUB_MODEL, dto=ProjectListResponse)
+
+    function = await get_model_generate_content(
+        organization=config.SYSTEM_ORGANIZATION)
+    response = function(
+        prompt=prompt_template, 
+        model_name=config.LLM_SUB_MODEL, 
+        dto=ProjectListResponse)
     return json.loads(response)
 
 

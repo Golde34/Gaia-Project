@@ -2,12 +2,11 @@ from infrastructure.llm import system_generate_content
 
 
 MODEL_INTERFACE = {
-    "gemini-2.5-flash": system_generate_content.generate_content,
-    "gemini-2.5-flash-lite": system_generate_content.generate_content,
+    "google": system_generate_content.generate_content,
 }
 
 
-async def get_model_generate_content(model_name: str = "gemini-2.5-flash") -> str:
-    if model_name not in MODEL_INTERFACE:
-        raise ValueError(f"Model {model_name} not supported")
-    return MODEL_INTERFACE.get(model_name, "gemini-2.5-flash")
+async def get_model_generate_content(organization: str) -> str:
+    if organization not in MODEL_INTERFACE:
+        raise ValueError(f"Model {organization} not supported")
+    return MODEL_INTERFACE.get(organization, "google")
