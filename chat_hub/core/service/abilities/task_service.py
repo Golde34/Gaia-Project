@@ -4,6 +4,7 @@ from core.domain.enums import enum, redis_enum
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.domain.response.model_output_schema import CreateTaskResponseSchema, CreateTaskSchema
 from core.prompts.task_prompt import (
+    AUTO_CREATE_TASK_FIELD_PROMPT,
     MISSING_TASK_FIELD_PROMPT,
     PARSING_DATE_PROMPT, 
     TASK_RESULT_PROMPT_2, 
@@ -27,7 +28,7 @@ class PersonalTaskService:
 
     async def create_personal_task(self, query: QueryRequest):
         """
-        Create task pipeline
+        Create task pipeline with support for auto-selection
         Args:
             query (QueryRequest): The user's query containing task information.
         Returns:
@@ -42,8 +43,18 @@ class PersonalTaskService:
             )
 
             if missing_fields:
-                await self.question_missing_fields(missing_fields, query)
-                return task_data["response"], is_recommendation 
+                # Check if auto-selection is needed (user said "tuỳ bạn")
+                has_auto_select = any(v == "default" for v in missing_fields.values())
+                
+                if has_auto_select:
+                    # Auto-select and update task_data, then continue to create
+                    selected = await self._handle_auto_selection(missing_fields, query, task_data)
+                    task_data.update(selected)
+                    # Fall through to create task (no return)
+                else:
+                    # Ask user to choose manually
+                    await self.question_missing_fields(missing_fields, query)
+                    return task_data["response"], is_recommendation 
 
             # created_task = await task_manager_client.create_personal_task(task_data)
             created_task = task_data  # MOCKED for now
@@ -154,11 +165,66 @@ class PersonalTaskService:
         Validate the generated task data for required fields.
         """
         required_fields = ['project', 'groupTask']
-        missing_fields = {
-            field: True for field in required_fields
-            if not task_data.get(field)
-        }
+        missing_fields = {}
+        
+        for field in required_fields:
+            value = task_data.get(field)
+            if value == "default":
+                missing_fields[field] = "default"  # Mark for auto-selection
+            elif not value:
+                missing_fields[field] = True  # Mark as missing
+        
         return missing_fields or None
+
+    async def _handle_auto_selection(
+        self, 
+        missing_fields: dict, 
+        query: QueryRequest,
+        task_data: dict
+    ) -> dict:
+        projects = None
+        group_tasks = None
+        
+        if missing_fields.get("project") == "default":
+            projects = await self._list_project(query=query)
+        
+        if missing_fields.get("groupTask") == "default":
+            group_tasks = await self._list_group_task(query=query)
+        
+        selected = await self._auto_select_defaults(
+            projects=projects,
+            group_tasks=group_tasks,
+            task_title=task_data.get("title", ""),
+            query=query
+        )
+        
+        return selected
+
+    async def _auto_select_defaults(
+        self, 
+        projects: list = None, 
+        group_tasks: list = None,
+        task_title: str = "",
+        query: QueryRequest = None
+    ) -> dict:
+        prompt = AUTO_CREATE_TASK_FIELD_PROMPT.format(
+            task_title=task_title,
+            projects=json.dumps(projects) if projects else "None",
+            group_tasks=json.dumps(group_tasks) if group_tasks else "None"
+        )
+        function = await llm_models.get_model_generate_content(
+            query.model, query.user_id, prompt=prompt
+        )
+        response = function(prompt=prompt, model=query.model)
+        
+        try:
+            selected = json.loads(response)
+            return selected
+        except:
+            return {
+                "project": projects[0] if projects else None,
+                "groupTask": group_tasks[0] if group_tasks else None
+            }
 
     async def _optimize_datetime(self, datetime_object: dict, query: QueryRequest) -> dict:
         try:

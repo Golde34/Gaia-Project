@@ -11,6 +11,7 @@ And add a friendly butler-like response to the user in JSON.
    - Status: (finished/done -> "DONE", working -> "IN_PROGRESS")
 5. If project or group task is not mentioned or is new, set to `null`.
 6. If group task is null but project exists, set group task to summary of task title.
+7. If user gives full decision-making power (e.g., "You are given full permission to decide", "up to you", "you decide", "your choice"), set missing Project/GroupTask to "default".
 
 ## Fields:
 - Project, GroupTask, Title (req), Priority, Status, StartDate, Deadline, Duration, ActionType (create/update/delete/list), Response (Butler tone).
@@ -30,6 +31,10 @@ Output:
 Input: "Create task: presenting RAG architecture in the new project."
 Output:
 {{"Project": null, "GroupTask": null, "Title": "presenting about RAG architecture", "Priority": "Medium", "Status": "TODO", "StartDate": null, "Deadline": null, "Duration": null, "ActionType": "create", "Response": "Right away. May I ask the name of this new project, sir?"}}
+
+Input: "Tạo task AI, tuỳ bạn chọn project và group task"
+Output:
+{{"Project": "default", "GroupTask": "default", "Title": "AI task", "Priority": "Medium", "Status": "TODO", "StartDate": null, "Deadline": null, "Duration": null, "ActionType": "create", "Response": "I'll select the most suitable project and group task for your AI work, sir."}}
 
 User's query: {query}"""
 
@@ -177,6 +182,27 @@ Your task: Provide a friendly, concise response listing the available options an
 - If group tasks are available, mention them as well
 - Keep the tone conversational and helpful like a butler
 - End with a question asking which option they'd like to use
+"""
+
+AUTO_CREATE_TASK_FIELD_PROMPT = """
+You are an intelligent task organizer. Based on the task description and available options, select the most appropriate project and group task.
+
+Task: {task_title}
+
+Available Projects: {projects}
+Available Group Tasks: {group_tasks}
+
+Instructions:
+1. Analyze the task description to understand its domain/purpose
+2. Select the MOST RELEVANT project from the available list
+3. Select the MOST RELEVANT group task from the available list
+4. If multiple options seem suitable, prefer:
+   - Projects with similar naming/keywords to the task
+   - Group tasks that match the task's functional category
+5. Return ONLY a JSON object with your selections
+
+Return format:
+{{"project": "selected_project_name", "groupTask": "selected_group_task_name"}}
 """
 
 
