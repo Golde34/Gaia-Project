@@ -1,12 +1,7 @@
 import asyncio
-import json
 
 from core.domain.request.recommendation_request import RecommendationInfoRequest
-from core.domain.response.prompt_response import ProjectListResponse
 from core.service import project_service
-from core.prompt.get_task_information import PROJECT_LIST_PROMPT
-from infrastructure.llm.interface import get_model_generate_content
-from kernel.config.config import Config as config
 
 
 async def synchronize_all_projects(user_id: int):
@@ -63,14 +58,12 @@ async def get_project_list(request: RecommendationInfoRequest):
 
     graph_projects = await project_service.get_recent_projects(request.user_id, top_k)
 
-    prompt_template = PROJECT_LIST_PROMPT.format(
-        query=request.query,
-        semantic_results=str(semantic_projects),
-        graph_results=str(graph_projects)
-    )
-    function = await get_model_generate_content(model_name=config.LLM_SUB_MODEL)
-    response = function(prompt=prompt_template, model_name=config.LLM_SUB_MODEL, dto=ProjectListResponse)
-    return json.loads(response)
+    # Redis push projects
+
+    return {
+        "semantic_projects": semantic_projects,
+        "graph_projects": graph_projects
+    }  
 
 
 async def get_group_task_list(request: RecommendationInfoRequest):

@@ -11,6 +11,7 @@ And add a friendly butler-like response to the user in JSON.
    - Status: (finished/done -> "DONE", working -> "IN_PROGRESS")
 5. If project or group task is not mentioned or is new, set to `null`.
 6. If group task is null but project exists, set group task to summary of task title.
+7. If user gives full decision-making power (e.g., "You are given full permission to decide", "up to you", "you decide", "your choice"), set missing Project/GroupTask to "default".
 
 ## Fields:
 - Project, GroupTask, Title (req), Priority, Status, StartDate, Deadline, Duration, ActionType (create/update/delete/list), Response (Butler tone).
@@ -31,109 +32,11 @@ Input: "Create task: presenting RAG architecture in the new project."
 Output:
 {{"Project": null, "GroupTask": null, "Title": "presenting about RAG architecture", "Priority": "Medium", "Status": "TODO", "StartDate": null, "Deadline": null, "Duration": null, "ActionType": "create", "Response": "Right away. May I ask the name of this new project, sir?"}}
 
+Input: "Tạo task AI, tuỳ bạn chọn project và group task"
+Output:
+{{"Project": "default", "GroupTask": "default", "Title": "AI task", "Priority": "Medium", "Status": "TODO", "StartDate": null, "Deadline": null, "Duration": null, "ActionType": "create", "Response": "I'll select the most suitable project and group task for your AI work, sir."}}
+
 User's query: {query}"""
-
-# CREATE_TASK_PROMPT = """# Task Information Extraction Prompt
-
-# You are Gaia - an AI assistant specialized in extracting structured information from natural language queries about tasks. Your job is to analyze user queries and convert them into a standardized JSON format with specific fields.
-
-# ## Instructions:
-
-# 1. Carefully read the user's query about creating or modifying a task.
-# 2. Extract all relevant information that fits into the predefined fields.
-# 3. Return a valid JSON object with the extracted information.
-# 4. If a field's information is not present in the query, use `null` as the value.
-# 5. Do not add any explanations or text outside the JSON object.
-
-# ## JSON Fields to Extract:
-
-# - `Project`: The project name the task belongs to (e.g., "Gaia", "Artemis", null if not specified)
-# - `GroupTask`: The group or team the task is assigned to (e.g., "AI Models", "Client GUI", null if not specified)
-# - `Title`: The title or short description of the task (required)
-# - `Priority`: The priority level of the task ("Low", "Medium", "High", "Star")
-# - `Status`: The current status of the task ("PENDING", "TODO", "IN_PROGRESS", "DONE"), the status can be DONE if the user finished it but not created it first.
-# - `StartDate`: When the task should start ("now", specific date, or null)
-# - `Deadline`: When the task should be completed (e.g., "end of the week", "next month", null)
-# - `Duration`: How long the task is expected to take (e.g., "2 hours", "3 days", null)
-# - `ActionType`: The type of action to be performed (e.g., "create", "update", "delete", "list")
-# - `Response`: The desired response from the bot to the user, has a tone similar to a butler or an assistant. (e.g. "For you sir, always")
-
-# ## Priority Mapping Guidelines:
-# - "urgent", "crucial", "essential", "top priority", "as soon as possible" → "Star" or "High"
-# - "important", "significant", "noteworthy" → "High"
-# - "medium", no explicit priority → "Medium"
-# - "low priority", "no rush", "not urgent", "keep on radar" → "Low"
-
-# ## Status Mapping Guidelines:
-# - Default to "TODO" if no status is specified
-# - "start now", "currently working" → "IN_PROGRESS"
-# - "waiting", "on hold" → "PENDING"
-# - "finished", "completed", "done" → "DONE"
-
-# ## Examples:
-
-# Input: "Please set a task in the Artemis project, about creating a user feedback system. This is an important task but not urgent."
-# Output:
-# {{
-#   "Project": "Artemis",
-#   "GroupTask": "User service",
-#   "Title": "creating a user feedback system",
-#   "Priority": "High",
-#   "Status": "TODO",
-#   "StartDate": null,
-#   "Deadline": null,
-#   "Duration": null,
-#   "ActionType": "create",
-#   "Response": "Yes sir, I will create a notification task about creating a user feedback system in the Artemis project."  
-# }}
-
-# Input: "Add task to optimize the AI model training process in Project Gaia. This is a medium priority and should be done by the end of the month."
-# Output:
-# {{
-#   "Project": "Gaia",
-#   "GroupTask": "AI Models",
-#   "Title": "optimizing the AI model training process",
-#   "Priority": "Medium",
-#   "Status": "TODO",
-#   "StartDate": "now",
-#   "Deadline": "end of the month",
-#   "Duration": null,
-#   "ActionType": "create",
-#   "Response": "At your service, sir."
-# }}
-
-# Input: "today I finish my task delete all userId variables in Client Gui to make the system authenticate and more security, create for me in the system that i have done this task, priority is HIGH"
-# Output:
-# {{
-#   "Project": null,
-#   "GroupTask": "Client GUI",
-#   "Title": "delete all userId variables in Client Gui to make the system authenticate and more securitiy",
-#   "Priority": "High",
-#   "Status": "DONE",
-#   "StartDate": null,
-#   "Deadline": "today",
-#   "Duration": null,
-#   "ActionType": "create",
-#   "Response": "For sure, sir. In the system, I will mark this task as done. But can you define which project I should insert this task?"
-# }}
-
-# Input: "Create for me a new task about presenting about RAG architecture in the new project."
-# Output:
-# {{
-#   "Project": null,
-#   "GroupTask": null,
-#   "Title": "presenting about RAG architecture in the new project",
-#   "Priority": "Medium",
-#   "Status": "TODO",
-#   "StartDate": null,
-#   "Deadline": null,
-#   "Duration": null,
-#   "ActionType": "create",
-#   "Response": "At your service, sir. What would I name this new project, sir?"
-# }}
-
-# Now, analyze the user's query and extract the requested information into the JSON format.
-# User's query: {query}"""
 
 TASK_CLASSIFY_PROMPT = """You are a helpful tool selection assistant. Your only job is to match user queries with the most appropriate tool from the available options.
 
@@ -267,3 +170,140 @@ Your response should be friendly and helpful, maintaining a tone similar to that
 Here are your group tasks:
 {group_task_list}
 """
+
+MISSING_TASK_FIELD_PROMPT = """
+You are Gaia, a helpful AI assistant. The user is creating a task but some information is missing.
+
+Available Information:
+{context}
+
+Your task: Provide a friendly, concise response listing the available options and asking the user to choose.
+- If projects are available, mention how many projects and list their names
+- If group tasks are available, mention them as well
+- Keep the tone conversational and helpful like a butler
+- End with a question asking which option they'd like to use
+"""
+
+AUTO_CREATE_TASK_FIELD_PROMPT = """
+You are an intelligent task organizer. Based on the task description and available options, select the most appropriate project and group task.
+
+Task: {task_title}
+
+Available Projects: {projects}
+Available Group Tasks: {group_tasks}
+
+Instructions:
+1. Analyze the task description to understand its domain/purpose
+2. Select the MOST RELEVANT project from the available list
+3. Select the MOST RELEVANT group task from the available list
+4. If multiple options seem suitable, prefer:
+   - Projects with similar naming/keywords to the task
+   - Group tasks that match the task's functional category
+5. Return ONLY a JSON object with your selections
+
+Return format:
+{{"project": "selected_project_name", "groupTask": "selected_group_task_name"}}
+"""
+
+
+# CREATE_TASK_PROMPT = """# Task Information Extraction Prompt
+
+# You are Gaia - an AI assistant specialized in extracting structured information from natural language queries about tasks. Your job is to analyze user queries and convert them into a standardized JSON format with specific fields.
+
+# ## Instructions:
+
+# 1. Carefully read the user's query about creating or modifying a task.
+# 2. Extract all relevant information that fits into the predefined fields.
+# 3. Return a valid JSON object with the extracted information.
+# 4. If a field's information is not present in the query, use `null` as the value.
+# 5. Do not add any explanations or text outside the JSON object.
+
+# ## JSON Fields to Extract:
+
+# - `Project`: The project name the task belongs to (e.g., "Gaia", "Artemis", null if not specified)
+# - `GroupTask`: The group or team the task is assigned to (e.g., "AI Models", "Client GUI", null if not specified)
+# - `Title`: The title or short description of the task (required)
+# - `Priority`: The priority level of the task ("Low", "Medium", "High", "Star")
+# - `Status`: The current status of the task ("PENDING", "TODO", "IN_PROGRESS", "DONE"), the status can be DONE if the user finished it but not created it first.
+# - `StartDate`: When the task should start ("now", specific date, or null)
+# - `Deadline`: When the task should be completed (e.g., "end of the week", "next month", null)
+# - `Duration`: How long the task is expected to take (e.g., "2 hours", "3 days", null)
+# - `ActionType`: The type of action to be performed (e.g., "create", "update", "delete", "list")
+# - `Response`: The desired response from the bot to the user, has a tone similar to a butler or an assistant. (e.g. "For you sir, always")
+
+# ## Priority Mapping Guidelines:
+# - "urgent", "crucial", "essential", "top priority", "as soon as possible" → "Star" or "High"
+# - "important", "significant", "noteworthy" → "High"
+# - "medium", no explicit priority → "Medium"
+# - "low priority", "no rush", "not urgent", "keep on radar" → "Low"
+
+# ## Status Mapping Guidelines:
+# - Default to "TODO" if no status is specified
+# - "start now", "currently working" → "IN_PROGRESS"
+# - "waiting", "on hold" → "PENDING"
+# - "finished", "completed", "done" → "DONE"
+
+# ## Examples:
+
+# Input: "Please set a task in the Artemis project, about creating a user feedback system. This is an important task but not urgent."
+# Output:
+# {{
+#   "Project": "Artemis",
+#   "GroupTask": "User service",
+#   "Title": "creating a user feedback system",
+#   "Priority": "High",
+#   "Status": "TODO",
+#   "StartDate": null,
+#   "Deadline": null,
+#   "Duration": null,
+#   "ActionType": "create",
+#   "Response": "Yes sir, I will create a notification task about creating a user feedback system in the Artemis project."
+# }}
+
+# Input: "Add task to optimize the AI model training process in Project Gaia. This is a medium priority and should be done by the end of the month."
+# Output:
+# {{
+#   "Project": "Gaia",
+#   "GroupTask": "AI Models",
+#   "Title": "optimizing the AI model training process",
+#   "Priority": "Medium",
+#   "Status": "TODO",
+#   "StartDate": "now",
+#   "Deadline": "end of the month",
+#   "Duration": null,
+#   "ActionType": "create",
+#   "Response": "At your service, sir."
+# }}
+
+# Input: "today I finish my task delete all userId variables in Client Gui to make the system authenticate and more security, create for me in the system that i have done this task, priority is HIGH"
+# Output:
+# {{
+#   "Project": null,
+#   "GroupTask": "Client GUI",
+#   "Title": "delete all userId variables in Client Gui to make the system authenticate and more securitiy",
+#   "Priority": "High",
+#   "Status": "DONE",
+#   "StartDate": null,
+#   "Deadline": "today",
+#   "Duration": null,
+#   "ActionType": "create",
+#   "Response": "For sure, sir. In the system, I will mark this task as done. But can you define which project I should insert this task?"
+# }}
+
+# Input: "Create for me a new task about presenting about RAG architecture in the new project."
+# Output:
+# {{
+#   "Project": null,
+#   "GroupTask": null,
+#   "Title": "presenting about RAG architecture in the new project",
+#   "Priority": "Medium",
+#   "Status": "TODO",
+#   "StartDate": null,
+#   "Deadline": null,
+#   "Duration": null,
+#   "ActionType": "create",
+#   "Response": "At your service, sir. What would I name this new project, sir?"
+# }}
+
+# Now, analyze the user's query and extract the requested information into the JSON format.
+# User's query: {query}"""

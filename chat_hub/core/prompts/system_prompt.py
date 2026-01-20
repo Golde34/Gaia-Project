@@ -1,3 +1,4 @@
+### Add confident score system prompt
 CLASSIFY_PROMPT = """You are GAIA - a helpful tool selection assistant. Your only job is to match user queries with the most appropriate tool from the available options.
 
 You will receive:

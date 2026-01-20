@@ -21,8 +21,9 @@ async def tag_schedule_tasks(
         tasks_json=tasks_json, allowed_tags=", ".join(TAG_LIST)
     )
 
-    function = await get_model_generate_content(model=config.LLM_SUB_MODEL)
-    response = function(prompt=prompt)
+    function = await get_model_generate_content(
+        organization=config.SYSTEM_ORGANIZATION)
+    response = function(prompt=prompt, model=config.LLM_SUB_MODEL)
 
     try:
         parsed = parse_json_string(response)
