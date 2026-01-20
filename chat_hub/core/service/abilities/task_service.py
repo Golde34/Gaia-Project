@@ -1,9 +1,10 @@
 import json
 
-from core.domain.enums import enum, kafka_enum, redis_enum
+from core.domain.enums import enum, redis_enum
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.domain.response.model_output_schema import CreateTaskResponseSchema, CreateTaskSchema
 from core.prompts.task_prompt import (
+    MISSING_TASK_FIELD_PROMPT,
     PARSING_DATE_PROMPT, 
     TASK_RESULT_PROMPT_2, 
     UPGRADATION_CREATE_TASK_PROMPT,
@@ -14,7 +15,6 @@ from core.service.abilities.function_handlers import function_handler
 from core.service.chat_service import push_and_save_bot_message
 from infrastructure.client.recommendation_service_client import recommendation_service_client
 from infrastructure.client.task_manager_client import task_manager_client
-from infrastructure.kafka.producer import publish_message
 from infrastructure.redis.redis import get_key
 from kernel.config import config, llm_models
 from kernel.utils.parse_json import parse_json_string
@@ -63,7 +63,7 @@ class PersonalTaskService:
             raise e
 
     async def question_missing_fields(self, missing_fields: dict, query: QueryRequest) -> None:
-        """Call recomendation service to get project list and group task list, ready answer user
+        """Get and display project list and group task list to help user choose
 
         Args:
             missing_fields (dict): missing fields from task generation
@@ -71,11 +71,35 @@ class PersonalTaskService:
         Returns:
             str: response message to user
         """
-        is_async = True
+        projects = None
+        group_tasks = None
+        
         if missing_fields.get("project"):
-            await self._list_project(query=query, is_async=is_async) 
+            projects = await self._list_project(query=query)
+        
         if missing_fields.get("groupTask"):
-            await self._list_group_task(query=query, is_async=is_async)
+            group_tasks = await self._list_group_task(query=query)
+        
+        if projects or group_tasks:
+            prompt = self._build_missing_fields_prompt(projects, group_tasks)
+            function = await llm_models.get_model_generate_content(
+                query.model, query.user_id, prompt=prompt
+            )
+            response_msg = function(prompt=prompt, model=query.model)
+            await push_and_save_bot_message(message=response_msg, query=query)
+    
+    def _build_missing_fields_prompt(self, projects: list = None, group_tasks: list = None) -> str:
+        """Build prompt for LLM to describe available projects and group tasks."""
+        context_parts = []
+        
+        if projects:
+            context_parts.append(f"Available projects: {json.dumps(projects)}")
+        
+        if group_tasks:
+            context_parts.append(f"Available group tasks: {json.dumps(group_tasks)}")
+        
+        context = "\n".join(context_parts)
+        return MISSING_TASK_FIELD_PROMPT.format(context=context)
     
     async def _generate_personal_task_llm(self, query: QueryRequest) -> dict:
         """
@@ -128,17 +152,11 @@ class PersonalTaskService:
     async def _validate_generated_task(self, task_data: dict) -> dict:
         """
         Validate the generated task data for required fields.
-        Ask user again if group task or project is missing.
-        Maybe ask user to choose optional fields if they are null
-        Args:
-            task_data (dict): The generated task data.
-        Returns:
-            dict: A dictionary indicating missing fields if any.
         """
         required_fields = ['project', 'groupTask']
         missing_fields = {
             field: True for field in required_fields
-            if not getattr(task_data, field, None)
+            if not task_data.get(field)
         }
         return missing_fields or None
 
@@ -176,7 +194,7 @@ class PersonalTaskService:
         return created_task, response["response"]
 
     async def list_project_response(self, query: QueryRequest) -> str:
-        projects = await self._list_project(query=query, is_async=False)
+        projects = await self._list_project(query=query)
         prompt = LIST_PROJECT_PROMPT.format(task=json.dumps(projects))
         function = await llm_models.get_model_generate_content(
             query.model, query.user_id, prompt=prompt
@@ -187,26 +205,19 @@ class PersonalTaskService:
         )
         return llm_response 
         
-    async def _list_project(self, query: QueryRequest, is_async: bool) -> str:
+    async def _list_project(self, query: QueryRequest) -> str:
         try:
             redis_key = redis_enum.RedisEnum.USER_PROJECT_LIST.value + f":{query.user_id}"
             redis_project_list = get_key(redis_key)
             if redis_project_list:
                 return json.loads(redis_project_list)
 
-            if is_async:
-                await publish_message(
-                    kafka_enum.KafkaTopic.GET_RECOMMENDATIONS_INFO.value,
-                    kafka_enum.KafkaCommand.PROJECT_LIST.value,
-                    {"userId": query.user_id}
-                ) 
-            else:
-                return await recommendation_service_client.project_list(query.user_id)
+            return await recommendation_service_client.project_list(query.user_id)
         except Exception as e:
             raise e
 
     async def list_group_task_response(self, query: QueryRequest) -> str:
-        group_tasks = await self._list_group_task(query=query, is_async=False)
+        group_tasks = await self._list_group_task(query=query)
         prompt = LIST_GROUP_TASK_PROMPT.format(task=json.dumps(group_tasks))
         function = await llm_models.get_model_generate_content(
             query.model, query.user_id, prompt=prompt
@@ -217,21 +228,14 @@ class PersonalTaskService:
         )
         return llm_response
 
-    async def _list_group_task(self, query: QueryRequest, is_async: bool) -> str:
+    async def _list_group_task(self, query: QueryRequest) -> str:
         try:
             redis_key = redis_enum.RedisEnum.USER_GROUP_TASK_LIST.value + f":{query.user_id}"
             redis_group_task_list = get_key(redis_key)
             if redis_group_task_list:
                 return json.loads(redis_group_task_list)
 
-            if is_async:
-                await publish_message(
-                    kafka_enum.KafkaTopic.GET_RECOMMENDATIONS_INFO.value,
-                    kafka_enum.KafkaCommand.GROUP_TASK_LIST.value,
-                    {"userId": query.user_id}
-                )
-            else:
-                return await recommendation_service_client.group_task_list(query.user_id)
+            return await recommendation_service_client.group_task_list(query.user_id)
         except Exception as e:
             raise e
 
