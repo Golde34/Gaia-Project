@@ -39,7 +39,9 @@ class PersonalTaskService:
         try:
             task_data, missing_fields = await self._generate_personal_task_llm(query)
             await push_and_save_bot_message(
-                message=task_data["response"], query=query
+                message=task_data["response"], 
+                query=query, 
+                tool=enum.GaiaAbilities.CREATE_TASK.value
             )
 
             if missing_fields:
@@ -63,7 +65,8 @@ class PersonalTaskService:
             await push_and_save_bot_message(
                 message=created_task,
                 query=query,
-                message_type="task_result"
+                message_type="task_result",
+                tool=enum.GaiaAbilities.CREATE_TASK.value
             )
 
             is_recommendation = True
@@ -94,7 +97,11 @@ class PersonalTaskService:
                 query.model, query.user_id, prompt=prompt
             )
             response_msg = function(prompt=prompt, model=query.model)
-            await push_and_save_bot_message(message=response_msg, query=query)
+            await push_and_save_bot_message(
+                message=response_msg, 
+                query=query, 
+                tool=enum.GaiaAbilities.CREATE_TASK.value
+            )
     
     async def _generate_personal_task_llm(self, query: QueryRequest) -> dict:
         """

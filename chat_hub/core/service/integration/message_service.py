@@ -1,5 +1,5 @@
 import json
-from typing import List
+from typing import List, Optional
 import uuid
 
 from core.domain.entities.database.user_dialogue import UserDialogue
@@ -13,14 +13,30 @@ from infrastructure.repository.message_repository import message_repository
 class MessageService:
     """Service layer for messages, interfacing with the MessageRepository."""
 
-    async def create_message(self, dialogue: UserDialogue, user_id: int, message: str, user_message_id: str, sender_type: str, message_type: str) -> str:
+    async def create_message(
+            self,
+            dialogue: UserDialogue,
+            user_id: int,
+            message: str,
+            user_message_id: str,
+            sender_type: str,
+            message_type: str,
+            tool: Optional[str] = None) -> str:
         message_request = self._build_message(
-            dialogue, user_id, message, user_message_id, sender_type, message_type)
+            dialogue, user_id, message, user_message_id, sender_type, message_type, tool)
         message_id = await message_repository.create_message(message_request)
         print(f"Created message with ID: {message_id}")
         return message_id
 
-    def _build_message(self, dialogue: UserDialogue, user_id: int, message: str, user_message_id: str, sender_type: str, message_type: str) -> Message:
+    def _build_message(
+            self,
+            dialogue: UserDialogue,
+            user_id: int,
+            message: str,
+            user_message_id: str,
+            sender_type: str,
+            message_type: str,
+            tool: Optional[str] = None) -> Message:
         content = (
             json.dumps(message, ensure_ascii=False)
             if isinstance(message, dict)
@@ -35,6 +51,7 @@ class MessageService:
             content=content,
             sender_type=sender_type,
             metadata="",
+            tool=tool
         )
         return new_message
 
@@ -46,7 +63,8 @@ class MessageService:
         recent_chat_messages_response = []
         for message in recent_chat_messages:
             recent_chat_messages_response.append(MessageResponseDTO(
-                message="<" + message['sender_type'] + "> " + message['content'],
+                message="<" + message['sender_type'] +
+                "> " + message['content'],
                 metadata=message['metadata'],
             ))
 
@@ -93,7 +111,8 @@ class MessageService:
             print(f"User ID mismatch: {request.user_id} != {response.user_id}")
             return False
         if request.dialogue_id != response.dialogue_id:
-            print(f"Dialogue ID mismatch: {request.dialogue_id} != {response.dialogue_id}")
+            print(
+                f"Dialogue ID mismatch: {request.dialogue_id} != {response.dialogue_id}")
             return False
         return True
 
@@ -101,9 +120,12 @@ class MessageService:
         lines = []
         for msg in history_list:
             if msg.message.startswith("<user>"):
-                lines.append("User: " + msg.message.replace("<user>", "").strip())
+                lines.append(
+                    "User: " + msg.message.replace("<user>", "").strip())
             elif msg.message.startswith("<bot>"):
-                lines.append("GAIA: " + msg.message.replace("<bot>", "").strip())
+                lines.append(
+                    "GAIA: " + msg.message.replace("<bot>", "").strip())
         return "\n".join(lines)
+
 
 message_service = MessageService()

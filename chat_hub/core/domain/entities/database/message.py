@@ -14,6 +14,7 @@ class Message(BaseModel):
     user_message_id: Optional[str] = None
     message_type: str
     sender_type: str
+    tool: str
     content: str
     metadata: str
     created_at: Optional[datetime] = None
