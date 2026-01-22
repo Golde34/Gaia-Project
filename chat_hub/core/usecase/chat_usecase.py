@@ -67,12 +67,14 @@ class ChatUsecase:
             if user_message_id is not None:
                 query.user_message_id = str(user_message_id)
 
-            query = await memory_service.recall_history_info(query=query, default=default)
+            recalled_memory = await memory_service.recall_history_info(query=query, default=default)
+            query.query = recalled_memory.reflected_query
 
             print(f"Chat Type: {chat_type}, Query: {query.query}")
             tool = await tool_selection.select_tool_by_router(
                 label_value=chat_type, 
-                query=query
+                query=query,
+                recalled_memory=recalled_memory
             )
             print(f"Selected tool: {tool}")
 

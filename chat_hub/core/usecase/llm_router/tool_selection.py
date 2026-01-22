@@ -6,6 +6,7 @@ from core.domain.entities.database.tool import Tool
 from core.domain.entities.vectordb.tool import tool_vector_entity
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
+from core.domain.request.memory_request import MemoryRecallDto
 from core.prompts.system_prompt import CLASSIFY_PROMPT
 from core.semantic_router import router_registry
 from infrastructure.embedding.base_embedding import embedding_model
@@ -14,7 +15,11 @@ from infrastructure.reranking.base_reranking import reranking_model
 from kernel.config import llm_models
 
 
-async def select_tool_by_router(label_value: str, query: QueryRequest) -> str:
+async def select_tool_by_router(
+    label_value: str,
+    query: QueryRequest,
+    recalled_memory: MemoryRecallDto
+) -> str:
     """
     Select the appropriate ability based on the label value.
 
@@ -30,22 +35,12 @@ async def select_tool_by_router(label_value: str, query: QueryRequest) -> str:
     elif label_value == enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value:
         return label_value
     elif label_value == enum.ChatType.ABILITIES.value:
-        return await select_ability_tool(query)
+        return await select_ability_tool(query, recalled_memory)
 
 
-async def select_ability_tool(query: QueryRequest) -> str:
+async def select_ability_tool(query: QueryRequest, recalled_memory: MemoryRecallDto) -> str:
     """
-    Select the appropriate ability based on the label value.
-    + First semantic search to shortlist top5 tools
-    + Then try to reranking among top5 tools using LLM
-    + If the relevant scores between top1 and top2 is smaller than threshold, return list tools
-    + Secondary, when we have the list of tools, we can use another LLM to select among them
-
-    Args:
-        label_value (str): The label to identify the ability.
-        query (QueryRequest): The user's query containing task information.
-    Returns:
-        str: The response from the selected ability handler.
+    Select the appropriate ability tool based on the user's query using semantic search and LLM classification. 
     """
     embedding_tools = await _semantic_shortlist_tools(query.query)
     tools = await _rerank_tools(
@@ -56,13 +51,14 @@ async def select_ability_tool(query: QueryRequest) -> str:
     if not _should_use_llm_selection(tools):
         top_tool = tools[0] if tools else None
         if top_tool:
-            tool = await tool_repository.query_tool_by_name(top_tool["tool"]) 
+            tool = await tool_repository.query_tool_by_name(top_tool["tool"])
             return tool.tool
         else:
             return enum.GaiaAbilities.CHITCHAT.value
     else:
         tools_name = [tool["tool"] for tool in tools]
-        tools_name.append(enum.GaiaAbilities.CHITCHAT.value)  # always add chitchat as fallback
+        # always add chitchat as fallback
+        tools_name.append(enum.GaiaAbilities.CHITCHAT.value)
         tools = tool_repository.query_tools_by_names(tools_name)
         tools_string = json.dumps(tools, indent=2)
 
@@ -83,6 +79,7 @@ async def _semantic_shortlist_tools(query_text: str):
         top_k=constant.SemanticSearch.DEFAULT_TOP_K,
     )
 
+
 async def _rerank_tools(query_text: str, search_results: List[List[Dict[str, Any]]], top_n: int = 3) -> List[Dict[str, Any]]:
     if not search_results or not search_results[0]:
         return []
@@ -100,7 +97,7 @@ async def _rerank_tools(query_text: str, search_results: List[List[Dict[str, Any
             continue
 
         doc_text = f"{description}\nExample: {sample_query}" if sample_query else description
-        
+
         documents.append({
             "text": doc_text,
             "tool_name": tool_name
@@ -131,7 +128,7 @@ async def _rerank_tools(query_text: str, search_results: List[List[Dict[str, Any
 
     tools = []
     seen_tools = set()
-    
+
     for i, doc in enumerate(reranked_docs):
         tool_name = doc.get("tool_name")
         if not tool_name or tool_name in seen_tools:
