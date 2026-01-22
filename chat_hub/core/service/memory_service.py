@@ -6,7 +6,7 @@ from core.domain.enums import kafka_enum, redis_enum, enum
 from core.domain.entities.database.recursive_summary import RecursiveSummary
 from core.domain.entities.vectordb.long_term_memory import long_term_memory_entity
 from core.domain.request.chat_hub_request import RecentHistoryRequest
-from core.domain.request.memory_request import MemoryRequest
+from core.domain.request.memory_request import MemoryRecallDto, MemoryRequest
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.domain.response.model_output_schema import LongTermMemorySchema
 from core.prompts.system_prompt import CHAT_HISTORY_PROMPT, LONGTERM_MEMORY_PROMPT, RECURSIVE_SUMMARY_PROMPT
@@ -38,8 +38,13 @@ async def recall_history_info(query: QueryRequest, default=True):
         long_term_memory=long_term_memory,
         query=query,
     )
-    query.query = new_query
-    return query
+
+    return MemoryRecallDto(
+        query=query.query,
+        reflected_query=new_query,
+        recent_history=recent_history,
+        summarized_history=recursive_summary,
+    )
 
 
 async def memorize_info(query: QueryRequest, is_change_title: bool):

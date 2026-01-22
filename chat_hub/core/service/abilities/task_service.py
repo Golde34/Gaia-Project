@@ -45,17 +45,13 @@ class PersonalTaskService:
             )
 
             if missing_fields:
-                # Check if auto-selection is needed (user said "tuỳ bạn")
                 has_auto_select = any(v == "default" for v in missing_fields.values())
                 
                 if has_auto_select:
-                    # Auto-select and update task_data, then continue to create
                     selected = await self._handle_auto_selection(missing_fields, query, task_data)
                     task_data.update(selected)
-                    # Fall through to create task (no return)
                 else:
-                    # Ask user to choose manually
-                    await self.question_missing_fields(missing_fields, query)
+                    await self._question_missing_fields(missing_fields, query)
                     return task_data["response"], is_recommendation 
 
             # created_task = await task_manager_client.create_personal_task(task_data)
@@ -76,7 +72,7 @@ class PersonalTaskService:
         except Exception as e:
             raise e
 
-    async def question_missing_fields(self, missing_fields: dict, query: QueryRequest) -> None:
+    async def _question_missing_fields(self, missing_fields: dict, query: QueryRequest) -> None:
         """Get and display project list and group task list to help user choose
 
         Args:
