@@ -2,7 +2,6 @@ from enum import Enum
 
 
 class RedisEnum(str, Enum):
-    RECENT_HISTORY = "ai_core:recent_history"
     RECURSIVE_SUMMARY = "ai_core:recursive_summary"
     LONG_TERM_MEMORY = "ai_core:long_term_memory"
 

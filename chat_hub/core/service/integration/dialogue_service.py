@@ -1,7 +1,9 @@
 import uuid
 
+from core.domain.enums.redis_enum import RedisEnum
 from core.domain.enums.enum import DialogueEnum, ActiveEnum
 from core.domain.entities.database.user_dialogue import UserDialogue
+from infrastructure.redis.redis import get_key, set_key
 from infrastructure.repository.dialogue_repository import user_dialogue_repository
 
 
@@ -34,15 +36,21 @@ class DialogueService:
             user_id: int,
             dialogue_id: str) -> tuple[UserDialogue | None, bool]:
         try:
-            dialogue = await user_dialogue_repository.get_dialogue_by_id(user_id, dialogue_id)
+            redis_key = f"{RedisEnum.USER_DIALOGUE.value}:{user_id}:{dialogue_id}"
+            if redis_key:
+                dialogue = UserDialogue.model_validate(get_key(redis_key))
+            else:
+                dialogue = await user_dialogue_repository.get_dialogue_by_id(user_id, dialogue_id)
+                set_key(redis_key, dialogue.model_dump())
+            
             if dialogue is None:
-                print(f"Dialogue with ID {dialogue_id} not found for user {user_id}.")
+                raise Exception("Dialogue not found")
+
             if dialogue.dialogue_type == DialogueEnum.CHAT_TYPE.value:
                 return dialogue, True
-
             return dialogue, False
         except Exception as e:
-            print(f"Error in get_dialogue_by_id: {e}")
+            print(f"Error retrieving dialogue by ID {dialogue_id} for user {user_id}: {e}")
             return None
 
     async def _create_dialogue_if_not_exists(

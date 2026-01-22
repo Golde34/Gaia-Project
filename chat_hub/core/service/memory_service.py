@@ -137,7 +137,7 @@ async def query_chat_history(query: QueryRequest, semantic_response: dict = conf
     """
     Routes the request based on semantic guidance, querying different memory sources.
     """
-    recent_history = recursive_summary = long_term_memory = ''
+    recursive_summary = long_term_memory = ''
     if semantic_response.get('recent_history'):
         recent_history = await query_recent_history(
             query.user_id, str(query.dialogue_id)) 
