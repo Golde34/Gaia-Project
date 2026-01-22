@@ -10,3 +10,4 @@ class RecentHistory(BaseModel):
     user_id: int
     dialogue_id: str
     messages: List[MessageResponseDTO]
+    tools: List[str]

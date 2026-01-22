@@ -6,7 +6,7 @@ from core.domain.enums import kafka_enum, redis_enum, enum
 from core.domain.entities.database.recursive_summary import RecursiveSummary
 from core.domain.entities.vectordb.long_term_memory import long_term_memory_entity
 from core.domain.request.chat_hub_request import RecentHistoryRequest
-from core.domain.request.memory_request import MemoryRequest
+from core.domain.request.memory_request import MemoryRecallDto, MemoryRequest
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.domain.response.model_output_schema import LongTermMemorySchema
 from core.prompts.system_prompt import CHAT_HISTORY_PROMPT, LONGTERM_MEMORY_PROMPT, RECURSIVE_SUMMARY_PROMPT
@@ -30,7 +30,7 @@ async def recall_history_info(query: QueryRequest, default=True):
         chat_history_semantic_router = await router_registry.chat_history_route(query=query.query)
         recent_history, recursive_summary, long_term_memory = await query_chat_history(query, chat_history_semantic_router)
     else:
-        recent_history, recursive_summary, long_term_memory = await query_chat_history(query)
+        recent_history, recursive_summary, long_term_memory, used_tool = await recall_memory_and_tool(query)
 
     new_query = await reflection_chat_history(
         recent_history=recent_history,
@@ -38,8 +38,14 @@ async def recall_history_info(query: QueryRequest, default=True):
         long_term_memory=long_term_memory,
         query=query,
     )
-    query.query = new_query
-    return query
+
+    return MemoryRecallDto(
+        query=query.query,
+        reflected_query=new_query,
+        recent_history=recent_history,
+        summarized_history=recursive_summary,
+        used_tools=used_tool
+    )
 
 
 async def memorize_info(query: QueryRequest, is_change_title: bool):
@@ -134,7 +140,7 @@ async def query_chat_history(query: QueryRequest, semantic_response: dict = conf
     """
     recent_history = recursive_summary = long_term_memory = ''
     if semantic_response.get('recent_history'):
-        recent_history = await query_recent_history(
+        recent_history, _ = await query_recent_history(
             query.user_id, str(query.dialogue_id)) 
 
     if semantic_response.get('recursive_summary'):
@@ -147,15 +153,15 @@ async def query_chat_history(query: QueryRequest, semantic_response: dict = conf
 
     return recent_history, recursive_summary, long_term_memory
 
-async def query_recent_history(user_id: int, dialogue_id: str) -> str:
-    recent_history = await message_service.get_recent_history(
+async def query_recent_history(user_id: int, dialogue_id: str) -> tuple[str, list[str]]:
+    recent_history, used_tool = await message_service.get_recent_history(
         RecentHistoryRequest(
             user_id=user_id,
             dialogue_id=dialogue_id,
             number_of_messages=config.RECENT_HISTORY_MAX_LENGTH,
         )
     )
-    return recent_history or ''
+    return recent_history or '', used_tool or []
 
 async def get_recursive_summary(user_id: int, dialogue_id: str) -> str:
     """
@@ -208,6 +214,25 @@ async def get_long_term_memory(user_id: int, dialogue_id: str, query: str) -> st
         print(f"Error retrieving long term memory: {e}")
         return ''
 
+async def recall_memory_and_tool(query: QueryRequest, semantic_response: dict = config.DEFAULT_SEMANTIC_RESPONSE):
+    """
+    Routes the request based on semantic guidance, querying different memory sources.
+    """
+    recent_history = recursive_summary = long_term_memory = ''
+    if semantic_response.get('recent_history'):
+        recent_history, used_tools = await query_recent_history(
+            query.user_id, str(query.dialogue_id)) 
+
+    if semantic_response.get('recursive_summary'):
+        recursive_summary = await get_recursive_summary(
+            query.user_id, query.dialogue_id)
+
+    if semantic_response.get('long_term_memory'):
+        long_term_memory = await get_long_term_memory(
+            query.user_id, query.dialogue_id, query.query)
+
+    return recent_history, recursive_summary, long_term_memory, used_tools
+
 
 async def reflection_chat_history(recent_history: str, recursive_summary: str, long_term_memory: str, query: QueryRequest):
     """
@@ -227,7 +252,7 @@ async def reflection_chat_history(recent_history: str, recursive_summary: str, l
 
 
 async def kafka_update_memory(memory_request: MemoryRequest, type: str) -> None:
-    recent_history = await query_recent_history(
+    recent_history, _ = await query_recent_history(
         memory_request.user_id, memory_request.dialogue_id
     ) 
     if not recent_history:
