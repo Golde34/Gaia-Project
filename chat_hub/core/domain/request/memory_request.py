@@ -11,3 +11,4 @@ class MemoryRecallDto(BaseModel):
     reflected_query: str
     recent_history: str
     summarized_history: str
+    used_tools: list[str]

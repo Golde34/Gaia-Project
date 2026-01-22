@@ -42,7 +42,10 @@ async def select_ability_tool(query: QueryRequest, recalled_memory: MemoryRecall
     """
     Select the appropriate ability tool based on the user's query using semantic search and LLM classification. 
     """
-    embedding_tools = await _semantic_shortlist_tools(query.query)
+    embedding_tools = await _semantic_shortlist_tools(
+        recalled_memory.reflected_query
+    )
+    # candidates_tools = recalled_memory.used_tools + embedding_tools
     tools = await _rerank_tools(
         query.query,
         embedding_tools,

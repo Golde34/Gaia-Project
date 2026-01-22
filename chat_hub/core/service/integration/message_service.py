@@ -55,25 +55,33 @@ class MessageService:
         )
         return new_message
 
-    async def get_message_by_dialogue_id(self, dialogue_id: str, number_of_messages: int) -> RecentHistory | None:
+    async def get_message_by_dialogue_id(
+        self,
+        dialogue_id: str,
+        number_of_messages: int
+    ) -> RecentHistory | None:
         recent_chat_messages = await message_repository.get_recent_chat_messages_by_dialogue_id(dialogue_id, number_of_messages)
         if len(recent_chat_messages) == 0:
             print("No messages found for dialogue_id:", dialogue_id)
             return None
+
         recent_chat_messages_response = []
+        recent_tools = set()
         for message in recent_chat_messages:
             recent_chat_messages_response.append(MessageResponseDTO(
                 message="<" + message['sender_type'] +
                 "> " + message['content'],
                 metadata=message['metadata'],
             ))
+            if message.tool:
+                recent_tools.add(message.tool)
 
-        recent_chat_his: RecentHistory = RecentHistory(
+        return RecentHistory(
             user_id=recent_chat_messages[0]['user_id'],
             dialogue_id=str(dialogue_id),
-            messages=recent_chat_messages_response
+            messages=recent_chat_messages_response,
+            tools=list(recent_tools)
         )
-        return recent_chat_his
 
     async def get_messages_by_dialogue_id_with_cursor_pagination(
         self, dialogue_id: str, size: int, cursor: str | None
@@ -88,20 +96,23 @@ class MessageService:
         messages.reverse()
         return messages, has_more
 
-    async def get_recent_history(self, request: RecentHistoryRequest) -> str:
+    async def get_recent_history(self, request: RecentHistoryRequest) -> tuple[str, list[str]]:
+        """
+        Recent history with formated messages and list of used tools.
+        """
         try:
             dialogue, _ = await dialogue_service.get_dialogue_by_id(request.user_id, request.dialogue_id)
             if dialogue is None:
                 print("Dialogue not found for dialogue_id:", request.dialogue_id)
                 return ''
-            result = await self.get_message_by_dialogue_id(dialogue.id, request.number_of_messages)
+            result: RecentHistory = await self.get_message_by_dialogue_id(dialogue.id, request.number_of_messages)
             if not result:
                 print("No recent history found.")
                 return ''
             if not self._validate_recent_history_response(request, result):
                 print("Recent history response validation failed.")
                 return ''
-            return self._format_history(result.messages)
+            return self._format_history(result.messages), result.tools
         except Exception as e:
             print(f"Error in ChatHubServiceClient.get_recent_history: {e}")
             return ''
