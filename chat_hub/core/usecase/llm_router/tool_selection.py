@@ -1,7 +1,6 @@
 from typing import List, Dict, Any
 
 from core.domain import constant
-from core.domain.entities.database.tool import Tool
 from core.domain.entities.vectordb.tool import tool_vector_entity
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
@@ -54,7 +53,10 @@ async def select_ability_tool(memory: MemoryQueryDto) -> str:
 
     selected_tool = _validate_ambiguity(ranked_tools)
     if not selected_tool:
-        selected_tool = await _llm_reasoning_selection(tools=tools, query=memory.reflected_query)
+        selected_tool = await _llm_reasoning_selection(
+            tools=tools,
+            query=memory.reflected_query
+        )
     return selected_tool
 
 
@@ -79,8 +81,6 @@ MIN_DECISIVE_DELTA = 0.15
 DOMINANT_RATIO_THRESHOLD = 2.0
 SINGLE_TOOL_TRUST_THRESHOLD = 0.5
 AMBIGUITY_CANDIDATE_LIMIT = 3
-
-
 def _validate_ambiguity(ranked_tools: List[Dict[str, Any]]) -> bool:
     top_1 = ranked_tools[0]
     top_2 = ranked_tools[1] if len(ranked_tools) > 1 else None
@@ -106,6 +106,8 @@ def _validate_ambiguity(ranked_tools: List[Dict[str, Any]]) -> bool:
 
 
 async def _llm_reasoning_selection(tools: str, query: QueryRequest) -> str:
+    tools = "\n".join(tools) + "\n" + \
+        enum.GaiaAbilities.CHITCHAT.value  # backup tool
     prompt = CLASSIFY_PROMPT.format(
         query=query, tools=tools)
 
@@ -114,7 +116,11 @@ async def _llm_reasoning_selection(tools: str, query: QueryRequest) -> str:
     return function(prompt=prompt, model=query.model)
 
 
-async def _rerank_tools(query_text: str, search_results: List[List[Dict[str, Any]]], top_n: int = 3) -> List[Dict[str, Any]]:
+async def _rerank_tools(
+    query_text: str,
+    search_results: List[List[Dict[str, Any]]],
+    top_n: int = 3
+) -> List[Dict[str, Any]]:
     if not search_results or not search_results[0]:
         return []
 
