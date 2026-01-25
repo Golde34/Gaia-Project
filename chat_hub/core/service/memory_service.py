@@ -6,10 +6,14 @@ from core.domain.enums import kafka_enum, redis_enum, enum
 from core.domain.entities.database.recursive_summary import RecursiveSummary
 from core.domain.entities.vectordb.long_term_memory import long_term_memory_entity
 from core.domain.request.chat_hub_request import RecentHistoryRequest
-from core.domain.request.memory_request import MemoryRecallDto, MemoryRequest
+from core.domain.request.memory_request import MemoryQueryDto, MemoryRequest
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.domain.response.model_output_schema import LongTermMemorySchema
-from core.prompts.system_prompt import CHAT_HISTORY_PROMPT, LONGTERM_MEMORY_PROMPT, RECURSIVE_SUMMARY_PROMPT
+from core.prompts.system_prompt import (
+    CHAT_HISTORY_PROMPT, 
+    LONGTERM_MEMORY_PROMPT, 
+    RECURSIVE_SUMMARY_PROMPT
+)
 from core.semantic_router import router_registry
 from core.validation import milvus_validation
 from core.service.integration.message_service import message_service
@@ -26,11 +30,12 @@ async def recall_history_info(query: QueryRequest, default=True):
     """
     Retrieves the chat history for the user and dialogue ID from Redis.
     """
-    if default == False:
-        chat_history_semantic_router = await router_registry.chat_history_route(query=query.query)
-        recent_history, recursive_summary, long_term_memory = await query_chat_history(query, chat_history_semantic_router)
-    else:
-        recent_history, recursive_summary, long_term_memory, used_tool = await recall_memory_and_tool(query)
+    # if default == False:
+    #     chat_history_semantic_router = await router_registry.chat_history_route(query=query.query)
+    #     recent_history, recursive_summary, long_term_memory = await query_chat_history(query, chat_history_semantic_router)
+    # else:
+    #     recent_history, recursive_summary, long_term_memory, used_tool = await recall_memory_and_tool(query)
+    recent_history, recursive_summary, long_term_memory, used_tool = await recall_memory_and_tool(query)
 
     new_query = await reflection_chat_history(
         recent_history=recent_history,
@@ -39,11 +44,12 @@ async def recall_history_info(query: QueryRequest, default=True):
         query=query,
     )
 
-    return MemoryRecallDto(
+    last_bot_message = recent_history.split("Bot:")[-1].strip() if "Bot:" in recent_history else ""
+
+    return MemoryQueryDto(
         query=query.query,
         reflected_query=new_query,
-        recent_history=recent_history,
-        summarized_history=recursive_summary,
+        last_bot_message=last_bot_message,
         used_tools=used_tool
     )
 

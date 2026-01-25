@@ -25,13 +25,6 @@ class ChatUsecase:
         """
         Gaia categorizes the chat flow based on the user's query.
         It retrieves the chat history and generates a categorized response.
-
-        Args:
-            query (QueryRequest): The user's query containing user_id, dialogue_id, and model_name
-            chat_type (str, optional): Chat type override; defaults to abilities.
-            **kwargs: Additional optional arguments for downstream handlers.
-        Returns:
-            dict: The categorized response from Gaia.
         """
         memory_model = query.model.memory_model
         if memory_model is None:
@@ -51,15 +44,6 @@ class ChatUsecase:
         Gaia selects the appropriate ability based on the chat type and query.
         It retrieves the chat history, generates a new query based on the context,
         and calls the appropriate router function to handle the request.
-
-        Args:
-            query (QueryRequest): The user's query containing user_id, dialogue_id, and model_name
-            chat_type (str): The type of chat to handle, e.g., abilities, introduction, etc.
-            default (bool): Whether to use the default semantic response or a custom one.
-            **kwargs: Additional optional arguments (e.g., user_message_id) for downstream handlers.
-        Returns:
-            dict: The response from the selected ability handler.
-
         """
         try:
             is_change_title = kwargs.get("is_change_title", False)
@@ -68,16 +52,15 @@ class ChatUsecase:
                 query.user_message_id = str(user_message_id)
 
             recalled_memory = await memory_service.recall_history_info(query=query, default=default)
-            query.query = recalled_memory.reflected_query
 
             print(f"Chat Type: {chat_type}, Query: {query.query}")
             tool = await tool_selection.select_tool_by_router(
                 label_value=chat_type, 
-                query=query,
                 recalled_memory=recalled_memory
             )
             print(f"Selected tool: {tool}")
 
+            query.query = recalled_memory.reflected_query
             responses = await chat_routers.call_router_function(
                 label_value=chat_type, 
                 query=query, 
@@ -96,15 +79,7 @@ class ChatUsecase:
         """
         Gaia handles chat interactions using a graph-based approach.
         It retrieves the chat history, generates a new query based on the context,
-        and processes the request using graph-based methods.
-
-        Args:
-            query (QueryRequest): The user's query containing user_id, dialogue_id, and model_name
-            chat_type (str): The type of chat to handle, e.g., abilities, introduction, etc.
-            **kwargs: Additional optional arguments for downstream handlers.
-        Returns:
-            dict: The response from the graph-based handler.
-
+        and processes the request using graph-based methods
         """
         switching_engine = SwitchingEngine().switch(query)
         stag = STAG(query).build_temporary_graph()

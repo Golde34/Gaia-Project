@@ -6,9 +6,8 @@ class MemoryRequest(BaseModel):
     dialogue_id: str
     is_change_title: bool = False
 
-class MemoryRecallDto(BaseModel):
+class MemoryQueryDto(BaseModel):
     query: str
     reflected_query: str
-    recent_history: str
-    summarized_history: str
+    last_bot_message: str
     used_tools: list[str]

@@ -78,9 +78,13 @@ class ToolRepository(BaseRepository[Tool]):
 
     async def query_tools_by_names(self, tool_names: List[str]) -> List[Tool]:
         results = await self.list(
-            where={"tool IN": tool_names},  # Use "tool IN" not "tool__in"
+            where={"tool IN": tool_names, "is_active": True},  # Use "tool IN" not "tool__in"
+            columns=[
+                "tool",
+                "description",
+            ],
             to_models=True,
         )
-        return results
+        return results 
 
 tool_repository = ToolRepository()
