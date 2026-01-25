@@ -67,7 +67,7 @@ class ChatUsecase:
                 guided_route=tool)
             print(f"Response(s): {responses}")
 
-            await memory_service.memorize_info(query=query, is_change_title=is_change_title)
+            await memory_service.memorize(query=query, is_change_title=is_change_title)
 
             return MessageType.SUCCESS_MESSAGE
         except Exception as e:
@@ -81,7 +81,8 @@ class ChatUsecase:
         It retrieves the chat history, generates a new query based on the context,
         and processes the request using graph-based methods
         """
-        switching_engine = SwitchingEngine().switch(query)
+        recalled_memory = await memory_service.recall_history_info(query=query)
+        switching_engine = SwitchingEngine().switch(recalled_memory)
         stag = STAG(query).build_temporary_graph()
         sltg = SLTG(query).build_long_term_graph()
         emg = EMG(query).build_episodic_memory_graph()

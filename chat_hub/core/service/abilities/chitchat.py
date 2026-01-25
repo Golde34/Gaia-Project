@@ -13,9 +13,7 @@ async def chitchat_with_history(query: QueryRequest) -> tuple[str, bool]:
     Chitchat with history pipeline
     Args:
         query (QueryRequest): The user's query containing task information.
-        recent_history (str): Recent chat history.
-        recursive_summary (str): Recursive summary of the conversation.
-        long_term_memory (str): Long term memory of the user.
+        memory (MemoryDto): The user's memory data. 
     Returns:
         tuple[str, bool]: Short response to the request and a flag indicating if it needs a recommendation.
     """

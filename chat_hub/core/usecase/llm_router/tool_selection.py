@@ -75,47 +75,6 @@ async def _query_tools(memory: MemorySelectionToolDto) -> List[str]:
             for tool in selected_tools]
 
 
-MIN_RELEVANCE_THRESHOLD = 0.15
-HIGH_CONFIDENCE_SCORE = 0.7
-MIN_DECISIVE_DELTA = 0.15
-DOMINANT_RATIO_THRESHOLD = 2.0
-SINGLE_TOOL_TRUST_THRESHOLD = 0.5
-AMBIGUITY_CANDIDATE_LIMIT = 3
-def _validate_ambiguity(ranked_tools: List[Dict[str, Any]]) -> bool:
-    top_1 = ranked_tools[0]
-    top_2 = ranked_tools[1] if len(ranked_tools) > 1 else None
-    print(f"Top 1 tool: {top_1}, Top 2 tool: {top_2}")
-
-    if top_1["score"] < MIN_RELEVANCE_THRESHOLD:
-        return enum.GaiaAbilities.CHITCHAT.value
-
-    if not top_2:
-        if top_1["score"] > SINGLE_TOOL_TRUST_THRESHOLD:
-            return top_1["tool"]
-    else:
-        delta = top_1["score"] - top_2["score"]
-        ratio = top_1["score"] / (top_2["score"] + 1e-9)
-
-        if top_1["score"] > HIGH_CONFIDENCE_SCORE and delta > MIN_DECISIVE_DELTA:
-            return top_1["tool"]
-
-        if ratio > DOMINANT_RATIO_THRESHOLD:
-            return top_1["tool"]
-
-    return None  # Indicate ambiguity
-
-
-async def _llm_reasoning_selection(tools: str, query: QueryRequest) -> str:
-    tools = "\n".join(tools) + "\n" + \
-        enum.GaiaAbilities.CHITCHAT.value  # backup tool
-    prompt = CLASSIFY_PROMPT.format(
-        query=query, tools=tools)
-
-    function = await llm_models.get_model_generate_content(
-        query.model, query.user_id, prompt=prompt)
-    return function(prompt=prompt, model=query.model)
-
-
 async def _rerank_tools(
     query_text: str,
     search_results: List[List[Dict[str, Any]]],
@@ -184,3 +143,43 @@ async def _rerank_tools(
         })
 
     return tools
+
+MIN_RELEVANCE_THRESHOLD = 0.15
+HIGH_CONFIDENCE_SCORE = 0.7
+MIN_DECISIVE_DELTA = 0.15
+DOMINANT_RATIO_THRESHOLD = 2.0
+SINGLE_TOOL_TRUST_THRESHOLD = 0.5
+AMBIGUITY_CANDIDATE_LIMIT = 3
+def _validate_ambiguity(ranked_tools: List[Dict[str, Any]]) -> bool:
+    top_1 = ranked_tools[0]
+    top_2 = ranked_tools[1] if len(ranked_tools) > 1 else None
+    print(f"Top 1 tool: {top_1}, Top 2 tool: {top_2}")
+
+    if top_1["score"] < MIN_RELEVANCE_THRESHOLD:
+        return enum.GaiaAbilities.CHITCHAT.value
+
+    if not top_2:
+        if top_1["score"] > SINGLE_TOOL_TRUST_THRESHOLD:
+            return top_1["tool"]
+    else:
+        delta = top_1["score"] - top_2["score"]
+        ratio = top_1["score"] / (top_2["score"] + 1e-9)
+
+        if top_1["score"] > HIGH_CONFIDENCE_SCORE and delta > MIN_DECISIVE_DELTA:
+            return top_1["tool"]
+
+        if ratio > DOMINANT_RATIO_THRESHOLD:
+            return top_1["tool"]
+
+    return None  # Indicate ambiguity
+
+
+async def _llm_reasoning_selection(tools: str, query: QueryRequest) -> str:
+    tools = "\n".join(tools) + "\n" + \
+        enum.GaiaAbilities.CHITCHAT.value  # backup tool
+    prompt = CLASSIFY_PROMPT.format(
+        query=query, tools=tools)
+
+    function = await llm_models.get_model_generate_content(
+        query.model, query.user_id, prompt=prompt)
+    return function(prompt=prompt, model=query.model)
