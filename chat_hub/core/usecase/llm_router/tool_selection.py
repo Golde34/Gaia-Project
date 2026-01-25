@@ -4,7 +4,7 @@ from core.domain import constant
 from core.domain.entities.vectordb.tool import tool_vector_entity
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
-from core.domain.request.memory_request import MemoryQueryDto
+from core.domain.request.memory_request import MemorySelectionToolDto
 from core.prompts.system_prompt import CLASSIFY_PROMPT
 from core.semantic_router import router_registry
 from infrastructure.embedding.base_embedding import embedding_model
@@ -15,7 +15,7 @@ from kernel.config import llm_models
 
 async def select_tool_by_router(
     label_value: str,
-    memory: MemoryQueryDto
+    memory: MemorySelectionToolDto
 ) -> str:
     """
     Select the appropriate ability based on the label value.
@@ -35,7 +35,7 @@ async def select_tool_by_router(
         return await select_ability_tool(memory)
 
 
-async def select_ability_tool(memory: MemoryQueryDto) -> str:
+async def select_ability_tool(memory: MemorySelectionToolDto) -> str:
     """
     Select the appropriate ability tool based on the user's query using semantic search and LLM classification. 
     """
@@ -60,7 +60,7 @@ async def select_ability_tool(memory: MemoryQueryDto) -> str:
     return selected_tool
 
 
-async def _query_tools(memory: MemoryQueryDto) -> List[str]:
+async def _query_tools(memory: MemorySelectionToolDto) -> List[str]:
     query_embedding = await embedding_model.get_embeddings([memory.reflected_query])
     embedding_tools = tool_vector_entity.search_top_n(
         query_embeddings=query_embedding,
