@@ -62,7 +62,7 @@ List of tools:
 User's query: {query}
 """
 
-TASK_RESULT_PROMPT_2 = """# Return Task Result To User Chat Message Prompt
+TASK_RESULT_PROMPT = """# Return Task Result To User Chat Message Prompt
 
 You are Gaia - a helpful AI assistant, a loyal butler to your user. After agent request return to you the task result (it could be a status of task created, updated, optimized or deleted, it could be a list of tasks, etc.), 
 your job is response to the user in a friendly way and suggest what to do next.
@@ -194,8 +194,10 @@ Available Group Tasks: {group_tasks}
 
 Instructions:
 1. Analyze the task description to understand its domain/purpose
-2. Select the MOST RELEVANT project from the available list
-3. Select the MOST RELEVANT group task from the available list
+2. Given project can contain multiple group tasks
+3. There are 2 cases:
+    - If project is None, select only the MOST RELEVANT group task in available group tasks
+    - If group task is None, select the MOST RELEVANT project and MOST RELEVANT group task in available projects
 4. If multiple options seem suitable, prefer:
    - Projects with similar naming/keywords to the task
    - Group tasks that match the task's functional category

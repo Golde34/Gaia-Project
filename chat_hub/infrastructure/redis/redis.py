@@ -5,6 +5,11 @@ from kernel.config import config
 rd = RedisCluster(host=config.REDIS_HOST, port=config.REDIS_PORT, 
                  password=config.REDIS_PASSWORD, decode_responses=True)
 
+def set_default_key(key: str, type: str):
+    if type == "int":
+        set_key(key, value=0, ttl=3600)
+        return 0
+
 def set_key(key: str, value: str, ttl: int = None) -> None:
     """
     Set a key-value pair in Redis.

@@ -38,19 +38,23 @@ class AgentExecutionRepository(BaseRepository[AgentExecution]):
         execution_id: str,
         status: str,
         tool_output: Optional[str] = None,
-    ) -> Optional[AgentExecution]:
-        update_data = {"status": status}
-        if tool_output is not None:
-            update_data["tool_output"] = tool_output
+    ) -> None:
+        try:
+            update_data = {"status": status}
+            if tool_output is not None:
+                update_data["tool_output"] = tool_output
 
-        await self.update_by_id(
-            execution_id,
-            update_data,
-            returning=("id", "user_id", "message_id", "selected_tool_id", "user_query",
-                       "confidence_score", "tool_input", "tool_output", "status"),
-        )
+            await self.update_by_id(
+                execution_id,
+                update_data,
+                returning=("id", "user_id", "message_id", "selected_tool_id", "user_query",
+                        "confidence_score", "tool_input", "tool_output", "status"),
+            )
 
-        return await self.get_by_id(execution_id)
+        except Exception as e:
+            print("Error updating agent execution status:", e)
+            return None
+
 
 
 agent_execution_repo = AgentExecutionRepository()

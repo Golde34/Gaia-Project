@@ -6,8 +6,8 @@ from core.domain.response.model_output_schema import CreateTaskResponseSchema, C
 from core.prompts.task_prompt import (
     AUTO_CREATE_TASK_FIELD_PROMPT,
     MISSING_TASK_FIELD_PROMPT,
-    PARSING_DATE_PROMPT, 
-    TASK_RESULT_PROMPT_2, 
+    PARSING_DATE_PROMPT,
+    TASK_RESULT_PROMPT, 
     UPGRADATION_CREATE_TASK_PROMPT,
     LIST_PROJECT_PROMPT,
     LIST_GROUP_TASK_PROMPT
@@ -44,12 +44,18 @@ class PersonalTaskService:
                 tool=enum.GaiaAbilities.CREATE_TASK.value
             )
 
+            generated_data = CreateTaskSchema.model_validate(task_data)
             if missing_fields:
                 has_auto_select = any(v == "default" for v in missing_fields.values())
                 
                 if has_auto_select:
-                    selected = await self._handle_auto_selection(missing_fields, query, task_data)
-                    task_data.update(selected)
+                    selected = await self._handle_auto_selection(
+                        missing_fields, 
+                        query, 
+                        generated_data.title
+                    )
+                    generated_data.project = selected.get("project", generated_data.project)
+                    generated_data.groupTask = selected.get("groupTask", generated_data.groupTask)
                 else:
                     await self._question_missing_fields(missing_fields, query)
                     return task_data["response"], is_recommendation 
@@ -72,40 +78,9 @@ class PersonalTaskService:
         except Exception as e:
             raise e
 
-    async def _question_missing_fields(self, missing_fields: dict, query: QueryRequest) -> None:
-        """Get and display project list and group task list to help user choose
-
-        Args:
-            missing_fields (dict): missing fields from task generation
-            query (QueryRequest): The user's query containing task information.
-        Returns:
-            str: response message to user
-        """
-        projects = None
-        
-        if missing_fields.get("project") or missing_fields.get("groupTask"):
-            projects = await self._list_project(query=query)
-        
-            prompt = MISSING_TASK_FIELD_PROMPT.format(
-                context=json.dumps(projects) if projects else "No projects available"
-            )
-            function = await llm_models.get_model_generate_content(
-                query.model, query.user_id, prompt=prompt
-            )
-            response_msg = function(prompt=prompt, model=query.model)
-            await push_and_save_bot_message(
-                message=response_msg, 
-                query=query, 
-                tool=enum.GaiaAbilities.CREATE_TASK.value
-            )
-    
     async def _generate_personal_task_llm(self, query: QueryRequest) -> dict:
         """
         Create task information extraction prompt for Gemini API.
-        Args:
-            query (QueryRequest): The user's query containing task information.
-        Returns:
-            dict: A structured JSON object with the extracted and optionally optimized task information.
         """
         try:
             datetime_parse_col = ['startDate', 'deadline']
@@ -161,58 +136,8 @@ class PersonalTaskService:
             elif not value:
                 missing_fields[field] = True  # Mark as missing
         
-        return missing_fields or None
-
-    async def _handle_auto_selection(
-        self, 
-        missing_fields: dict, 
-        query: QueryRequest,
-        task_data: dict
-    ) -> dict:
-        projects = None
-        group_tasks = None
-        
-        if missing_fields.get("project") == "default":
-            projects = await self._list_project(query=query)
-        
-        if missing_fields.get("groupTask") == "default":
-            group_tasks = await self._list_group_task(query=query)
-        
-        selected = await self._auto_select_defaults(
-            projects=projects,
-            group_tasks=group_tasks,
-            task_title=task_data.get("title", ""),
-            query=query
-        )
-        
-        return selected
-
-    async def _auto_select_defaults(
-        self, 
-        projects: list = None, 
-        group_tasks: list = None,
-        task_title: str = "",
-        query: QueryRequest = None
-    ) -> dict:
-        prompt = AUTO_CREATE_TASK_FIELD_PROMPT.format(
-            task_title=task_title,
-            projects=json.dumps(projects) if projects else "None",
-            group_tasks=json.dumps(group_tasks) if group_tasks else "None"
-        )
-        function = await llm_models.get_model_generate_content(
-            query.model, query.user_id, prompt=prompt
-        )
-        response = function(prompt=prompt, model=query.model)
-        
-        try:
-            selected = json.loads(response)
-            return selected
-        except:
-            return {
-                "project": projects[0] if projects else None,
-                "groupTask": group_tasks[0] if group_tasks else None
-            }
-
+        return missing_fields or None 
+    
     async def _optimize_datetime(self, datetime_object: dict, query: QueryRequest) -> dict:
         try:
             llm_model: LLMModel = LLMModel(
@@ -231,8 +156,82 @@ class PersonalTaskService:
         except Exception as e:
             raise e
 
+    async def _handle_auto_selection(
+        self, 
+        missing_fields: dict, 
+        query: QueryRequest,
+        title: str
+    ) -> dict:
+        projects = None
+        group_tasks = None
+
+        if not missing_fields.get("project") == "default":
+            if missing_fields.get("groupTask") == "default":
+                group_tasks = await self._list_group_task(query=query)   
+        else: 
+            projects = await self._list_project(query=query)
+        
+        return await self._auto_select_defaults(
+            projects=projects,
+            group_tasks=group_tasks,
+            task_title=title,
+            query=query
+        )
+        
+    async def _auto_select_defaults(
+        self, 
+        projects: list = None, 
+        group_tasks: list = None,
+        task_title: str = "",
+        query: QueryRequest = None
+    ) -> dict:
+        prompt = AUTO_CREATE_TASK_FIELD_PROMPT.format(
+            task_title=task_title,
+            projects=json.dumps(projects) if projects else "None",
+            group_tasks=json.dumps(group_tasks) if group_tasks else "None"
+        )
+        function = await llm_models.get_model_generate_content(
+            query.model, query.user_id, prompt=prompt
+        )
+        response = function(prompt=prompt, model=query.model)
+        
+        try:
+            return json.loads(response)
+        except:
+            return {
+                "project": projects[0] if projects else None,
+                "groupTask": group_tasks[0] if group_tasks else None
+            }
+
+    async def _question_missing_fields(self, missing_fields: dict, query: QueryRequest) -> None:
+        """Get and display project list and group task list to help user choose
+
+        Args:
+            missing_fields (dict): missing fields from task generation
+            query (QueryRequest): The user's query containing task information.
+        Returns:
+            str: response message to user
+        """
+        projects = None
+        
+        if missing_fields.get("project") or missing_fields.get("groupTask"):
+            projects = await self._list_project(query=query)
+        
+            prompt = MISSING_TASK_FIELD_PROMPT.format(
+                context=json.dumps(projects) if projects else "No projects available"
+            )
+            function = await llm_models.get_model_generate_content(
+                query.model, query.user_id, prompt=prompt
+            )
+            response_msg = function(prompt=prompt, model=query.model)
+            await push_and_save_bot_message(
+                message=response_msg, 
+                query=query, 
+                tool=enum.GaiaAbilities.CREATE_TASK.value
+            )
+
     async def _create_personal_task_result(self, task: dict, query: QueryRequest) -> dict:
-        prompt = TASK_RESULT_PROMPT_2.format(task=json.dumps(task))
+        prompt = TASK_RESULT_PROMPT.format(task=json.dumps(task))
         function = await llm_models.get_model_generate_content(
             query.model, query.user_id, prompt=prompt
         )

@@ -3,7 +3,7 @@ CLASSIFY_PROMPT = """You are GAIA - a helpful tool selection assistant. Your onl
 
 You will receive:
 1. A user query (asking for some information or requesting a task)
-2. A list of available tools you can use
+2. A list of available tools you can use, format: Tool: <tool_label>, Description: <tool_description>
 
 Instructions:
 - Carefully analyze the user query to understand what they need

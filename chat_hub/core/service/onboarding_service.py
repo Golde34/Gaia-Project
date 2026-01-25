@@ -7,6 +7,7 @@ import json
 from core.domain.entities.vectordb.root_memory import root_memory_entity
 from core.domain.enums import enum, kafka_enum
 from core.domain.request.query_request import QueryRequest
+from core.domain.request.memory_request import MemoryDto
 from core.domain.response.base_response import return_response
 from core.domain.response.model_output_schema import DailyRoutineSchema
 from core.prompts import onboarding_prompt
@@ -22,28 +23,28 @@ from kernel.utils.background_loop import log_background_task_error
 
 
 async def handle_onboarding_action(query: QueryRequest, selection: str) -> dict:
-    recent_history, recursive_summary, long_term_memory = await memory_service.query_chat_history(query)
+    memory: MemoryDto = await memory_service.query_chat_history(query)
     
     handlers = {
         enum.SemanticRoute.GAIA_INTRODUCTION.value:
             lambda: _gaia_introduce(
-                query, recent_history, recursive_summary, long_term_memory),
+                query, memory),
         enum.SemanticRoute.CHITCHAT.value:
             lambda: _chitchat_with_history(
-                query, recent_history, recursive_summary, long_term_memory),
+                query, memory),
         enum.GaiaAbilities.REGISTER_SCHEDULE_CALENDAR.value:
             lambda: _generate_calendar_schedule_response(
-                query, recent_history=recent_history, long_term_memory=long_term_memory),
+                query, memory),
         enum.SemanticRoute.CHITCHAT_AND_REGISTER_CALENDAR.value:
             lambda: _chitchat_and_register_calendar(
-                query, recent_history, recursive_summary, long_term_memory),
+                query, memory),
     }
 
     handler = handlers.get(selection)
     return await handler() if handler else None
 
 
-async def _gaia_introduce(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
+async def _gaia_introduce(query: QueryRequest, memory: MemoryDto) -> str:
     embedding = await embedding_model.get_embeddings(texts=[enum.VectorDBContext.GAIA_INTRODUCTION.value])
     query_embeddings = milvus_validation.validate_milvus_search_top_n(
         embedding)
@@ -56,16 +57,16 @@ async def _gaia_introduce(query: QueryRequest, recent_history: str, recursive_su
 
     prompt = onboarding_prompt.GAIA_INTRODUCTION_PROMPT.format(
         system_info=results[0][0]['content'],
-        recent_history=recent_history,
-        recursive_summary=recursive_summary,
-        long_term_memory=long_term_memory,
+        recent_history=memory.recent_history,
+        recursive_summary=memory.recursive_summary,
+        long_term_memory=memory.longterm_memory,
         query=query.query,
     )
 
     function = await llm_models.get_model_generate_content(model=query.model, user_id=query.user_id, prompt=prompt)
     return function(prompt=prompt, model=query.model)
 
-async def _chitchat_with_history(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
+async def _chitchat_with_history(query: QueryRequest, memory: MemoryDto) -> str:
     """
     Chitchat with history pipeline
     Args:
@@ -79,9 +80,9 @@ async def _chitchat_with_history(query: QueryRequest, recent_history: str, recur
     try:
         prompt = CHITCHAT_WITH_HISTORY_PROMPT.format(
             query=query.query,
-            recent_history=recent_history,
-            recursive_summary=recursive_summary,
-            long_term_memory=long_term_memory
+            recent_history=memory.recent_history,
+            recursive_summary=memory.recursive_summary,
+            long_term_memory=memory.longterm_memory
         )
         function = await llm_models.get_model_generate_content(query.model, query.user_id)
         return function(prompt=prompt, model=query.model)
@@ -89,12 +90,11 @@ async def _chitchat_with_history(query: QueryRequest, recent_history: str, recur
         raise e
 
 
-async def _generate_calendar_schedule_response(query: QueryRequest, recent_history: str, long_term_memory: str) -> Dict:
+async def _generate_calendar_schedule_response(query: QueryRequest, memory: MemoryDto) -> Dict:
     try:
         readiness = await _prepare_calendar_readiness(
             query=query,
-            recent_history=recent_history,
-            long_term_memory=long_term_memory,
+            memory=memory
         )
 
         if readiness["ready"]:
@@ -111,11 +111,11 @@ async def _generate_calendar_schedule_response(query: QueryRequest, recent_histo
         print(f"Error generating calendar schedule: {str(e)}")
 
 
-async def _prepare_calendar_readiness(query: QueryRequest, recent_history: str, long_term_memory: str) -> Dict[str, object]:
+async def _prepare_calendar_readiness(query: QueryRequest, memory: MemoryDto) -> Dict[str, object]:
     prompt = onboarding_prompt.REGISTER_CALENDAR_READINESS_PROMPT.format(
         query=query.query,
-        recent_history=recent_history,
-        long_term_memory=long_term_memory
+        recent_history=memory.recent_history,
+        long_term_memory=memory.longterm_memory
     )
     function = await llm_models.get_model_generate_content(query.model, query.user_id)
     response = await asyncio.to_thread(function, prompt=prompt, model=query.model)
@@ -165,13 +165,13 @@ async def _dispatch_register_calendar_request(query: QueryRequest, requirement: 
         print(f"Failed to dispatch register calendar request: {exc}")
 
 
-async def _chitchat_and_register_calendar(query: QueryRequest, recent_history: str, recursive_summary: str, long_term_memory: str) -> str:
+async def _chitchat_and_register_calendar(query: QueryRequest, memory: MemoryDto) -> str:
     try:
         prompt = onboarding_prompt.CHITCHAT_AND_RECOMMEND_REGISTER_CALENDAR_PROMPT.format(
             query=query.query,
-            recent_history=recent_history,
-            recursive_summary=recursive_summary,
-            long_term_memory=long_term_memory
+            recent_history=memory.recent_history,
+            recursive_summary=memory.recursive_summary,
+            long_term_memory=memory.longterm_memory
         )
         function = await llm_models.get_model_generate_content(query.model, query.user_id)
         return function(prompt=prompt, model=query.model)
@@ -179,11 +179,11 @@ async def _chitchat_and_register_calendar(query: QueryRequest, recent_history: s
         raise e
 
 
-async def llm_generate_calendar_schedule(query: QueryRequest, recent_history: str, long_term_memory: str) -> str:
+async def llm_generate_calendar_schedule(query: QueryRequest, memory: MemoryDto) -> str:
     prompt = onboarding_prompt.REGISTER_SCHEDULE_CALENDAR.format(
         query=query.query.strip(),
-        recent_history=json.dumps(recent_history),
-        long_term_memory=long_term_memory
+        recent_history=json.dumps(memory.recent_history),
+        long_term_memory=memory.longterm_memory
     )
 
     function = await llm_models.get_model_generate_content(query.model, query.user_id, prompt=prompt)

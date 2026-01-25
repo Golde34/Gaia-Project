@@ -1,12 +1,10 @@
-import json
 from typing import List, Dict, Any
 
 from core.domain import constant
-from core.domain.entities.database.tool import Tool
 from core.domain.entities.vectordb.tool import tool_vector_entity
 from core.domain.enums import enum
 from core.domain.request.query_request import QueryRequest
-from core.domain.request.memory_request import MemoryRecallDto
+from core.domain.request.memory_request import MemorySelectionToolDto
 from core.prompts.system_prompt import CLASSIFY_PROMPT
 from core.semantic_router import router_registry
 from infrastructure.embedding.base_embedding import embedding_model
@@ -17,8 +15,7 @@ from kernel.config import llm_models
 
 async def select_tool_by_router(
     label_value: str,
-    query: QueryRequest,
-    recalled_memory: MemoryRecallDto
+    memory: MemorySelectionToolDto
 ) -> str:
     """
     Select the appropriate ability based on the label value.
@@ -30,60 +27,59 @@ async def select_tool_by_router(
         str: The response from the selected ability handler.
     """
     if label_value == enum.ChatType.GAIA_INTRODUCTION.value:
-        guided_route = await router_registry.gaia_introduction_route(query.query)
+        guided_route = await router_registry.gaia_introduction_route(memory.reflected_query)
         return guided_route
     elif label_value == enum.ChatType.REGISTER_SCHEDULE_CALENDAR.value:
         return label_value
     elif label_value == enum.ChatType.ABILITIES.value:
-        return await select_ability_tool(query, recalled_memory)
+        return await select_ability_tool(memory)
 
 
-async def select_ability_tool(query: QueryRequest, recalled_memory: MemoryRecallDto) -> str:
+async def select_ability_tool(memory: MemorySelectionToolDto) -> str:
     """
     Select the appropriate ability tool based on the user's query using semantic search and LLM classification. 
     """
-    embedding_tools = await _semantic_shortlist_tools(
-        recalled_memory.reflected_query
+    tools = await _query_tools(memory)
+    if not tools:
+        return enum.GaiaAbilities.CHITCHAT.value
+
+    ranked_tools = await _rerank_tools(
+        query_text=f"Context: {memory.last_bot_message}\nUser: {memory.query}",
+        search_results=tools,
+        top_n=constant.SemanticSearch.DEFAULT_TOP_N
     )
-    # candidates_tools = recalled_memory.used_tools + embedding_tools
-    tools = await _rerank_tools(
-        query.query,
-        embedding_tools,
-        top_n=constant.SemanticSearch.DEFAULT_TOP_N)
+    if not ranked_tools:
+        return enum.GaiaAbilities.CHITCHAT.value
 
-    if not _should_use_llm_selection(tools):
-        top_tool = tools[0] if tools else None
-        if top_tool:
-            tool = await tool_repository.query_tool_by_name(top_tool["tool"])
-            return tool.tool
-        else:
-            return enum.GaiaAbilities.CHITCHAT.value
-    else:
-        tools_name = [tool["tool"] for tool in tools]
-        # always add chitchat as fallback
-        tools_name.append(enum.GaiaAbilities.CHITCHAT.value)
-        tools = tool_repository.query_tools_by_names(tools_name)
-        tools_string = json.dumps(tools, indent=2)
-
-        prompt = CLASSIFY_PROMPT.format(
-            query=query.query, tools=tools_string)
-
-        function = await llm_models.get_model_generate_content(
-            query.model, query.user_id, prompt=prompt)
-        tool: Tool = function(prompt=prompt, model=query.model, dto=Tool)
-
-        return tool.tool
+    selected_tool = _validate_ambiguity(ranked_tools)
+    if not selected_tool:
+        selected_tool = await _llm_reasoning_selection(
+            tools=tools,
+            query=memory.reflected_query
+        )
+    return selected_tool
 
 
-async def _semantic_shortlist_tools(query_text: str):
-    query_embedding = await embedding_model.get_embeddings([query_text])
-    return tool_vector_entity.search_top_n(
+async def _query_tools(memory: MemorySelectionToolDto) -> List[str]:
+    query_embedding = await embedding_model.get_embeddings([memory.reflected_query])
+    embedding_tools = tool_vector_entity.search_top_n(
         query_embeddings=query_embedding,
         top_k=constant.SemanticSearch.DEFAULT_TOP_K,
     )
 
+    tools = embedding_tools + memory.used_tools
 
-async def _rerank_tools(query_text: str, search_results: List[List[Dict[str, Any]]], top_n: int = 3) -> List[Dict[str, Any]]:
+    selected_tools = await tool_repository.query_tools_by_names(tools)
+
+    return [f"Tool: {tool.tool}, Description: {tool.description}"
+            for tool in selected_tools]
+
+
+async def _rerank_tools(
+    query_text: str,
+    search_results: List[List[Dict[str, Any]]],
+    top_n: int = 3
+) -> List[Dict[str, Any]]:
     if not search_results or not search_results[0]:
         return []
 
@@ -148,10 +144,42 @@ async def _rerank_tools(query_text: str, search_results: List[List[Dict[str, Any
 
     return tools
 
+MIN_RELEVANCE_THRESHOLD = 0.15
+HIGH_CONFIDENCE_SCORE = 0.7
+MIN_DECISIVE_DELTA = 0.15
+DOMINANT_RATIO_THRESHOLD = 2.0
+SINGLE_TOOL_TRUST_THRESHOLD = 0.5
+AMBIGUITY_CANDIDATE_LIMIT = 3
+def _validate_ambiguity(ranked_tools: List[Dict[str, Any]]) -> bool:
+    top_1 = ranked_tools[0]
+    top_2 = ranked_tools[1] if len(ranked_tools) > 1 else None
+    print(f"Top 1 tool: {top_1}, Top 2 tool: {top_2}")
 
-def _should_use_llm_selection(tools: List[Dict[str, Any]], threshold: float = 0.1) -> bool:
-    if len(tools) < 2:
-        return False
+    if top_1["score"] < MIN_RELEVANCE_THRESHOLD:
+        return enum.GaiaAbilities.CHITCHAT.value
 
-    score_diff = abs(tools[0]["score"] - tools[1]["score"])
-    return score_diff < threshold
+    if not top_2:
+        if top_1["score"] > SINGLE_TOOL_TRUST_THRESHOLD:
+            return top_1["tool"]
+    else:
+        delta = top_1["score"] - top_2["score"]
+        ratio = top_1["score"] / (top_2["score"] + 1e-9)
+
+        if top_1["score"] > HIGH_CONFIDENCE_SCORE and delta > MIN_DECISIVE_DELTA:
+            return top_1["tool"]
+
+        if ratio > DOMINANT_RATIO_THRESHOLD:
+            return top_1["tool"]
+
+    return None  # Indicate ambiguity
+
+
+async def _llm_reasoning_selection(tools: str, query: QueryRequest) -> str:
+    tools = "\n".join(tools) + "\n" + \
+        enum.GaiaAbilities.CHITCHAT.value  # backup tool
+    prompt = CLASSIFY_PROMPT.format(
+        query=query, tools=tools)
+
+    function = await llm_models.get_model_generate_content(
+        query.model, query.user_id, prompt=prompt)
+    return function(prompt=prompt, model=query.model)

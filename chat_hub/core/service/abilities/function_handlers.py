@@ -57,35 +57,32 @@ async def execute_task(label: str, func: Callable, *args, **kwargs):
             message=response, query=query
         )
     except Exception as exc:
-        execution_result = await agent_execution_repo.update_agent_execution_status(
+        await agent_execution_repo.update_agent_execution_status(
             execution_id=execution_log.id,
             status=enum.TaskStatus.FAILED.value,
             tool_output=str(exc),
         )
-        raise exc
+        print("Exception during task execution:", exc)
+        return str(exc), enum.TaskStatus.FAILED.value, False
 
-    execution_result: Optional[AgentExecution] = await agent_execution_repo.update_agent_execution_status(
+    await agent_execution_repo.update_agent_execution_status(
         execution_id=execution_log.id,
         status=enum.TaskStatus.SUCCESS.value,
         tool_output=str(response),
     )
-    if not execution_result:
-        print("Failed to update execution result for execution id:", execution_log.id)
-        status = enum.TaskStatus.SUCCESS.value
-    status = execution_result.status
-    print("Execution result:", status)
 
-    return response, status, is_need_recommendation
-
-
-async def handle_function(func: Callable, *args, **kwargs) -> Any:
-    query = _extract_query(args, kwargs)
-    # All function handlers are expected to return a tuple of (result, is_need_recommendation)
-    response, is_need_recommendation = await func(*args, **kwargs)
-    await push_and_save_bot_message(
-        message=response, query=query
-    )
     return response, enum.TaskStatus.SUCCESS.value, is_need_recommendation
+
+
+def _extract_query(args: tuple, kwargs: dict) -> Optional[QueryRequest]:
+    query = kwargs.get('query')
+    if isinstance(query, QueryRequest):
+        return query
+    for arg in args:
+        if isinstance(arg, QueryRequest):
+            return arg
+    print("No QueryRequest found in function arguments. This case cannot happen.")
+    return None
 
 
 def _extract_agent_execution(kwargs: dict, label: str, query: QueryRequest) -> Optional[AgentExecution]:
@@ -107,15 +104,14 @@ def _extract_agent_execution(kwargs: dict, label: str, query: QueryRequest) -> O
     )
 
 
-def _extract_query(args: tuple, kwargs: dict) -> Optional[QueryRequest]:
-    query = kwargs.get('query')
-    if isinstance(query, QueryRequest):
-        return query
-    for arg in args:
-        if isinstance(arg, QueryRequest):
-            return arg
-    print("No QueryRequest found in function arguments. This case cannot happen.")
-    return None
+async def handle_function(func: Callable, *args, **kwargs) -> Any:
+    query = _extract_query(args, kwargs)
+    # All function handlers are expected to return a tuple of (result, is_need_recommendation)
+    response, is_need_recommendation = await func(*args, **kwargs)
+    await push_and_save_bot_message(
+        message=response, query=query
+    )
+    return response, enum.TaskStatus.SUCCESS.value, is_need_recommendation
 
 
 FUNCTIONS = _FUNCTION_REGISTRY

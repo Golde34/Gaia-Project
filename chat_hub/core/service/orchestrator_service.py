@@ -20,7 +20,7 @@ async def orchestrate(query: QueryRequest, guided_route: str) -> str:
     Handle the service request based on the query type dynamically.
     Args:
         query (QueryRequest): The user's query containing task information.
-        response (any): The response content to determine service type.
+        guided_route (any): The response content to determine service type.
     Returns:
         str: The response from the appropriate service handler.
     """
