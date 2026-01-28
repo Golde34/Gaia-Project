@@ -22,6 +22,7 @@ class SemanticRoute(Enum):
     REGISTER_SCHEDULE_CALENDAR = "register_schedule_calendar"
     REGISTER_SCHEDULE_CALENDAR_EXAMPLE = "register_schedule_calendar_example"
     CHITCHAT_AND_REGISTER_CALENDAR = "chitchat_and_register_calendar"
+    USER_INFORMATION = "user_information"
 
 
 class GaiaAbilities(Enum):

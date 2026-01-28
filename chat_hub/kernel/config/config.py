@@ -17,7 +17,9 @@ LLM_DEFAULT_MODEL = os.getenv('LLM_DEFAULT_MODEL', 'gemini-2.5-flash')
 LLM_SUB_MODEL = os.getenv('LLM_SUB_MODEL', 'gemini-2.5-flash-lite')
 
 EMBEDDING_MODEL = os.getenv('EMBEDDING_MODEL')
+EMBEDDING_CLOUD_MODEL = os.getenv('EMBEDDING_CLOUD_MODEL', 'models/text-embedding-004')
 RERANKING_MODEL = os.getenv('RERANKING_MODEL', 'default_reranking_config')
+RERANKING_CLOUD_MODEL = os.getenv('RERANKING_CLOUD_MODEL', 'semantic-ranker-512')
 MODEL_MODE = os.getenv('MODEL_MODE', 'vllm')
 
 EMBEDDING_RERANKING_HOST = os.getenv('EMBEDDING_RERANKING_HOST', 'http://localhost:8000')
@@ -26,6 +28,7 @@ EMBEDDING_RERANKING_PORT = int(os.getenv('EMBEDDING_RERANKING_PORT', 8000))
 EMBEDDING_API = EMBEDDING_RERANKING_HOST + f":{EMBEDDING_RERANKING_PORT}" 
 RERANKING_API = EMBEDDING_RERANKING_HOST + f":{EMBEDDING_RERANKING_PORT}" 
 
+REDIS_MODE = os.getenv('REDIS_MODE', 'cluster')
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
 REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', 'bitnami')

@@ -6,6 +6,7 @@ import time
 from core.domain.enums.enum import ModelMode
 from core.domain.response.vllm_response import VllmEmbeddingResponse
 from infrastructure.embedding import embedding_config
+from kernel.config import config
 
 
 class BaseEmbedding:
@@ -25,6 +26,7 @@ class BaseEmbedding:
         self.config = embedding_config.EmbeddingConfig()
         self.base_url = self.config.url
         self.model_name = self.config.model_name
+        self.cloud_model_name = self.config.cloud_model_name
 
         self.endpoint = f"http://{self.base_url}/embeddings"
         self.model_mode = self.config.model_mode 
@@ -35,11 +37,11 @@ class BaseEmbedding:
         if self.model_mode == ModelMode.LOCAL.value:
             return await self._get_embedding_from_model(texts, logger)
         elif self.model_mode == ModelMode.VLLM.value:
-            return await self._get_embedding_api(texts, logger)
+            return await self._get_embedding_vllm(texts, logger)
         elif self.model_mode == ModelMode.CLOUD.value:
-            return await self._get_embedding_from_cloud(texts, logger)
+            return await self._get_embedding_cloud(texts, logger)
 
-    async def _get_embedding_api(self, texts: List[str], logger = None):
+    async def _get_embedding_vllm(self, texts: List[str], logger = None):
         payload = {
             "model": self.model_name,
             "input": texts
@@ -93,11 +95,22 @@ class BaseEmbedding:
                 raise
         return embeding_list
 
-    async def _get_embedding_from_cloud(self, text: str, logger: None):
-        """
-        Placeholder for cloud embedding logic
-        """
-        raise NotImplementedError("Cloud embedding logic not implemented yet")
+    async def _get_embedding_cloud(self, texts: List[str], logger = None):
+        from google import genai
+        client = genai.Client(api_key=config.SYSTEM_API_KEY)
+        try:
+            embeddings = []
+            for text in texts:
+                result = client.models.embed_content(
+                    model=self.cloud_model_name,
+                    contents=text
+                )
+                embeddings.append(result.embeddings[0].values)
+            return embeddings
+            
+        except Exception as e:
+            print(f"Error getting embeddings from Gemini: {e}")
+            raise 
 
 # Global instance for easy access across modules
 embedding_model = BaseEmbedding()

@@ -7,6 +7,7 @@ class RerankingConfig:
     url: str = config.RERANKING_API
     model_name: str = config.RERANKING_MODEL
     model_mode: str = config.MODEL_MODE
+    cloud_model_name: str = config.RERANKING_CLOUD_MODEL
 
     # todo
     # max_results: int = config.RERANKING_MAX_RESULTS

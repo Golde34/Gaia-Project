@@ -32,9 +32,9 @@ async def introduce(query: QueryRequest, guided_route: str) -> None:
         if guided_route == enum.SemanticRoute.GAIA_INTRODUCTION:
             response = await onboarding_service.handle_onboarding_action(
                 query, enum.SemanticRoute.GAIA_INTRODUCTION.value)
-        elif guided_route == enum.SemanticRoute.CHITCHAT:
+        elif guided_route == enum.SemanticRoute.USER_INFORMATION:
             response = await onboarding_service.handle_onboarding_action(
-                query, enum.SemanticRoute.CHITCHAT.value)
+                query, enum.SemanticRoute.USER_INFORMATION.value)
         print(f"Onboarding response: {response}")
         await chat_service.push_and_save_bot_message(message=response, query=query)
         return response
