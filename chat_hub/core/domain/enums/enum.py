@@ -10,7 +10,6 @@ class ChatType(Enum):
 class ModelMode(Enum):
     LOCAL = "local"
     VLLM = "vllm"
-    CLOUD = "cloud"
     API = "api"
 
 
