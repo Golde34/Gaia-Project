@@ -3,7 +3,9 @@ from typing import List, Dict, Any
 import traceback
 
 import aiohttp
+from numpy import record
 
+from GAIA.gaia_bot.abilities import response
 from chat_hub.kernel.config import config
 from core.domain.enums.enum import ModelMode
 from infrastructure.reranking import reranking_config
@@ -14,7 +16,7 @@ class BaseReranking:
         self.config = reranking_config.RerankingConfig()
         self.base_url = self.config.url
         self.model_name = self.config.model_name
-        self.api_model_name = self.config.api_model_name
+        self.cloud_model_name = self.config.cloud_model_name
 
         self.endpoint = f"http://{self.base_url}/rerank"
         self.session_queue = Queue(maxsize=20)
@@ -36,8 +38,8 @@ class BaseReranking:
             return await self._rerank_from_vllm(query, documents, top_n, logger)
         elif self.model_mode == ModelMode.LOCAL.value:
             return await self._rerank_from_model(query, documents, top_n, logger)
-        elif self.model_mode == ModelMode.API.value:
-            return await self._rerank_from_api(query, documents, top_n, logger)
+        elif self.model_mode == ModelMode.CLOUD.value:
+            return await self._rerank_from_cloud(query, documents, top_n, logger)
 
     async def _rerank_from_model(self, query: str, documents: List[Dict[str, Any]], top_n: int, logger=None):
         try:
@@ -103,21 +105,30 @@ class BaseReranking:
             traceback.print_exc()
             return {"error": str(e)}
 
-    async def _rerank_from_api(self, query: str, documents: List[Dict[str, Any]], top_n: int, logger=None):
+    async def _rerank_from_cloud(self, query: str, documents: List[Dict[str, Any]], top_n: int, logger=None):
         from google import genai
         client = genai.Client(api_key=config.SYSTEM_API_KEY)
         try:
             doc_texts = [doc.get('text', '') for doc in documents]
-            response = client.models.rerank(
-                model=self.api_model_name,
+            client = genai.Client(
+                vertexai=True,
+                project="your-project-id",
+                location="us-central1"
+            )
+
+            response = client.discovery.rank(
+                model=self.cloud_model_name,
                 query=query,
-                documents=doc_texts,
+                records=doc_texts,
                 top_n=top_n
             )
-            ranked_indices = [item.index for item in response.ranked_documents]
-            reranked_documents = [documents[i] for i in ranked_indices]
-            return {"documents": reranked_documents, "query": query, "top_n": top_n} 
-            
+
+            for record in response.records:
+                print(f"Score: {record.score:.4f} | Content: {record.content}")            
+            ranked_indices = [record.index for record in response.records]
+            reranked_documents = [documents[i] for i in ranked_indices] 
+            return {"documents": reranked_documents, "query": query, "top_n": top_n}
+
         except Exception as e:
             print(f"Error getting embeddings from Gemini: {e}")
             raise

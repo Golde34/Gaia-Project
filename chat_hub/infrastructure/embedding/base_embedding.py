@@ -26,7 +26,7 @@ class BaseEmbedding:
         self.config = embedding_config.EmbeddingConfig()
         self.base_url = self.config.url
         self.model_name = self.config.model_name
-        self.api_model_name = self.config.api_model_name
+        self.cloud_model_name = self.config.cloud_model_name
 
         self.endpoint = f"http://{self.base_url}/embeddings"
         self.model_mode = self.config.model_mode 
@@ -38,8 +38,8 @@ class BaseEmbedding:
             return await self._get_embedding_from_model(texts, logger)
         elif self.model_mode == ModelMode.VLLM.value:
             return await self._get_embedding_vllm(texts, logger)
-        elif self.model_mode == ModelMode.API.value:
-            return await self._get_embedding_api(texts, logger)
+        elif self.model_mode == ModelMode.CLOUD.value:
+            return await self._get_embedding_cloud(texts, logger)
 
     async def _get_embedding_vllm(self, texts: List[str], logger = None):
         payload = {
@@ -95,14 +95,14 @@ class BaseEmbedding:
                 raise
         return embeding_list
 
-    async def _get_embedding_api(self, texts: List[str], logger = None):
+    async def _get_embedding_cloud(self, texts: List[str], logger = None):
         from google import genai
         client = genai.Client(api_key=config.SYSTEM_API_KEY)
         try:
             embeddings = []
             for text in texts:
                 result = client.models.embed_content(
-                    model=self.api_model_name,
+                    model=self.cloud_model_name,
                     contents=text
                 )
                 embeddings.append(result.embeddings[0].values)
