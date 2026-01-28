@@ -7,6 +7,7 @@ class EmbeddingConfig:
     url: str = config.EMBEDDING_API 
     model_name = config.EMBEDDING_MODEL
     model_mode = config.MODEL_MODE
+    api_model_name = config.EMBEDDING_API_MODEL
 
 @dataclass
 class EmbeddingConfigTest:

@@ -17,6 +17,7 @@ LLM_DEFAULT_MODEL = os.getenv('LLM_DEFAULT_MODEL', 'gemini-2.5-flash')
 LLM_SUB_MODEL = os.getenv('LLM_SUB_MODEL', 'gemini-2.5-flash-lite')
 
 EMBEDDING_MODEL = os.getenv('EMBEDDING_MODEL')
+EMBEDDING_API_MODEL = os.getenv('EMBEDDING_API_MODEL', 'models/text-embedding-004')
 RERANKING_MODEL = os.getenv('RERANKING_MODEL', 'default_reranking_config')
 MODEL_MODE = os.getenv('MODEL_MODE', 'vllm')
 
