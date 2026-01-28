@@ -11,8 +11,9 @@ from core.domain.request.memory_request import MemoryDto
 from core.domain.response.base_response import return_response
 from core.domain.response.model_output_schema import DailyRoutineSchema
 from core.prompts import onboarding_prompt
-from core.prompts.abilities_prompt import CHITCHAT_WITH_HISTORY_PROMPT
+from core.prompts.abilities_prompt import USER_INFORMATION_PROMPT
 from core.service import memory_service
+from core.service.abilities import chitchat
 from core.validation import milvus_validation
 from infrastructure.client.schedule_plan_client import schedule_plan_client
 from infrastructure.embedding.base_embedding import embedding_model
@@ -30,13 +31,15 @@ async def handle_onboarding_action(query: QueryRequest, selection: str) -> dict:
             lambda: _gaia_introduce(
                 query, memory),
         enum.SemanticRoute.CHITCHAT.value:
-            lambda: _chitchat_with_history(
-                query, memory),
+            lambda: chitchat.chitchat_with_history(query),
         enum.GaiaAbilities.REGISTER_SCHEDULE_CALENDAR.value:
             lambda: _generate_calendar_schedule_response(
                 query, memory),
         enum.SemanticRoute.CHITCHAT_AND_REGISTER_CALENDAR.value:
             lambda: _chitchat_and_register_calendar(
+                query, memory),
+        enum.SemanticRoute.USER_INFORMATION.value:
+            lambda: _chitchat_and_ask_user_info(
                 query, memory),
     }
 
@@ -66,9 +69,9 @@ async def _gaia_introduce(query: QueryRequest, memory: MemoryDto) -> str:
     function = await llm_models.get_model_generate_content(model=query.model, user_id=query.user_id, prompt=prompt)
     return function(prompt=prompt, model=query.model)
 
-async def _chitchat_with_history(query: QueryRequest, memory: MemoryDto) -> str:
+async def _chitchat_and_ask_user_info(query: QueryRequest, memory: MemoryDto) -> str:
     """
-    Chitchat with history pipeline
+    Chitchat with history and ask user information pipeline
     Args:
         query (str): The user's query containing task information.
         recent_history (str): Recent chat history.
@@ -78,7 +81,7 @@ async def _chitchat_with_history(query: QueryRequest, memory: MemoryDto) -> str:
         str: Short response to the request
     """
     try:
-        prompt = CHITCHAT_WITH_HISTORY_PROMPT.format(
+        prompt = USER_INFORMATION_PROMPT.format(
             query=query.query,
             recent_history=memory.recent_history,
             recursive_summary=memory.recursive_summary,

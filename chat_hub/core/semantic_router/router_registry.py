@@ -6,9 +6,9 @@ from kernel.config import config
 
 introduction_route = route.Route(
     name=enum.SemanticRoute.GAIA_INTRODUCTION, samples=introduction_samples.gaia_introduction_sample)
-chitchat_route = route.Route(
-    name=enum.SemanticRoute.CHITCHAT, samples=introduction_samples.chitchat_sample)
-onboarding_router = router.SemanticRouter(routes=[introduction_route, chitchat_route],
+user_information_route = route.Route(
+    name=enum.SemanticRoute.USER_INFORMATION, samples=introduction_samples.chitchat_sample)
+onboarding_router = router.SemanticRouter(routes=[introduction_route, user_information_route],
                                           model_name=config.EMBEDDING_MODEL)
 
 async def gaia_introduction_route(query: str) -> route.Route:
@@ -49,6 +49,8 @@ recursive_summary = route.Route(
     name=enum.SemanticRoute.RECURSIVE_SUMMARY, samples=chat_history_samples.recursive_summary_sample)
 long_term_memory = route.Route(
     name=enum.SemanticRoute.LONG_TERM_MEMORY, samples=chat_history_samples.long_term_memory_sample)
+chitchat_route = route.Route(
+    name=enum.SemanticRoute.CHITCHAT, samples=introduction_samples.chitchat_sample)
 chat_history_router = router.SemanticRouter(routes=[recent_history, recursive_summary, long_term_memory, chitchat_route],
                                           model_name=config.EMBEDDING_MODEL)
 
