@@ -10,7 +10,7 @@ class ChatType(Enum):
 class ModelMode(Enum):
     LOCAL = "local"
     VLLM = "vllm"
-    API = "api"
+    CLOUD = "cloud"
 
 
 class SemanticRoute(Enum):
