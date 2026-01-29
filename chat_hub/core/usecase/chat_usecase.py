@@ -2,13 +2,6 @@ from typing import Any, Optional
 
 from core.domain.enums.enum import ChatType, MemoryModel, MessageType
 from core.domain.request.query_request import QueryRequest
-from core.service.graph_memory_model.consolidation import ConsolidationLayer
-from core.service.graph_memory_model.context_builder import ContextBuilder
-from core.service.graph_memory_model.episodic_memory_graph import EMG
-from core.service.graph_memory_model.memory_store import MemoryStore
-from core.service.graph_memory_model.semantic_long_term_graph import SLTG
-from core.service.graph_memory_model.short_term_activation_graph import STAG
-from core.service.graph_memory_model.switching_engine import SwitchingEngine
 from core.service import memory_service
 from core.usecase.llm_router import chat_routers, tool_selection
 
@@ -81,12 +74,5 @@ class ChatUsecase:
         It retrieves the chat history, generates a new query based on the context,
         and processes the request using graph-based methods
         """
-        recalled_memory = await memory_service.recall_history_info(query=query)
-        switching_engine = SwitchingEngine().switch(recalled_memory)
-        stag = STAG(query).build_temporary_graph()
-        sltg = SLTG(query).build_long_term_graph()
-        emg = EMG(query).build_episodic_memory_graph()
-        retrieval_memory = MemoryStore(query, stag, sltg, emg).get_memory()
-        consolidation = ConsolidationLayer(query, retrieval_memory).consolidate()
-        response = await ContextBuilder(query, consolidation).generate_response()
+         
         return response
