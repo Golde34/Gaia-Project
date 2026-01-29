@@ -1,5 +1,7 @@
+from chat_hub.core.domain.enums.enum import SenderTypeEnum
+from kernel.config import config
 from core.domain.request.query_request import QueryRequest
-from .redis_graph_storage import RedisGraphStorage
+from .redis_graph_storage import FastAccessMemory
 from .base_memory_graph import MessageNode
 from typing import Optional, Dict, Any
 
@@ -15,53 +17,53 @@ class GraphMemory:
     
     def __init__(self, query: QueryRequest, redis_host='localhost', redis_port=6379):
         self.query = query
-        self.storage = RedisGraphStorage(host=redis_host, port=redis_port)
+        self.storage = FastAccessMemory(host=redis_host, port=redis_port)
     
     def quick_think(self) -> Optional[Dict[str, Any]]:
         """
-        Giai đoạn 1: RAM Layer - Xử lý nhanh với 6-10 nodes gần nhất
         - Fetch recent messages from Redis RAM
-        - Parse command & extract WBOS structure
+        - Parse command & extract WBOS structure, response contains:
+        + fast_access_memory: recent nodes from RAM
+        + memory_node: extracted memory node with WBOS structure
+        + response: generated response if enough context
+        + is_ready: boolean flag is true if no need to go to STAG
         - Short-circuit if enough context
         
-        Returns:
-            Dict với kết quả nếu tìm thấy (RAM_HIT), None nếu cần chuyển sang STAG
         """
-        query_text = self.query.query.lower()
-        
-        # Lấy 10 node gần nhất từ Redis
-        recent_nodes = self.storage.get_recent_nodes(limit=10)
-        
-        # Phân tích nhanh query tìm thực thể/đại từ (Logic đơn giản)
-        pronouns = ["nó", "hắn", "đó", "họ", "ấy", "kia", "này"]
-        needs_context = any(pronoun in query_text for pronoun in pronouns)
-        
-        # Nếu không có đại từ, không cần short-circuit
-        if not needs_context:
-            return None  # Chuyển sang Giai đoạn 2 (STAG)
-        
-        # Quét ngược RAM tìm WBOS phù hợp
-        for node in recent_nodes:
-            wbos = node.wbos
-            conf = node.confidence
-            
-            # Điều kiện Short-circuit: 
-            # Có thực thể (W) hoặc Hành động (B) và độ tin cậy cao
-            if (wbos.get('W') or wbos.get('B')) and conf > 0.8:
-                target = wbos.get('W') or wbos.get('B')
-                return {
-                    "source": "RAM_HIT",
-                    "resolved_entity": target,
-                    "node_id": node.node_id,
-                    "reasoning": f"Query '{self.query.query}' ám chỉ '{target}' từ node {node.node_id}",
-                    "confidence": conf,
-                    "original_content": node.content
-                }
-        
-        # Không tìm thấy trong RAM
+        fast_access_memory = self.storage.get_recent_nodes(limit=config.RECENT_HISTORY_MAX_LENGTH*2) 
+        # llm parse command and extract WBOS
+        raw_response = {
+            "fast_access_memory": [node.to_dict() for node in fast_access_memory],
+            "memory_node": MessageNode(
+                node_id="temp_node",
+                content="Create for me a new task based on the recent messages.",
+                wbos={
+                    "W": "Task Management",
+                    "B": "User needs to create a new task",
+                    "O": "Important to track tasks efficiently",
+                    "S": "No existing task found related to recent messages"
+                },
+                confidence=0.9,
+                role=SenderTypeEnum.USER,
+                tool="create_task"
+            ),
+            "response": "Sure, I have created a new task for you based on your recent messages.",
+            "is_ready": True
+        }
+        # TODO: Trong trường hợp người dùng mới sử dụng 
+        # và chưa load được các tool hay dùng, cần làm một function 
+        # lấy ra tool nếu truyền null thì tự gen tool, so sánh với các 
+        # tool hiện có trên vectorDB, chọn ra tool hợp lí nhất, dùng levenshtein
+        if raw_response["is_ready"]:
+            # Store message
+            # Tạo node từ memory_node và commit vào Redis
+            memory_node_dict = raw_response["memory_node"].to_dict()
+            memory_node = MessageNode.from_dict(memory_node_dict)
+            self.storage.commit_node(memory_node)
+            return raw_response
         return None
-    
-    def recall_short_term(self) -> Optional[Dict[str, Any]]:
+        
+    def recall_short_term(self) -> Optional[]:
         """
         Giai đoạn 2: STAG Layer - Truy vấn đồ thị ngắn hạn
         - Hybrid vector search on STAG
