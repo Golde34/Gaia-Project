@@ -98,3 +98,9 @@ class RecommendationStatusEnum(Enum):
     RECOMMENDED = "recommended"
     SUGGEST = "suggest"
     OUTDATED = "outdated"
+
+class WBOSEnum(Enum):
+    W = "World"
+    B = "Experience"
+    O = "Opinion"
+    S = "Observation"

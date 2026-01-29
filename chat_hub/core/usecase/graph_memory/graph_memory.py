@@ -1,8 +1,10 @@
+import time
+
 from chat_hub.core.domain.enums.enum import SenderTypeEnum
 from kernel.config import config
 from core.domain.request.query_request import QueryRequest
-from .redis_graph_storage import FastAccessMemory
-from .base_memory_graph import MessageNode
+from .redis_graph_storage import RedisMemoryOrchestrator
+from .base_memory_graph import BaseMemoryGraph, MessageNode
 from typing import Optional, Dict, Any
 
 
@@ -15,9 +17,83 @@ class GraphMemory:
     4. Consolidate & Response
     """
     
-    def __init__(self, query: QueryRequest, redis_host='localhost', redis_port=6379):
+    def __init__(self, query: QueryRequest):
         self.query = query
-        self.storage = FastAccessMemory(host=redis_host, port=redis_port)
+        self.storage = RedisMemoryOrchestrator(session_id=query.dialogue_id)
+
+    def quick_think(self) -> Optional[Dict[str, Any]]:
+        # 1. Khởi tạo Orchestrator & Pull Graph từ Redis (RAM)
+        graph: BaseMemoryGraph = self.storage.get_graph()
+        
+        # Lấy nhanh 10-20 nodes thô làm ngữ cảnh cho LLM
+        fast_access_memory = graph.get_recent_nodes_raw(limit=config.RECENT_HISTORY_MAX_LENGTH)
+
+        # 2. LLM Parse Command & WBOS (World, Behavior, Opinion, Observation)
+        # Giả sử llm_response trả về cấu trúc như yêu cầu của bạn
+        # llm_output = self.llm_service.parse_wbos(query=self.query.query, context=fast_access_memory)
+        llm_output = {
+                "fast_access_memory": [node.to_dict() for node in fast_access_memory],
+                "memory_node": MessageNode(
+                    node_id="temp_node",
+                    content="Create for me a new task based on the recent messages.",
+                    wbos={
+                        "W": "Task Management",
+                        "B": "User needs to create a new task",
+                        "O": "Important to track tasks efficiently",
+                        "S": "No existing task found related to recent messages"
+                    },
+                    confidence=0.9,
+                    role=SenderTypeEnum.USER,
+                    tool="create_task"
+                ),
+                "response": "Sure, I have created a new task for you based on your recent messages.",
+                "is_ready": True
+            }
+
+        # 3. Xử lý Tool Fuzzy Matching (Levenshtein)
+        extracted_tool = llm_output.get("tool")
+        if not extracted_tool or extracted_tool == "null":
+            # Logic: Lấy danh sách tool từ Config hoặc VectorDB và so sánh
+            # available_tools = self.get_registered_tools() 
+            available_tools = ["create_task", "register_schedule", "search_information"]
+            final_tool = min(available_tools, key=lambda x: distance(extracted_tool or "", x))
+        else:
+            final_tool = extracted_tool
+
+        # 4. Short-circuit Logic
+        if llm_output.get("is_ready"):
+            # Tạo MessageNode thực tế từ LLM Output
+            new_node = MessageNode(
+                node_id=f"node_{int(time.time()*1000)}",
+                topic_id=llm_output.get("topic_id", "general"),
+                content=self.query.query,
+                wbos=llm_output.get("wbos"),
+                confidence=llm_output.get("confidence", 0.0),
+                role=SenderTypeEnum.USER,
+                tool=final_tool
+            )
+
+            # 5. Thực thi Logic trong BaseMemoryGraph (Logic Object)
+            # Trong lock để đảm bảo atomicity cho việc Evict & Summarize
+            with self.storage.lock:
+                # add_node sẽ tự động thực hiện:
+                # - Stitching topic_link_id
+                # - Tăng topic_counter
+                # - IF counter > limit: recursive_summarize() -> evict_oldest_node()
+                graph.add_node(new_node)
+                
+                # 6. Push Graph ngược lại Redis
+                self.storage.save_graph(graph)
+
+            return {
+                "fast_access_memory": [n.to_dict() for n in fast_access_memory],
+                "memory_node": new_node.to_dict(),
+                "response": llm_output.get("response"),
+                "is_ready": True
+            }
+
+        return None
+
     
     def quick_think(self) -> Optional[Dict[str, Any]]:
         """
@@ -31,6 +107,7 @@ class GraphMemory:
         
         """
         fast_access_memory = self.storage.get_recent_nodes(limit=config.RECENT_HISTORY_MAX_LENGTH*2) 
+        temporary_graph: BaseMemoryGraph = BaseMemoryGraph()
         # llm parse command and extract WBOS
         raw_response = {
             "fast_access_memory": [node.to_dict() for node in fast_access_memory],
@@ -56,14 +133,15 @@ class GraphMemory:
         # tool hiện có trên vectorDB, chọn ra tool hợp lí nhất, dùng levenshtein
         if raw_response["is_ready"]:
             # Store message
-            # Tạo node từ memory_node và commit vào Redis
+            # Tạo node từ memory_node, sliding graph window
+            # Store new graph node vào Redis RAM
             memory_node_dict = raw_response["memory_node"].to_dict()
             memory_node = MessageNode.from_dict(memory_node_dict)
             self.storage.commit_node(memory_node)
             return raw_response
         return None
         
-    def recall_short_term(self) -> Optional[]:
+    def recall_short_term(self) -> Optional[Dict[str, Any]]:
         """
         Giai đoạn 2: STAG Layer - Truy vấn đồ thị ngắn hạn
         - Hybrid vector search on STAG
