@@ -81,12 +81,5 @@ class ChatUsecase:
         It retrieves the chat history, generates a new query based on the context,
         and processes the request using graph-based methods
         """
-        recalled_memory = await memory_service.recall_history_info(query=query)
-        switching_engine = SwitchingEngine().switch(recalled_memory)
-        stag = STAG(query).build_temporary_graph()
-        sltg = SLTG(query).build_long_term_graph()
-        emg = EMG(query).build_episodic_memory_graph()
-        retrieval_memory = MemoryStore(query, stag, sltg, emg).get_memory()
-        consolidation = ConsolidationLayer(query, retrieval_memory).consolidate()
-        response = await ContextBuilder(query, consolidation).generate_response()
+        
         return response

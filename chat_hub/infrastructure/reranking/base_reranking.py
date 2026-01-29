@@ -3,9 +3,7 @@ from typing import List, Dict, Any
 import traceback
 
 import aiohttp
-from numpy import record
 
-from GAIA.gaia_bot.abilities import response
 from chat_hub.kernel.config import config
 from core.domain.enums.enum import ModelMode
 from infrastructure.reranking import reranking_config
