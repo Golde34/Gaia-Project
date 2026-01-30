@@ -1,6 +1,17 @@
 version: '3.8'
 
 services:
+  redis_insight:
+    image: redis/redisinsight:latest
+    container_name: redis_insight
+    restart: always
+    ports:
+      - "8001:5540"
+    volumes:
+      - insight_data:/data
+    networks:
+      - valkey-network
+
   valkey:
     image: docker.io/bitnami/valkey:latest
     container_name: valkey_standalone
@@ -11,7 +22,13 @@ services:
       - "6379:6379"
     volumes:
       - valkey_data:/bitnami/valkey/data
+    networks:
+      - valkey-network
 
 volumes:
   valkey_data:
-    driver: local
+  insight_data:
+
+networks:
+  valkey-network:
+    driver: bridge
