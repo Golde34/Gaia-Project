@@ -209,11 +209,8 @@ async def _summarize(query: str, content: str, model: Optional[LLMModel], user_i
         f"Sources:\n{content[:config.SEARCH_MAX_PROMPT_CHARS]}"
     )
     try:
-        model_to_use = model or LLMModel(
-            model_name=config.LLM_DEFAULT_MODEL, 
-            model_key=config.SYSTEM_API_KEY,
-            memory_model=enum.MemoryModel.DEFAULT.value,
-            organization=config.SYSTEM_ORGANIZATION    
+        model_to_use = model or llm_models.build_system_model(
+            memory_model=enum.MemoryModel.DEFAULT
         )
         llm_fn = await llm_models.get_model_generate_content(
             model=model_to_use,

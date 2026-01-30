@@ -1,5 +1,6 @@
 import functools
 
+from chat_hub.kernel.config import llm_models
 from core.domain.enums.enum import DialogueEnum, MemoryModel, SenderTypeEnum, ChatType
 from core.domain.request.chat_hub_request import SendMessageRequest
 from core.domain.request.query_request import LLMModel, QueryRequest
@@ -144,12 +145,9 @@ class ChatInteractionUsecase:
         query_request: QueryRequest = QueryRequest(
             user_id=0,  # System or anonymous user
             query=message,
-            model=LLMModel(
-                model_name=config.LLM_DEFAULT_MODEL,
-                model_key=config.SYSTEM_API_KEY,
-                memory_model=MemoryModel.GRAPH.value,
-                organization=config.SYSTEM_ORGANIZATION
-                ),
+            model=llm_models.build_system_model(
+                memory_model=MemoryModel.GRAPH.value
+            ),
             dialogue_id="s1",
             type=DialogueEnum.GAIA_INTRODUCTION_TYPE.value,
         )
