@@ -1,10 +1,9 @@
-import time
-
-from core.domain.enums.enum import SenderTypeEnum
-from kernel.config import config
+import asyncio
+from kernel.config import llm_models
+from core.usecase.graph_memory.working_memory_graph import WorkingMemoryGraph
+from core.domain.enums.enum import GraphModelEnum, SenderTypeEnum
 from core.domain.request.query_request import QueryRequest
-from .redis_graph_storage import RedisMemoryOrchestrator
-from .base_graph import BaseGraphMemory, MessageNode
+from .base_graph import MessageNode
 from typing import Optional, Dict, Any
 
 
@@ -19,84 +18,44 @@ class GraphMemory:
     
     def __init__(self, query: QueryRequest):
         self.query = query
-        self.storage = RedisMemoryOrchestrator(session_id=query.dialogue_id)
+        self.working_memory_graph = WorkingMemoryGraph(self.query)
 
-    def quick_think(self) -> Optional[Dict[str, Any]]:
-        """
-        - Fetch recent messages from Redis RAM
-        - Parse command & extract WBOS structure, response contains:
-        + fast_access_memory: recent nodes from RAM
-        + memory_node: extracted memory node with WBOS structure
-        + response: generated response if enough context
-        + is_ready: boolean flag is true if no need to go to STAG
-        - Short-circuit if enough context
+    async def quick_think(self) -> str:
+        raw_nodes, metadata = self.working_memory_graph.fetch_recent_nodes()
+
+        prompt = f"later {raw_nodes} with metadata {metadata}"
+        llm_function = await llm_models.get_model_generate_content(
+            model=self.query.model,
+            user_id=self.query.user_id,
+            prompt=prompt
+        )
+        ai_decision = await llm_function(prompt, self.query.model)
+
+        # Fuzzy Matching Tool Logic (Levenshtein) --- IGNORE ---
+        # Build new node
+        new_node = MessageNode.from_dict(ai_decision['new_node'])
+
+        evicted_node_json = self.working_memory_graph.build_graph(
+            new_node_data=new_node,
+            topic_id=ai_decision['topic_id'],
+            limit=10
+        )
+
+        if ai_decision["is_ready"]:
+            asyncio.create_task(self.process_to_stag(evicted_node_json))
+            return ai_decision["response"] # Trả kết quả ngay (RAM HIT)
         
-        """
-        # 1. Khởi tạo Orchestrator & Pull Graph từ Redis (RAM)
-        graph: BaseGraphMemory = self.storage.get_graph()
-        
-        # Lấy nhanh 10-20 nodes thô làm ngữ cảnh cho LLM
-        fast_access_memory = graph.get_recent_nodes_raw(limit=config.RECENT_HISTORY_MAX_LENGTH)
-
-        # 2. LLM Parse Command & WBOS (World, Behavior, Opinion, Observation)
-        # Giả sử llm_response trả về cấu trúc như yêu cầu của bạn
-        # llm_output = self.llm_service.parse_wbos(query=self.query.query, context=fast_access_memory)
-        llm_output = {
-                "fast_access_memory": [node.to_dict() for node in fast_access_memory],
-                "memory_node": MessageNode(
-                    node_id="temp_node",
-                    topic_id="general",
-                    content="Create for me a new task based on the recent messages.",
-                    wbos={
-                        "W": "Task Management",
-                        "B": "User needs to create a new task",
-                        "O": "Important to track tasks efficiently",
-                        "S": "No existing task found related to recent messages"
-                    },
-                    confidence=0.9,
-                    role=SenderTypeEnum.USER,
-                    tool="create_task"
-                ),
-                "response": "Sure, I have created a new task for you based on your recent messages.",
-                "is_ready": True
-            }
-
-        # 3. Xử lý Tool Fuzzy Matching (Levenshtein)
-        # extracted_tool = llm_output.get("tool")
-        # if not extracted_tool or extracted_tool == "null":
-        #     # Logic: Lấy danh sách tool từ Config hoặc VectorDB và so sánh
-        #     # available_tools = self.get_registered_tools() 
-        #     available_tools = ["create_task", "register_schedule", "search_information"]
-        #     final_tool = min(available_tools, key=lambda x: distance(extracted_tool or "", x))
-        # else:
-        #     final_tool = extracted_tool
-
-        # 4. Short-circuit Logic
-        if llm_output.get("is_ready"):
-            # Tạo MessageNode thực tế từ LLM Output
-            new_node = llm_output.get("memory_node")
-
-            # 5. Thực thi Logic trong BaseMemoryGraph (Logic Object)
-            # Trong lock để đảm bảo atomicity cho việc Evict & Summarize
-            with self.storage.lock:
-                # add_node sẽ tự động thực hiện:
-                # - Stitching topic_link_id
-                # - Tăng topic_counter
-                # - IF counter > limit: recursive_summarize() -> evict_oldest_node()
-                graph.add_node(new_node)
-                
-                # 6. Push Graph ngược lại Redis
-                self.storage.save_graph(graph)
-
-            return {
-                "fast_access_memory": [n.to_dict() for n in fast_access_memory],
-                "memory_node": new_node.to_dict(),
-                "response": llm_output.get("response"),
-                "is_ready": True
-            }
-
+        self.process_to_tag(evicted_node_json)
         return None
 
+    def process_to_tag(self, evicted_node_json: Optional[str]):
+        """
+        Xử lý đẩy node bị evict xuống STAG (Neo4J)
+        """
+        if evicted_node_json:
+            evicted_node = MessageNode.from_dict(evicted_node_json)
+        pass
+        
     def recall_short_term(self) -> Optional[Dict[str, Any]]:
         """
         Giai đoạn 2: STAG Layer - Truy vấn đồ thị ngắn hạn
