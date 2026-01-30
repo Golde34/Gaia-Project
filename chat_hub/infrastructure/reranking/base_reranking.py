@@ -4,7 +4,7 @@ import traceback
 
 import aiohttp
 
-from chat_hub.kernel.config import config
+from kernel.config import config
 from core.domain.enums.enum import ModelMode
 from infrastructure.reranking import reranking_config
 

@@ -1,6 +1,6 @@
 import json
 
-from core.usecase.graph_memory.base_memory_graph import BaseMemoryGraph, MessageNode
+from core.usecase.graph_memory.base_graph import BaseGraphMemory, MessageNode
 from infrastructure.redis.redis import rd
 
 class RedisMemoryOrchestrator:
@@ -8,18 +8,19 @@ class RedisMemoryOrchestrator:
         self.r = rd
         self.session_key = f"graph_memory:{session_id}"
         self.lock_key = f"lock:graph_memory:{session_id}"
+        self.lock = self.r.lock(self.lock_key, timeout=5)
 
-    def get_graph(self) -> BaseMemoryGraph:
+    def get_graph(self) -> BaseGraphMemory:
         """Lấy toàn bộ trạng thái Graph từ Redis"""
         raw_data = self.r.get(self.session_key)
         if raw_data:
-            # Re-hydrate object từ byte data
-            return json.loads(raw_data)
-        return BaseMemoryGraph() # Trả về graph mới nếu chưa có
+            data_dict = json.loads(raw_data)
+            return BaseGraphMemory.from_dict(data_dict)
+        return BaseGraphMemory()
 
-    def _save_graph(self, graph: BaseMemoryGraph):
-        serialized_data = json.dumps(graph)
-        self.r.set(self.session_key, serialized_data)
+    def save_graph(self, graph: BaseGraphMemory):
+        json_data = json.dumps(graph.to_dict())
+        self.r.set(self.session_key, json_data)
 
     def sync_process(self, new_node: MessageNode):
         """
@@ -39,6 +40,6 @@ class RedisMemoryOrchestrator:
             graph.add_node(new_node)
             
             # 4. Push
-            self._save_graph(graph)
+            self.save_graph(graph)
             
         return graph

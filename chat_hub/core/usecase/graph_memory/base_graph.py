@@ -10,11 +10,11 @@ from core.domain.enums.enum import SenderTypeEnum, WBOSEnum
 class MessageNode:
     node_id: str
     topic_id: str
+    tool: str
     content: str
     wbos: Dict[WBOSEnum, str]
     confidence: float
     role: SenderTypeEnum
-    tool: str
     timestamp: float = field(default_factory=time.time)
     previous_node_id: Optional[str] = None
     topic_link_id: Optional[str] = None
@@ -23,16 +23,29 @@ class MessageNode:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "node_id": self.node_id, "topic_id": self.topic_id, "content": self.content,
-            "wbos": self.wbos, "confidence": self.confidence, "role": self.role.value,
+            "wbos": {k.value if hasattr(k, 'value') else str(k): v for k, v in self.wbos.items()}, 
+            "confidence": self.confidence, "role": self.role.value,
             "tool": self.tool, "timestamp": self.timestamp, "previous_node_id": self.previous_node_id,
             "topic_link_id": self.topic_link_id, "optional_links": self.optional_links
         }
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'MessageNode':
+        # Convert string keys back to WBOSEnum
+        wbos_data = data.get("wbos", {})
+        wbos_dict = {}
+        for key, value in wbos_data.items():
+            try:
+                # Try to convert string key to WBOSEnum
+                enum_key = WBOSEnum(key)
+                wbos_dict[enum_key] = value
+            except (ValueError, KeyError):
+                # If conversion fails, keep as string
+                wbos_dict[key] = value
+        
         return cls(
             node_id=data.get("node_id"), topic_id=data.get("topic_id", "default"),
-            content=data.get("content"), wbos=data.get("wbos", {}),
+            content=data.get("content"), wbos=wbos_dict,
             confidence=float(data.get("confidence", 0)), role=SenderTypeEnum(data.get("role")),
             tool=data.get("tool", ""), timestamp=float(data.get("timestamp", time.time())),
             previous_node_id=data.get("previous_node_id"), topic_link_id=data.get("topic_link_id"),
@@ -40,7 +53,7 @@ class MessageNode:
         )
 
 
-class BaseMemoryGraph:
+class BaseGraphMemory:
     def __init__(self,
                  topic_limit: int = 10,
                  storage_callback: Optional[Callable] = None):
@@ -98,6 +111,25 @@ class BaseMemoryGraph:
                 self.storage_callback(oldest_node)
 
             del self.nodes[oldest_id]
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize graph to dict for Redis storage"""
+        return {
+            "nodes": {nid: node.to_dict() for nid, node in self.nodes.items()},
+            "topic_index": dict(self.topic_index),
+            "topic_observations": self.topic_observations,
+            "topic_limit": self.topic_limit
+        }
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'BaseGraphMemory':
+        """Deserialize graph from dict"""
+        graph = cls(topic_limit=data.get("topic_limit", 10))
+        graph.nodes = {nid: MessageNode.from_dict(node_data) 
+                      for nid, node_data in data.get("nodes", {}).items()}
+        graph.topic_index = defaultdict(list, data.get("topic_index", {}))
+        graph.topic_observations = data.get("topic_observations", {})
+        return graph
 
     def _get_last_node_id(self) -> Optional[str]:
         if not self.nodes:

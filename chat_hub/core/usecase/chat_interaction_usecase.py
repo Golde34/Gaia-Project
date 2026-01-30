@@ -1,6 +1,6 @@
 import functools
 
-from core.domain.enums.enum import DialogueEnum, SenderTypeEnum, ChatType
+from core.domain.enums.enum import DialogueEnum, MemoryModel, SenderTypeEnum, ChatType
 from core.domain.request.chat_hub_request import SendMessageRequest
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.service import sse_stream_service
@@ -9,6 +9,7 @@ from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
 from core.usecase.llm_router.chat_routers import MESSAGE_TYPE_CONVERTER
 from core.usecase.chat_usecase import ChatUsecase as chat_usecase
+from kernel.config import config
 from kernel.utils import build_header
 
 
@@ -137,6 +138,28 @@ class ChatInteractionUsecase:
         print("Chat message flow completed with data:", data)
 
         return data
+
+    @classmethod
+    async def handle_graph_chat(cls, message: str):
+        query_request: QueryRequest = QueryRequest(
+            user_id=0,  # System or anonymous user
+            query=message,
+            model=LLMModel(
+                model_name=config.LLM_DEFAULT_MODEL,
+                model_key=config.SYSTEM_API_KEY,
+                memory_model=MemoryModel.GRAPH.value,
+                organization=config.SYSTEM_ORGANIZATION
+                ),
+            dialogue_id="s1",
+            type=DialogueEnum.GAIA_INTRODUCTION_TYPE.value,
+        )
+
+        response = await chat_usecase.chat(
+            query=query_request,
+            chat_type=ChatType.ABILITIES.value,
+        )
+
+        return response
 
 
 chat_interaction_usecase = ChatInteractionUsecase()
