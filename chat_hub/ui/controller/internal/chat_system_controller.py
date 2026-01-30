@@ -41,3 +41,14 @@ async def send_message(dialogue_id: str = Query(..., alias="dialogueId"),
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)
         raise HTTPException(status_code=500, detail=str(e))
+
+@ChatSystemRouter.get("/graph")
+async def chat(message: str = Query(..., description="User message")):
+    try:
+        return await usecase.handle_graph_chat(message)
+    except HTTPException:
+        raise
+    except Exception as e:
+        stack_trace = traceback.format_exc()
+        print("ERROR:", stack_trace)
+        raise HTTPException(status_code=500, detail=str(e))

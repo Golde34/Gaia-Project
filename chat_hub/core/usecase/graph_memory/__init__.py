@@ -1,10 +1,10 @@
 import time
 
-from chat_hub.core.domain.enums.enum import SenderTypeEnum
+from core.domain.enums.enum import SenderTypeEnum
 from kernel.config import config
 from core.domain.request.query_request import QueryRequest
 from .redis_graph_storage import RedisMemoryOrchestrator
-from .base_memory_graph import BaseMemoryGraph, MessageNode
+from .base_graph import BaseGraphMemory, MessageNode
 from typing import Optional, Dict, Any
 
 
@@ -22,8 +22,18 @@ class GraphMemory:
         self.storage = RedisMemoryOrchestrator(session_id=query.dialogue_id)
 
     def quick_think(self) -> Optional[Dict[str, Any]]:
+        """
+        - Fetch recent messages from Redis RAM
+        - Parse command & extract WBOS structure, response contains:
+        + fast_access_memory: recent nodes from RAM
+        + memory_node: extracted memory node with WBOS structure
+        + response: generated response if enough context
+        + is_ready: boolean flag is true if no need to go to STAG
+        - Short-circuit if enough context
+        
+        """
         # 1. Khởi tạo Orchestrator & Pull Graph từ Redis (RAM)
-        graph: BaseMemoryGraph = self.storage.get_graph()
+        graph: BaseGraphMemory = self.storage.get_graph()
         
         # Lấy nhanh 10-20 nodes thô làm ngữ cảnh cho LLM
         fast_access_memory = graph.get_recent_nodes_raw(limit=config.RECENT_HISTORY_MAX_LENGTH)
@@ -51,14 +61,14 @@ class GraphMemory:
             }
 
         # 3. Xử lý Tool Fuzzy Matching (Levenshtein)
-        extracted_tool = llm_output.get("tool")
-        if not extracted_tool or extracted_tool == "null":
-            # Logic: Lấy danh sách tool từ Config hoặc VectorDB và so sánh
-            # available_tools = self.get_registered_tools() 
-            available_tools = ["create_task", "register_schedule", "search_information"]
-            final_tool = min(available_tools, key=lambda x: distance(extracted_tool or "", x))
-        else:
-            final_tool = extracted_tool
+        # extracted_tool = llm_output.get("tool")
+        # if not extracted_tool or extracted_tool == "null":
+        #     # Logic: Lấy danh sách tool từ Config hoặc VectorDB và so sánh
+        #     # available_tools = self.get_registered_tools() 
+        #     available_tools = ["create_task", "register_schedule", "search_information"]
+        #     final_tool = min(available_tools, key=lambda x: distance(extracted_tool or "", x))
+        # else:
+        #     final_tool = extracted_tool
 
         # 4. Short-circuit Logic
         if llm_output.get("is_ready"):
@@ -70,7 +80,7 @@ class GraphMemory:
                 wbos=llm_output.get("wbos"),
                 confidence=llm_output.get("confidence", 0.0),
                 role=SenderTypeEnum.USER,
-                tool=final_tool
+                # tool=final_tool
             )
 
             # 5. Thực thi Logic trong BaseMemoryGraph (Logic Object)
@@ -94,53 +104,6 @@ class GraphMemory:
 
         return None
 
-    
-    def quick_think(self) -> Optional[Dict[str, Any]]:
-        """
-        - Fetch recent messages from Redis RAM
-        - Parse command & extract WBOS structure, response contains:
-        + fast_access_memory: recent nodes from RAM
-        + memory_node: extracted memory node with WBOS structure
-        + response: generated response if enough context
-        + is_ready: boolean flag is true if no need to go to STAG
-        - Short-circuit if enough context
-        
-        """
-        fast_access_memory = self.storage.get_recent_nodes(limit=config.RECENT_HISTORY_MAX_LENGTH*2) 
-        temporary_graph: BaseMemoryGraph = BaseMemoryGraph()
-        # llm parse command and extract WBOS
-        raw_response = {
-            "fast_access_memory": [node.to_dict() for node in fast_access_memory],
-            "memory_node": MessageNode(
-                node_id="temp_node",
-                content="Create for me a new task based on the recent messages.",
-                wbos={
-                    "W": "Task Management",
-                    "B": "User needs to create a new task",
-                    "O": "Important to track tasks efficiently",
-                    "S": "No existing task found related to recent messages"
-                },
-                confidence=0.9,
-                role=SenderTypeEnum.USER,
-                tool="create_task"
-            ),
-            "response": "Sure, I have created a new task for you based on your recent messages.",
-            "is_ready": True
-        }
-        # TODO: Trong trường hợp người dùng mới sử dụng 
-        # và chưa load được các tool hay dùng, cần làm một function 
-        # lấy ra tool nếu truyền null thì tự gen tool, so sánh với các 
-        # tool hiện có trên vectorDB, chọn ra tool hợp lí nhất, dùng levenshtein
-        if raw_response["is_ready"]:
-            # Store message
-            # Tạo node từ memory_node, sliding graph window
-            # Store new graph node vào Redis RAM
-            memory_node_dict = raw_response["memory_node"].to_dict()
-            memory_node = MessageNode.from_dict(memory_node_dict)
-            self.storage.commit_node(memory_node)
-            return raw_response
-        return None
-        
     def recall_short_term(self) -> Optional[Dict[str, Any]]:
         """
         Giai đoạn 2: STAG Layer - Truy vấn đồ thị ngắn hạn

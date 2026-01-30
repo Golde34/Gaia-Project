@@ -40,7 +40,7 @@ class MessageNode:
         )
 
 
-class BaseMemoryGraph:
+class BaseGraphMemory:
     def __init__(self,
                  topic_limit: int = 10,
                  storage_callback: Optional[Callable] = None):
