@@ -45,6 +45,7 @@ class GraphMemory:
                 "fast_access_memory": [node.to_dict() for node in fast_access_memory],
                 "memory_node": MessageNode(
                     node_id="temp_node",
+                    topic_id="general",
                     content="Create for me a new task based on the recent messages.",
                     wbos={
                         "W": "Task Management",
@@ -73,15 +74,7 @@ class GraphMemory:
         # 4. Short-circuit Logic
         if llm_output.get("is_ready"):
             # Tạo MessageNode thực tế từ LLM Output
-            new_node = MessageNode(
-                node_id=f"node_{int(time.time()*1000)}",
-                topic_id=llm_output.get("topic_id", "general"),
-                content=self.query.query,
-                wbos=llm_output.get("wbos"),
-                confidence=llm_output.get("confidence", 0.0),
-                role=SenderTypeEnum.USER,
-                # tool=final_tool
-            )
+            new_node = llm_output.get("memory_node")
 
             # 5. Thực thi Logic trong BaseMemoryGraph (Logic Object)
             # Trong lock để đảm bảo atomicity cho việc Evict & Summarize
