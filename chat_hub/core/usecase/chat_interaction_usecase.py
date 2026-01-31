@@ -9,7 +9,7 @@ from core.service.integration.dialogue_service import dialogue_service
 from core.service.integration.message_service import message_service
 from core.usecase.llm_router.chat_routers import MESSAGE_TYPE_CONVERTER
 from core.usecase.chat_usecase import ChatUsecase as chat_usecase
-from kernel.config import config
+from kernel.config import llm_models
 from kernel.utils import build_header
 
 
@@ -144,12 +144,9 @@ class ChatInteractionUsecase:
         query_request: QueryRequest = QueryRequest(
             user_id=0,  # System or anonymous user
             query=message,
-            model=LLMModel(
-                model_name=config.LLM_DEFAULT_MODEL,
-                model_key=config.SYSTEM_API_KEY,
-                memory_model=MemoryModel.GRAPH.value,
-                organization=config.SYSTEM_ORGANIZATION
-                ),
+            model=llm_models.build_system_model(
+                memory_model=MemoryModel.GRAPH
+            ),
             dialogue_id="s1",
             type=DialogueEnum.GAIA_INTRODUCTION_TYPE.value,
         )

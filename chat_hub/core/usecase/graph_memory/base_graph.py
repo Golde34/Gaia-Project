@@ -9,7 +9,7 @@ from core.domain.enums.enum import SenderTypeEnum, WBOSEnum
 @dataclass
 class MessageNode:
     node_id: str
-    topic_id: str
+    topic: str
     tool: str
     content: str
     wbos: Dict[WBOSEnum, str]
@@ -22,7 +22,7 @@ class MessageNode:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "node_id": self.node_id, "topic_id": self.topic_id, "content": self.content,
+            "node_id": self.node_id, "topic": self.topic, "content": self.content,
             "wbos": {k.value if hasattr(k, 'value') else str(k): v for k, v in self.wbos.items()}, 
             "confidence": self.confidence, "role": self.role.value,
             "tool": self.tool, "timestamp": self.timestamp, "previous_node_id": self.previous_node_id,
@@ -44,7 +44,7 @@ class MessageNode:
                 wbos_dict[key] = value
         
         return cls(
-            node_id=data.get("node_id"), topic_id=data.get("topic_id", "default"),
+            node_id=data.get("node_id"), topic=data.get("topic", "default"),
             content=data.get("content"), wbos=wbos_dict,
             confidence=float(data.get("confidence", 0)), role=SenderTypeEnum(data.get("role")),
             tool=data.get("tool", ""), timestamp=float(data.get("timestamp", time.time())),
@@ -73,11 +73,11 @@ class BaseGraphMemory:
             node.previous_node_id = last_node_id
 
         # B. Cạnh chủ đề (Topic Stitching)
-        if node.topic_id:
-            if self.topic_index[node.topic_id]:
-                node.topic_link_id = self.topic_index[node.topic_id][-1]
+        if node.topic:
+            if self.topic_index[node.topic]:
+                node.topic_link_id = self.topic_index[node.topic][-1]
 
-            self.topic_index[node.topic_id].append(node.node_id)
+            self.topic_index[node.topic].append(node.node_id)
 
         # C. Lưu vào RAM
         self.nodes[node.node_id] = node
@@ -86,11 +86,11 @@ class BaseGraphMemory:
         self._update_topic_observation(node)
 
         # E. Kiểm tra ngưỡng tràn Topic (Evict & Consolidate)
-        if node.topic_id and len(self.topic_index[node.topic_id]) > self.topic_limit:
-            self.evict_oldest_topic_node(node.topic_id)
+        if node.topic and len(self.topic_index[node.topic]) > self.topic_limit:
+            self.evict_oldest_topic_node(node.topic)
 
     def _update_topic_observation(self, node: MessageNode):
-        t_id = node.topic_id
+        t_id = node.topic
         if t_id not in self.topic_observations:
             self.topic_observations[t_id] = {"summary": "", "key_entities": []}
 
@@ -100,12 +100,12 @@ class BaseGraphMemory:
 
         self.topic_observations[t_id]["last_update"] = time.time()
 
-    def evict_oldest_topic_node(self, topic_id: str):
-        oldest_id = self.topic_index[topic_id].pop(0)
+    def evict_oldest_topic_node(self, topic: str):
+        oldest_id = self.topic_index[topic].pop(0)
         oldest_node = self.nodes.get(oldest_id)
 
         if oldest_node:
-            print(f"--- [Evicting] Topic: {topic_id} | Node: {oldest_id} ---")
+            print(f"--- [Evicting] Topic: {topic} | Node: {oldest_id} ---")
 
             if self.storage_callback:
                 self.storage_callback(oldest_node)
@@ -136,8 +136,8 @@ class BaseGraphMemory:
             return None
         return list(self.nodes.keys())[-1]
 
-    def get_topic_context(self, topic_id: str) -> List[MessageNode]:
-        return [self.nodes[nid] for nid in self.topic_index[topic_id] if nid in self.nodes]
+    def get_topic_context(self, topic: str) -> List[MessageNode]:
+        return [self.nodes[nid] for nid in self.topic_index[topic] if nid in self.nodes]
 
     def get_recent_nodes_raw(self, limit: int = 10) -> List[MessageNode]:
         if not self.nodes:

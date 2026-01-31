@@ -140,11 +140,8 @@ class PersonalTaskService:
     
     async def _optimize_datetime(self, datetime_object: dict, query: QueryRequest) -> dict:
         try:
-            llm_model: LLMModel = LLMModel(
-                model_name=config.LLM_SUB_MODEL,
-                model_key=config.SYSTEM_API_KEY,
-                memory_model=enum.MemoryModel.DEFAULT.value,
-                organization=config.SYSTEM_ORGANIZATION
+            llm_model: LLMModel = llm_models.build_sub_model(
+                memory_model=enum.MemoryModel.DEFAULT
             )
             prompt = PARSING_DATE_PROMPT.format(input=datetime_object)
             function = await llm_models.get_model_generate_content(

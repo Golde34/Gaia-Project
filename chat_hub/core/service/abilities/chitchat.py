@@ -46,11 +46,8 @@ async def chitchat(query: QueryRequest) -> str:
     try:
         prompt = CHITCHAT_PROMPT.format(query=query.query)
         if not query.model:
-            model: LLMModel = LLMModel(
-                model_name=config.LLM_DEFAULT_MODEL,
-                model_key=config.SYSTEM_API_KEY,
-                memory_model=enum.MemoryModel.DEFAULT.value,
-                organization=config.SYSTEM_ORGANIZATION
+            model: LLMModel = llm_models.build_system_model(
+                memory_model=enum.MemoryModel.DEFAULT
             )
         else:
             model = query.model

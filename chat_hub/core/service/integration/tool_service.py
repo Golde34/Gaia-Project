@@ -57,11 +57,8 @@ class ToolService:
             }
         }
 
-        llm_model = LLMModel(
-            model_name=config.LLM_DEFAULT_MODEL,
-            model_key=config.SYSTEM_API_KEY,
-            memory_model=enum.MemoryModel.DEFAULT.value,
-            organization=config.SYSTEM_ORGANIZATION
+        llm_model: LLMModel = llm_models.build_sub_model(
+            memory_model=enum.MemoryModel.DEFAULT
         )
         function = await llm_models.get_model_generate_content(llm_model, 0, prompt)
         result = function(prompt=prompt, model=llm_model, dto=response_schema)

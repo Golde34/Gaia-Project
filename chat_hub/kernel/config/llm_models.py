@@ -1,29 +1,31 @@
+from core.domain.enums.enum import MemoryModel
 from core.domain.enums import kafka_enum
 from core.domain.request.query_request import LLMModel
-from infrastructure.llm import gemini_generate_content 
+from infrastructure.llm import gemini_generate_content
 from infrastructure.kafka.producer import send_kafka_message
-from kernel.config.config import session_id_var
+from kernel.config import config
 
 
 MODELS_INTERFACE = {
     "google": gemini_generate_content.generate_content,
-    "unsloth": "UNSLOTH" 
+    "unsloth": "UNSLOTH"
 }
+
 
 async def get_model_generate_content(model: LLMModel, user_id: str, prompt: str = None):
     """
     Get the generate content function for the specified model.
-    
+
     Args:
         model (LLMModel): The model object.
-        
+
     Returns:
         str: The generate content function for the model.
     """
     if model.organization not in MODELS_INTERFACE:
         raise ValueError(f"Model {model.model_name} is not supported.")
-    session_id = session_id_var.get() 
-    
+    session_id = config.session_id_var.get()
+
     # Push kafka message in background to avoid blocking and ensure proper cleanup
     import asyncio
     asyncio.create_task(
@@ -33,8 +35,9 @@ async def get_model_generate_content(model: LLMModel, user_id: str, prompt: str 
             prompt=prompt
         )
     )
-    
+
     return MODELS_INTERFACE.get(model.organization, "google")
+
 
 async def push_calling_llm_api_times_message(user_id: str, session_id: str, prompt: str = None):
     """Push calling LLM API times message to Kafka with proper error handling."""
@@ -43,9 +46,36 @@ async def push_calling_llm_api_times_message(user_id: str, session_id: str, prom
             "user_id": user_id,
             "session_id": session_id,
             "prompt": prompt if prompt else "",
-        } 
+        }
         await send_kafka_message(kafka_enum.KafkaTopic.CALLING_LLM_API_TIMES.value, payload)
     except Exception as e:
         # Log error but don't raise to avoid blocking main flow
         print(f"Error pushing calling LLM API times message: {e}")
 
+
+def build_system_model(memory_model: MemoryModel) -> LLMModel:
+    """Build the system LLM model configuration."""
+    return LLMModel(
+        model_name=config.LLM_DEFAULT_MODEL,
+        model_key=config.SYSTEM_API_KEY,
+        memory_model=memory_model.value,
+        organization=config.SYSTEM_ORGANIZATION 
+    )
+
+def build_sub_model(memory_model: MemoryModel) -> LLMModel:
+    """Build the sub LLM model configuration."""
+    return LLMModel(
+        model_name=config.LLM_SUB_MODEL,
+        model_key=config.SYSTEM_API_KEY,
+        memory_model=memory_model.value,
+        organization=config.SYSTEM_ORGANIZATION
+    )
+
+def build_slm_model(memory_model: MemoryModel) -> LLMModel:
+    """Build the SLM LLM model configuration."""
+    return LLMModel(
+        model_name=config.SLM_MODEL,
+        model_key=config.SYSTEM_API_KEY,
+        memory_model=memory_model.value,
+        organization=config.SYSTEM_ORGANIZATION
+    )
