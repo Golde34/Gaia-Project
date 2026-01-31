@@ -101,10 +101,10 @@ class RecommendationStatusEnum(Enum):
 
 
 class WBOSEnum(Enum):
-    W = "World"
-    B = "Experience"
-    O = "Opinion"
-    S = "Observation"
+    WORLD = "W"
+    EXPERIENCE = "E"
+    OPINION = "O"
+    OBSERVATION = "S"
 
 
 class GraphModelEnum(Enum):
