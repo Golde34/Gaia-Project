@@ -75,6 +75,6 @@ class ChatUsecase:
         It retrieves the chat history, generates a new query based on the context,
         and processes the request using graph-based methods
         """
-        response = GraphMemory(query=query).execute_reasoning()
+        response = await GraphMemory(query=query).execute_reasoning()
         print(f"Graph Memory Response: {response}")
         return response
