@@ -1,9 +1,11 @@
 from typing import Any, Optional
 
 from core.domain.enums.enum import ChatType, MemoryModel, MessageType
+from core.domain.enums.graph_memory_enum import GraphRoutingDecision
 from core.domain.request.query_request import QueryRequest
 from core.service import memory_service
 from core.usecase.graph_memory import GraphMemory
+from core.usecase.graph_memory.switching_engine import SwitchingEngine
 from core.usecase.llm_router import chat_routers, tool_selection
 
 
@@ -75,6 +77,9 @@ class ChatUsecase:
         It retrieves the chat history, generates a new query based on the context,
         and processes the request using graph-based methods
         """
-        response = await GraphMemory(query=query).execute_reasoning()
-        print(f"Graph Memory Response: {response}")
-        return response
+        engine, extracted_info = await SwitchingEngine(query=query).switch_engine()
+        print(f"Graph Memory Extracted Info: {extracted_info}, engine: {engine}")
+        if engine == GraphRoutingDecision.SLM.value:
+            return extracted_info.response
+        else:
+            return await GraphMemory(query=query).execute_reasoning(engine)

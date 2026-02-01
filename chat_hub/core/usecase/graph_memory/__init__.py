@@ -1,14 +1,8 @@
-import asyncio
-import json
 from typing import Dict, Any, Optional
 
-from .base_graph import MessageNode
-from core.domain.enums.enum import GraphModelEnum, MemoryModel, SenderTypeEnum
-from core.domain.request.query_request import LLMModel, QueryRequest
-from core.domain.response.graph_llm_response import SlmExtractionResponse
+from core.domain.request.query_request import QueryRequest
+from core.usecase.graph_memory.short_term_activation_graph import ShortTermActivationGraph
 from core.usecase.graph_memory.working_memory_graph import WorkingMemoryGraph
-from core.prompts import graph_prompts
-from kernel.config import llm_models
 
 
 class GraphMemory:
@@ -21,90 +15,21 @@ class GraphMemory:
 
     def __init__(self, query: QueryRequest):
         self.query = query
-        self.working_memory_graph = WorkingMemoryGraph(self.query)
+        self.wmg = WorkingMemoryGraph(self.query)
+        self.stag = ShortTermActivationGraph(self.query)
 
-    async def execute_reasoning(self) -> str:
-        raw_nodes, metadata, last_topic_nodes = self.working_memory_graph.fetch_recent_nodes()
-
-        extracting_output: SlmExtractionResponse = await self._quick_think(raw_nodes, metadata)
-
-        # Fuzzy Matching Tool Logic (Levenshtein) --- IGNORE ---
-        # Build new nod
-        evicted_node_json = self.working_memory_graph.build_graph(
-            new_node=extracting_output,
-            last_topic_nodes=last_topic_nodes
-        )
-
-        return extracting_output.response
-
-        # if extracting_output.is_ready:
-        #     asyncio.create_task(self.process_to_stag(evicted_node_json))
-        #     return extracting_output.response
-
-        # self.process_to_stag(evicted_node_json)
-        # return None
-
-    async def _quick_think(self, raw_nodes: dict, metadata: dict) -> Dict[str, Any]:
-        print("Raw Nodes from RAM:", raw_nodes)
-        print("Metadata from RAM:", metadata)
-        history_str = ""
-        for _, node in raw_nodes.items():
-            user_query = node.get('user_query', '')
-            bot_response = node.get('content', node.get('response', ''))
-            topic = node.get('topic', 'general')
-
-            history_str += f"[User]: {user_query} (Topic: {topic})\n"
-            history_str += f"[Bot]: {bot_response} (Topic: {topic})\n"
-
-        observation_str = ""
-        for key, value in metadata.items():
-            if ":S" in key or ":O" in key or ":W" in key:
-                observation_str += f"- {key}: {value}\n"
-
-        print("---- Quick Think Prompt ----")
-        print("History Context:\n", history_str)
-        print("Observations:\n", observation_str) 
-
-        extract_info_prompt = graph_prompts.WORKING_MEMORY_EXTRACTOR_PROMPT.format(
-            query=self.query.query,
-            history=history_str,
-            observations=observation_str
-        )
-        slm_output = await self._call_llm(
-            prompt=extract_info_prompt,
-            model_type=GraphModelEnum.SLM,
-            dto=SlmExtractionResponse
-        )
-        print("SLM Output:", slm_output)
-        response = SlmExtractionResponse.model_validate(
-            json.loads(slm_output))
-        response.user_query = self.query.query
-        return response
-
-    async def _call_llm(self, prompt: str, model_type: GraphModelEnum, dto=None) -> str:
-        if model_type == GraphModelEnum.SLM:
-            model: LLMModel = llm_models.build_slm_model(
-                memory_model=MemoryModel.GRAPH
-            )
-        elif model_type == GraphModelEnum.LLM:
-            model: LLMModel = llm_models.build_sub_model(
-                memory_model=MemoryModel.GRAPH
-            )
-
-        function = await llm_models.get_model_generate_content(
-            model=model,
-            user_id=self.query.user_id,
-            prompt=prompt
-        )
-        return function(prompt=prompt, model=model, dto=dto)
-
-    def process_to_stag(self, evicted_node_json: Optional[str]):
+    def execute_reasoning(self, engine: str):
         """
-        Xử lý đẩy node bị evict xuống STAG (Neo4J)
+        Giai đoạn 1: RAM Layer - Suy nghĩ nhanh trong Working Memory Graph
+        - Lấy các node gần đây từ WMG
+        - Tóm tắt & trích xuất thông tin liên quan từ các node này
+        - Kiểm tra quyết định định tuyến (SLM, STAG, LLM)
+
+        Returns:
+            Dict[str, Any]: Kết quả suy nghĩ nhanh nếu có, ngược lại None
         """
-        if evicted_node_json:
-            evicted_node = MessageNode.from_dict(evicted_node_json)
-        pass
+        raw_nodes, metadata, _ = self.wmg.fetch_recent_nodes()
+        return self.wmg.quick_answer(raw_nodes, metadata) # Later replace by stag
 
     def recall_short_term(self) -> Optional[Dict[str, Any]]:
         """
@@ -166,19 +91,3 @@ class GraphMemory:
             "reasoning": "No relevant context found in any memory layer",
             "query": self.query.query
         }
-
-
-# if extracting_output.routing_decision == "slm" and extracting_output.confidence_score > 0.8:
-#             return extracting_output
-
-#         if extracting_output.routing_decision == "llm":
-#             # Model nhỏ đã trích xuất WBOS xong, chỉ cần Model lớn "viết văn" hoặc "suy luận"
-#             # Truyền WBOS + 10 Nodes RAM cho Model lớn
-#             thinking_prompt = f"Using WBOS {extracting_output.wbos} and recent nodes {raw_nodes}, generate response"
-#             return await self._call_llm(
-#                 prompt=thinking_prompt,
-#                 model_type=GraphModelEnum.LLM
-#             )
-
-#         if extracting_output.routing_decision == "stag":
-#             return None  # Chuyển sang layer STAG

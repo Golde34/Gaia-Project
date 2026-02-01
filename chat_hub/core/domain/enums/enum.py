@@ -98,15 +98,3 @@ class RecommendationStatusEnum(Enum):
     RECOMMENDED = "recommended"
     SUGGEST = "suggest"
     OUTDATED = "outdated"
-
-
-class WBOSEnum(Enum):
-    WORLD = "W"
-    EXPERIENCE = "E"
-    OPINION = "O"
-    OBSERVATION = "S"
-
-
-class GraphModelEnum(Enum):
-    SLM = "small_language_model"
-    LLM = "large_language_model"

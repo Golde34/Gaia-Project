@@ -13,6 +13,5 @@ class SlmExtractionResponse(BaseModel):
     user_query: str
     response: str | None
     confidence_score: float
-    is_ready: bool
     tool: str
     routing_decision: str
