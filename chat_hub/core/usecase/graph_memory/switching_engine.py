@@ -24,5 +24,4 @@ class SwitchingEngine:
                 last_topic_nodes=last_topic_nodes 
             )
             asyncio.create_task(self.stag.add_stag_node(extracted_query_info))
-            return extracted_query_info.routing_decision, extracted_query_info.response
-        return extracted_query_info.routing_decision, None
+        return extracted_query_info.routing_decision, extracted_query_info 
