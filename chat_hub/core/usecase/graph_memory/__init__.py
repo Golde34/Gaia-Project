@@ -2,6 +2,7 @@ from typing import Dict, Any, Optional
 
 from core.domain.request.query_request import QueryRequest
 from core.usecase.graph_memory.short_term_activation_graph import ShortTermActivationGraph
+from core.usecase.graph_memory.working_memory_graph import WorkingMemoryGraph
 
 
 class GraphMemory:
@@ -14,9 +15,10 @@ class GraphMemory:
 
     def __init__(self, query: QueryRequest):
         self.query = query
+        self.wmg = WorkingMemoryGraph(self.query)
         self.stag = ShortTermActivationGraph(self.query)
 
-    def execute_reasoning(self) -> Optional[Dict[str, Any]]:
+    def execute_reasoning(self, engine: str):
         """
         Giai đoạn 1: RAM Layer - Suy nghĩ nhanh trong Working Memory Graph
         - Lấy các node gần đây từ WMG
@@ -26,7 +28,8 @@ class GraphMemory:
         Returns:
             Dict[str, Any]: Kết quả suy nghĩ nhanh nếu có, ngược lại None
         """
-        return "Execute rasoning by using LLM on Working Memory Graph"
+        raw_nodes, metadata, _ = self.wmg.fetch_recent_nodes()
+        return self.wmg.quick_answer(raw_nodes, metadata) # Later replace by stag
 
     def recall_short_term(self) -> Optional[Dict[str, Any]]:
         """

@@ -2,6 +2,7 @@ import json
 from typing import Any, Dict
 
 from core.domain.enums.enum import MemoryModel
+from core.domain.enums.graph_memory_enum import GraphRoutingDecision
 from core.prompts import graph_prompts
 from core.domain.response.graph_llm_response import SlmExtractionResponse
 from core.domain.request.query_request import LLMModel, QueryRequest
@@ -18,7 +19,7 @@ class WorkingMemoryGraph:
 
         self.nodes_key = f"graph:{self.session_id}:nodes"
         self.metadata_key = f"graph:{self.session_id}:metadata"
-        self.topics_prefix = f"graph:{self.session_id}:topics" 
+        self.topics_prefix = f"graph:{self.session_id}:topics"
 
     def fetch_recent_nodes(self) -> tuple[dict, dict, dict]:
         raw_meta = self.r.hgetall(self.metadata_key)
@@ -52,19 +53,9 @@ class WorkingMemoryGraph:
     async def quick_think(self, raw_nodes: dict, metadata: dict) -> Dict[str, Any]:
         print("Raw Nodes from RAM:", raw_nodes)
         print("Metadata from RAM:", metadata)
-        history_str = ""
-        for _, node in raw_nodes.items():
-            user_query = node.get('user_query', '')
-            bot_response = node.get('content', node.get('response', ''))
-            topic = node.get('topic', 'general')
-
-            history_str += f"[User]: {user_query} (Topic: {topic})\n"
-            history_str += f"[Bot]: {bot_response} (Topic: {topic})\n"
-
-        observation_str = ""
-        for key, value in metadata.items():
-            if ":S" in key or ":O" in key or ":W" in key:
-                observation_str += f"- {key}: {value}\n"
+        history_str, observation_str = self._extract_recent_nodes(
+            raw_nodes, metadata
+        )
 
         print("---- Quick Think Prompt ----")
         print("History Context:\n", history_str)
@@ -91,7 +82,26 @@ class WorkingMemoryGraph:
         response = SlmExtractionResponse.model_validate(
             json.loads(slm_output))
         response.user_query = self.query.query
+
+        if response.routing_decision == GraphRoutingDecision.LLM.value:
+            response.response = await self.quick_answer(raw_nodes, metadata)
         return response
+
+    def _extract_recent_nodes(self, raw_nodes: dict, metadata: dict) -> str:
+        history_str = ""
+        for _, node in raw_nodes.items():
+            user_query = node.get('user_query', '')
+            bot_response = node.get('content', node.get('response', ''))
+            topic = node.get('topic', 'general')
+
+            history_str += f"[User]: {user_query} (Topic: {topic})\n"
+            history_str += f"[Bot]: {bot_response} (Topic: {topic})\n"
+
+        observation_str = ""
+        for key, value in metadata.items():
+            if ":S" in key or ":O" in key or ":W" in key:
+                observation_str += f"- {key}: {value}\n"
+        return history_str, observation_str
 
     def build_graph(self, new_node: SlmExtractionResponse, last_topic_nodes: dict) -> dict:
         max_id = 0
@@ -118,3 +128,31 @@ class WorkingMemoryGraph:
         if evicted_node_json:
             return json.loads(evicted_node_json)
         return None
+
+    async def quick_answer(self, raw_nodes: dict, metadata: dict) -> str:
+        print("Raw Nodes from RAM:", raw_nodes)
+        print("Metadata from RAM:", metadata)
+        history_str, observation_str = self._extract_recent_nodes(
+            raw_nodes, metadata
+        )
+
+        print("---- Quick Think Prompt ----")
+        print("History Context:\n", history_str)
+        print("Observations:\n", observation_str)
+
+        quick_answer_prompt = graph_prompts.QUICK_ANSWER_PROMPT.format(
+            query=self.query.query,
+            recent_nodes=history_str,
+            metadata=observation_str
+        )
+
+        model: LLMModel = llm_models.build_system_model(
+            memory_model=MemoryModel.GRAPH
+        )
+
+        function = await llm_models.get_model_generate_content(
+            model=model,
+            user_id=self.query.user_id,
+            prompt=quick_answer_prompt
+        )
+        return function(prompt=quick_answer_prompt, model=model)

@@ -82,4 +82,4 @@ class ChatUsecase:
         if engine == GraphRoutingDecision.SLM.value:
             return extracted_info.response
         else:
-            return await GraphMemory.execute_reasoning(query=query)
+            return await GraphMemory(query=query).execute_reasoning(engine)

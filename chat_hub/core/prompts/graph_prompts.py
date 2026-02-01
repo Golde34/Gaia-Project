@@ -42,3 +42,20 @@ OUTPUT JSON FORMAT:
     "routing_decision": "slm/llm/stag"
 }}
 """
+
+QUICK_ANSWER_PROMPT = """
+You are a Graph Memory Assistant. Your task is to quickly analyze the user query based on recent nodes and metadata.
+
+### CONTEXT:
+Recent Nodes:
+{recent_nodes}
+
+Metadata Observations:
+{metadata}
+
+USER QUERY: {query}
+Provide a brief analysis to help decide the next steps.
+
+The response is only String.
+"""
+ 
