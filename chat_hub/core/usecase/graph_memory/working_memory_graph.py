@@ -1,20 +1,24 @@
 import json
+from typing import Any, Dict
 
+from core.domain.enums.enum import MemoryModel
+from core.prompts import graph_prompts
 from core.domain.response.graph_llm_response import SlmExtractionResponse
-from core.domain.request.query_request import QueryRequest
+from core.domain.request.query_request import LLMModel, QueryRequest
 from infrastructure.redis.redis import rd
 from infrastructure.redis.lua_script import lua_scripts
+from kernel.config import llm_models
 
 
 class WorkingMemoryGraph:
     def __init__(self, query: QueryRequest):
         self.r = rd
-        self.query = query.query
+        self.query = query
         self.session_id = query.dialogue_id
 
         self.nodes_key = f"graph:{self.session_id}:nodes"
         self.metadata_key = f"graph:{self.session_id}:metadata"
-        self.topics_prefix = f"graph:{self.session_id}:topics"
+        self.topics_prefix = f"graph:{self.session_id}:topics" 
 
     def fetch_recent_nodes(self) -> tuple[dict, dict, dict]:
         raw_meta = self.r.hgetall(self.metadata_key)
@@ -44,6 +48,50 @@ class WorkingMemoryGraph:
                 processed_meta[k] = v
 
         return processed_nodes, processed_meta, last_topic_nodes
+
+    async def quick_think(self, raw_nodes: dict, metadata: dict) -> Dict[str, Any]:
+        print("Raw Nodes from RAM:", raw_nodes)
+        print("Metadata from RAM:", metadata)
+        history_str = ""
+        for _, node in raw_nodes.items():
+            user_query = node.get('user_query', '')
+            bot_response = node.get('content', node.get('response', ''))
+            topic = node.get('topic', 'general')
+
+            history_str += f"[User]: {user_query} (Topic: {topic})\n"
+            history_str += f"[Bot]: {bot_response} (Topic: {topic})\n"
+
+        observation_str = ""
+        for key, value in metadata.items():
+            if ":S" in key or ":O" in key or ":W" in key:
+                observation_str += f"- {key}: {value}\n"
+
+        print("---- Quick Think Prompt ----")
+        print("History Context:\n", history_str)
+        print("Observations:\n", observation_str)
+
+        extract_info_prompt = graph_prompts.WORKING_MEMORY_EXTRACTOR_PROMPT.format(
+            query=self.query.query,
+            history=history_str,
+            observations=observation_str
+        )
+
+        model: LLMModel = llm_models.build_slm_model(
+            memory_model=MemoryModel.GRAPH
+        )
+
+        function = await llm_models.get_model_generate_content(
+            model=model,
+            user_id=self.query.user_id,
+            prompt=extract_info_prompt
+        )
+        slm_output = function(prompt=extract_info_prompt,
+                              model=model, dto=SlmExtractionResponse)
+        print("SLM Output:", slm_output)
+        response = SlmExtractionResponse.model_validate(
+            json.loads(slm_output))
+        response.user_query = self.query.query
+        return response
 
     def build_graph(self, new_node: SlmExtractionResponse, last_topic_nodes: dict) -> dict:
         max_id = 0
