@@ -3,7 +3,7 @@ from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 import traceback
 import pandas as pd
 
-from core.usecase.rag import upload_context_to_vectordb, query_context 
+from core.usecase.rag_usecase import upload_context_to_vectordb, query_context 
 
 
 RagRouter = APIRouter(
