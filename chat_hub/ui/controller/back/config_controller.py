@@ -2,7 +2,7 @@
 import traceback
 from fastapi import APIRouter, HTTPException
 
-from core.usecase import config
+from core.usecase import config_usecase
 
 
 ConfigRouter = APIRouter(
@@ -13,7 +13,7 @@ ConfigRouter = APIRouter(
 @ConfigRouter.post("/cache/clear-user-llm-config/{user_id}")
 async def user_llm_config(user_id: str):
     try:
-        config.clear_user_llm_config(user_id)
+        config_usecase.clear_user_llm_config(user_id)
         return {"status": "success", "message": f"Cleared LLM config cache for user {user_id}"} 
     except Exception as e:
         stack_trace = traceback.format_exc()
@@ -23,7 +23,7 @@ async def user_llm_config(user_id: str):
 @ConfigRouter.post("/vectordb/collections")
 async def create_vectordb_collections():
     try:
-        config.create_vectordb_collections()
+        config_usecase.create_vectordb_collections()
         return {"status": "success", "message": "VectorDB collections created successfully"}
     except Exception as e:
         stack_trace = traceback.format_exc()
