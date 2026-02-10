@@ -4,8 +4,8 @@ from core.domain.enums.enum import ChatType, MemoryModel, MessageType
 from core.domain.enums.graph_memory_enum import GraphRoutingDecision
 from core.domain.request.query_request import QueryRequest
 from core.service import memory_service
-from core.usecase.graph_memory import GraphMemory
-from core.usecase.graph_memory.switching_engine import SwitchingEngine
+from core.graph_memory import GraphMemory
+from core.graph_memory.switching_engine import SwitchingEngine
 from core.usecase.llm_router import chat_routers, tool_selection
 
 
