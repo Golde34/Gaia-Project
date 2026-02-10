@@ -88,12 +88,43 @@ Instead of hard-deleting, the system performs a **Tiered Storage** move:
 2.  **Cold (PostgreSQL):** Pruned nodes are archived. They lose their "Active" status but remain searchable via **Milvus** for long-term Hindsight.
 3.  **Re-activation:** If a cold node is hit via **Phase 2 (Vector Matching)** with a high similarity score, it is "re-hydrated" back into Redis with a fresh energy boost.
 
-### 4. Edge Integrity (Relational Repair)
-When a node is pruned, the system must bridge the gap in the **Temporal Link**:
-*   If node $N$ is removed, its `Prev` and `Next` neighbors are re-linked: 
-    *   $N_{prev}.next = N_{next}$
-    *   $N_{next}.prev = N_{prev}$
-*   This ensures the "Physical Edges" in **Phase 1** never point to a null reference.
+### 4. Edge Integrity & Deep Repair
+When a node is pruned from the Hot Layer (Redis), the system must bridge the gap to prevent "Graph Fragmentation":
+
+*   **Temporal Repair:** Standard doubly-linked list repair:
+    *   $N_{prev}.next \leftarrow N.next$
+    *   $N_{next}.prev \leftarrow N.prev$
+*   **Topic Chain Repair (Crucial):** If the pruned node $N$ is the `lt` (Last Topic) reference for a subsequent node $M$, we must maintain the lineage:
+    *   $M.lt \leftarrow N.lt$
+    *   This ensures that even if intermediate "chatter" nodes are pruned, the **Topic Backbone** remains intact for Phase 1 lookups.
+
+---
+
+## Phase 5: Re-hydration (LTM to STM)
+
+To prevent RAM explosion while maintaining "Long-term Memory" (LTM) accessibility, we implement a **Top-K Competitive Re-hydration** mechanism.
+
+### 1. Resonance Trigger
+A node is pulled from **PostgreSQL** back into **Redis** only if:
+*   It is identified via **Phase 2 (Milvus)** with a high similarity score: $\text{sim}(\vec{V}_{new}, \vec{V}_{i}) > 0.9$.
+*   It belongs to the current **Topic ID** or a globally significant context.
+
+### 2. Competitive Admission (LRU-E)
+Instead of simply adding to Redis, the system uses an **LRU-Energy (Least Recently Used based on Energy)** replacement policy:
+*   **Capacity Guard:** If Redis reaches its node limit (e.g., 1 million nodes), the incoming re-hydrated node must "compete" for a slot.
+*   **Swap Logic:** The node with the **lowest Energy** and **oldest timestamp** is evicted to PostgreSQL to make room for the high-resonance re-hydrated node.
+*   **Initial Energy:** Re-hydrated nodes are initialized with $E = 0.8$ to ensure they survive the immediate next decay cycle.
+
+---
+
+## 6. Storage Strategy (Hybrid Stack)
+
+| Layer | Technology | Role | Persistence |
+| :--- | :--- | :--- | :--- |
+| **STM (Short-Term)** | **Redis** | Fast Activation (Phase 1, 3) | Volatile/Hot |
+| **Subconscious** | **Milvus** | Semantic Resonance (Phase 2) | Permanent (Vector) |
+| **LTM (Long-Term)** | **PostgreSQL** | Cold Archive & Edge Backups | Permanent (Relational) |
+| **Deep Graph** | **Neo4j** | Complex Pathfinding & Global Topology | Strategic |
 
 Mermaid flow
 ```graph TD
