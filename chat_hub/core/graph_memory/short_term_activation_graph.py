@@ -1,32 +1,31 @@
 import uuid
 
 import numpy as np
+from torch import norm
 
+from core.domain.response.graph_llm_response import SlmExtractionResponse
 from core.graph_memory.dto.signal import Signal
 from core.domain.request.query_request import QueryRequest
+from infrastructure.embedding.base_embedding import embedding_model
 
 
 class ShortTermActivationGraph:
     def __init__(self, query: QueryRequest):
         self.query = query
 
-    # ---------------------------------------------------------
-    # STAG ENGINE - MAIN LOGIC
-    # ---------------------------------------------------------
-    def on_new_message(self, user_id, content, metadata):
+    def on_new_message(self, query: QueryRequest, metadata: SlmExtractionResponse):
         """
         Main Entry Point: Phối hợp giữa Ghi nhớ và Tư duy.
         """
-        # Bước 0: Trích xuất đặc tính (Encoding)
-        signal = self.preprocess_signal(content) 
+        signal = self.preprocess_signal(query.query, metadata) 
         
         # PHẦN 1: ACTIVATE CONTEXT (Thinking / Recall)
         # Tìm kiếm các node liên quan trong Short-term Memory và kích hoạt chúng
-        active_subgraph = self.activate_context(user_id, signal, metadata)
+        active_subgraph = self.activate_context(query.user_id, signal, metadata)
         
         # PHẦN 2: ENCODE MEMORY (Add New Message)
         # Lưu node mới và thiết lập các "Hard-wired Edges" ban đầu
-        new_node = self.commit_to_memory(user_id, signal, metadata, active_subgraph)
+        new_node = self.commit_to_memory(query.user_id, signal, metadata, active_subgraph)
         
         return {
             "status": "integrated",
@@ -34,21 +33,22 @@ class ShortTermActivationGraph:
             "new_node_id": new_node.id
         }
     
-    def preprocess_signal(self, content):
+    def preprocess_signal(self, content, extracted_info: SlmExtractionResponse):
         """
         Biến đổi văn bản thô thành cấu trúc dữ liệu giàu đặc tính (Signal).
         """
         # 1. Tạo Vector Embedding (Phục vụ Phase 2: Neural Resonance)
         # Chúng ta normalize vector để dùng Cosine Similarity nhanh hơn
-        raw_vector = model.encode(content)
-        normalized_vector = raw_vector / np.linalg.norm(raw_vector)
-        
+        raw_vector_list = embedding_model.get_embeddings(texts=[content])
+        raw_vector = np.array(raw_vector_list[0]) 
+        norm = np.linalg.norm(raw_vector)
+        normalized_vector = raw_vector / norm if norm > 0 else raw_vector
+
         # 2. Định danh Vector (ID để liên kết giữa Redis, Milvus và Postgres)
         vector_id = str(uuid.uuid4())
         
         # 3. Phân tích WBOS Bitmask (Phục vụ Phase 3: Logical Routing)
-        # Đây là logic phân loại nội dung tin nhắn
-        bitmask = self._extract_wbos_bitmask(content)
+        bitmask = self._extract_wbos_bitmask(extracted_info)
         
         return Signal(
             content=content,
@@ -57,31 +57,18 @@ class ShortTermActivationGraph:
             vector_id=vector_id
         )
 
-    def _extract_wbos_bitmask(self, content):
+    def _extract_wbos_bitmask(self, extracted_info: SlmExtractionResponse):
         """
         Phân tích nội dung để gán nhãn WBOS (W:8, B:4, O:2, S:1).
-        Có thể dùng Keyword-based, Regex hoặc gọi một Small-LLM.
         """
         mask = 0
-        c = content.lower()
+        wbos = extracted_info.wbos
+        if wbos.W: mask |= 8
+        if wbos.B: mask |= 4
+        if wbos.O: mask |= 2
+        if wbos.S: mask |= 1
         
-        # S (Observation/Fact): Chứa các từ khẳng định, dữ liệu, thực tại
-        if any(word in c for word in ["là", "thấy", "có", "biết", "tại"]):
-            mask |= 1
-            
-        # O (Opinion/Feeling): Chứa từ chỉ cảm xúc, đánh giá chủ quan
-        if any(word in c for word in ["thích", "ghét", "tốt", "xấu", "cảm thấy", "nghĩ"]):
-            mask |= 2
-            
-        # B (Belief/Conviction): Chứa các từ khẳng định niềm tin, giá trị cốt lõi
-        if any(word in c for word in ["luôn luôn", "vĩnh viễn", "tin rằng", "không bao giờ"]):
-            mask |= 4
-            
-        # W (Will/Intent): Chứa các động từ chỉ ý chí, mong muốn, dự định
-        if any(word in c for word in ["muốn", "sẽ", "định", "cần", "phải"]):
-            mask |= 8
-            
-        # Default: Nếu không bắt được gì, coi như là một Observation (S)
+        # Mặc định là S (1) nếu SLM không trích xuất được gì
         return mask if mask > 0 else 1
 
 

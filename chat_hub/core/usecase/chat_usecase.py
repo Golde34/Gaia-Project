@@ -77,9 +77,12 @@ class ChatUsecase:
         It retrieves the chat history, generates a new query based on the context,
         and processes the request using graph-based methods
         """
-        engine, extracted_info = await SwitchingEngine(query=query).switch_engine()
+        engine, extracted_info = await SwitchingEngine(query=query).choose_engine()
         print(f"Graph Memory Extracted Info: {extracted_info}, engine: {engine}")
         if engine == GraphRoutingDecision.SLM.value:
             return extracted_info.response
         else:
-            return await GraphMemory(query=query).execute_reasoning(engine)
+            return await SwitchingEngine(query=query).switch_engine(
+                engine=engine,
+                extracted_info=extracted_info
+            )
