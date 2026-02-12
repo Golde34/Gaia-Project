@@ -76,8 +76,11 @@ class WorkingMemoryGraph:
             user_id=self.query.user_id,
             prompt=extract_info_prompt
         )
-        slm_output = function(prompt=extract_info_prompt,
-                              model=model, dto=SlmExtractionResponse)
+        slm_output = function(
+            prompt=extract_info_prompt,
+            model=model, 
+            dto=SlmExtractionResponse
+        )
         print("SLM Output:", slm_output)
         response = SlmExtractionResponse.model_validate(
             json.loads(slm_output))

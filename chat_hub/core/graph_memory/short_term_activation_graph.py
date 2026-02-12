@@ -34,20 +34,13 @@ class ShortTermActivationGraph:
         }
     
     def preprocess_signal(self, content, extracted_info: SlmExtractionResponse):
-        """
-        Biến đổi văn bản thô thành cấu trúc dữ liệu giàu đặc tính (Signal).
-        """
-        # 1. Tạo Vector Embedding (Phục vụ Phase 2: Neural Resonance)
-        # Chúng ta normalize vector để dùng Cosine Similarity nhanh hơn
         raw_vector_list = embedding_model.get_embeddings(texts=[content])
         raw_vector = np.array(raw_vector_list[0]) 
         norm = np.linalg.norm(raw_vector)
         normalized_vector = raw_vector / norm if norm > 0 else raw_vector
 
-        # 2. Định danh Vector (ID để liên kết giữa Redis, Milvus và Postgres)
         vector_id = str(uuid.uuid4())
         
-        # 3. Phân tích WBOS Bitmask (Phục vụ Phase 3: Logical Routing)
         bitmask = self._extract_wbos_bitmask(extracted_info)
         
         return Signal(
@@ -59,7 +52,7 @@ class ShortTermActivationGraph:
 
     def _extract_wbos_bitmask(self, extracted_info: SlmExtractionResponse):
         """
-        Phân tích nội dung để gán nhãn WBOS (W:8, B:4, O:2, S:1).
+        Analyzing WBOS into bitmap (W:8, B:4, O:2, S:1).
         """
         mask = 0
         wbos = extracted_info.wbos
@@ -68,7 +61,7 @@ class ShortTermActivationGraph:
         if wbos.O: mask |= 2
         if wbos.S: mask |= 1
         
-        # Mặc định là S (1) nếu SLM không trích xuất được gì
+        # Default to S (1) if SLM extracts nothing
         return mask if mask > 0 else 1
 
 
@@ -80,7 +73,7 @@ class ShortTermActivationGraph:
         """
         Cơ chế 'Recall': Đánh thức các ký ức liên quan để chuẩn bị cho việc xử lý.
         """
-        topic_id = metadata['topic_id']
+        topic_id = metadata['topic']
         
         # 1. Flash Activation: Kích hoạt dựa trên cấu trúc (Temporal/Topic)
         # Trả về các node lân cận vật lý từ Redis
