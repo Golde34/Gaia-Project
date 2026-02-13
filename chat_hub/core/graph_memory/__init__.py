@@ -1,8 +1,8 @@
 from typing import Dict, Any, Optional
 
 from core.domain.request.query_request import QueryRequest
-from core.usecase.graph_memory.short_term_activation_graph import ShortTermActivationGraph
-from core.usecase.graph_memory.working_memory_graph import WorkingMemoryGraph
+from core.graph_memory.short_term_activation_graph import ShortTermActivationGraph
+from core.graph_memory.working_memory_graph import WorkingMemoryGraph
 
 
 class GraphMemory:

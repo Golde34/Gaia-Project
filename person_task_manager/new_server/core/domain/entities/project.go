@@ -8,7 +8,7 @@ type ProjectEntity struct {
 	Description  string    `db:"description" json:"description"`
 	Status       string    `db:"status" json:"status"`
 	Color        string    `db:"color" json:"color"`
-	OwnerID      int       `db:"owner_id" json:"ownerId"`
+	UserID       int       `db:"user_id" json:"userId"`
 	ActiveStatus string    `db:"active_status" json:"activeStatus"`
 	IsDefault    bool      `db:"is_default" json:"isDefault"`
 	Tag          []string  `db:"tag" json:"tag"`
@@ -23,7 +23,7 @@ func NewProject(row map[string]interface{}) *ProjectEntity {
 		Description:  row["description"].(string),
 		Status:       row["status"].(string),
 		Color:        row["color"].(string),
-		OwnerID:      row["owner_id"].(int),
+		UserID:       row["user_id"].(int),
 		ActiveStatus: row["active_status"].(string),
 		IsDefault:    row["is_default"].(bool),
 		Tag:          row["tag"].([]string),

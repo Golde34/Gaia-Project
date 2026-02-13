@@ -2,8 +2,8 @@ import asyncio
 from core.domain.enums.graph_memory_enum import GraphRoutingDecision
 from core.domain.request.query_request import QueryRequest
 from core.domain.response.graph_llm_response import SlmExtractionResponse
-from core.usecase.graph_memory.short_term_activation_graph import ShortTermActivationGraph
-from core.usecase.graph_memory.working_memory_graph import WorkingMemoryGraph
+from core.graph_memory.short_term_activation_graph import ShortTermActivationGraph
+from core.graph_memory.working_memory_graph import WorkingMemoryGraph
 
 
 class SwitchingEngine:
@@ -12,7 +12,7 @@ class SwitchingEngine:
         self.wmg = WorkingMemoryGraph(self.query)
         self.stag = ShortTermActivationGraph(self.query)
         
-    async def switch_engine(self):
+    async def choose_engine(self):
         raw_nodes, metadata, last_topic_nodes = self.wmg.fetch_recent_nodes()
         extracted_query_info: SlmExtractionResponse = await self.wmg.quick_think(
             raw_nodes, metadata
@@ -23,5 +23,15 @@ class SwitchingEngine:
                 new_node=extracted_query_info,
                 last_topic_nodes=last_topic_nodes 
             )
-            asyncio.create_task(self.stag.add_stag_node(extracted_query_info))
+            asyncio.create_task(self.stag.commit_to_memory(extracted_query_info))
         return extracted_query_info.routing_decision, extracted_query_info 
+
+    async def switch_engine(self, engine: str, extracted_info: SlmExtractionResponse): 
+        if engine == GraphRoutingDecision.STAG.value:
+            self.stag.on_new_message(
+                query=self.query,
+                metadata=extracted_info
+            ) 
+        else:
+            raw_nodes, metadata, _ = self.wmg.fetch_recent_nodes()
+            return self.wmg.quick_answer(raw_nodes, metadata)
