@@ -1,6 +1,9 @@
 package entities
 
-import "time"
+import (
+	"personal_task_manager/core/domain/mapper"
+	"time"
+)
 
 type ProjectEntity struct {
 	ID           string    `db:"id" json:"id"`
@@ -17,17 +20,7 @@ type ProjectEntity struct {
 }
 
 func NewProject(row map[string]interface{}) *ProjectEntity {
-	return &ProjectEntity{
-		ID:           row["id"].(string),
-		Name:         row["name"].(string),
-		Description:  row["description"].(string),
-		Status:       row["status"].(string),
-		Color:        row["color"].(string),
-		UserID:       row["user_id"].(int),
-		ActiveStatus: row["active_status"].(string),
-		IsDefault:    row["is_default"].(bool),
-		Tag:          row["tag"].([]string),
-		CreatedAt:    row["created_at"].(time.Time),
-		UpdatedAt:    row["updated_at"].(time.Time),
-	}
+	project := &ProjectEntity{}
+	mapper.MapToStruct(row, project)
+	return project
 }

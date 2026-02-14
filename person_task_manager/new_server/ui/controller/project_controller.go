@@ -18,7 +18,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request, usecase *usecase.Proj
 		return
 	}
 
-	result, err := usecase.CreateProject(projectRequest)
+	result, err := usecase.CreateProject(r.Context(), projectRequest)
 	if err != nil {
 		log.Printf("Error creating project: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -34,10 +34,26 @@ func CreateProject(w http.ResponseWriter, r *http.Request, usecase *usecase.Proj
 
 func GetProject(w http.ResponseWriter, r *http.Request, usecase *usecase.ProjectUsecase) {
 	projectId := chi.URLParam(r, "id")
-	log.Print("ProjectId: ", projectId)
-	result, err := usecase.GetProjectByID(projectId)
+	result, err := usecase.GetProjectByID(r.Context(), projectId)
 	if err != nil {
 		log.Printf("Error retrieving project: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		log.Printf("Error encoding final response: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func GetAllProject(w http.ResponseWriter, r *http.Request, usecase *usecase.ProjectUsecase) {
+	userId := chi.URLParam(r, "userId")
+	log.Print("UserId: ", userId)
+	result, err := usecase.GetAllProjectsByUserID(r.Context(), userId)
+	if err != nil {
+		log.Printf("Error retrieving projects: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

@@ -35,7 +35,49 @@ func (r *ProjectRepository) CreateProject(project entities.ProjectEntity) (entit
 	return project, nil
 }
 
-func (r *ProjectRepository) GetProjectByID(id int) (string, error) {
-	// Implementation for retrieving a project by ID from the database
-	return "Project Name", nil
+func (r *ProjectRepository) GetProjectByID(id int) (entities.ProjectEntity, error) {
+	where := map[string]interface{}{
+		"id": id,
+	}
+
+	columns := base_repo.GetStructColumns(entities.ProjectEntity{})
+	results, err := r.base.SelectDB(
+		r.DB,
+		ProjectTableName,
+		columns,
+		where)
+	if err != nil {
+		return entities.ProjectEntity{}, err
+	}
+
+	if len(results) == 0 {
+		return entities.ProjectEntity{}, sql.ErrNoRows
+	}
+
+	project := entities.NewProject(results[0])
+	return *project, nil
+}
+
+func (r *ProjectRepository) GetAllProjectsByUserID(userId int) ([]entities.ProjectEntity, error) {
+	where := map[string]interface{}{
+		"user_id": userId,
+	}
+	
+	columns := base_repo.GetStructColumns(entities.ProjectEntity{})
+	results, err := r.base.SelectDB(
+		r.DB,
+		ProjectTableName,
+		columns,
+		where)
+	if err != nil {
+		return nil, err
+	}
+	
+	var projects []entities.ProjectEntity
+	for _, row := range results {
+		project := entities.NewProject(row)
+		projects = append(projects, *project)
+	}
+	
+	return projects, nil
 }
