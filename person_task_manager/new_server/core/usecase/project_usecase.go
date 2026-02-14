@@ -1,10 +1,12 @@
 package usecase
 
 import (
+	"context"
 	"database/sql"
 	"personal_task_manager/core/domain/dtos/request"
 	"personal_task_manager/core/domain/entities"
 	"personal_task_manager/core/service"
+	"strconv"
 )
 
 type ProjectUsecase struct {
@@ -20,7 +22,7 @@ func NewProjectUsecase(db *sql.DB) *ProjectUsecase {
 	}
 }
 
-func (pu *ProjectUsecase) CreateProject(project request.CreateProjectRequest) (entities.ProjectEntity, error) {
+func (pu *ProjectUsecase) CreateProject(ctx context.Context, project request.CreateProjectRequest) (entities.ProjectEntity, error) {
 	if project.Color == "" {
 		project.Color = "indigo"
 	}
@@ -40,7 +42,7 @@ func (pu *ProjectUsecase) CreateProject(project request.CreateProjectRequest) (e
 	}
 
 	// replace by project service and cache later
-	createdProject, err := pu.projectService.CreateProject(newProject)
+	createdProject, err := pu.projectService.CreateProject(ctx, newProject)
 	if err != nil {
 		return entities.ProjectEntity{}, err
 	}
@@ -48,12 +50,10 @@ func (pu *ProjectUsecase) CreateProject(project request.CreateProjectRequest) (e
 	return createdProject, nil
 }
 
-func (pu *ProjectUsecase) GetProjectByID(id string) (map[string]string, error) {
-	// Implement the logic to get a project by ID
-	project := map[string]string{
-		"id":          id,
-		"name":        "Sample Project",
-		"description": "This is a sample project description.",
+func (pu *ProjectUsecase) GetProjectByID(ctx context.Context, id string) (entities.ProjectEntity, error) {
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return entities.ProjectEntity{}, err
 	}
-	return project, nil
+	return pu.projectService.GetProjectByID(ctx, idInt)	
 }

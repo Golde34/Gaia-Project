@@ -18,7 +18,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request, usecase *usecase.Proj
 		return
 	}
 
-	result, err := usecase.CreateProject(projectRequest)
+	result, err := usecase.CreateProject(r.Context(), projectRequest)
 	if err != nil {
 		log.Printf("Error creating project: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -35,7 +35,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request, usecase *usecase.Proj
 func GetProject(w http.ResponseWriter, r *http.Request, usecase *usecase.ProjectUsecase) {
 	projectId := chi.URLParam(r, "id")
 	log.Print("ProjectId: ", projectId)
-	result, err := usecase.GetProjectByID(projectId)
+	result, err := usecase.GetProjectByID(r.Context(), projectId)
 	if err != nil {
 		log.Printf("Error retrieving project: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
