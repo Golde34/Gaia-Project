@@ -39,11 +39,13 @@ func (r *ProjectRepository) GetProjectByID(id int) (entities.ProjectEntity, erro
 	where := map[string]interface{}{
 		"id": id,
 	}
+
+	columns := base_repo.GetStructColumns(entities.ProjectEntity{})
 	results, err := r.base.SelectDB(
-		r.DB, 
-		ProjectTableName, 
-		[]string{"id", "name", "description", "user_id", "color", "status", "active_status"}, 
-		where)	
+		r.DB,
+		ProjectTableName,
+		columns,
+		where)
 	if err != nil {
 		return entities.ProjectEntity{}, err
 	}
@@ -51,16 +53,7 @@ func (r *ProjectRepository) GetProjectByID(id int) (entities.ProjectEntity, erro
 	if len(results) == 0 {
 		return entities.ProjectEntity{}, sql.ErrNoRows
 	}
-	
-	result := results[0]
-	project := entities.ProjectEntity{
-		ID:           result["id"].(string),
-		Name:         result["name"].(string),
-		Description:  result["description"].(string),
-		UserID:       int(result["user_id"].(float64)),
-		Color:        result["color"].(string),
-		Status:       result["status"].(string),
-		ActiveStatus: result["active_status"].(string),
-	}
-	return project, nil
+
+	project := entities.NewProject(results[0])
+	return *project, nil
 }

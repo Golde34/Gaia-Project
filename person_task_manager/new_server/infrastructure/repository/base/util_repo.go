@@ -18,12 +18,31 @@ func StructToColumnsAndValues(entity interface{}) ([]string, []interface{}) {
 		field := t.Field(i)
 		column := field.Tag.Get("db")
 		if column == "" {
-			column = field.Name 
+			column = field.Name
 		}
 		columns = append(columns, column)
 		values = append(values, v.Field(i).Interface())
 	}
 	return columns, values
+}
+
+func GetStructColumns(entity interface{}) []string {
+	v := reflect.ValueOf(entity)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	t := v.Type()
+
+	var columns []string
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		column := field.Tag.Get("db")
+		if column == "" {
+			column = field.Name
+		}
+		columns = append(columns, column)
+	}
+	return columns
 }
 
 func ConvertStruct(src interface{}, dst interface{}) {
