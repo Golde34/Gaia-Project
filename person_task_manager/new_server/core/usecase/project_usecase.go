@@ -4,18 +4,19 @@ import (
 	"database/sql"
 	"personal_task_manager/core/domain/dtos/request"
 	"personal_task_manager/core/domain/entities"
-	"personal_task_manager/infrastructure/repository"
+	"personal_task_manager/core/service"
 )
 
 type ProjectUsecase struct {
 	db *sql.DB
 
-	projectRepo *repository.ProjectRepository
+	projectService *service.ProjectService
 }
 
 func NewProjectUsecase(db *sql.DB) *ProjectUsecase {
 	return &ProjectUsecase{
-		db: db,
+		db:             db,
+		projectService: service.NewProjectService(db),
 	}
 }
 
@@ -39,7 +40,7 @@ func (pu *ProjectUsecase) CreateProject(project request.CreateProjectRequest) (e
 	}
 
 	// replace by project service and cache later
-	createdProject, err := pu.projectRepo.CreateProject(newProject)
+	createdProject, err := pu.projectService.CreateProject(newProject)
 	if err != nil {
 		return entities.ProjectEntity{}, err
 	}
