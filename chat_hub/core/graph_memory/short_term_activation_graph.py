@@ -1,3 +1,4 @@
+import json
 import uuid
 
 import numpy as np
@@ -5,19 +6,23 @@ from torch import norm
 
 from core.domain.response.graph_llm_response import SlmExtractionResponse
 from core.graph_memory.dto.signal import Signal
+from core.graph_memory.working_memory_graph import WorkingMemoryGraph
 from core.domain.request.query_request import QueryRequest
 from infrastructure.embedding.base_embedding import embedding_model
+from infrastructure.redis.redis import rd
 
 
 class ShortTermActivationGraph:
     def __init__(self, query: QueryRequest):
         self.query = query
+        self.wmg = WorkingMemoryGraph(query)
+        self.r = rd
 
     def on_new_message(self, query: QueryRequest, metadata: SlmExtractionResponse):
         """
         Main Entry Point: Phối hợp giữa Ghi nhớ và Tư duy.
         """
-        signal = self.preprocess_signal(query.query, metadata) 
+        signal: Signal = self.preprocess_signal(query.query, metadata) 
         
         # PHẦN 1: ACTIVATE CONTEXT (Thinking / Recall)
         # Tìm kiếm các node liên quan trong Short-term Memory và kích hoạt chúng
@@ -69,11 +74,11 @@ class ShortTermActivationGraph:
     # PHẦN 1: ACTIVATE CONTEXT (The "Thinking" Process)
     # ---------------------------------------------------------
 
-    def activate_context(self, user_id, signal, metadata):
+    def activate_context(self, user_id: int, signal: Signal, metadata: SlmExtractionResponse):
         """
         Cơ chế 'Recall': Đánh thức các ký ức liên quan để chuẩn bị cho việc xử lý.
         """
-        topic_id = metadata['topic']
+        topic_id = metadata.topic
         
         # 1. Flash Activation: Kích hoạt dựa trên cấu trúc (Temporal/Topic)
         # Trả về các node lân cận vật lý từ Redis
@@ -129,12 +134,32 @@ class ShortTermActivationGraph:
     # ---------------------------------------------------------
 
     def phase_1_flash_activation(self, user_id, topic_id):
-        """
-        Truy vấn nhanh từ Redis để lấy các node Prev và Last Topic
-        """
-        # Lookup Redis Hash: user:{id}:last_nodes
-        # Cập nhật Energy: E = E + beta
-        pass
+        _, processed_meta, last_topic_nodes = self.wmg.fetch_recent_nodes() 
+
+        target_ids = [
+            processed_meta.get("last_node_id"),
+            last_topic_nodes.get(topic_id)
+        ]
+        target_ids = list(set(filter(None, target_ids)))
+
+        stag_buffer_key = f"stag:active:{user_id}"
+        pipe = self.r.pipeline()
+        for n_id in target_ids:
+            pipe.hincrbyfloat(stag_buffer_key, n_id, self.beta)
+        pipe.execute()
+
+        activated_nodes_with_content = []
+        for n_id in target_ids:
+            raw_node = self.r.hget(self.nodes_key, n_id)
+            
+            if not raw_node:
+                continue 
+                
+            node_data = json.loads(raw_node)
+            node_data['e'] = float(self.r.hget(stag_buffer_key, n_id) or 0)
+            activated_nodes_with_content.append(node_data)
+
+        return activated_nodes_with_content
 
     def phase_2_neural_resonance(self, vector_new, topic_id):
         """

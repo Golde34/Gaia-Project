@@ -7,6 +7,8 @@ from core.graph_memory.working_memory_graph import WorkingMemoryGraph
 
 
 class SwitchingEngine:
+    _SLM_CONFIDENCE_THRESHOLD = 0.8
+
     def __init__(self, query: QueryRequest):
         self.query = query
         self.wmg = WorkingMemoryGraph(self.query)
@@ -18,15 +20,16 @@ class SwitchingEngine:
             raw_nodes, metadata
         )
         if extracted_query_info.routing_decision == GraphRoutingDecision.SLM.value \
-                and extracted_query_info.confidence_score > 0.8:
+                and extracted_query_info.confidence_score > self._SLM_CONFIDENCE_THRESHOLD:
             self.wmg.build_graph(
                 new_node=extracted_query_info,
                 last_topic_nodes=last_topic_nodes 
             )
             asyncio.create_task(self.stag.commit_to_memory(extracted_query_info))
-        return extracted_query_info.routing_decision, extracted_query_info 
+        return extracted_query_info 
 
-    async def switch_engine(self, engine: str, extracted_info: SlmExtractionResponse): 
+    async def switch_engine(self, extracted_info: SlmExtractionResponse): 
+        engine = extracted_info.routing_decision
         if engine == GraphRoutingDecision.STAG.value:
             self.stag.on_new_message(
                 query=self.query,
