@@ -57,3 +57,11 @@ func (pu *ProjectUsecase) GetProjectByID(ctx context.Context, id string) (entiti
 	}
 	return pu.projectService.GetProjectByID(ctx, idInt)	
 }
+
+func (pu *ProjectUsecase) GetAllProjectsByUserID(ctx context.Context, userId string) ([]entities.ProjectEntity, error) {
+	userIdInt, err := strconv.Atoi(userId)
+	if err != nil {
+		return nil, err
+	}
+	return pu.projectService.GetAllProjectsByUserID(ctx, userIdInt)	
+}

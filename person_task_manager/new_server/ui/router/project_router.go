@@ -19,7 +19,10 @@ func NewProjectRouter(r *chi.Mux, db *sql.DB) *ProjectRouter {
 		r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
 			controller.GetProject(w, r, usecase)
 		})
-		r.Post("/create-project", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/all/{userId}", func(w http.ResponseWriter, r *http.Request) {
+			controller.GetAllProject(w, r, usecase)
+		})
+		r.Post("/create", func(w http.ResponseWriter, r *http.Request) {
 			controller.CreateProject(w, r, usecase)
 		})
 	})

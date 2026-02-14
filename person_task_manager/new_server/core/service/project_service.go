@@ -57,3 +57,19 @@ func (ps *ProjectService) GetProjectByID(ctx context.Context, id int) (entities.
 
 	return project, nil
 }
+
+func (ps *ProjectService) GetAllProjectsByUserID(ctx context.Context, userId int) ([]entities.ProjectEntity, error) {
+	projects, err := ps.projectRepo.GetAllProjectsByUserID(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	go func() {
+		for _, project := range projects {
+			cacheKey := fmt.Sprintf("project:%s", project.ID)
+			_ = redis_cache.SetHybridLocal(context.Background(), cacheKey, project, 10*time.Minute)
+		}	
+	}()
+	
+	return projects, nil
+}

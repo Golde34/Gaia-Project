@@ -57,3 +57,27 @@ func (r *ProjectRepository) GetProjectByID(id int) (entities.ProjectEntity, erro
 	project := entities.NewProject(results[0])
 	return *project, nil
 }
+
+func (r *ProjectRepository) GetAllProjectsByUserID(userId int) ([]entities.ProjectEntity, error) {
+	where := map[string]interface{}{
+		"user_id": userId,
+	}
+	
+	columns := base_repo.GetStructColumns(entities.ProjectEntity{})
+	results, err := r.base.SelectDB(
+		r.DB,
+		ProjectTableName,
+		columns,
+		where)
+	if err != nil {
+		return nil, err
+	}
+	
+	var projects []entities.ProjectEntity
+	for _, row := range results {
+		project := entities.NewProject(row)
+		projects = append(projects, *project)
+	}
+	
+	return projects, nil
+}
