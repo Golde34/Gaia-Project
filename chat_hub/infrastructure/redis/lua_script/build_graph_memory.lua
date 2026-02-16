@@ -20,6 +20,11 @@ redis.call('LPUSH', topic_list_key, node_id)
 local count_key = "topic:" .. topic_id .. ":count"
 redis.call('HINCRBY', meta_key, count_key, 1)
 
+local last_topic_key = "topic:" .. topic_id .. ":last_node_id"
+redis.call('HSET', meta_key, last_topic_key, node_id)
+
+redis.call('HSET', meta_key, "last_node_id", node_id)
+
 -- 4. Quản lý Timeline tổng để Evict (Giữ RAM đúng 10 messages)
 local timeline_key = nodes_key .. ":timeline"
 redis.call('LPUSH', timeline_key, node_id)
