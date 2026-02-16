@@ -3,6 +3,7 @@ import uuid
 
 import numpy as np
 
+from infrastructure.vector_db.milvus import milvus_db
 from core.domain.response.graph_llm_response import SlmExtractionResponse
 from core.graph_memory.dto.signal import Signal
 from core.graph_memory.working_memory_graph import WorkingMemoryGraph
@@ -81,16 +82,14 @@ class ShortTermActivationGraph:
         """
         Cơ chế 'Recall': Đánh thức các ký ức liên quan để chuẩn bị cho việc xử lý.
         """
-        topic_id = metadata.topic
-
         # 1. Flash Activation: Kích hoạt dựa trên cấu trúc (Temporal/Topic)
         # Trả về các node lân cận vật lý từ Redis
-        structural_nodes = self.phase_1_flash_activation(query, topic_id)
+        structural_nodes = self._flash_activation(metadata.topic)
         print("Structural Activation Result:", structural_nodes)
 
         # 2. Neural Resonance: Kích hoạt dựa trên ý nghĩa (Vector Similarity)
         # Bao gồm cả logic Re-hydration từ Postgres nếu Similarity > 0.9
-        semantic_nodes = self.phase_2_neural_resonance(signal.vector, topic_id)
+        semantic_nodes = self.phase_2_neural_resonance(signal.vector, metadata.topic)
 
         # 3. WBOS Propagation: Lan truyền năng lượng logic
         # Từ các node đã tìm thấy, "bắn" điện năng sang các node Opinion/Belief liên quan
@@ -137,14 +136,14 @@ class ShortTermActivationGraph:
     # ---------------------------------------------------------
     # CÁC HÀM CHI TIẾT (COMPONENTS)
     # ---------------------------------------------------------
-    def phase_1_flash_activation(self, user_id: int, topic_id: str):
+    def _flash_activation(self, topic: str):
         wmg_meta = self.r.hgetall(self.wmg.metadata_key)
         if wmg_meta is None:
             return []
 
         last_node_id = wmg_meta.get("last_node_id")
         last_topic_node_id = wmg_meta.get(
-            f"topic:{topic_id}:last_node_id") if last_topic_node_id in wmg_meta else None
+            f"topic:{topic}:last_node_id") if f"topic:{topic}:last_node_id" in wmg_meta else None
         target_node_ids = list(
             set(filter(None, [last_node_id, last_topic_node_id])))
         if not target_node_ids:
@@ -180,13 +179,7 @@ class ShortTermActivationGraph:
         return activated_nodes
 
     def phase_2_neural_resonance(self, vector_new, topic_id):
-        """
-        Tìm kiếm vector trong Milvus và quản lý Re-hydration
-        """
-        # 1. Search Milvus (limit by Topic ID)
-        # 2. IF similarity > 0.9 AND node not in Redis:
-        #    rehydrate_from_postgres(node_id)
-        # 3. Update Energy theo công thức Decay + Sim * Alpha
+        milvus_result = milvus_db.search_top_n()
         pass
 
     def phase_3_wbos_pathing(self, candidate_nodes, current_bitmask):

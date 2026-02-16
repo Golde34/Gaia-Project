@@ -1,4 +1,5 @@
 from pymilvus import MilvusClient, DataType
+from pymilvus.milvus_client.index import IndexParams
 from typing import Any, Dict, List
 import traceback
 
@@ -77,7 +78,11 @@ class MilvusDB:
 
         return self.create_collection_if_not_exists(self.config.root_memory_collection, schema)
 
-    def create_collection_if_not_exists(self, collection_name: str, schema):
+    def create_collection_if_not_exists(
+        self, 
+        collection_name: str, 
+        schema: any, 
+        index_params: IndexParams = None):
         """
         Create collection if it does not exist.
         """
@@ -90,7 +95,8 @@ class MilvusDB:
                 )
 
                 # Create index
-                index_params = self.client.prepare_index_params()
+                if index_params is None:
+                    index_params = self.client.prepare_index_params()
 
                 index_params.add_index(
                     field_name="vector",
@@ -158,7 +164,6 @@ class MilvusDB:
         Search top N similar vectors in the collection
         """
         try:
-
             search_params = {
                 "metric_type": self.index_params["metric_type"],
                 "params": {
@@ -189,91 +194,31 @@ class MilvusDB:
             traceback.print_exc()
             raise e
 
-    def search_by_user_id(self, user_id: str, query_embeddings: List[float], top_n: int, suffix: str = "archived"):
-        result = {}
-
-        for actor in self.partition_actors:
-            partition_name = f"{user_id}_{actor}_{suffix}"
-            try:
-                partition_data = self.search_top_n(
-                    partition_name=partition_name,
-                    query_embeddings=[query_embeddings],
-                    top_k=top_n
-                )[0]
-                archived_mem = [t['content'] for t in partition_data]
-                result[actor] = archived_mem
-            except Exception as e:
-                pass
-
-        return result
-
-    def get_all_user_content(self, user_id: str, suffix: str = "archieved") -> List[str]:
-        all_content = []
-        try:
-            for actor in self.partition_actors:
-                partition_name = f"{user_id}_{actor}_{suffix}"
-                if not self.client.has_partition(self.config.root_memory_collection, partition_name=partition_name):
-                    continue
-
-                query_results = self.client.query(
-                    collection_name=self.config.root_memory_collection,
-                    partition_names=[partition_name],
-                    output_fields=["content"],
-                    limit=1000  # Adjust limit as needed
-                )
-
-                partition_content = [
-                    result.get("content", "") for result in query_results
-                ]
-                all_content[actor] = partition_content
-
-            return all_content
-        except Exception as e:
-            print(f"Error in get_all_user_content: {e}")
-            traceback.print_exc()
-            raise e
-
-    def delete_by_ids(self, ids: List[int], partition_name: str):
+    def delete_by_ids(self, ids: List[int], partition_name: str, collection_name: str = None):
         print(f"Deleting id: {ids}")
         if ids:
+            if collection_name is None:
+                collection_name = self.config.root_memory_collection
             try:
                 if not self.client.has_partition(
-                    collection_name=self.config.root_memory_collection,
+                    collection_name=collection_name,
                     partition_name=partition_name
                 ):
                     raise ValueError(
-                        f"Partition {partition_name} does not exist in collection {self.config.root_memory_collection}.")
+                        f"Partition {partition_name} does not exist in collection {collection_name}.")
 
                 self.client.delete(
-                    collection_name=self.config.root_memory_collection,
+                    collection_name=collection_name,
                     partition_name=partition_name,
                     ids=ids
                 )
 
                 print(
-                    f"Deleted {len(ids)} records from partition {partition_name}.")
+                    f"Deleted {len(ids)} records from partition {partition_name} in collection {collection_name}.")
             except Exception as e:
                 print(f"Error in delete_by_ids: {e}")
                 traceback.print_exc()
                 raise e
-
-    def get_all_contexts(self, partition_name: str = "default_context") -> List[dict]:
-        try:
-            if not self.client.has_partition(self.config.root_memory_collection, partition_name=partition_name):
-                return []
-
-            query_results = self.client.query(
-                collection_name=self.config.root_memory_collection,
-                partition_names=[partition_name],
-                output_fields=["content", "metadata"],
-                limit=1000
-            )
-
-            return query_results
-        except Exception as e:
-            print(f"Error in get_all_contexts: {e}")
-            traceback.print_exc()
-            raise e
 
     def close(self):
         try:
