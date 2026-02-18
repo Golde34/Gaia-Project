@@ -1,3 +1,4 @@
+import asyncio
 import json
 import uuid
 import time
@@ -5,8 +6,6 @@ from typing import List
 
 import numpy as np
 
-from infrastructure.vector_db.milvus import milvus_db
-from core.domain.enums.graph_memory_enum import WBOSEnum
 from core.domain.response.graph_llm_response import SlmExtractionResponse
 from core.graph_memory.dto.signal import Signal
 from core.graph_memory.entity.stag import stag_entity
@@ -14,6 +13,7 @@ from core.graph_memory.working_memory_graph import WorkingMemoryGraph
 from core.domain.request.query_request import QueryRequest
 from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.redis.redis import rd
+from infrastructure.redis.lua_script import lua_scripts
 
 
 class ShortTermActivationGraph:
@@ -23,6 +23,8 @@ class ShortTermActivationGraph:
         self.r = rd
 
         self.stag_energy_prefix = f"stag:energy:{self.query.dialogue_id}:"
+        self.stag_metadata_key = f"stag:metadata:{self.query.dialogue_id}"
+        self.prefix = f"stag:{self.query.dialogue_id}"
 
     def on_new_message(self, metadata: SlmExtractionResponse):
         """
@@ -30,7 +32,7 @@ class ShortTermActivationGraph:
         """
         signal: Signal = self.preprocess_signal(self.query.query, metadata)
 
-        active_subgraph = self.activate_context(self.query, signal, metadata)
+        active_subgraph = self.activate_context(signal, metadata)
 
         new_node = self.commit_to_memory(
             self.query.user_id, signal, metadata, active_subgraph)
@@ -71,7 +73,7 @@ class ShortTermActivationGraph:
         # Default to S (1) if SLM extracts nothing
         return mask or 1
 
-    def activate_context(self, query: QueryRequest, signal: Signal, metadata: SlmExtractionResponse):
+    def activate_context(self, signal: Signal, metadata: SlmExtractionResponse):
         topic = metadata.topic
 
         structural_nodes = self._flash_activation(topic)
@@ -231,16 +233,20 @@ class ShortTermActivationGraph:
     def fetch_from_permanent_storage(self, node_id):
         pass
 
-    # ---------------------------------------------------------
-    # PHẦN 2: ENCODE MEMORY (The "Storage" Process)
-    # ---------------------------------------------------------
-
     def commit_to_memory(self, current_node_id: int, extracted_info: SlmExtractionResponse):
         """
-        Cơ chế 'Ghi nhớ': Lưu trữ node mới (Atomic WBOS) và thiết lập liên kết Graph.
+        Store energy value in Redis for quick access during activation.
+        Store detailed node information in VectorDB for semantic search.
         """
         self.r.hset(self.stag_energy_prefix, current_node_id, 1.0)
 
+        asyncio.create_task(self._store_stag_vector(
+            current_node_id, extracted_info))
+
+        asyncio.create_task(self._trigger_graph_maintenance(
+            current_node_id, extracted_info))
+
+    def _store_stag_vector(self, node_id: int, extracted_info: SlmExtractionResponse):
         wbos_data = extracted_info.wbos
 
         for wbos_type, content_value in wbos_data.model_dump().items():
@@ -249,7 +255,7 @@ class ShortTermActivationGraph:
                     texts=[content_value])[0]
                 stag_entity.insert_data(
                     user_id=self.query.user_id,
-                    node_id=current_node_id,
+                    node_id=node_id,
                     topic=extracted_info.topic,
                     wbos_mask=self._extract_wbos_bitmask(
                         extracted_info, current_type=wbos_type),
@@ -259,14 +265,12 @@ class ShortTermActivationGraph:
                     timestamp=int(time.time())
                 )
 
-        # # C. Tầng LTM (PostgreSQL): Lưu trữ vĩnh viễn (Cold Archive)
-        # # Phục vụ Re-hydration khi Redis bị xóa hoặc dữ liệu quá cũ
-        # self.archive_to_permanent_storage(node_data)
-
-        print(
-            f"--- [STAG Commit] Node {current_node_id} integrated into Memory. ---")
-
-        return None
+    def _trigger_graph_maintenance(self, current_node_id: int, extracted_info: SlmExtractionResponse):
+        stag_meta_result = lua_scripts.update_stag_metadata(
+            keys=[self.stag_metadata_key, f"{self.prefix}:topics_recency"],
+            args=[str(current_node_id), extracted_info.topic, 50]
+        )
+        print("Evicted Node JSON:", stag_meta_result)
 
     # ---------------------------------------------------------
     # CÁC HÀM CHI TIẾT (COMPONENTS)
@@ -355,23 +359,3 @@ class ShortTermActivationGraph:
                     final_nodes_dict[n_id] = n_data
 
         return list(final_nodes_dict.values())
-
-    def save_new_node(self, user_id, content, vector, bitmask, topic_id):
-        """
-        Lưu dữ liệu đồng thời vào Redis (Hot), Milvus (Vector), Postgres (LTM)
-        """
-        pass
-
-    # ---------------------------------------------------------
-    # HỆ THỐNG BẢO TRÌ (BACKGROUND TASKS)
-    # ---------------------------------------------------------
-
-    def graph_maintenance_loop(self):
-        """
-        Chạy định kỳ (Cron job) để dọn dẹp Graph
-        """
-        # 1. Apply Global Energy Decay (E = E * delta)
-        # 2. Identify pruning candidates (E < threshold)
-        # 3. Perform Edge Repair (Temporal & Topic Chain Repair)
-        # 4. Evict low energy nodes from Redis to Postgres
-        pass

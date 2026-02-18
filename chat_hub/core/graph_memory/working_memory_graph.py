@@ -1,6 +1,5 @@
 import json
-from typing import Any, Dict, Tuple
-import uuid
+from typing import Tuple
 
 from core.domain.enums.enum import MemoryModel
 from core.domain.enums.graph_memory_enum import GraphRoutingDecision
@@ -135,7 +134,7 @@ class WorkingMemoryGraph:
 
         node_json = json.dumps(new_node.model_dump())
 
-        evicted_node_json = lua_scripts.build_graph_memory(
+        evicted_node_json = lua_scripts.build_wmg_memory(
             keys=[self.nodes_key, specific_topic_key, self.metadata_key],
             args=[str(node_id), node_json, topic, 10]
         )
