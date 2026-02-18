@@ -1,5 +1,6 @@
 import json
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
+import uuid
 
 from core.domain.enums.enum import MemoryModel
 from core.domain.enums.graph_memory_enum import GraphRoutingDecision
@@ -50,7 +51,12 @@ class WorkingMemoryGraph:
 
         return processed_nodes, processed_meta, last_topic_nodes
 
-    async def quick_think(self, raw_nodes: dict, metadata: dict) -> Dict[str, Any]:
+    async def quick_think(
+        self,
+        raw_nodes: dict,
+        metadata: dict,
+        last_topic_nodes: dict
+    ) -> Tuple[int, SlmExtractionResponse]:
         print("Raw Nodes from RAM:", raw_nodes)
         print("Metadata from RAM:", metadata)
         history_str, observation_str = self._extract_recent_nodes(
@@ -78,7 +84,7 @@ class WorkingMemoryGraph:
         )
         slm_output = function(
             prompt=extract_info_prompt,
-            model=model, 
+            model=model,
             dto=SlmExtractionResponse
         )
         print("SLM Output:", slm_output)
@@ -88,7 +94,9 @@ class WorkingMemoryGraph:
 
         if response.routing_decision == GraphRoutingDecision.LLM.value:
             response.response = await self.quick_answer(raw_nodes, metadata)
-        return response
+
+        node_id: int = self._get_max_id(last_topic_nodes)
+        return node_id, response
 
     def _extract_recent_nodes(self, raw_nodes: dict, metadata: dict) -> str:
         history_str = ""
@@ -106,7 +114,7 @@ class WorkingMemoryGraph:
                 observation_str += f"- {key}: {value}\n"
         return history_str, observation_str
 
-    def build_graph(self, new_node: SlmExtractionResponse, last_topic_nodes: dict) -> dict:
+    def _get_max_id(self, last_topic_nodes: dict) -> int:
         max_id = 0
         if last_topic_nodes:
             for last_id in last_topic_nodes.values():
@@ -116,8 +124,9 @@ class WorkingMemoryGraph:
                     max_id = max(max_id, val)
                 except:
                     continue
-        node_id = str(max_id + 1)
+        return max_id + 1
 
+    def build_graph(self, node_id: int, new_node: SlmExtractionResponse) -> None:
         topic = new_node.topic
         specific_topic_key = f"{self.topics_prefix}:{topic}"
 
@@ -125,12 +134,9 @@ class WorkingMemoryGraph:
 
         evicted_node_json = lua_scripts.build_graph_memory(
             keys=[self.nodes_key, specific_topic_key, self.metadata_key],
-            args=[node_id, node_json, topic, 10]
+            args=[str(node_id), node_json, topic, 10]
         )
-
-        if evicted_node_json:
-            return json.loads(evicted_node_json)
-        return None
+        print("Evicted Node JSON:", evicted_node_json)
 
     async def quick_answer(self, raw_nodes: dict, metadata: dict) -> str:
         print("Raw Nodes from RAM:", raw_nodes)
