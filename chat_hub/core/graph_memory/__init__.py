@@ -29,7 +29,7 @@ class GraphMemory:
             Dict[str, Any]: Kết quả suy nghĩ nhanh nếu có, ngược lại None
         """
         raw_nodes, metadata, _ = self.wmg.fetch_recent_nodes()
-        return self.wmg.quick_answer(raw_nodes, metadata) # Later replace by stag
+        return self.wmg.quick_analyzing_answer(raw_nodes, metadata) # Later replace by stag
 
     def recall_short_term(self) -> Optional[Dict[str, Any]]:
         """

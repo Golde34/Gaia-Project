@@ -1,10 +1,10 @@
+from platform import node
 from typing import Any, Optional
 
 from core.domain.enums.enum import ChatType, MemoryModel, MessageType
 from core.domain.enums.graph_memory_enum import GraphRoutingDecision
 from core.domain.request.query_request import QueryRequest
 from core.service import memory_service
-from core.graph_memory import GraphMemory
 from core.graph_memory.switching_engine import SwitchingEngine
 from core.usecase.llm_router import chat_routers, tool_selection
 
@@ -77,13 +77,20 @@ class ChatUsecase:
         It retrieves the chat history, generates a new query based on the context,
         and processes the request using graph-based methods
         """
-        current_node_id, extracted_info = await SwitchingEngine(query=query).choose_engine()
+        switching_engine = SwitchingEngine(query=query)
+        current_node_id, extracted_info = await switching_engine.choose_engine()
         engine = extracted_info.routing_decision
         print(f"Graph Memory Extracted Info: {extracted_info}, engine: {engine}")
-        if engine == GraphRoutingDecision.SLM.value:
-            return extracted_info.response
+        if engine == GraphRoutingDecision.SLM.value \
+            and extracted_info.confidence_score > 0.8: #TODO: Magic number 
+            response = extracted_info.response
         else:
-            return await SwitchingEngine(query=query).switch_engine(
+            response = await switching_engine.activate_engine(
                 current_node_id=current_node_id,
                 extracted_info=extracted_info
             )
+        await switching_engine.commit_new_message(
+                node_id=current_node_id,
+                metadata=extracted_info
+            )
+        return response

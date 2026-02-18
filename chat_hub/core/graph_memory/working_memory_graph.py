@@ -92,8 +92,11 @@ class WorkingMemoryGraph:
             json.loads(slm_output))
         response.user_query = self.query.query
 
-        if response.routing_decision == GraphRoutingDecision.LLM.value:
-            response.response = await self.quick_answer(raw_nodes, metadata)
+        if response.routing_decision == GraphRoutingDecision.LLM.value \
+            or response.confidence_score <= 0.8: #TODO: Magic number
+            response.response = await self.quick_analyzing_answer(raw_nodes, metadata)
+            response.routing_decision = GraphRoutingDecision.LLM.value
+            response.confidence_score = 1.0
 
         node_id: int = self._get_max_id(last_topic_nodes)
         return node_id, response
@@ -138,7 +141,7 @@ class WorkingMemoryGraph:
         )
         print("Evicted Node JSON:", evicted_node_json)
 
-    async def quick_answer(self, raw_nodes: dict, metadata: dict) -> str:
+    async def quick_analyzing_answer(self, raw_nodes: dict, metadata: dict) -> str:
         print("Raw Nodes from RAM:", raw_nodes)
         print("Metadata from RAM:", metadata)
         history_str, observation_str = self._extract_recent_nodes(

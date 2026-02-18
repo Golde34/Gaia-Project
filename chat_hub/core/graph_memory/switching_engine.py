@@ -20,22 +20,22 @@ class SwitchingEngine:
         )
         current_node_id = working_memory_response[0]
         extracted_query_info = working_memory_response[1]
-        if extracted_query_info.routing_decision == GraphRoutingDecision.SLM.value \
-                and extracted_query_info.confidence_score > 0.8: #TODO: Magic number
-            self.wmg.build_graph(
-                node_id=current_node_id,
-                new_node=extracted_query_info,
-            )
-            asyncio.create_task(self.stag.commit_to_memory(current_node_id, extracted_query_info))
         return current_node_id, extracted_query_info 
 
-    async def switch_engine(self, current_node_id: int, extracted_info: SlmExtractionResponse): 
+    async def activate_engine(self, current_node_id: int, extracted_info: SlmExtractionResponse): 
         print("Current node id can be used for STAG commitment:", current_node_id)
         engine = extracted_info.routing_decision
         if engine == GraphRoutingDecision.STAG.value:
             self.stag.on_new_message(
                 metadata=extracted_info
             ) 
-        else:
-            raw_nodes, metadata, _ = self.wmg.fetch_recent_nodes()
-            return self.wmg.quick_answer(raw_nodes, metadata)
+
+    async def commit_new_message(self, node_id: int, metadata: SlmExtractionResponse):
+        self.wmg.build_graph(
+            node_id=node_id,
+            new_node=metadata
+        )
+        self.stag.commit_to_memory(
+            current_node_id=node_id, 
+            extracted_info=metadata
+        ) 
