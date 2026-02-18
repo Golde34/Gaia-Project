@@ -10,10 +10,13 @@ class LuaScripts:
         self._scripts = {}
     
     @property
-    def build_graph_memory(self):
-        """Get build_graph_memory lua script"""
-        return self._load_script('build_graph_memory')
+    def build_wmg_memory(self):
+        return self._load_script('wmg_memory')
 
+    @property
+    def update_stag_metadata(self):
+        return self._load_script('stag_metadata')
+    
     def _load_script(self, script_name: str):
         """Load and register a lua script"""
         if script_name not in self._scripts:

@@ -3,8 +3,11 @@ from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 import traceback
 import pandas as pd
 
-from core.usecase.rag_usecase import upload_context_to_vectordb, query_context 
-
+from core.usecase.rag_usecase import (
+    upload_context_to_vectordb, 
+    query_context,
+    create_collection 
+)
 
 RagRouter = APIRouter(
     prefix="/rag",
@@ -58,6 +61,15 @@ async def upload_context(file: UploadFile = File(...)):
         }
 
         return await upload_context_to_vectordb(context_list, metadata)
+    except Exception as e:
+        stack_trace = traceback.format_exc()
+        print("ERROR:", stack_trace)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@RagRouter.post("/create-collection")
+async def create_vectodb_collection():
+    try:
+        return await create_collection() 
     except Exception as e:
         stack_trace = traceback.format_exc()
         print("ERROR:", stack_trace)

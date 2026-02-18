@@ -1,6 +1,7 @@
 from typing import List
 
 from core.domain.entities.vectordb.root_memory import root_memory_entity
+from core.graph_memory.entity.stag import stag_entity
 from core.validation import milvus_validation
 from infrastructure.embedding.base_embedding import embedding_model 
 
@@ -74,3 +75,11 @@ async def query_context(query: str, top_k: int = 5, partition_name: str = "defau
     except Exception as e:
         print("Error querying context from vector database:", e)
         raise e
+
+async def create_collection():
+    try:
+        stag_entity.create_collection()
+        return {"message": "STAG collection schema created successfully."}
+    except Exception as e:
+        print("Error creating collection:", e)
+        raise e 
