@@ -6,6 +6,7 @@ from typing import List
 import numpy as np
 
 from infrastructure.vector_db.milvus import milvus_db
+from core.domain.enums.graph_memory_enum import WBOSEnum
 from core.domain.response.graph_llm_response import SlmExtractionResponse
 from core.graph_memory.dto.signal import Signal
 from core.graph_memory.entity.stag import stag_entity
@@ -57,23 +58,18 @@ class ShortTermActivationGraph:
             vector_id=vector_id
         )
 
-    def _extract_wbos_bitmask(self, extracted_info: SlmExtractionResponse):
-        """
-        Analyzing WBOS into bitmap (W:8, B:4, O:2, S:1).
-        """
-        mask = 0
+    def _extract_wbos_bitmask(self, extracted_info: SlmExtractionResponse, current_type=None):
+        mapping = {'W': 8, 'B': 4, 'O': 2, 'S': 1}
+
+        if current_type in mapping:
+            return mapping[current_type]
+
         wbos = extracted_info.wbos
-        if wbos.W:
-            mask |= 8
-        if wbos.B:
-            mask |= 4
-        if wbos.O:
-            mask |= 2
-        if wbos.S:
-            mask |= 1
+        mask = sum(val for key, val in mapping.items()
+                   if getattr(wbos, key, False))
 
         # Default to S (1) if SLM extracts nothing
-        return mask if mask > 0 else 1
+        return mask or 1
 
     def activate_context(self, query: QueryRequest, signal: Signal, metadata: SlmExtractionResponse):
         topic = metadata.topic
@@ -243,72 +239,34 @@ class ShortTermActivationGraph:
         """
         Cơ chế 'Ghi nhớ': Lưu trữ node mới (Atomic WBOS) và thiết lập liên kết Graph.
         """
-        topic = extracted_info.topic
-        dialogue_id = self.query.dialogue_id
+        self.r.hset(self.stag_energy_prefix, current_node_id, 1.0)
 
-        # 1. TRUY XUẤT VÀ CẬP NHẬT CON TRỎ (METADATA) TRÊN REDIS
-        wmg_meta_key = self.wmg.metadata_key
-        topic_last_key = f"topic:{topic}:last_node_id"
+        wbos_data = extracted_info.wbos
 
-        # Lấy last_node_id và last_topic_node_id cũ trước khi ghi đè
-        pipe_meta = self.r.pipeline()
-        pipe_meta.hget(wmg_meta_key, "last_node_id")
-        pipe_meta.hget(wmg_meta_key, topic_last_key)
-        meta_results = pipe_meta.execute()
+        for wbos_type, content_value in wbos_data.model_dump().items():
+            if content_value:
+                vector = embedding_model.get_embeddings(
+                    texts=[content_value])[0]
+                stag_entity.insert_data(
+                    user_id=self.query.user_id,
+                    node_id=current_node_id,
+                    topic=extracted_info.topic,
+                    wbos_mask=self._extract_wbos_bitmask(
+                        extracted_info, current_type=wbos_type),
+                    wbos_type=wbos_type,        # "W", "B", "O", or "S"
+                    vector=vector,
+                    content=content_value,
+                    timestamp=int(time.time())
+                )
 
-        prev_node_id = meta_results[0]
-        last_topic_node_id = meta_results[1]
-
-        # 2. THIẾT KẾ CẤU TRÚC GRAPH NODE (STAG DATA)
-        # Lưu các Edges (Cạnh) để phục vụ Phase 1 & 3 sau này
-        node_data = {
-            "node_id": current_node_id,
-            "t": topic,
-            "w_mask": signal.bitmask,
-            "e": 1.0,  # Luôn khởi tạo mức năng lượng tối đa
-            "ed": {
-                "p": prev_node_id,       # Prev (Temporal Edge)
-                "lt": last_topic_node_id  # Last Topic (Structural Edge)
-            },
-            "content": metadata.full_content,
-            "ts": int(time.time())
-        }
-
-        # 3. LƯU TRỮ ĐA TẦNG (HYBRID STORAGE)
-
-        # A. Tầng Hot (Redis): Lưu vào WMG Nodes để Phase 1 & 2 truy xuất O(1)
-        wmg_nodes_key = self.wmg.nodes_key
-        stag_energy_key = f"stag:energy:{dialogue_id}"
-
-        pipe_storage = self.r.pipeline()
-        pipe_storage.hset(wmg_nodes_key, current_node_id,
-                          json.dumps(node_data))
-        pipe_storage.hset(stag_energy_key, current_node_id, 1.0)
-
-        # Cập nhật con trỏ Metadata cho tin nhắn kế tiếp
-        pipe_storage.hset(wmg_meta_key, "last_node_id", current_node_id)
-        pipe_storage.hset(wmg_meta_key, topic_last_key, current_node_id)
-        pipe_storage.execute()
-
-        # B. Tầng Subconscious (Milvus): Lưu Atomic WBOS (Hindsight)
-        # Sử dụng class STAGEntity chúng ta đã thiết kế để xé nhỏ W, B, O, S
-        stag_entity.insert_atomic_data(
-            vid=current_node_id,
-            uid=user_id,
-            topic_name=topic,
-            extracted_info=metadata,  # Chứa wbos.W, wbos.B...
-            embedding_model=self.embedding_engine,
-            milvus_db=milvus_db
-        )
-
-        # C. Tầng LTM (PostgreSQL): Lưu trữ vĩnh viễn (Cold Archive)
-        # Phục vụ Re-hydration khi Redis bị xóa hoặc dữ liệu quá cũ
-        self.archive_to_permanent_storage(node_data)
+        # # C. Tầng LTM (PostgreSQL): Lưu trữ vĩnh viễn (Cold Archive)
+        # # Phục vụ Re-hydration khi Redis bị xóa hoặc dữ liệu quá cũ
+        # self.archive_to_permanent_storage(node_data)
 
         print(
             f"--- [STAG Commit] Node {current_node_id} integrated into Memory. ---")
 
-        return node_data
+        return None
 
     # ---------------------------------------------------------
     # CÁC HÀM CHI TIẾT (COMPONENTS)
