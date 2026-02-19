@@ -26,16 +26,21 @@ class SwitchingEngine:
         print("Current node id can be used for STAG commitment:", current_node_id)
         engine = extracted_info.routing_decision
         if engine == GraphRoutingDecision.STAG.value:
-            self.stag.on_new_message(
+            return await self.stag.on_new_message(
                 metadata=extracted_info
             ) 
+        else:
+            ## Fix later when add SLTG and EMG
+            return await self.stag.on_new_message(
+                metadata=extracted_info
+            )
 
     async def commit_new_message(self, node_id: int, metadata: SlmExtractionResponse):
         self.wmg.build_graph(
             node_id=node_id,
             new_node=metadata
         )
-        self.stag.commit_to_memory(
+        await self.stag.commit_to_memory(
             current_node_id=node_id, 
             extracted_info=metadata
         ) 

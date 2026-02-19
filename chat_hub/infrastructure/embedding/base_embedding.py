@@ -103,7 +103,10 @@ class BaseEmbedding:
             for text in texts:
                 result = client.models.embed_content(
                     model=self.cloud_model_name,
-                    contents=text
+                    contents=text,
+                    config={
+                       'output_dimensionality': 1024 
+                    },
                 )
                 embeddings.append(result.embeddings[0].values)
             return embeddings

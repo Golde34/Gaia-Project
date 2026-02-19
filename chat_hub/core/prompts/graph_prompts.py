@@ -57,4 +57,23 @@ Provide a brief analysis to help decide the next steps.
 
 The response is only String.
 """
- 
+
+ANALYZING_ANSWER_PROMPT = """
+You are a Graph Memory Assistant. Your task is to analyze the user query and the current active
+subgraph to decide how to update the graph and what response to generate.
+### CONTEXT:
+Current Active Subgraph:
+{active_subgraph}
+USER QUERY: {query}
+Provide a detailed analysis to help decide how to update the graph and what response to generate.
+The response is only String.
+"""
+# The response should be in JSON format:
+# {{
+#       "response": "...",
+#       "wbos_update": {{"W": "...", "B": "...", "O": "...", "S": "..."}},
+#       "wbos_mask": int (bitmask for W=1, B=2, O=4, S=8),
+#       "wbos_type": "S/B/O/W",
+#       "routing_decision": "slm/llm/stag",
+#       "confidence_score": 0.0-1.0
+# }}

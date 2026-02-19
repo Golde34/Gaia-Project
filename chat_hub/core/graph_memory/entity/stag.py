@@ -21,15 +21,15 @@ class STAGEngity():
                          datatype=DataType.VARCHAR,
                          max_length=64)
         schema.add_field(field_name="topic",
-                         datatype=DataType.VARCHAR)
+                         datatype=DataType.VARCHAR, max_length=65535)
         schema.add_field(field_name="wbos_mask",
                          datatype=DataType.INT16)
         schema.add_field(field_name="wbos_type",
-                         datatype=DataType.VARCHAR)
+                         datatype=DataType.VARCHAR, max_length=16)
         schema.add_field(field_name="vector",
                          datatype=DataType.FLOAT_VECTOR, dim=self.dim)
         schema.add_field(field_name="content",
-                         datatype=DataType.VARCHAR)
+                         datatype=DataType.VARCHAR, max_length=65535)
         schema.add_field(field_name="timestamp",
                          datatype=DataType.INT64)
         return schema
