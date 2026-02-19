@@ -26,25 +26,19 @@ class ShortTermActivationGraph:
         self.stag_metadata_key = f"stag:metadata:{self.query.dialogue_id}"
         self.prefix = f"stag:{self.query.dialogue_id}"
 
-    def on_new_message(self, metadata: SlmExtractionResponse):
+    async def on_new_message(self, metadata: SlmExtractionResponse):
         """
         Main Entry Point: Phối hợp giữa Ghi nhớ và Tư duy.
         """
-        signal: Signal = self.preprocess_signal(self.query.query, metadata)
+        signal: Signal = await self.preprocess_signal(self.query.query, metadata)
 
-        active_subgraph = self.activate_context(signal, metadata)
+        active_subgraph = await self.activate_context(signal, metadata)
 
-        new_node = self.commit_to_memory(
-            self.query.user_id, signal, metadata, active_subgraph)
+        ## LLM use active_subgraph to generate response (not implemented here)
+        pass 
 
-        return {
-            "status": "integrated",
-            "active_nodes": active_subgraph,
-            "new_node_id": new_node.id
-        }
-
-    def preprocess_signal(self, content, extracted_info: SlmExtractionResponse):
-        raw_vector_list = embedding_model.get_embeddings(texts=[content])
+    async def preprocess_signal(self, content, extracted_info: SlmExtractionResponse):
+        raw_vector_list = await embedding_model.get_embeddings(texts=[content])
         raw_vector = np.array(raw_vector_list[0])
         norm = np.linalg.norm(raw_vector)
         normalized_vector = raw_vector / norm if norm > 0 else raw_vector
@@ -73,13 +67,13 @@ class ShortTermActivationGraph:
         # Default to S (1) if SLM extracts nothing
         return mask or 1
 
-    def activate_context(self, signal: Signal, metadata: SlmExtractionResponse):
+    async def activate_context(self, signal: Signal, metadata: SlmExtractionResponse):
         topic = metadata.topic
 
         structural_nodes = self._flash_activation(topic)
         print(f"Phase 1 - Structural Nodes Activated: {len(structural_nodes)}")
 
-        activated_nodes = self._neural_resonance(
+        activated_nodes = await self._neural_resonance(
             query_vector=signal.vector,
             topic=topic,
             structural_nodes=structural_nodes
@@ -146,7 +140,7 @@ class ShortTermActivationGraph:
 
         return structural_nodes
 
-    def _neural_resonance(
+    async def _neural_resonance(
             self,
             query_vector: List[float],
             topic: str,
@@ -233,7 +227,7 @@ class ShortTermActivationGraph:
     def fetch_from_permanent_storage(self, node_id):
         pass
 
-    def commit_to_memory(self, current_node_id: int, extracted_info: SlmExtractionResponse):
+    async def commit_to_memory(self, current_node_id: int, extracted_info: SlmExtractionResponse):
         """
         Store energy value in Redis for quick access during activation.
         Store detailed node information in VectorDB for semantic search.
@@ -246,16 +240,17 @@ class ShortTermActivationGraph:
         asyncio.create_task(self._trigger_graph_maintenance(
             current_node_id, extracted_info))
 
-    def _store_stag_vector(self, node_id: int, extracted_info: SlmExtractionResponse):
+    async def _store_stag_vector(self, node_id: int, extracted_info: SlmExtractionResponse):
         wbos_data = extracted_info.wbos
 
         for wbos_type, content_value in wbos_data.model_dump().items():
             if content_value:
-                vector = embedding_model.get_embeddings(
-                    texts=[content_value])[0]
+                embeddings = await embedding_model.get_embeddings(
+                    texts=[content_value])
+                vector = embeddings[0]
                 stag_entity.insert_data(
-                    user_id=self.query.user_id,
-                    node_id=node_id,
+                    user_id=str(self.query.user_id),
+                    node_id=str(node_id),
                     topic=extracted_info.topic,
                     wbos_mask=self._extract_wbos_bitmask(
                         extracted_info, current_type=wbos_type),
@@ -265,12 +260,12 @@ class ShortTermActivationGraph:
                     timestamp=int(time.time())
                 )
 
-    def _trigger_graph_maintenance(self, current_node_id: int, extracted_info: SlmExtractionResponse):
+    async def _trigger_graph_maintenance(self, current_node_id: int, extracted_info: SlmExtractionResponse):
         stag_meta_result = lua_scripts.update_stag_metadata(
             keys=[self.stag_metadata_key, f"{self.prefix}:topics_recency"],
-            args=[str(current_node_id), extracted_info.topic, 50]
+            args=[str(current_node_id), extracted_info.topic, 50, int(time.time())]
         )
-        print("Evicted Node JSON:", stag_meta_result)
+        print("STAG Metadata Updated:", stag_meta_result)
 
     # ---------------------------------------------------------
     # CÁC HÀM CHI TIẾT (COMPONENTS)

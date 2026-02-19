@@ -37,7 +37,7 @@ app.add_middleware(
     allow_headers=["*"],
     allow_credentials=True,
 )
-app.add_middleware(ValidateAccessTokenMiddleware)
+# app.add_middleware(ValidateAccessTokenMiddleware)
 
 app.include_router(rag_controller.RagRouter)
 app.include_router(auth_controller.AuthRouter)

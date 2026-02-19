@@ -26,7 +26,7 @@ class SwitchingEngine:
         print("Current node id can be used for STAG commitment:", current_node_id)
         engine = extracted_info.routing_decision
         if engine == GraphRoutingDecision.STAG.value:
-            self.stag.on_new_message(
+            await self.stag.on_new_message(
                 metadata=extracted_info
             ) 
 
@@ -35,7 +35,7 @@ class SwitchingEngine:
             node_id=node_id,
             new_node=metadata
         )
-        self.stag.commit_to_memory(
+        await self.stag.commit_to_memory(
             current_node_id=node_id, 
             extracted_info=metadata
         ) 

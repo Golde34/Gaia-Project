@@ -7,7 +7,7 @@ local topics_recency_key = KEYS[2]
 local node_id = ARGV[1]
 local topic_id = ARGV[2]
 local threshold = tonumber(ARGV[3]) or 50
-local timestamp = os.time()
+local timestamp = tonumber(ARGV[4])
 
 -- 1. Tăng tổng số lượng message toàn bộ STAG
 local total_session_count = redis.call('HINCRBY', meta_key, "total_count", 1)
