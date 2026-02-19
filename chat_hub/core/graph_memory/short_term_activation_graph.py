@@ -1,16 +1,16 @@
 import asyncio
 import json
-import uuid
 import time
 from typing import List
+import uuid
 
 import numpy as np
 
+from core.domain.request.query_request import QueryRequest
 from core.domain.response.graph_llm_response import SlmExtractionResponse
 from core.graph_memory.dto.signal import Signal
 from core.graph_memory.entity.stag import stag_entity
 from core.graph_memory.working_memory_graph import WorkingMemoryGraph
-from core.domain.request.query_request import QueryRequest
 from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.redis.redis import rd
 from infrastructure.redis.lua_script import lua_scripts
@@ -27,15 +27,12 @@ class ShortTermActivationGraph:
         self.prefix = f"stag:{self.query.dialogue_id}"
 
     async def on_new_message(self, metadata: SlmExtractionResponse):
-        """
-        Main Entry Point: Phối hợp giữa Ghi nhớ và Tư duy.
-        """
         signal: Signal = await self.preprocess_signal(self.query.query, metadata)
 
         active_subgraph = await self.activate_context(signal, metadata)
 
-        ## LLM use active_subgraph to generate response (not implemented here)
-        pass 
+        # LLM use active_subgraph to generate response (not implemented here)
+        pass
 
     async def preprocess_signal(self, content, extracted_info: SlmExtractionResponse):
         raw_vector_list = await embedding_model.get_embeddings(texts=[content])
@@ -116,7 +113,10 @@ class ShortTermActivationGraph:
         pipe = self.r.pipeline()
         for node_id in target_node_ids:
             # Beta = 0.2 TODO: Magic number
-            pipe.hincrbyfloat(self.stag_energy_prefix, node_id, 0.2)
+            e = float(self.r.hget(self.stag_energy_prefix, node_id) or 0)
+            new_e = e + 0.2 * (1 - e)
+            new_e = np.min(1.0, new_e)
+            pipe.hset(self.stag_energy_prefix, node_id, new_e)
             pipe.hget(wmg_nodes_key, node_id)
 
         results = pipe.execute()
@@ -146,77 +146,82 @@ class ShortTermActivationGraph:
             topic: str,
             structural_nodes: List[dict]):
 
-        semantic_results = stag_entity.search_top_n(
+        gamma = 0.8  # Decay
+        alpha = 0.5  # Activation
+        wmg_nodes_key = self.wmg.nodes_key
+
+        await self.r.eval(
+            lua_scripts.decay_stag_nodes,
+            1, self.stag_energy_prefix,
+            gamma
+        )
+
+        search_output = stag_entity.search_top_n(
             query_vector=query_vector,
             uid=self.query.user_id,
             active_topics=[topic],
             top_k=20
         )
-
-        gamma = 0.8  # Decay
-        alpha = 0.5  # Activation
-
-        wmg_nodes_key = self.wmg.nodes_key
-
-        node_hits = {}
-        for hit in semantic_results:
-            nid = hit["node_id"]
-            score = hit["distance"]
-            # Lấy score cao nhất nếu node đó có nhiều mảnh resonance
-            node_hits[nid] = max(node_hits.get(nid, 0), score)
-
-        if not node_hits:
+        if not search_output or not search_output[0]:
+            for node in structural_nodes:
+                node['e'] *= gamma
             return structural_nodes
 
-        # 2. CHECK STATUS TRÊN REDIS (PIPELINE)
+        semantic_results = search_output[0]
+        node_hits = {}
+        node_metadata = {}
+
+        for hit in semantic_results:
+            entity = hit.get('entity', {})
+            nid = entity.get('node_id') or hit.get('id')
+            score = hit.get('distance', 0)
+            node_hits[nid] = max(node_hits.get(nid, 0), score)
+            node_metadata[nid] = entity
+
         unique_node_ids = list(node_hits.keys())
         pipe = self.r.pipeline()
         for nid in unique_node_ids:
-            pipe.hget(f"{self.stag_energy_prefix}energy", nid)
+            pipe.hget(self.stag_energy_prefix, nid)
             pipe.hget(wmg_nodes_key, nid)
-
         redis_data = pipe.execute()
 
-        # 3. TÍNH TOÁN CỘNG HƯỞNG
+        # ACTIVATION & RE-HYDRATION
         resonance_nodes = []
         update_pipe = self.r.pipeline()
-
         for i, nid in enumerate(unique_node_ids):
             sim_score = node_hits[nid]
+            # current_e is already (Old_E * 0.8) thanks to the Lua script above
             current_e = float(redis_data[i*2] or 0)
             raw_wmg_json = redis_data[i*2 + 1]
 
-            # CÔNG THỨC KÍCH HOẠT
-            new_energy = min(1.0, (current_e * gamma) + (sim_score * alpha))
+            # Resonance Formula: E(t+1) = (E_old * gamma) + (sim * alpha)
+            new_energy = min(1.0, current_e + (sim_score * alpha))
 
             if raw_wmg_json:
                 node_data = json.loads(raw_wmg_json)
                 node_data["node_id"] = nid
                 node_data["e"] = new_energy
                 resonance_nodes.append(node_data)
+                update_pipe.hset(self.stag_energy_prefix, nid, new_energy)
             elif sim_score > 0.85:
-                # RE-HYDRATION từ Cold Storage (Postgres)
-                node_from_ltm = self.fetch_from_permanent_storage(nid)
-                if node_from_ltm:
-                    node_from_ltm["node_id"] = nid
-                    node_from_ltm["e"] = 0.8  # Boost cho ký ức hồi sinh
-                    resonance_nodes.append(node_from_ltm)
-                    # Cache lại vào WMG (Hot layer)
+                ltm_entity = node_metadata.get(nid)
+                if ltm_entity:
+                    ltm_entity["node_id"] = nid
+                    ltm_entity["e"] = 0.8  # Re-hydration boost
+                    resonance_nodes.append(ltm_entity)
                     update_pipe.hset(wmg_nodes_key, nid,
-                                     json.dumps(node_from_ltm))
+                                     json.dumps(ltm_entity))
+                    update_pipe.hset(self.stag_energy_prefix, nid, 0.8)
 
-            # Cập nhật energy mới vào Redis
-            update_pipe.hset(
-                f"{self.stag_energy_prefix}energy", nid, new_energy)
+        await update_pipe.execute()
 
-        update_pipe.execute()
+        for n in structural_nodes:
+            n['e'] *= gamma
 
-        # 4. MERGE (Không trùng lặp, lấy energy cao nhất)
-        all_nodes_dict = {n['node_id']: n for n in structural_nodes}
+        all_nodes_dict = {str(n['node_id']): n for n in structural_nodes}
         for r_node in resonance_nodes:
-            nid = r_node['node_id']
+            nid = str(r_node['node_id'])
             if nid in all_nodes_dict:
-                # Nếu node đã có ở Phase 1, cập nhật energy mới (cao hơn)
                 all_nodes_dict[nid]['e'] = max(
                     all_nodes_dict[nid]['e'], r_node['e'])
             else:
@@ -224,8 +229,86 @@ class ShortTermActivationGraph:
 
         return list(all_nodes_dict.values())
 
-    def fetch_from_permanent_storage(self, node_id):
-        pass
+    def phase_3_wbos_pathing(self, m_new_wbos_mask: int, activated_nodes: List[dict]):
+        """
+        Phase 3: Logical Pulse Propagation (Hindsight Logic).
+        Propagates energy through logical gates based on WBOS bitmasks.
+        """
+        omega_wbos = 0.3  # Strength of the logical jump
+        hindsight_nodes = []
+
+        # Define Logic Gates: Current Bit -> Target Bit to activate
+        # Example: If new message is S (1), we look for neighbors with O (2)
+        logic_gates = {
+            1: 2,  # S -> O (Fact recalls Feeling)
+            2: 4,  # O -> B (Feeling recalls Belief)
+            8: 4,  # W -> B (Will recalls Belief)
+            4: 2   # B -> O (Belief recalls Feeling)
+        }
+
+        # Identify the target bit based on the new message's mask
+        target_bit = logic_gates.get(m_new_wbos_mask)
+        if not target_bit:
+            return activated_nodes
+
+        # We iterate through neighbors of currently activated nodes
+        # to find those that match the target logical type.
+        for node in activated_nodes:
+            # Each node in WMG should store its neighbors in 'ed' (edges)
+            # and its WBOS type in 'w'
+            edges = node.get('ed', {})
+            if isinstance(edges, str):
+                edges = json.loads(edges)
+
+            # Target neighbor IDs from structural links (Prev, Next, Last Topic)
+            neighbor_ids = [edges.get('p'), edges.get('n'), edges.get('lt')]
+            neighbor_ids = list(set(filter(None, neighbor_ids)))
+
+            if not neighbor_ids:
+                continue
+
+            # Check neighbors in Redis
+            pipe = self.r.pipeline()
+            for nid in neighbor_ids:
+                pipe.hgetall(f"stag:node:{nid}")  # Assuming full hash access
+
+            neighbors_data = pipe.execute()
+
+            for i, data in enumerate(neighbors_data):
+                if not data:
+                    continue
+
+                # Check if neighbor matches the logical gate
+                neighbor_w = int(data.get('w', 0))
+
+                # Bitwise AND to check if the neighbor has the target bit
+                if neighbor_w & target_bit:
+                    # Calculate boosted energy for this logical jump
+                    current_e = float(data.get('e', 0))
+                    # Boost formula: E_j = E_j + (E_source * omega)
+                    boosted_e = min(1.0, current_e +
+                                    (node.get('e', 0) * omega_wbos))
+
+                    # Update energy in Redis for this neighbor
+                    nid = neighbor_ids[i]
+                    self.r.hset(self.stag_energy_prefix, nid, boosted_e)
+
+                    # Add to context cloud
+                    data['node_id'] = nid
+                    data['e'] = boosted_e
+                    hindsight_nodes.append(data)
+
+        # Merge hindsight nodes back into the activated set
+        all_nodes_dict = {str(n['node_id']): n for n in activated_nodes}
+        for h_node in hindsight_nodes:
+            nid = str(h_node['node_id'])
+            if nid in all_nodes_dict:
+                all_nodes_dict[nid]['e'] = max(
+                    all_nodes_dict[nid]['e'], h_node['e'])
+            else:
+                all_nodes_dict[nid] = h_node
+
+        return list(all_nodes_dict.values())
 
     async def commit_to_memory(self, current_node_id: int, extracted_info: SlmExtractionResponse):
         """
@@ -263,94 +346,7 @@ class ShortTermActivationGraph:
     async def _trigger_graph_maintenance(self, current_node_id: int, extracted_info: SlmExtractionResponse):
         stag_meta_result = lua_scripts.update_stag_metadata(
             keys=[self.stag_metadata_key, f"{self.prefix}:topics_recency"],
-            args=[str(current_node_id), extracted_info.topic, 50, int(time.time())]
+            args=[str(current_node_id), extracted_info.topic,
+                  50, int(time.time())]
         )
         print("STAG Metadata Updated:", stag_meta_result)
-
-    # ---------------------------------------------------------
-    # CÁC HÀM CHI TIẾT (COMPONENTS)
-    # ---------------------------------------------------------
-
-    def phase_3_wbos_pathing(self, m_new_wbos_mask: int, activated_nodes: List[dict]):
-        """
-        Input: 
-            m_new_wbos_mask: Mask của tin nhắn hiện tại (ví dụ: 1 cho S)
-            activated_nodes: Danh sách node từ Phase 1 & 2 (có kèm node_id, e, wbos_mask)
-        """
-        # 1. ĐỊNH NGHĨA CÁC CỔNG LOGIC (GATES)
-        # Cấu trúc: { Nguồn_Bit: { Đích_Bit: Trọng_số_Omega } }
-        LOGIC_GATES = {
-            1: {2: 0.8, 4: 0.4},  # S -> O (0.8), S -> B (0.4)
-            2: {4: 0.6, 8: 0.3},  # O -> B (0.6), O -> W (0.3)
-            4: {8: 0.9, 1: 0.5},  # B -> W (0.9), B -> S (0.5)
-            8: {1: 0.7, 4: 0.6}   # W -> S (0.7), W -> B (0.6)
-        }
-
-        stag_energy_key = f"stag:energy:{self.query.dialogue_id}"
-        wmg_nodes_key = self.wmg.nodes_key
-
-        # 2. XÁC ĐỊNH CÁC BIT ĐANG BẬT TRONG M_NEW
-        active_input_bits = [bit for bit in [
-            8, 4, 2, 1] if m_new_wbos_mask & bit]
-
-        # 3. LAN TRUYỀN NĂNG LƯỢNG QUA CÁC CỔNG
-        propagated_updates = {}  # {neighbor_node_id: additional_energy}
-        nodes_to_fetch = set()
-
-        for node in activated_nodes:
-            source_e = node.get("e", 0)
-            source_id = node.get("node_id")
-
-            # Lấy danh sách neighbors của node này từ trường 'ed' (edges) trong Redis
-            # (Giả sử node_data có trường 'edges' lưu {p: prev, n: next, lt: last_topic})
-            edges = node.get("metadata", {}).get("edges", {})
-            neighbor_ids = list(
-                filter(None, [edges.get("p"), edges.get("n"), edges.get("lt")]))
-
-            for input_bit in active_input_bits:
-                if input_bit in LOGIC_GATES:
-                    for target_bit, omega in LOGIC_GATES[input_bit].items():
-                        # Tìm trong hàng xóm của node đang xét, node nào có target_bit thì boost
-                        for n_id in neighbor_ids:
-                            nodes_to_fetch.add(n_id)
-                            # Logic: Năng lượng truyền đi = Năng lượng nguồn * Omega
-                            boost = source_e * omega
-                            propagated_updates[n_id] = propagated_updates.get(
-                                n_id, 0) + boost
-
-        if not nodes_to_fetch:
-            return activated_nodes
-
-        # 4. CẬP NHẬT REDIS VÀ LẤY DỮ LIỆU NEIGHBORS MỚI KÍCH HOẠT
-        pipe = self.r.pipeline()
-        neighbor_ids_list = list(nodes_to_fetch)
-        for n_id in neighbor_ids_list:
-            # Tăng năng lượng cho neighbor dựa trên bước nhảy logic
-            if n_id in propagated_updates:
-                pipe.hincrbyfloat(stag_energy_key, n_id,
-                                  propagated_updates[n_id])
-            pipe.hget(wmg_nodes_key, n_id)
-
-        redis_results = pipe.execute()
-
-        # 5. HỢP NHẤT VÀO DANH SÁCH ACTIVATED NODES
-        final_nodes_dict = {n['node_id']: n for n in activated_nodes}
-
-        for i, n_id in enumerate(neighbor_ids_list):
-            # Kết quả pipeline: [hincrbyfloat_res, hget_res]
-            new_e = float(redis_results[i*2] or 0)
-            raw_json = redis_results[i*2 + 1]
-
-            if raw_json:
-                n_data = json.loads(raw_json)
-                n_data["node_id"] = n_id
-                n_data["e"] = min(1.0, new_e)  # Cap năng lượng tại 1.0
-
-                # Hợp nhất: Nếu node đã có, cập nhật Energy, nếu chưa có thì thêm mới
-                if n_id in final_nodes_dict:
-                    final_nodes_dict[n_id]["e"] = max(
-                        final_nodes_dict[n_id]["e"], n_data["e"])
-                else:
-                    final_nodes_dict[n_id] = n_data
-
-        return list(final_nodes_dict.values())
