@@ -6,7 +6,10 @@ import uuid
 
 import numpy as np
 
-from core.domain.request.query_request import QueryRequest
+from chat_hub.core.domain.enums.enum import MemoryModel
+from chat_hub.core.prompts import graph_prompts
+from chat_hub.kernel.config import llm_models
+from core.domain.request.query_request import LLMModel, QueryRequest
 from core.domain.response.graph_llm_response import SlmExtractionResponse
 from core.graph_memory.dto.signal import Signal
 from core.graph_memory.entity.stag import stag_entity
@@ -31,7 +34,21 @@ class ShortTermActivationGraph:
 
         active_subgraph = await self.activate_context(signal, metadata)
 
-         
+        prompt = graph_prompts.ANALYZING_ANSWER_PROMPT.format(
+            query=self.query.query,
+            active_subgraph=json.dumps(active_subgraph),
+        )
+        model: LLMModel = llm_models.build_system_model(
+            memory_model=MemoryModel.GRAPH
+        )
+
+        function = await llm_models.get_model_generate_content(
+            model=model,
+            user_id=self.query.user_id,
+            prompt=prompt
+        )
+        return function(prompt=prompt, model=model)
+
 
     async def preprocess_signal(self, content, extracted_info: SlmExtractionResponse):
         raw_vector_list = await embedding_model.get_embeddings(texts=[content])
@@ -239,17 +256,19 @@ class ShortTermActivationGraph:
 
         # 2. Collect all potential neighbor IDs from the 'ed' field of activated nodes
         # Limit to Top 5 most energetic nodes to prevent explosion
-        source_nodes = sorted(activated_nodes, key=lambda x: x.get('e', 0), reverse=True)[:5]
-        
+        source_nodes = sorted(
+            activated_nodes, key=lambda x: x.get('e', 0), reverse=True)[:5]
+
         neighbor_ids = set()
         for node in source_nodes:
             edges = node.get('ed', {})
             if isinstance(edges, str):
                 edges = json.loads(edges)
-            
+
             # Pull Prev, Next, and Last Topic neighbors
             for nid in [edges.get('p'), edges.get('n'), edges.get('lt')]:
-                if nid: neighbor_ids.add(str(nid))
+                if nid:
+                    neighbor_ids.add(str(nid))
 
         if not neighbor_ids:
             return activated_nodes
@@ -259,18 +278,19 @@ class ShortTermActivationGraph:
         for nid in neighbor_ids:
             pipe.hgetall(f"stag:node:{nid}")
             pipe.hget(self.stag_energy_prefix, nid)
-        
+
         raw_results = await pipe.execute()
-        
+
         # 4. Filter and Boost Energy
         hindsight_nodes = []
-        omega_wbos = 0.3 # Logical boost weight
+        omega_wbos = 0.3  # Logical boost weight
 
         for i, nid in enumerate(neighbor_ids):
             node_data = raw_results[i*2]
             current_energy = float(raw_results[i*2 + 1] or 0)
-            
-            if not node_data: continue
+
+            if not node_data:
+                continue
 
             # Check if neighbor matches the logic gate bitmask
             neighbor_w = int(node_data.get('w', 0))
@@ -280,7 +300,7 @@ class ShortTermActivationGraph:
                 node_data['node_id'] = nid
                 node_data['e'] = new_e
                 hindsight_nodes.append(node_data)
-                
+
                 # Update boosted energy back to Redis for future resonance
                 await self.r.hset(self.stag_energy_prefix, nid, new_e)
 
@@ -289,7 +309,8 @@ class ShortTermActivationGraph:
         for h_node in hindsight_nodes:
             nid = str(h_node['node_id'])
             if nid in all_nodes_dict:
-                all_nodes_dict[nid]['e'] = max(all_nodes_dict[nid]['e'], h_node['e'])
+                all_nodes_dict[nid]['e'] = max(
+                    all_nodes_dict[nid]['e'], h_node['e'])
             else:
                 all_nodes_dict[nid] = h_node
 
