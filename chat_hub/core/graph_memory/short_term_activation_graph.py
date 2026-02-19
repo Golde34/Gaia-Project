@@ -31,8 +31,7 @@ class ShortTermActivationGraph:
 
         active_subgraph = await self.activate_context(signal, metadata)
 
-        # LLM use active_subgraph to generate response (not implemented here)
-        pass
+         
 
     async def preprocess_signal(self, content, extracted_info: SlmExtractionResponse):
         raw_vector_list = await embedding_model.get_embeddings(texts=[content])
@@ -78,11 +77,7 @@ class ShortTermActivationGraph:
         print(
             f"Phase 2 - Resonance Result (Total Unique Nodes): {len(activated_nodes)}")
 
-        # 3. Phase 3: WBOS Pathing (Lan truyền logic theo Gate)
-        # Nhiệm vụ: Từ các node đang "sáng" ở P1 & P2, kiểm tra signal.bitmask của M_new.
-        # Nếu M_new là 'S', nó sẽ tự động kích hoạt các hàng xóm 'O' hoặc 'B' của các node này.
-        # Đây là bước tạo ra "Hindsight Context" (Hồi tưởng ngữ cảnh logic).
-        context_cloud = self.phase_3_wbos_pathing(
+        context_cloud = await self._wbos_pathing(
             m_new_wbos_mask=signal.bitmask,
             activated_nodes=activated_nodes
         )
@@ -229,82 +224,72 @@ class ShortTermActivationGraph:
 
         return list(all_nodes_dict.values())
 
-    def phase_3_wbos_pathing(self, m_new_wbos_mask: int, activated_nodes: List[dict]):
+    async def _wbos_pathing(self, m_new_wbos_mask: int, activated_nodes: List[dict]):
         """
-        Phase 3: Logical Pulse Propagation (Hindsight Logic).
-        Propagates energy through logical gates based on WBOS bitmasks.
+        Phase 3: Logical Pulse Propagation.
+        Goal: High-speed local expansion via structural edges.
         """
-        omega_wbos = 0.3  # Strength of the logical jump
-        hindsight_nodes = []
-
-        # Define Logic Gates: Current Bit -> Target Bit to activate
-        # Example: If new message is S (1), we look for neighbors with O (2)
-        logic_gates = {
-            1: 2,  # S -> O (Fact recalls Feeling)
-            2: 4,  # O -> B (Feeling recalls Belief)
-            8: 4,  # W -> B (Will recalls Belief)
-            4: 2   # B -> O (Belief recalls Feeling)
-        }
-
-        # Identify the target bit based on the new message's mask
+        # 1. Define Logic Gates (S:1, O:2, B:4, W:8)
+        # If Input is S (1), look for O (2). If Input is W (8), look for B (4).
+        logic_gates = {1: 2, 2: 4, 8: 4, 4: 1}
         target_bit = logic_gates.get(m_new_wbos_mask)
-        if not target_bit:
+
+        if not target_bit or not activated_nodes:
             return activated_nodes
 
-        # We iterate through neighbors of currently activated nodes
-        # to find those that match the target logical type.
-        for node in activated_nodes:
-            # Each node in WMG should store its neighbors in 'ed' (edges)
-            # and its WBOS type in 'w'
+        # 2. Collect all potential neighbor IDs from the 'ed' field of activated nodes
+        # Limit to Top 5 most energetic nodes to prevent explosion
+        source_nodes = sorted(activated_nodes, key=lambda x: x.get('e', 0), reverse=True)[:5]
+        
+        neighbor_ids = set()
+        for node in source_nodes:
             edges = node.get('ed', {})
             if isinstance(edges, str):
                 edges = json.loads(edges)
+            
+            # Pull Prev, Next, and Last Topic neighbors
+            for nid in [edges.get('p'), edges.get('n'), edges.get('lt')]:
+                if nid: neighbor_ids.add(str(nid))
 
-            # Target neighbor IDs from structural links (Prev, Next, Last Topic)
-            neighbor_ids = [edges.get('p'), edges.get('n'), edges.get('lt')]
-            neighbor_ids = list(set(filter(None, neighbor_ids)))
+        if not neighbor_ids:
+            return activated_nodes
 
-            if not neighbor_ids:
-                continue
+        # 3. Batch fetch neighbors from Redis (Fast O(1) lookups)
+        pipe = self.r.pipeline()
+        for nid in neighbor_ids:
+            pipe.hgetall(f"stag:node:{nid}")
+            pipe.hget(self.stag_energy_prefix, nid)
+        
+        raw_results = await pipe.execute()
+        
+        # 4. Filter and Boost Energy
+        hindsight_nodes = []
+        omega_wbos = 0.3 # Logical boost weight
 
-            # Check neighbors in Redis
-            pipe = self.r.pipeline()
-            for nid in neighbor_ids:
-                pipe.hgetall(f"stag:node:{nid}")  # Assuming full hash access
+        for i, nid in enumerate(neighbor_ids):
+            node_data = raw_results[i*2]
+            current_energy = float(raw_results[i*2 + 1] or 0)
+            
+            if not node_data: continue
 
-            neighbors_data = pipe.execute()
+            # Check if neighbor matches the logic gate bitmask
+            neighbor_w = int(node_data.get('w', 0))
+            if neighbor_w & target_bit:
+                # Boost the energy and record the jump
+                new_e = min(1.0, current_energy + omega_wbos)
+                node_data['node_id'] = nid
+                node_data['e'] = new_e
+                hindsight_nodes.append(node_data)
+                
+                # Update boosted energy back to Redis for future resonance
+                await self.r.hset(self.stag_energy_prefix, nid, new_e)
 
-            for i, data in enumerate(neighbors_data):
-                if not data:
-                    continue
-
-                # Check if neighbor matches the logical gate
-                neighbor_w = int(data.get('w', 0))
-
-                # Bitwise AND to check if the neighbor has the target bit
-                if neighbor_w & target_bit:
-                    # Calculate boosted energy for this logical jump
-                    current_e = float(data.get('e', 0))
-                    # Boost formula: E_j = E_j + (E_source * omega)
-                    boosted_e = min(1.0, current_e +
-                                    (node.get('e', 0) * omega_wbos))
-
-                    # Update energy in Redis for this neighbor
-                    nid = neighbor_ids[i]
-                    self.r.hset(self.stag_energy_prefix, nid, boosted_e)
-
-                    # Add to context cloud
-                    data['node_id'] = nid
-                    data['e'] = boosted_e
-                    hindsight_nodes.append(data)
-
-        # Merge hindsight nodes back into the activated set
+        # 5. Final Merge
         all_nodes_dict = {str(n['node_id']): n for n in activated_nodes}
         for h_node in hindsight_nodes:
             nid = str(h_node['node_id'])
             if nid in all_nodes_dict:
-                all_nodes_dict[nid]['e'] = max(
-                    all_nodes_dict[nid]['e'], h_node['e'])
+                all_nodes_dict[nid]['e'] = max(all_nodes_dict[nid]['e'], h_node['e'])
             else:
                 all_nodes_dict[nid] = h_node
 
