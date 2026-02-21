@@ -94,7 +94,7 @@ class WorkingMemoryGraph:
         if response.routing_decision == GraphRoutingDecision.LLM.value \
             or response.confidence_score <= 0.8: #TODO: Magic number
             response.response = await self.quick_analyzing_answer(raw_nodes, metadata)
-            response.routing_decision = GraphRoutingDecision.LLM.value
+            response.routing_decision = GraphRoutingDecision.SLM.value
             response.confidence_score = 1.0
 
         node_id: int = self._get_max_id(last_topic_nodes)

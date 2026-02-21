@@ -126,7 +126,7 @@ class ShortTermActivationGraph:
             # Beta = 0.2 TODO: Magic number
             e = float(self.r.hget(self.stag_energy_prefix, node_id) or 0)
             new_e = e + 0.2 * (1 - e)
-            new_e = np.min(1.0, new_e)
+            new_e = min(1.0, new_e)
             pipe.hset(self.stag_energy_prefix, node_id, new_e)
             pipe.hget(wmg_nodes_key, node_id)
 
