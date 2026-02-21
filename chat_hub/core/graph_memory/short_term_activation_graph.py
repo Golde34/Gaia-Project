@@ -161,9 +161,9 @@ class ShortTermActivationGraph:
         wmg_nodes_key = self.wmg.nodes_key
 
         search_output = stag_entity.search_top_n(
-            query_vector=query_vector,
-            uid=self.query.user_id,
-            active_topics=[topic],
+            user_id=str(self.query.user_id),
+            query_embeddings=[query_vector],
+            topic=topic,
             top_k=20
         )
         if not search_output or not search_output[0]:
