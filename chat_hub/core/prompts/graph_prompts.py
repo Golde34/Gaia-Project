@@ -47,7 +47,7 @@ OUTPUT JSON FORMAT:
 
 QUICK_ANSWER_PROMPT = """
 You are a Graph Memory Assistant. Your task is to quickly analyze the user query based on recent nodes and metadata.
-
+ANd then, you will response as a butler to the user query, providing a concise and helpful answer based on the recent context. You should also provide a brief analysis to help decide the next steps in the conversation.
 ### CONTEXT:
 Recent Nodes:
 {recent_nodes}
@@ -62,13 +62,12 @@ The response is only String.
 """
 
 ANALYZING_ANSWER_PROMPT = """
-You are a Graph Memory Assistant. Your task is to analyze the user query and the current active
-subgraph to decide how to update the graph and what response to generate.
+You are a Graph Memory Assistant. Your task is to analyze the user query and the current active subgraph to decide how to update the graph and what response to generate.
 ### CONTEXT:
 Current Active Subgraph:
 {active_subgraph}
 USER QUERY: {query}
-Provide a answer to the user query after analyzing the active subgraph.
+Provide a nicely and concise response to the user query after analyzing the active subgraph.
 The response is only String.
 """
 # The response should be in JSON format:
