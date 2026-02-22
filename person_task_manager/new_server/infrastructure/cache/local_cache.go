@@ -60,10 +60,17 @@ func GetLocal(ctx context.Context, key string, dest interface{}) (bool, error) {
 }
 
 func SetHybridLocal(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
-	err := Client().Set(ctx, key, value, expiration).Err()
+	data, err := json.Marshal(value)
+	if err != nil {
+		return fmt.Errorf("failed to marshal redis data: %w", err)
+	}
+
+	err = Client().Set(ctx, key, data, expiration).Err()
 	if err != nil {
 		return err
 	}
+
+	memoryCache.Set(key, value, cache.DefaultExpiration)
 
 	return Client().Publish(ctx, cacheInvalidationChannel, key).Err()
 }
