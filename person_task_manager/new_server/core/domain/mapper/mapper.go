@@ -3,6 +3,8 @@ package mapper
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/lib/pq"
 )
 
 func MapToStruct(data map[string]interface{}, result interface{}) error {
@@ -33,6 +35,14 @@ func MapToStruct(data map[string]interface{}, result interface{}) error {
 		valueReflect := reflect.ValueOf(value)
 		valueType := valueReflect.Type()
 		fieldType := fieldValue.Type()
+
+		if fieldType.Kind() == reflect.Slice && fieldType.Elem().Kind() == reflect.String {
+			var arr pq.StringArray
+			if err := arr.Scan(value); err == nil {
+				fieldValue.Set(reflect.ValueOf([]string(arr)))
+				continue
+			}
+		}
 
 		if valueType.AssignableTo(fieldType) {
 			fieldValue.Set(valueReflect)
