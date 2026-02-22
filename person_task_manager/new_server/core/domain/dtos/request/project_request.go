@@ -3,8 +3,8 @@ package request
 type CreateProjectRequest struct {
 	Name         string `json:"name"`
 	Description  string `json:"description"`
-	UserID       int    `json:"user_id"`
+	UserID       int    `json:"userId"`
 	Color        string `json:"color"`
 	Status       string `json:"status"`
-	ActiveStatus string `json:"active_status"`
+	ActiveStatus string `json:"activeStatus"`
 }

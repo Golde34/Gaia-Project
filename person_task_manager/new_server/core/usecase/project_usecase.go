@@ -3,11 +3,15 @@ package usecase
 import (
 	"context"
 	"database/sql"
+	"log"
 	base_dtos "personal_task_manager/core/domain/dtos/base"
 	"personal_task_manager/core/domain/dtos/request"
 	"personal_task_manager/core/domain/entities"
 	"personal_task_manager/core/service"
 	"strconv"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type ProjectUsecase struct {
@@ -23,32 +27,48 @@ func NewProjectUsecase(db *sql.DB) *ProjectUsecase {
 	}
 }
 
-func (pu *ProjectUsecase) CreateProject(ctx context.Context, project request.CreateProjectRequest) (entities.ProjectEntity, error) {
+func (pu *ProjectUsecase) CreateProject(ctx context.Context, project request.CreateProjectRequest) (base_dtos.ErrorResponse, error) {
 	if project.Color == "" {
 		project.Color = "indigo"
 	}
 	if project.ActiveStatus == "" {
-		project.ActiveStatus = "active"
+		project.ActiveStatus = "ACTIVE"
 	}
+	log.Println("Creating project with name: ", project.Name, " for userId: ", project.UserID)
 
 	// Did I need default project logic here?
+	// tag is empty array for now, will implement later when I have tag feature
 
 	newProject := entities.ProjectEntity{
+		ID:           uuid.New().String(),
 		Name:         project.Name,
 		Description:  project.Description,
-		UserID:       project.UserID,
-		Color:        project.Color,
 		Status:       project.Status,
+		Color:        project.Color,
+		UserID:       project.UserID,
 		ActiveStatus: project.ActiveStatus,
+		IsDefault:    false,
+		Tag:          []string{},
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 
 	// replace by project service and cache later
 	createdProject, err := pu.projectService.CreateProject(ctx, newProject)
 	if err != nil {
-		return entities.ProjectEntity{}, err
+		return base_dtos.NewErrorResponse(
+			"Error",
+			"Failed to create project",
+			500,
+			err.Error(),
+			nil,
+		), err
 	}
-
-	return createdProject, nil
+	response := base_dtos.NewSuccessResponse(
+		"Project created successfully",
+		map[string]interface{}{"projects": createdProject},
+	)
+	return response, nil
 }
 
 func (pu *ProjectUsecase) GetProjectByID(ctx context.Context, id string) (base_dtos.ErrorResponse, error) {
