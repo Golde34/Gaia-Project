@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"database/sql"
+	base_dtos "personal_task_manager/core/domain/dtos/base"
 	"personal_task_manager/core/domain/dtos/request"
 	"personal_task_manager/core/domain/entities"
 	"personal_task_manager/core/service"
@@ -58,10 +59,21 @@ func (pu *ProjectUsecase) GetProjectByID(ctx context.Context, id string) (entiti
 	return pu.projectService.GetProjectByID(ctx, idInt)	
 }
 
-func (pu *ProjectUsecase) GetAllProjectsByUserID(ctx context.Context, userId string) ([]entities.ProjectEntity, error) {
+func (pu *ProjectUsecase) GetAllProjectsByUserID(ctx context.Context, userId string) (base_dtos.ErrorResponse, error) {
 	userIdInt, err := strconv.Atoi(userId)
 	if err != nil {
-		return nil, err
+		return base_dtos.ErrorResponse{}, err
 	}
-	return pu.projectService.GetAllProjectsByUserID(ctx, userIdInt)	
+	projects, err := pu.projectService.GetAllProjectsByUserID(ctx, userIdInt)
+	if err != nil {
+		return base_dtos.ErrorResponse{}, err
+	}
+	response := base_dtos.ErrorResponse{
+		Status:        "Success",
+		StatusMessage: "Success",
+		ErrorCode:     200,
+		ErrorMessage:  "Projects retrieved successfully",
+		Data:          map[string]interface{}{"projects": projects},
+	}
+	return response, nil
 }
