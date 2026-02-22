@@ -6,17 +6,17 @@ import uuid
 
 import numpy as np
 
-from chat_hub.core.domain.enums.enum import MemoryModel
-from chat_hub.core.prompts import graph_prompts
-from chat_hub.kernel.config import llm_models
+from core.domain.enums.enum import MemoryModel
 from core.domain.request.query_request import LLMModel, QueryRequest
 from core.domain.response.graph_llm_response import SlmExtractionResponse
 from core.graph_memory.dto.signal import Signal
 from core.graph_memory.entity.stag import stag_entity
 from core.graph_memory.working_memory_graph import WorkingMemoryGraph
+from core.prompts import graph_prompts
 from infrastructure.embedding.base_embedding import embedding_model
 from infrastructure.redis.redis import rd
 from infrastructure.redis.lua_script import lua_scripts
+from kernel.config import llm_models
 
 
 class ShortTermActivationGraph:
@@ -33,6 +33,7 @@ class ShortTermActivationGraph:
         signal: Signal = await self.preprocess_signal(self.query.query, metadata)
 
         active_subgraph = await self.activate_context(signal, metadata)
+        print(f"Active Subgraph Nodes: {active_subgraph}")
 
         prompt = graph_prompts.ANALYZING_ANSWER_PROMPT.format(
             query=self.query.query,
@@ -101,8 +102,6 @@ class ShortTermActivationGraph:
         print(
             f"Phase 3 - WBOS Pathing Complete. Context Cloud Size: {len(context_cloud)}")
 
-        # 4. Sắp xếp Context Cloud theo Energy (Độ ưu tiên truyền vào LLM)
-        # Những node có năng lượng cao nhất (vừa giống nghĩa, vừa khớp logic) sẽ đứng đầu.
         context_cloud.sort(key=lambda x: x.get('e', 0), reverse=True)
 
         return context_cloud
@@ -127,7 +126,7 @@ class ShortTermActivationGraph:
             # Beta = 0.2 TODO: Magic number
             e = float(self.r.hget(self.stag_energy_prefix, node_id) or 0)
             new_e = e + 0.2 * (1 - e)
-            new_e = np.min(1.0, new_e)
+            new_e = min(1.0, new_e)
             pipe.hset(self.stag_energy_prefix, node_id, new_e)
             pipe.hget(wmg_nodes_key, node_id)
 
@@ -158,25 +157,16 @@ class ShortTermActivationGraph:
             topic: str,
             structural_nodes: List[dict]):
 
-        gamma = 0.8  # Decay
         alpha = 0.5  # Activation
         wmg_nodes_key = self.wmg.nodes_key
 
-        await self.r.eval(
-            lua_scripts.decay_stag_nodes,
-            1, self.stag_energy_prefix,
-            gamma
-        )
-
         search_output = stag_entity.search_top_n(
-            query_vector=query_vector,
-            uid=self.query.user_id,
-            active_topics=[topic],
+            user_id=str(self.query.user_id),
+            query_embeddings=[query_vector],
+            topic=topic,
             top_k=20
         )
         if not search_output or not search_output[0]:
-            for node in structural_nodes:
-                node['e'] *= gamma
             return structural_nodes
 
         semantic_results = search_output[0]
@@ -225,10 +215,7 @@ class ShortTermActivationGraph:
                                      json.dumps(ltm_entity))
                     update_pipe.hset(self.stag_energy_prefix, nid, 0.8)
 
-        await update_pipe.execute()
-
-        for n in structural_nodes:
-            n['e'] *= gamma
+        update_pipe.execute()
 
         all_nodes_dict = {str(n['node_id']): n for n in structural_nodes}
         for r_node in resonance_nodes:
@@ -279,7 +266,7 @@ class ShortTermActivationGraph:
             pipe.hgetall(f"stag:node:{nid}")
             pipe.hget(self.stag_energy_prefix, nid)
 
-        raw_results = await pipe.execute()
+        raw_results = pipe.execute()
 
         # 4. Filter and Boost Energy
         hindsight_nodes = []
@@ -302,7 +289,7 @@ class ShortTermActivationGraph:
                 hindsight_nodes.append(node_data)
 
                 # Update boosted energy back to Redis for future resonance
-                await self.r.hset(self.stag_energy_prefix, nid, new_e)
+                self.r.hset(self.stag_energy_prefix, nid, new_e)
 
         # 5. Final Merge
         all_nodes_dict = {str(n['node_id']): n for n in activated_nodes}
@@ -350,6 +337,11 @@ class ShortTermActivationGraph:
                 )
 
     async def _trigger_graph_maintenance(self, current_node_id: int, extracted_info: SlmExtractionResponse):
+        gamma = 0.8  # Decay
+        lua_scripts.decay_stag_nodes(
+            keys=[self.stag_energy_prefix],
+            args=[gamma]
+        )
         stag_meta_result = lua_scripts.update_stag_metadata(
             keys=[self.stag_metadata_key, f"{self.prefix}:topics_recency"],
             args=[str(current_node_id), extracted_info.topic,

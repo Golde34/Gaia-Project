@@ -20,6 +20,7 @@ class WorkingMemoryGraph:
         self.nodes_key = f"graph:{self.session_id}:nodes"
         self.metadata_key = f"graph:{self.session_id}:metadata"
         self.topics_prefix = f"graph:{self.session_id}:topics"
+        self.max_query_size = 5
 
     def fetch_recent_nodes(self) -> tuple[dict, dict, dict]:
         raw_meta = self.r.hgetall(self.metadata_key)
@@ -94,7 +95,7 @@ class WorkingMemoryGraph:
         if response.routing_decision == GraphRoutingDecision.LLM.value \
             or response.confidence_score <= 0.8: #TODO: Magic number
             response.response = await self.quick_analyzing_answer(raw_nodes, metadata)
-            response.routing_decision = GraphRoutingDecision.LLM.value
+            response.routing_decision = GraphRoutingDecision.SLM.value
             response.confidence_score = 1.0
 
         node_id: int = self._get_max_id(last_topic_nodes)
@@ -136,7 +137,7 @@ class WorkingMemoryGraph:
 
         evicted_node_json = lua_scripts.build_wmg_memory(
             keys=[self.nodes_key, specific_topic_key, self.metadata_key],
-            args=[str(node_id), node_json, topic, 10]
+            args=[str(node_id), node_json, topic, self.max_query_size]
         )
         print("Evicted Node JSON:", evicted_node_json)
 

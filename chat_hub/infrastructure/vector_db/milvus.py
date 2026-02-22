@@ -181,7 +181,7 @@ class MilvusDB:
                 search_params=search_params,
                 limit=top_k,
                 partition_names=[partition_name] if partition_name else None,
-                expr=filter_expression
+                filter=filter_expression
             )
 
             formatted_results = []

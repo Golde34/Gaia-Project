@@ -73,9 +73,17 @@ class STAGEngity():
             entities=data
         ) 
 
-    def search_top_n(self, query_embeddings: List[List[float]], top_k: int = 5, topic: str = None) -> List[dict]:
+    def search_top_n(
+        self, 
+        user_id: str,
+        query_embeddings: List[List[float]], 
+        top_k: int = 5, 
+        topic: str = None) -> List[dict]:
         output_fields = ["user_id", "node_id", "topic", "wbos_mask", "wbos_type", "content", "timestamp"]
-        filter_expression = f'topic == "{topic}"' if topic else None
+        if topic:
+            filter_expression = f'user_id == "{user_id}" && topic == "{topic}"'
+        else:
+            filter_expression = f'user_id == "{user_id}"'
 
         return milvus_db.search_top_n(
             collection_name=self.connection_name,

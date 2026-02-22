@@ -11,5 +11,8 @@ for i = 1, #all_nodes, 2 do
     local current_e = tonumber(all_nodes[i+1])
     
     local new_e = current_e * gamma
+    redis.call('HSET', key, node_id, new_e)
 end
+
+return #all_nodes / 2
 
