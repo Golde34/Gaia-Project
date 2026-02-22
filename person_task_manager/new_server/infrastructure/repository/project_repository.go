@@ -35,7 +35,7 @@ func (r *ProjectRepository) CreateProject(project entities.ProjectEntity) (entit
 	return project, nil
 }
 
-func (r *ProjectRepository) GetProjectByID(id int) (entities.ProjectEntity, error) {
+func (r *ProjectRepository) GetProjectByID(id string) (entities.ProjectEntity, error) {
 	where := map[string]interface{}{
 		"id": id,
 	}

@@ -39,8 +39,8 @@ func (ps *ProjectService) CreateProject(ctx context.Context, project entities.Pr
 	return createdProject, nil
 }
 
-func (ps *ProjectService) GetProjectByID(ctx context.Context, id int) (entities.ProjectEntity, error) {
-	cacheKey := fmt.Sprintf("project:%d", id)
+func (ps *ProjectService) GetProjectByID(ctx context.Context, id string) (entities.ProjectEntity, error) {
+	cacheKey := fmt.Sprintf("project:%s", id)
 	var project entities.ProjectEntity
 
 	found, err := redis_cache.GetLocal(context.Background(), cacheKey, &project)

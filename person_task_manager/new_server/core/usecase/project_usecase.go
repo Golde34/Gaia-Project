@@ -51,12 +51,22 @@ func (pu *ProjectUsecase) CreateProject(ctx context.Context, project request.Cre
 	return createdProject, nil
 }
 
-func (pu *ProjectUsecase) GetProjectByID(ctx context.Context, id string) (entities.ProjectEntity, error) {
-	idInt, err := strconv.Atoi(id)
+func (pu *ProjectUsecase) GetProjectByID(ctx context.Context, id string) (base_dtos.ErrorResponse, error) {
+	projects, err := pu.projectService.GetProjectByID(ctx, id)
 	if err != nil {
-		return entities.ProjectEntity{}, err
+		return base_dtos.NewErrorResponse(
+			"Error",
+			"Failed to retrieve project",
+			500,
+			err.Error(),
+			nil,
+		), err
 	}
-	return pu.projectService.GetProjectByID(ctx, idInt)	
+	response := base_dtos.NewSuccessResponse(
+		"Project retrieved successfully",
+		map[string]interface{}{"project": projects},
+	)
+	return response, nil
 }
 
 func (pu *ProjectUsecase) GetAllProjectsByUserID(ctx context.Context, userId string) (base_dtos.ErrorResponse, error) {
@@ -64,16 +74,15 @@ func (pu *ProjectUsecase) GetAllProjectsByUserID(ctx context.Context, userId str
 	if err != nil {
 		return base_dtos.ErrorResponse{}, err
 	}
+
 	projects, err := pu.projectService.GetAllProjectsByUserID(ctx, userIdInt)
 	if err != nil {
 		return base_dtos.ErrorResponse{}, err
 	}
-	response := base_dtos.ErrorResponse{
-		Status:        "Success",
-		StatusMessage: "Success",
-		ErrorCode:     200,
-		ErrorMessage:  "Projects retrieved successfully",
-		Data:          map[string]interface{}{"projects": projects},
-	}
+
+	response := base_dtos.NewSuccessResponse(
+		"Projects retrieved successfully",
+		map[string]interface{}{"projects": projects},
+	)
 	return response, nil
 }
