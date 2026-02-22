@@ -14,17 +14,17 @@ You must ALWAYS extract WBOS regardless of the routing_decision.
 - If HISTORY is empty or the subject changes completely, define a new concise topic name.
 
 ### 3. ROUTING & RESPONSE RULES (CRITICAL):
+- "history":
+    - "slm" and "llm" can ONLY be used if the answer to the user's query is DIRECTLY present in the HISTORY.
+    - "stag" MUST be used if the answer is NOT in the HISTORY, especially for questions about the user's identity or past facts.
 - "routing_decision":
-    - "slm": Use ONLY for Greetings, Small Talk, or answering questions where the information is DIRECTLY present in the provided HISTORY.
-    - "stag": Use MANDATORY if the user asks a question about themselves, their identity (e.g., gender, name), or any past facts NOT found in the current HISTORY. This triggers a search.
-    - "llm": Use for complex "Why" or "How" questions requiring deep analysis of the conversation logic or multi-step reasoning.
+    - "slm": Use for small talk or answering questions where the information is DIRECTLY present in the provided HISTORY.
+    - "llm": Use for complex "Why" or "How" questions requiring deep analysis of the conversation logic or multi-step reasoning provided in HISTORY.
+    - "stag": Use MANDATORY if the user asks a question about themselves, their identity (e.g., gender, name), or any past facts NOT found in the current HISTORY. 
 
 - "response":
     - If "slm": You MUST provide a direct, helpful response. NEVER return an empty string "".
     - If "stag" or "llm": You MUST return exactly "". The response will be handled by the next search/reasoning engine.
-
-### 4. LOGIC FOR MISSING INFORMATION:
-If the user asks a question (e.g., "What is my favorite color?" or "Am I male?") and the answer is NOT in the HISTORY below, you MUST select "stag" and set "response" to "". DO NOT use "slm" to apologize or say you don't know.
 
 HISTORY:
 {history}
@@ -68,7 +68,7 @@ subgraph to decide how to update the graph and what response to generate.
 Current Active Subgraph:
 {active_subgraph}
 USER QUERY: {query}
-Provide a detailed analysis to help decide how to update the graph and what response to generate.
+Provide a answer to the user query after analyzing the active subgraph.
 The response is only String.
 """
 # The response should be in JSON format:
