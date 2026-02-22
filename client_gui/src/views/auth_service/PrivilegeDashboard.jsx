@@ -24,7 +24,8 @@ function PrivilegeDashboard() {
         debounceRef.current = setTimeout(() => {
             getPrivilegeList();
         }, 200);
-    }, []);
+        return () => clearTimeout(debounceRef.current);
+    }, [getPrivilegeList]);
 
     let [isOpen, setIsOpen] = useState(false);
     function closeModal() {

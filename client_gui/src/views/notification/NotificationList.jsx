@@ -22,6 +22,7 @@ function ContentArea() {
         debounceRef.current = setTimeout(() => {
             fetchNotifications();
         }, 200);
+        return () => clearTimeout(debounceRef.current);
     }, [fetchNotifications]);
 
     return (

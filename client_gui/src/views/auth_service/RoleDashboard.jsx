@@ -24,7 +24,8 @@ function RoleDashboard() {
         debounceRef.current = setTimeout(() => {
             getRoleList();
         }, 200);
-    }, []);
+        return () => clearTimeout(debounceRef.current);
+    }, [getRoleList]);
 
     let [isPrivilegeOpen, setPrivilegeOpen] = useState(false);
     function closePrivilegeModal() {

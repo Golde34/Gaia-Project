@@ -22,7 +22,8 @@ const UserListScreen = (props) => {
         debounceRef.current = setTimeout(() => {
             getListUsers();
         }, 200);
-    }, []);
+        return () => clearTimeout(debounceRef.current);
+    }, [getListUsers]);
 
     // Topup edit user
     let [isOpen, setIsOpen] = useState(false);

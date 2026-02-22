@@ -25,7 +25,8 @@ const TaskProgress = (props) => {
             debounceRef.current = setTimeout(() => {
                 getCompletedTasks();
             }, 200);
-        }, [groupTaskId]);
+            return () => clearTimeout(debounceRef.current);
+        }, [getCompletedTasks]);
     } else {
         const getCompletedTasks = useCallback(() => {
             dispatch(getTasksCompleted(activeTab));
@@ -38,7 +39,8 @@ const TaskProgress = (props) => {
             debounceRef.current = setTimeout(() => {
                 getCompletedTasks();
             }, 200);
-        }, [activeTab]);
+            return () => clearTimeout(debounceRef.current);
+        }, [getCompletedTasks]);
     }
 
     return (

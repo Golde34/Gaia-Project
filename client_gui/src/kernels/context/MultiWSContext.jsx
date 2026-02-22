@@ -8,6 +8,7 @@ export const MultiWSProvider = ({
   children,
   endpoints = {},       // { notification: "ws://...", chat: "ws://..." }
   reconnectDelay = 5000, // ms
+  maxMessagesPerChannel = 200,
 }) => {
   const jwtKey = {
     notification: "notificationJwt",
@@ -45,10 +46,13 @@ export const MultiWSProvider = ({
 
       client.onmessage = (evt) => {
         console.log(`[${channel}] message:`, evt.data);
-        setMessages((prev) => ({
-          ...prev,
-          [channel]: [...prev[channel], evt.data],
-        }));
+        setMessages((prev) => {
+          const nextMessages = [...prev[channel], evt.data];
+          return {
+            ...prev,
+            [channel]: nextMessages.slice(-maxMessagesPerChannel),
+          };
+        });
       };
 
       client.onclose = () => {
@@ -63,7 +67,7 @@ export const MultiWSProvider = ({
 
       socketsRef.current[channel] = client;
     },
-    [attemptReconnect]
+    [attemptReconnect, maxMessagesPerChannel]
   );
 
   const sendMessage = (channel, msg) => {

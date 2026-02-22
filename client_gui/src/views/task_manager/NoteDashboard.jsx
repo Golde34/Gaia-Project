@@ -22,7 +22,8 @@ function ContentArea() {
         debounceRef.current = setTimeout(() => {
             getListNotes();
         }, 200);
-    }, [])
+        return () => clearTimeout(debounceRef.current);
+    }, [getListNotes])
 
     return (
         <div>

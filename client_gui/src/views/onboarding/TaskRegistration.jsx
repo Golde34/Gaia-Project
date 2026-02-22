@@ -25,7 +25,8 @@ const TaskRegistration = (props) => {
         debounceRef.current = setTimeout(() => {
             taskConfig();
         }, 50);
-    }, []);
+        return () => clearTimeout(debounceRef.current);
+    }, [taskConfig]);
 
     return (
         <>

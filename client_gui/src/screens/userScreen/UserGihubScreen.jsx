@@ -22,7 +22,8 @@ const UserGithubScreen = (props) => {
             findUserGithubInfo();
         }, 200);
         console.log("userGithubInfo: ", userGithubInfo);
-    }, []);
+        return () => clearTimeout(debounceRef.current);
+    }, [findUserGithubInfo, userGithubInfo]);
 
     const syncUserGithubInfo = () => {
         dispatch(synchronizeUserGithubInfo());
