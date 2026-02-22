@@ -49,15 +49,15 @@ class STAGEngity():
         )
 
     def insert_data(
-        self, 
-        user_id: str, 
-        node_id: str, 
-        topic: str, 
-        wbos_mask: int, 
-        wbos_type: str, 
-        vector: List[float], 
-        content: str, 
-        timestamp: int):
+            self,
+            user_id: str,
+            node_id: str,
+            topic: str,
+            wbos_mask: int,
+            wbos_type: str,
+            vector: List[float],
+            content: str,
+            timestamp: int):
         data = [{
             "user_id": user_id,
             "node_id": node_id,
@@ -71,19 +71,17 @@ class STAGEngity():
         return milvus_db.insert_data(
             collection_name=self.connection_name,
             entities=data
-        ) 
+        )
 
     def search_top_n(
-        self, 
+        self,
         user_id: str,
-        query_embeddings: List[List[float]], 
-        top_k: int = 5, 
-        topic: str = None) -> List[dict]:
-        output_fields = ["user_id", "node_id", "topic", "wbos_mask", "wbos_type", "content", "timestamp"]
-        if topic:
-            filter_expression = f'user_id == "{user_id}" && topic == "{topic}"'
-        else:
-            filter_expression = f'user_id == "{user_id}"'
+        query_embeddings: List[List[float]],
+        top_k: int = 5
+    ) -> List[dict]:
+        output_fields = ["user_id", "node_id", "topic",
+                         "wbos_mask", "wbos_type", "content", "timestamp"]
+        filter_expression = f'user_id == "{user_id}"'
 
         return milvus_db.search_top_n(
             collection_name=self.connection_name,
@@ -92,5 +90,6 @@ class STAGEngity():
             top_k=top_k,
             filter_expression=filter_expression
         )
+
 
 stag_entity = STAGEngity()
