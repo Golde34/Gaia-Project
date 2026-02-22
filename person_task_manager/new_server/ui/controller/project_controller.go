@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	base_dtos "personal_task_manager/core/domain/dtos/base"
 	"personal_task_manager/core/domain/dtos/request"
 	"personal_task_manager/core/usecase"
 
@@ -58,8 +59,16 @@ func GetAllProject(w http.ResponseWriter, r *http.Request, usecase *usecase.Proj
 		return
 	}
 
+	response := base_dtos.ErrorResponse{
+		Status:        "Success",
+		StatusMessage: "Success",
+		ErrorCode:     200,
+		ErrorMessage:  "Chat dialogues retrieved successfully",
+		Data:         map[string]interface{}{"projects": result},
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(result); err != nil {
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Printf("Error encoding final response: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
