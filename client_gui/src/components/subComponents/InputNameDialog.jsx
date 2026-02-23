@@ -1,11 +1,12 @@
 import { Dialog, Transition } from '@headlessui/react'
 import { Input } from '@material-tailwind/react';
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { useUpdateComponentNameDispatch } from '../../kernels/utils/dialog-api-requests';
 
 export const InputNameDialog = (props) => {
     let [isOpen, setIsOpen] = useState(false);
     let [newName, setNewName] = useState("");
+    const spaceBugRef = useRef(null);
 
     function closeModal() {
         setIsOpen(false)
@@ -20,13 +21,20 @@ export const InputNameDialog = (props) => {
         window.location.reload();
     }
 
-    const spaceBug = document.getElementById("space-bug");
-    if (spaceBug !== null && props.elementName === "Group Task") { 
-        spaceBug.addEventListener('keydown', function(e) {
+    useEffect(() => {
+        if (props.elementName !== "Group Task") return;
+        const inputEl = spaceBugRef.current;
+        if (!inputEl) return;
+
+        const handleKeyDown = (e) => {
             if (e.keyCode === 32) {
-                setNewName(newName + " ");
-            }}
-    )};
+                setNewName((prev) => prev + " ");
+            }
+        };
+
+        inputEl.addEventListener('keydown', handleKeyDown);
+        return () => inputEl.removeEventListener('keydown', handleKeyDown);
+    }, [props.elementName]);
 
     return (
         <>
@@ -73,6 +81,7 @@ export const InputNameDialog = (props) => {
                                     <div className="mt-2">
                                         <Input 
                                             id="space-bug"
+                                            inputRef={spaceBugRef}
                                             type="text"
                                             outline={true}
                                             placeholder={props.elementName + " Name"}

@@ -3,6 +3,8 @@ package base_repo
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/lib/pq"
 )
 
 func StructToColumnsAndValues(entity interface{}) ([]string, []interface{}) {
@@ -21,7 +23,12 @@ func StructToColumnsAndValues(entity interface{}) ([]string, []interface{}) {
 			column = field.Name
 		}
 		columns = append(columns, column)
-		values = append(values, v.Field(i).Interface())
+		fieldValue := v.Field(i).Interface()
+		if s, ok := fieldValue.([]string); ok {
+			values = append(values, pq.Array(s))
+		} else {
+			values = append(values, fieldValue)
+		}
 	}
 	return columns, values
 }

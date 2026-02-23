@@ -23,7 +23,8 @@ const UserRolesScreen = () => {
         debounceRef.current = setTimeout(() => {
             getRoleList();
         }, 200);
-    }, []);
+        return () => clearTimeout(debounceRef.current);
+    }, [getRoleList]);
 
     const [selectedIndex, setSelectedIndex] = useState(0);
     const chartDataFormatter = (number) => {

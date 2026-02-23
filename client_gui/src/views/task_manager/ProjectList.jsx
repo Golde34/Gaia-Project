@@ -23,7 +23,9 @@ function ContentArea() {
         debounceRef.current = setTimeout(() => {
             getListProjects();
         }, 200);
-    }, []);
+
+        return () => clearTimeout(debounceRef.current);
+    }, [getListProjects]);
 
     localStorage.setItem("activeTab", 'none');
 

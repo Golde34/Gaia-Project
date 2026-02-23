@@ -21,7 +21,8 @@ const GithubSyncProjectScreen = () => {
         debounceRef.current = setTimeout(() => {
             projectsAndReposDispatch();
         }, 200);
-    }, []);
+        return () => clearTimeout(debounceRef.current);
+    }, [projectsAndReposDispatch]);
 
     const [selectedProject, setSelectedProject] = useState('');
     const [queryProject, setQueryProject] = useState('');

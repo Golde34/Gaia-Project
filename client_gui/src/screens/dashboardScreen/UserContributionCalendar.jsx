@@ -17,7 +17,8 @@ const UserContributionCalendar = () => {
         debounceRef.current = setTimeout(() => {
             dispatch(getUserContributions());
         }, 200);
-    }, [])
+        return () => clearTimeout(debounceRef.current);
+    }, [dispatch])
 
     return (
         <div className="flex-auto w-full">

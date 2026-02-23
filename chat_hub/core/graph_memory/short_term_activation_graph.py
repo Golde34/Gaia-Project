@@ -19,6 +19,9 @@ from infrastructure.redis.lua_script import lua_scripts
 from kernel.config import llm_models
 
 
+CONTENT_TEMPLATE = """Topic: {topic} | Content: {content}"""  # Template for consistent content formatting in STAG
+
+
 class ShortTermActivationGraph:
     def __init__(self, query: QueryRequest):
         self.query = query
@@ -28,6 +31,7 @@ class ShortTermActivationGraph:
         self.stag_energy_prefix = f"stag:energy:{self.query.dialogue_id}:"
         self.stag_metadata_key = f"stag:metadata:{self.query.dialogue_id}"
         self.prefix = f"stag:{self.query.dialogue_id}"
+        self.content_vector = f""
 
     async def on_new_message(self, metadata: SlmExtractionResponse):
         signal: Signal = await self.preprocess_signal(self.query.query, metadata)
@@ -50,8 +54,9 @@ class ShortTermActivationGraph:
         )
         return function(prompt=prompt, model=model)
 
-
-    async def preprocess_signal(self, content, extracted_info: SlmExtractionResponse):
+    async def preprocess_signal(self, user_query: str, extracted_info: SlmExtractionResponse):
+        content = CONTENT_TEMPLATE.format(
+            topic=extracted_info.topic, content=user_query)
         raw_vector_list = await embedding_model.get_embeddings(texts=[content])
         raw_vector = np.array(raw_vector_list[0])
         norm = np.linalg.norm(raw_vector)
@@ -85,22 +90,21 @@ class ShortTermActivationGraph:
         topic = metadata.topic
 
         structural_nodes = self._flash_activation(topic)
-        print(f"Phase 1 - Structural Nodes Activated: {len(structural_nodes)}")
+        print(f"Phase 1 - Structural Nodes Activated: {structural_nodes}")
 
         activated_nodes = await self._neural_resonance(
             query_vector=signal.vector,
-            topic=topic,
             structural_nodes=structural_nodes
         )
         print(
-            f"Phase 2 - Resonance Result (Total Unique Nodes): {len(activated_nodes)}")
+            f"Phase 2 - Resonance Result (Total Unique Nodes): {activated_nodes}")
 
         context_cloud = await self._wbos_pathing(
             m_new_wbos_mask=signal.bitmask,
             activated_nodes=activated_nodes
         )
         print(
-            f"Phase 3 - WBOS Pathing Complete. Context Cloud Size: {len(context_cloud)}")
+            f"Phase 3 - WBOS Pathing Complete. Context Cloud Size: {context_cloud}")
 
         context_cloud.sort(key=lambda x: x.get('e', 0), reverse=True)
 
@@ -154,7 +158,6 @@ class ShortTermActivationGraph:
     async def _neural_resonance(
             self,
             query_vector: List[float],
-            topic: str,
             structural_nodes: List[dict]):
 
         alpha = 0.5  # Activation
@@ -163,9 +166,9 @@ class ShortTermActivationGraph:
         search_output = stag_entity.search_top_n(
             user_id=str(self.query.user_id),
             query_embeddings=[query_vector],
-            topic=topic,
             top_k=20
         )
+        print("Search Output from STAG:", search_output)
         if not search_output or not search_output[0]:
             return structural_nodes
 
@@ -321,8 +324,13 @@ class ShortTermActivationGraph:
 
         for wbos_type, content_value in wbos_data.model_dump().items():
             if content_value:
+                content = CONTENT_TEMPLATE.format(
+                    topic=extracted_info.topic,
+                    content=content_value
+                )
                 embeddings = await embedding_model.get_embeddings(
-                    texts=[content_value])
+                    texts=[content]
+                )
                 vector = embeddings[0]
                 stag_entity.insert_data(
                     user_id=str(self.query.user_id),
@@ -332,7 +340,7 @@ class ShortTermActivationGraph:
                         extracted_info, current_type=wbos_type),
                     wbos_type=wbos_type,        # "W", "B", "O", or "S"
                     vector=vector,
-                    content=content_value,
+                    content=content,
                     timestamp=int(time.time())
                 )
 

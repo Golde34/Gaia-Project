@@ -24,7 +24,8 @@ const TaskTable = (props) => {
         debounceRef.current = setTimeout(() => {
             getTasks();
         }, 200);
-    }, [groupTaskId]);
+        return () => clearTimeout(debounceRef.current);
+    }, [getTasks]);
 
     return (
         <div>

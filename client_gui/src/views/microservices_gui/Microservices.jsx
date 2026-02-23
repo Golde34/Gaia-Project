@@ -21,8 +21,8 @@ function ContentArea() {
         debounceRef.current = setTimeout(() => {
             getListMicroservice();
         }, 200);
-
-    }, []);
+        return () => clearTimeout(debounceRef.current);
+    }, [getListMicroservice]);
 
     return (
         <div>

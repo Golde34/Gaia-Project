@@ -24,7 +24,8 @@ const UpdateUserModal = (props) => {
         debounceRef.current = setTimeout(() => {
             getRoleList();
         }, 200);
-    }, []);
+        return () => clearTimeout(debounceRef.current);
+    }, [getRoleList]);
 
     const currentUser = props.currentUser;
     const isOpen = props.isOpen;

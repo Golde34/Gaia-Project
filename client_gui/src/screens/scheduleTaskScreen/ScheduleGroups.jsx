@@ -23,7 +23,8 @@ const ScheduleGroups = () => {
         debounceRef.current = setTimeout(() => {
             getTasks();
         }, 200);
-    }, []);
+        return () => clearTimeout(debounceRef.current);
+    }, [getTasks]);
 
     function randomDecoration() {
         const colors = ["indigo", "red", "green", "blue", "yellow", "purple", "pink", "gray"];

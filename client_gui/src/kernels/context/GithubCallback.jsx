@@ -34,6 +34,7 @@ function GitHubCallback() {
         debounceRef.current = setTimeout(() => {
             sendAuthorizationCode();
         }, 200);
+        return () => clearTimeout(debounceRef.current);
     }, [sendAuthorizationCode]);
 
     return (

@@ -81,7 +81,8 @@ export const CreateScheduleGroupDialog = () => {
         debounceRef.current = setTimeout(() => {
             getListProjects();
         }, 200);
-    }, []);
+        return () => clearTimeout(debounceRef.current);
+    }, [getListProjects]);
 
     const [selectedProject, setSelectedProject] = useState('');
     const [queryProject, setQueryProject] = useState('');
@@ -100,7 +101,7 @@ export const CreateScheduleGroupDialog = () => {
         if (selectedProject) {
             getGroupTasks();
         }
-    }, [selectedProject.id]);
+    }, [getGroupTasks, selectedProject]);
 
     const [selectedGroupTask, setSelectedGroupTask] = useState('');
     const [queryGroupTask, setQueryGroupTask] = useState('');

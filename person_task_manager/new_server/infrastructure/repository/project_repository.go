@@ -27,15 +27,14 @@ var (
 func (r *ProjectRepository) CreateProject(project entities.ProjectEntity) (entities.ProjectEntity, error) {
 	columns, values := base_repo.StructToColumnsAndValues(project)
 	log.Println("Inserting project into database with columns:", columns, "and values:", values)
-	id, err := r.base.InsertDB(ProjectTableName, columns, values)
+	_, err := r.base.InsertDB(ProjectTableName, columns, values)
 	if err != nil {
 		return entities.ProjectEntity{}, err
 	}
-	project.ID = id
 	return project, nil
 }
 
-func (r *ProjectRepository) GetProjectByID(id int) (entities.ProjectEntity, error) {
+func (r *ProjectRepository) GetProjectByID(id string) (entities.ProjectEntity, error) {
 	where := map[string]interface{}{
 		"id": id,
 	}

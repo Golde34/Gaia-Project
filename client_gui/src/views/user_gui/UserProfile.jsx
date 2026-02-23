@@ -83,7 +83,8 @@ function ContentArea() {
         debounceRef.current = setTimeout(() => {
             getUserProfile();
         }, 200);
-    }, [])
+        return () => clearTimeout(debounceRef.current);
+    }, [getUserProfile])
 
     const getValidSectionId = (sections) => {
         if (!sectionParam) return undefined;

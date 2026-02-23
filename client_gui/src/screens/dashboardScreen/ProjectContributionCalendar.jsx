@@ -18,7 +18,8 @@ const ProjectContributionCalendar = (props) => {
         debounceRef.current = setTimeout(() => {
             dispatch(getProjectContribution(projectId));
         }, 200);
-    }, [])
+        return () => clearTimeout(debounceRef.current);
+    }, [dispatch, projectId])
 
     return (
         <div className="flex-auto w-full">
