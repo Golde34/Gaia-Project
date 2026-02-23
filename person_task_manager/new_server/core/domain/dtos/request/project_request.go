@@ -7,4 +7,5 @@ type CreateProjectRequest struct {
 	Color        string `json:"color"`
 	Status       string `json:"status"`
 	ActiveStatus string `json:"activeStatus"`
+	Tags         []string `json:"tags"`
 }

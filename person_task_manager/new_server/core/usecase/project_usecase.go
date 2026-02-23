@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"database/sql"
-	"log"
 	base_dtos "personal_task_manager/core/domain/dtos/base"
 	"personal_task_manager/core/domain/dtos/request"
 	"personal_task_manager/core/domain/entities"
@@ -34,7 +33,9 @@ func (pu *ProjectUsecase) CreateProject(ctx context.Context, project request.Cre
 	if project.ActiveStatus == "" {
 		project.ActiveStatus = "ACTIVE"
 	}
-	log.Println("Creating project with name: ", project.Name, " for userId: ", project.UserID)
+	if project.Tags == nil || len(project.Tags) == 0 {
+		project.Tags = []string{}
+	}
 
 	// Did I need default project logic here?
 	// tag is empty array for now, will implement later when I have tag feature
@@ -48,7 +49,7 @@ func (pu *ProjectUsecase) CreateProject(ctx context.Context, project request.Cre
 		UserID:       project.UserID,
 		ActiveStatus: project.ActiveStatus,
 		IsDefault:    false,
-		Tag:          []string{},
+		Tag:          project.Tags,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
