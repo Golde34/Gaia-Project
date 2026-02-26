@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	base_dtos "personal_task_manager/core/domain/dtos/base"
+	"personal_task_manager/core/domain/dtos/mapper"
 	"personal_task_manager/core/domain/dtos/request"
+	"personal_task_manager/core/domain/dtos/response"
 	"personal_task_manager/core/domain/entities"
 	"personal_task_manager/core/service"
 	"strconv"
@@ -17,12 +19,14 @@ type ProjectUsecase struct {
 	db *sql.DB
 
 	projectService *service.ProjectService
+	groupTaskService *service.GroupTaskService
 }
 
 func NewProjectUsecase(db *sql.DB) *ProjectUsecase {
 	return &ProjectUsecase{
 		db:             db,
 		projectService: service.NewProjectService(db),
+		groupTaskService: service.NewGroupTaskService(db),
 	}
 }
 
@@ -104,6 +108,40 @@ func (pu *ProjectUsecase) GetAllProjectsByUserID(ctx context.Context, userId str
 	response := base_dtos.NewSuccessResponse(
 		"Projects retrieved successfully",
 		map[string]interface{}{"projects": projects},
+	)
+	return response, nil
+}
+
+func (pu *ProjectUsecase) GetProjectWithGroupTasks(ctx context.Context, userId string) (base_dtos.ErrorResponse, error) {
+	userIdInt, err := strconv.Atoi(userId)
+	if err != nil {
+		return base_dtos.ErrorResponse{}, err
+	}	
+	projects, err := pu.projectService.GetAllProjectsByUserID(ctx, userIdInt)
+	if err != nil {
+		return base_dtos.ErrorResponse{}, err
+	}
+	projectsContextResponse := make([]response.ProjectContextResponse, len(projects))
+	for i, project := range projects {
+		projectsContextResponse[i] = *mapper.MapProjectEntityToProjectContextResponse(&project)
+	}
+
+
+	for i, project := range projectsContextResponse {
+		groupTasks, err := pu.groupTaskService.GetAllGroupTasksInProject(ctx, project.ID)
+		if err != nil {
+			return base_dtos.ErrorResponse{}, err
+		}
+		groupTaskContextResponse := make([]response.GroupTaskContextResponse, len(groupTasks))
+		for j, groupTask := range groupTasks {
+			groupTaskContextResponse[j] = *mapper.MapGroupTaskEntityToGroupTaskResponse(&groupTask)
+		}
+		projectsContextResponse[i].GroupTasks = groupTaskContextResponse
+	}
+
+	response := base_dtos.NewSuccessResponse(
+		"Projects with group tasks retrieved successfully",
+		map[string]interface{}{"projects": projectsContextResponse},
 	)
 	return response, nil
 }
