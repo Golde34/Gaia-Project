@@ -105,7 +105,7 @@ public class UserServiceValidation {
         return new GenericResponse<>(Constants.ResponseMessage.VALIDATE_SUCCESS, ResponseEnum.msg200);
     }
 
-    public GenericResponse<String> _validateUserUpdates(UpdateUserRequest userDto) {
+    public GenericResponse<String> validateUserUpdates(UpdateUserRequest userDto) {
         log.info("Validate user updates function: {}", userDto);
         if (objectUtils.isNullOrEmpty(userDto.getEmail())) {
             return responseUtils.returnMessage("Validate user updates function: ",

@@ -169,6 +169,9 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public Role getBiggestRole(Collection<Role> roles) {
-        return roles.stream().max((role1, role2) -> role1.getId().compareTo(role2.getId())).get();
+        return roles.stream().max(
+                (role1, role2) -> Integer.compare(
+                        role1.getGrantedRank(), role2.getGrantedRank()))
+                .get();
     }
 }
