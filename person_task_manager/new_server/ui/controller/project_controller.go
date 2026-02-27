@@ -64,3 +64,19 @@ func GetAllProject(w http.ResponseWriter, r *http.Request, usecase *usecase.Proj
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+
+func GetProjectWithGroupTasks(w http.ResponseWriter, r *http.Request, usecase *usecase.ProjectUsecase) {
+	userId := chi.URLParam(r, "userId")
+	result, err := usecase.GetProjectWithGroupTasks(r.Context(), userId)
+	if err != nil {
+		log.Printf("Error retrieving project with group tasks: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		log.Printf("Error encoding final response: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
