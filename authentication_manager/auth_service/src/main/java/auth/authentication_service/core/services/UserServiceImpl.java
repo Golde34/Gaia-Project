@@ -56,7 +56,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> createUser(RegisterDto userDto) {
         try {
-            User user = modelMapperConfig._mapperDtoToEntity(userDto);
+            User user = modelMapperConfig.mapperDtoToEntity(userDto);
 
             GenericResponse<?> validation = userServiceValidation.validateUserCreation(userDto, user);
             if (validation.getResponseMessage() != ResponseEnum.msg200) {
@@ -127,7 +127,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> deleteUser(UserDto userDto) {
         try {
-            User user = modelMapperConfig._mapperDtoToEntity(userDto);
+            User user = modelMapperConfig.mapperDtoToEntity(userDto);
             GenericResponse<?> validation = userServiceValidation.validateUserDeletion(user);
             if (validation.getResponseMessage() != ResponseEnum.msg200) {
                 // return http status code base on validate response message

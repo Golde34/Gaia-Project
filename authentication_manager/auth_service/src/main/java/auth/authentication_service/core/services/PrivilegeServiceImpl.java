@@ -57,7 +57,7 @@ public class PrivilegeServiceImpl implements PrivilegeService {
     @CacheEvict(value = "privileges", allEntries = true)
     public ResponseEntity<?> updatePrivilege(PrivilegeDto privilegeDto) {
         try {
-            Privilege privilege = modelMapperConfig._mapperDtoToEntity(privilegeDto);
+            Privilege privilege = modelMapperConfig.mapperDtoToEntity(privilegeDto);
             if (checkExistPrivilege(privilege)) {
                 if (!checkExistPrivilegeName(privilege.getName())) {
                     privilegeStore.save(privilege);
@@ -84,7 +84,7 @@ public class PrivilegeServiceImpl implements PrivilegeService {
     @CacheEvict(value = "privileges", allEntries = true)
     public ResponseEntity<?> deletePrivilege(PrivilegeDto privilegeDto) {
         try {
-            Privilege privilege = modelMapperConfig._mapperDtoToEntity(privilegeDto);
+            Privilege privilege = modelMapperConfig.mapperDtoToEntity(privilegeDto);
             if (checkExistPrivilege(privilege)) {
                 privilegeStore.delete(privilege);
                 log.info("Delete privilege: {} - {}", privilege.getName(), privilege);
