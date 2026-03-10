@@ -28,6 +28,12 @@ func NewProjectRouter(r *chi.Mux, db *sql.DB) *ProjectRouter {
 		r.Get("/group-tasks/{userId}", func(w http.ResponseWriter, r *http.Request) {
 			controller.GetProjectWithGroupTasks(w, r, usecase)
 		})
+		r.Put("/{id}", func(w http.ResponseWriter, r *http.Request) {
+			controller.UpdateProject(w, r, usecase)
+		})
+		r.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {
+			controller.DeleteProject(w, r, usecase)
+		})
 	})
 	return &ProjectRouter{
 	}
