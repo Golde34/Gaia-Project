@@ -18,19 +18,19 @@ import (
 type ProjectUsecase struct {
 	db *sql.DB
 
-	projectService *service.ProjectService
+	projectService   *service.ProjectService
 	groupTaskService *service.GroupTaskService
 }
 
 func NewProjectUsecase(db *sql.DB) *ProjectUsecase {
 	return &ProjectUsecase{
-		db:             db,
-		projectService: service.NewProjectService(db),
+		db:               db,
+		projectService:   service.NewProjectService(db),
 		groupTaskService: service.NewGroupTaskService(db),
 	}
 }
 
-func (pu *ProjectUsecase) CreateProject(ctx context.Context, project request.CreateProjectRequest) (base_dtos.ErrorResponse, error) {
+func (pu *ProjectUsecase) CreateProject(ctx context.Context, project request.ProjectRequest) (base_dtos.ErrorResponse, error) {
 	if project.Color == "" {
 		project.Color = "indigo"
 	}
@@ -116,7 +116,7 @@ func (pu *ProjectUsecase) GetProjectWithGroupTasks(ctx context.Context, userId s
 	userIdInt, err := strconv.Atoi(userId)
 	if err != nil {
 		return base_dtos.ErrorResponse{}, err
-	}	
+	}
 	projects, err := pu.projectService.GetAllProjectsByUserID(ctx, userIdInt)
 	if err != nil {
 		return base_dtos.ErrorResponse{}, err
@@ -125,7 +125,6 @@ func (pu *ProjectUsecase) GetProjectWithGroupTasks(ctx context.Context, userId s
 	for i, project := range projects {
 		projectsContextResponse[i] = *mapper.MapProjectEntityToProjectContextResponse(&project)
 	}
-
 
 	for i, project := range projectsContextResponse {
 		groupTasks, err := pu.groupTaskService.GetAllGroupTasksInProject(ctx, project.ID)
@@ -142,6 +141,54 @@ func (pu *ProjectUsecase) GetProjectWithGroupTasks(ctx context.Context, userId s
 	response := base_dtos.NewSuccessResponse(
 		"Projects with group tasks retrieved successfully",
 		map[string]interface{}{"projects": projectsContextResponse},
+	)
+	return response, nil
+}
+
+func (pu *ProjectUsecase) UpdateProject(ctx context.Context, id string, project request.ProjectRequest) (base_dtos.ErrorResponse, error) {
+	updatedProject := entities.ProjectEntity{
+		ID:           id,
+		Name:         project.Name,
+		Description:  project.Description,
+		Status:       project.Status,
+		Color:        project.Color,
+		UserID:       project.UserID,
+		ActiveStatus: project.ActiveStatus,
+		Tag:          project.Tags,
+		UpdatedAt:    time.Now(),
+	}
+
+	result, err := pu.projectService.UpdateProject(ctx, id, updatedProject)
+	if err != nil {
+		return base_dtos.NewErrorResponse(
+			"Error",
+			"Failed to update project",
+			500,
+			err.Error(),
+			nil,
+		), err
+	}
+	response := base_dtos.NewSuccessResponse(
+		"Project updated successfully",
+		map[string]interface{}{"project": result},
+	)
+	return response, nil
+}
+
+func (pu *ProjectUsecase) DeleteProject(ctx context.Context, id string) (base_dtos.ErrorResponse, error) {
+	err := pu.projectService.DeleteProject(ctx, id)
+	if err != nil {
+		return base_dtos.NewErrorResponse(
+			"Error",
+			"Failed to delete project",
+			500,
+			err.Error(),
+			nil,
+		), err
+	}
+	response := base_dtos.NewSuccessResponse(
+		"Project deleted successfully",
+		nil,
 	)
 	return response, nil
 }
