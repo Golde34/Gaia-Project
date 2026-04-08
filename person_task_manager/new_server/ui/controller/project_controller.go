@@ -11,7 +11,7 @@ import (
 )
 
 func CreateProject(w http.ResponseWriter, r *http.Request, usecase *usecase.ProjectUsecase) {
-	var projectRequest request.CreateProjectRequest
+	var projectRequest request.ProjectRequest
 	if err := json.NewDecoder(r.Body).Decode(&projectRequest); err != nil {
 		log.Printf("Error decoding request body: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -73,10 +73,45 @@ func GetProjectWithGroupTasks(w http.ResponseWriter, r *http.Request, usecase *u
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(result); err != nil {
 		log.Printf("Error encoding final response: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func UpdateProject(w http.ResponseWriter, r *http.Request, usecase *usecase.ProjectUsecase) {
+	projectId := chi.URLParam(r, "id")
+	var projectRequest request.ProjectRequest
+	if err := json.NewDecoder(r.Body).Decode(&projectRequest); err != nil {
+		log.Printf("Error decoding request body: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	result, err := usecase.UpdateProject(r.Context(), projectId, projectRequest)
+	if err != nil {
+		log.Printf("Error updating project: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		log.Printf("Error encoding final response: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func DeleteProject(w http.ResponseWriter, r *http.Request, usecase *usecase.ProjectUsecase) {
+	projectId := chi.URLParam(r, "id")
+	_, err := usecase.DeleteProject(r.Context(), projectId)
+	if err != nil {
+		log.Printf("Error deleting project: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

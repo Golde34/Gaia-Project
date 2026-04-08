@@ -104,32 +104,10 @@ class BaseReranking:
             return {"error": str(e)}
 
     async def _rerank_from_cloud(self, query: str, documents: List[Dict[str, Any]], top_n: int, logger=None):
-        from google import genai
-        client = genai.Client(api_key=config.SYSTEM_API_KEY)
-        try:
-            doc_texts = [doc.get('text', '') for doc in documents]
-            client = genai.Client(
-                vertexai=True,
-                project="your-project-id",
-                location="us-central1"
-            )
-
-            response = client.discovery.rank(
-                model=self.cloud_model_name,
-                query=query,
-                records=doc_texts,
-                top_n=top_n
-            )
-
-            for record in response.records:
-                print(f"Score: {record.score:.4f} | Content: {record.content}")            
-            ranked_indices = [record.index for record in response.records]
-            reranked_documents = [documents[i] for i in ranked_indices] 
-            return {"documents": reranked_documents, "query": query, "top_n": top_n}
-
-        except Exception as e:
-            print(f"Error getting embeddings from Gemini: {e}")
-            raise
+        ## using jinna instead
+        ## example of response 
+        ## return {"documents": reranked_documents, "query": query, "top_n": top_n}
+        return 
 
 
 reranking_model = BaseReranking()

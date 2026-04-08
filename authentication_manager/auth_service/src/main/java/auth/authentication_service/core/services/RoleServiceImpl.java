@@ -3,8 +3,6 @@ package auth.authentication_service.core.services;
 import java.util.Collection;
 import java.util.List;
 
-import auth.authentication_service.core.exceptions.BusinessException;
-import auth.authentication_service.core.port.mapper.RoleMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -18,6 +16,8 @@ import auth.authentication_service.core.domain.dto.RoleDto;
 import auth.authentication_service.core.domain.entities.Privilege;
 import auth.authentication_service.core.domain.entities.Role;
 import auth.authentication_service.core.domain.enums.ResponseEnum;
+import auth.authentication_service.core.exceptions.BusinessException;
+import auth.authentication_service.core.port.mapper.RoleMapper;
 import auth.authentication_service.core.port.store.RoleStore;
 import auth.authentication_service.core.services.interfaces.RoleService;
 import auth.authentication_service.core.validations.service_validations.RoleServiceValidation;
@@ -88,7 +88,7 @@ public class RoleServiceImpl implements RoleService {
     @CacheEvict(value = "roles", allEntries = true)
     public ResponseEntity<?> updateRole(RoleDto roleDto) {
         try {
-            Role role = modelMapperConfig._mapperDtoToEntity(roleDto);
+            Role role = modelMapperConfig.mapperDtoToEntity(roleDto);
             Pair<String, Boolean> canUpdateRole = roleServiceValidation.canUpdateRole(role, role.getName());
             if (!canUpdateRole.getSecond()) {
                 return genericResponse.matchingResponseMessage(
@@ -109,7 +109,7 @@ public class RoleServiceImpl implements RoleService {
     @CacheEvict(value = "roles", allEntries = true)
     public ResponseEntity<?> deleteRole(RoleDto roleDto) {
         try {
-            Role role = modelMapperConfig._mapperDtoToEntity(roleDto);
+            Role role = modelMapperConfig.mapperDtoToEntity(roleDto);
             if (roleServiceValidation.checkExistRole(role)) {
                 roleStore.delete(role);
                 updateRoleHierarchy();
@@ -149,8 +149,8 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public ResponseEntity<?> addPrivilegeToRole(RoleDto roleDto, List<PrivilegeDto> privilegesDto) {
         try {
-            Role role = modelMapperConfig._mapperDtoToEntity(roleDto);
-            List<Privilege> privileges = _mapperListPrivilegesDto(privilegesDto);
+            Role role = modelMapperConfig.mapperDtoToEntity(roleDto);
+            List<Privilege> privileges = modelMapperConfig.mapperListPrivilegesDto(privilegesDto);
             if (roleServiceValidation.checkExistRole(role)) {
                 role.setPrivileges(privileges);
                 roleStore.save(role);
@@ -169,10 +169,9 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public Role getBiggestRole(Collection<Role> roles) {
-        return roles.stream().max((role1, role2) -> role1.getId().compareTo(role2.getId())).get();
-    }
-
-    private List<Privilege> _mapperListPrivilegesDto(List<PrivilegeDto> privilegeDtos) {
-        return privilegeDtos.stream().map(p -> modelMapperConfig._mapperDtoToEntity(p)).toList();
+        return roles.stream().max(
+                (role1, role2) -> Integer.compare(
+                        role1.getGrantedRank(), role2.getGrantedRank()))
+                .get();
     }
 }

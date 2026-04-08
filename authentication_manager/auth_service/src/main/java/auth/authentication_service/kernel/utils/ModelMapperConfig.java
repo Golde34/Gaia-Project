@@ -30,41 +30,45 @@ public class ModelMapperConfig {
 
     // DTO -> Entity
 
-    public User _mapperDtoToEntity(RegisterDto userDto) {
+    public User mapperDtoToEntity(RegisterDto userDto) {
         return modelMapper().map(userDto, User.class);
     }
 
-    public User _mapperDtoToEntity(UserDto userDto) {
+    public User mapperDtoToEntity(UserDto userDto) {
         return modelMapper().map(userDto, User.class);
     }
 
-    public User _mapperDtoToEntity(UpdateUserRequest userDto) {
+    public User mapperDtoToEntity(UpdateUserRequest userDto) {
         return modelMapper().map(userDto, User.class);
     }
 
-    public Role _mapperDtoToEntity(RoleDto roleDto) {
+    public Role mapperDtoToEntity(RoleDto roleDto) {
         return modelMapper().map(roleDto, Role.class);
     }
 
-    public Privilege _mapperDtoToEntity(PrivilegeDto privilegeDto) {
+    public Privilege mapperDtoToEntity(PrivilegeDto privilegeDto) {
         return modelMapper().map(privilegeDto, Privilege.class);
+    }
+
+    public List<Privilege> mapperListPrivilegesDto(List<PrivilegeDto> privilegeDtos) {
+        return privilegeDtos.stream().map(p -> mapperDtoToEntity(p)).toList();
     }
 
     // Entity -> DTO
 
-    public UserDto _mapperEntityToDto(User user) {
+    public UserDto mapperEntityToDto(User user) {
         return modelMapper().map(user, UserDto.class);
     }
 
-    public RoleDto _mapperEntityToDto(Role role) {
+    public RoleDto mapperEntityToDto(Role role) {
         return modelMapper().map(role, RoleDto.class);
     }
 
-    public PrivilegeDto _mapperEntityToDto(Privilege privilege) {
+    public PrivilegeDto mapperEntityToDto(Privilege privilege) {
         return modelMapper().map(privilege, PrivilegeDto.class);
     }
 
-    public List<UserResponse> _mapperEntityToDto(List<User> users) {
+    public List<UserResponse> mapperEntityToDto(List<User> users) {
         return users.stream().map(user -> modelMapper()
                 .map(user, UserResponse.class))
                 .collect(Collectors.toList());

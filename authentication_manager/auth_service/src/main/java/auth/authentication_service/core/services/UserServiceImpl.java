@@ -56,7 +56,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> createUser(RegisterDto userDto) {
         try {
-            User user = modelMapperConfig._mapperDtoToEntity(userDto);
+            User user = modelMapperConfig.mapperDtoToEntity(userDto);
 
             GenericResponse<?> validation = userServiceValidation.validateUserCreation(userDto, user);
             if (validation.getResponseMessage() != ResponseEnum.msg200) {
@@ -66,7 +66,7 @@ public class UserServiceImpl implements UserService {
             List<LLMModel> llmModel = Collections.singletonList(llmModelStore.findModelById(1L));
 
             user.setPassword(new BCryptPasswordEncoder().encode(userDto.getPassword()));
-            user.setRoles(Collections.singletonList(_isBoss(userDto.isBoss())));
+            user.setRoles(Collections.singletonList(isBoss(userDto.isBoss())));
             user.setEnabled(true);
             user.setLlmModels(llmModel);
             userStore.save(user);
@@ -87,7 +87,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private Role _isBoss(final boolean isBoss) {
+    private Role isBoss(final boolean isBoss) {
         return roleStore.findByName(
             isBoss ? BossType.BOSS.getRole() : BossType.USER.getRole()
         );
@@ -96,7 +96,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> updateUser(UpdateUserRequest userDto) {
         try {
-            GenericResponse<?> validation = userServiceValidation._validateUserUpdates(userDto);
+            GenericResponse<?> validation = userServiceValidation.validateUserUpdates(userDto);
             log.info("UserDTO: {}", userDto);
             if (validation.getResponseMessage() != ResponseEnum.msg200) {
                 return genericResponse.matchingResponseMessage(validation);
@@ -127,7 +127,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseEntity<?> deleteUser(UserDto userDto) {
         try {
-            User user = modelMapperConfig._mapperDtoToEntity(userDto);
+            User user = modelMapperConfig.mapperDtoToEntity(userDto);
             GenericResponse<?> validation = userServiceValidation.validateUserDeletion(user);
             if (validation.getResponseMessage() != ResponseEnum.msg200) {
                 // return http status code base on validate response message

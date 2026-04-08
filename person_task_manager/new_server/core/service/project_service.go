@@ -73,3 +73,28 @@ func (ps *ProjectService) GetAllProjectsByUserID(ctx context.Context, userId int
 	
 	return projects, nil
 }
+
+func (ps *ProjectService) UpdateProject(ctx context.Context, id string, updatedProject entities.ProjectEntity) (entities.ProjectEntity, error) {
+	updatedProject, err := ps.projectRepo.UpdateProject(id, updatedProject)
+	if err != nil {
+		return entities.ProjectEntity{}, err
+	}
+
+	// delete old cache
+	cacheKey := fmt.Sprintf("project:%s", id)
+	_ = redis_cache.DeleteLocal(context.Background(), cacheKey)
+
+	return updatedProject, nil
+}
+
+func (ps *ProjectService) DeleteProject(ctx context.Context, id string) error {
+	err := ps.projectRepo.DeleteProject(id)
+	if err != nil {
+		return err
+	}
+
+	cacheKey := fmt.Sprintf("project:%s", id)
+	_ = redis_cache.DeleteLocal(context.Background(), cacheKey)
+
+	return nil
+}

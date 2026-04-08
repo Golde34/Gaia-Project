@@ -61,7 +61,7 @@ func (r *ProjectRepository) GetAllProjectsByUserID(userId int) ([]entities.Proje
 	where := map[string]interface{}{
 		"user_id": userId,
 	}
-	
+
 	columns := base_repo.GetStructColumns(entities.ProjectEntity{})
 	results, err := r.base.SelectDB(
 		r.DB,
@@ -71,12 +71,37 @@ func (r *ProjectRepository) GetAllProjectsByUserID(userId int) ([]entities.Proje
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var projects []entities.ProjectEntity
 	for _, row := range results {
 		project := entities.NewProject(row)
 		projects = append(projects, *project)
 	}
-	
+
 	return projects, nil
+}
+
+func (r *ProjectRepository) UpdateProject(id string, project entities.ProjectEntity) (entities.ProjectEntity, error) {
+	columns, values := base_repo.StructToColumnsAndValues(project)
+	log.Println("Updating project in database with columns:", columns, "and values:", values)
+	updateData := make(map[string]interface{})
+	for i, col := range columns {
+		updateData[col] = values[i]
+	}
+	where := map[string]interface{}{
+		"id": id,
+	}
+	_, err := r.base.UpdateDB(r.DB, ProjectTableName, updateData, where)
+	if err != nil {
+		return entities.ProjectEntity{}, err
+	}
+	return project, nil
+}
+
+func (r *ProjectRepository) DeleteProject(id string) error {
+	where := map[string]interface{}{
+		"id": id,
+	}
+	_, err := r.base.DeleteDB(r.DB, ProjectTableName, where)
+	return err
 }
