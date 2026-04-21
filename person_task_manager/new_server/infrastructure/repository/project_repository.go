@@ -105,3 +105,21 @@ func (r *ProjectRepository) DeleteProject(id string) error {
 	_, err := r.base.DeleteDB(r.DB, ProjectTableName, where)
 	return err
 }
+
+func (r *ProjectRepository) UpdateProjectName(id, name string) (entities.ProjectEntity, error) {
+	updateData := map[string]interface{}{
+		"name": name,
+	}
+	where := map[string]interface{}{
+		"id": id,
+	}
+	record, err := r.base.UpdateDB(r.DB, ProjectTableName, updateData, where)
+	if err != nil {
+		return entities.ProjectEntity{}, err
+	}
+	if record == 0 {
+		return entities.ProjectEntity{}, sql.ErrNoRows
+	}
+
+	return r.GetProjectByID(id)
+}
