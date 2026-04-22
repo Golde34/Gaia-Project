@@ -115,3 +115,22 @@ func UpdateProjectName(w http.ResponseWriter, r *http.Request, usecase *usecase.
 
 	utils.BuildResponse(w, result)	
 }
+
+func UpdateProjectColor(w http.ResponseWriter, r *http.Request, usecase *usecase.ProjectUsecase) {
+	projectId := chi.URLParam(r, "id")
+	var projectRequest request.ProjectColorRequest
+	if err := json.NewDecoder(r.Body).Decode(&projectRequest); err != nil {
+		log.Printf("Error decoding request body: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	result, err := usecase.UpdateProjectColor(r.Context(), projectId, projectRequest)
+	if err != nil {
+		log.Printf("Error updating project: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	
+	utils.BuildResponse(w, result)	
+}

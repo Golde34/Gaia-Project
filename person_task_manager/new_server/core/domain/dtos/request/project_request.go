@@ -13,3 +13,7 @@ type ProjectRequest struct {
 type ProjectNameRequest struct {
 	Name string `json:"name"`
 }
+
+type ProjectColorRequest struct {
+	Color string `json:"color"`
+}

@@ -111,3 +111,16 @@ func (ps *ProjectService) UpdateProjectName(ctx context.Context, id, name string
 
 	return updatedProject, nil
 }
+
+func (ps *ProjectService) UpdateProjectColor(ctx context.Context, id, color string) (entities.ProjectEntity, error) {
+	updatedProject, err := ps.projectRepo.UpdateProjectColor(id, color)
+	if err != nil {
+		return entities.ProjectEntity{}, err
+	}
+	
+	// delete old cache
+	cacheKey := fmt.Sprintf("project:%s", id)
+	_ = redis_cache.DeleteLocal(context.Background(), cacheKey)
+
+	return updatedProject, nil
+}
