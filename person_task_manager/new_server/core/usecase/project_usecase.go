@@ -192,3 +192,39 @@ func (pu *ProjectUsecase) DeleteProject(ctx context.Context, id string) (base_dt
 	)
 	return response, nil
 }
+
+func (pu *ProjectUsecase) UpdateProjectName(ctx context.Context, id string, projectName request.ProjectNameRequest) (base_dtos.ErrorResponse, error) {
+	result, err := pu.projectService.UpdateProjectName(ctx, id, projectName.Name)
+	if err != nil {
+		return base_dtos.NewErrorResponse(
+			"Error",
+			"Failed to update project name",
+			500,
+			err.Error(),
+			nil,
+		), err
+	}
+	response := base_dtos.NewSuccessResponse(
+		"Project name updated successfully",
+		map[string]interface{}{"project": result},
+	)
+	return response, nil
+}
+
+func (pu *ProjectUsecase) UpdateProjectColor(ctx context.Context, id string, projectColor request.ProjectColorRequest) (base_dtos.ErrorResponse, error) {
+	result, err := pu.projectService.UpdateProjectColor(ctx, id, projectColor.Color)
+	if err != nil {
+		return base_dtos.NewErrorResponse(
+			"Error",
+			"Failed to update project color",
+			500,
+			err.Error(),
+			nil,
+		), err
+	}
+	response := base_dtos.NewSuccessResponse(
+		"Project color updated successfully",
+		map[string]interface{}{"project": result},
+	)
+	return response, nil
+}

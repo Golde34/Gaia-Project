@@ -36,3 +36,21 @@ func (gtu *GroupTaskUsecase) GetAllGroupTasksInProject(ctx context.Context, proj
 		result,
 	), nil
 }
+
+func (gtu *GroupTaskUsecase) GetGroupTaskByTitle(ctx context.Context, title string) (base_dtos.ErrorResponse, error) {
+	result, err := gtu.groupTaskService.GetGroupTaskByTitle(ctx, title)
+	if err != nil {
+		return base_dtos.NewErrorResponse(
+			"Error",
+			"Failed to get group task by title",
+			500,
+			err.Error(),
+			nil,
+		), nil
+	}
+
+	return base_dtos.NewSuccessResponse(
+		"Group task retrieved successfully",
+		result,
+	), nil
+}

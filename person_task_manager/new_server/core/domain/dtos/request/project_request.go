@@ -9,3 +9,11 @@ type ProjectRequest struct {
 	ActiveStatus string   `json:"activeStatus"`
 	Tags         []string `json:"tags"`
 }
+
+type ProjectNameRequest struct {
+	Name string `json:"name"`
+}
+
+type ProjectColorRequest struct {
+	Color string `json:"color"`
+}

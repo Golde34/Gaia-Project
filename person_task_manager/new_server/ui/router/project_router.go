@@ -34,6 +34,9 @@ func NewProjectRouter(r *chi.Mux, db *sql.DB) *ProjectRouter {
 		r.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {
 			controller.DeleteProject(w, r, usecase)
 		})
+		r.Put("/{id}/update-name", func(w http.ResponseWriter, r *http.Request) {
+			controller.UpdateProjectName(w, r, usecase)
+		})
 	})
 	return &ProjectRouter{
 	}

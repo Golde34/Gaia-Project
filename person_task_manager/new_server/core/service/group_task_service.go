@@ -27,3 +27,7 @@ func (gts *GroupTaskService) GetAllGroupTasksInProject(ctx context.Context, proj
 	}
 	return groupTasks, nil
 }
+
+func (gts *GroupTaskService) GetGroupTaskByTitle(ctx context.Context, title string) (*entities.GroupTaskEntity, error) {
+	return nil, nil
+}

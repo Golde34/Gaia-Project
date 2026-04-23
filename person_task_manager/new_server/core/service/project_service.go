@@ -98,3 +98,29 @@ func (ps *ProjectService) DeleteProject(ctx context.Context, id string) error {
 
 	return nil
 }
+
+func (ps *ProjectService) UpdateProjectName(ctx context.Context, id, name string) (entities.ProjectEntity, error) {
+	updatedProject, err := ps.projectRepo.UpdateProjectName(id, name)
+	if err != nil {
+		return entities.ProjectEntity{}, err
+	}
+
+	// delete old cache
+	cacheKey := fmt.Sprintf("project:%s", id)
+	_ = redis_cache.DeleteLocal(context.Background(), cacheKey)
+
+	return updatedProject, nil
+}
+
+func (ps *ProjectService) UpdateProjectColor(ctx context.Context, id, color string) (entities.ProjectEntity, error) {
+	updatedProject, err := ps.projectRepo.UpdateProjectColor(id, color)
+	if err != nil {
+		return entities.ProjectEntity{}, err
+	}
+	
+	// delete old cache
+	cacheKey := fmt.Sprintf("project:%s", id)
+	_ = redis_cache.DeleteLocal(context.Background(), cacheKey)
+
+	return updatedProject, nil
+}
