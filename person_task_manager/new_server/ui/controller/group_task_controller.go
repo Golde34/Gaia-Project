@@ -20,15 +20,3 @@ func GetAllGroupTasksInProject(w http.ResponseWriter, r *http.Request, usecase *
 
 	utils.BuildResponse(w, result)
 }
-
-func GetGroupTaskByTitle(w http.ResponseWriter, r *http.Request, usecase *usecase.GroupTaskUsecase) {
-	title := chi.URLParam(r, "title")
-	result, err := usecase.GetGroupTaskByTitle(r.Context(), title)
-	if err != nil {
-		log.Printf("Error retrieving group task by title: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	utils.BuildResponse(w, result)
-}

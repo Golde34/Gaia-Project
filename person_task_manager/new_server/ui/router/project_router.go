@@ -16,17 +16,20 @@ type ProjectRouter struct {
 func NewProjectRouter(r *chi.Mux, db *sql.DB) *ProjectRouter {
 	usecase := usecase.NewProjectUsecase(db)
 	r.Route("/project", func(r chi.Router) {
-		r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
-			controller.GetProject(w, r, usecase)
-		})
 		r.Get("/all/{userId}", func(w http.ResponseWriter, r *http.Request) {
 			controller.GetAllProject(w, r, usecase)
+		})
+		r.Get("/group-tasks/{userId}", func(w http.ResponseWriter, r *http.Request) {
+			controller.GetProjectWithGroupTasks(w, r, usecase)
+		})
+		r.Get("/name/{userId}/{name}", func(w http.ResponseWriter, r *http.Request) {
+			controller.GetProjectByName(w, r, usecase)
 		})
 		r.Post("/create", func(w http.ResponseWriter, r *http.Request) {
 			controller.CreateProject(w, r, usecase)
 		})
-		r.Get("/group-tasks/{userId}", func(w http.ResponseWriter, r *http.Request) {
-			controller.GetProjectWithGroupTasks(w, r, usecase)
+		r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
+			controller.GetProject(w, r, usecase)
 		})
 		r.Put("/{id}", func(w http.ResponseWriter, r *http.Request) {
 			controller.UpdateProject(w, r, usecase)
@@ -36,6 +39,9 @@ func NewProjectRouter(r *chi.Mux, db *sql.DB) *ProjectRouter {
 		})
 		r.Put("/{id}/update-name", func(w http.ResponseWriter, r *http.Request) {
 			controller.UpdateProjectName(w, r, usecase)
+		})
+		r.Put("/{id}/update-color", func(w http.ResponseWriter, r *http.Request) {
+			controller.UpdateProjectColor(w, r, usecase)
 		})
 	})
 	return &ProjectRouter{
