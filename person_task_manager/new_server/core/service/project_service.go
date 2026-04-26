@@ -124,3 +124,7 @@ func (ps *ProjectService) UpdateProjectColor(ctx context.Context, id, color stri
 
 	return updatedProject, nil
 }
+
+func (ps *ProjectService) GetProjectByName(ctx context.Context, userId int, name string) ([]entities.ProjectEntity, error) {
+	return nil, nil
+}

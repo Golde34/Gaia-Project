@@ -19,9 +19,6 @@ func NewGroupTaskRouter(r *chi.Mux, db *sql.DB) *GroupTaskRouter {
 		r.Get("/project/{projectId}", func(w http.ResponseWriter, r *http.Request) {
 			controller.GetAllGroupTasksInProject(w, r, usecase)
 		})
-		r.Get("/title/{title}", func(w http.ResponseWriter, r *http.Request) {
-			controller.GetGroupTaskByTitle(w, r, usecase)
-		})
 	})
 	return &GroupTaskRouter{
 	}

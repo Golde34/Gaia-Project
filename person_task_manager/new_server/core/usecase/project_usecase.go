@@ -228,3 +228,19 @@ func (pu *ProjectUsecase) UpdateProjectColor(ctx context.Context, id string, pro
 	)
 	return response, nil
 }
+
+func (pu *ProjectUsecase) GetProjectByName(ctx context.Context, userId string, name string) (base_dtos.ErrorResponse, error) {
+	userIdInt, err := strconv.Atoi(userId)
+	if err != nil {
+		return base_dtos.ErrorResponse{}, err
+	}
+	project, err := pu.projectService.GetProjectByName(ctx, userIdInt, name)
+	if err != nil {
+		return base_dtos.ErrorResponse{}, err
+	}
+	response := base_dtos.NewSuccessResponse(
+		"Project retrieved successfully",
+		map[string]interface{}{"project": project},
+	)
+	return response, nil
+}

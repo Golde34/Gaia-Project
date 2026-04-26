@@ -134,3 +134,16 @@ func UpdateProjectColor(w http.ResponseWriter, r *http.Request, usecase *usecase
 	
 	utils.BuildResponse(w, result)	
 }
+
+func GetProjectByName(w http.ResponseWriter, r *http.Request, usecase *usecase.ProjectUsecase) {
+	userId := chi.URLParam(r, "userId")
+	name := chi.URLParam(r, "name")
+	result, err := usecase.GetProjectByName(r.Context(), userId, name)
+	if err != nil {
+		log.Printf("Error retrieving project: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	utils.BuildResponse(w, result)
+}
