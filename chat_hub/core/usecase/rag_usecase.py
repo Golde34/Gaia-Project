@@ -76,6 +76,7 @@ async def query_context(query: str, top_k: int = 5, partition_name: str = "defau
         print("Error querying context from vector database:", e)
         raise e
 
+
 async def create_collection():
     try:
         stag_entity.create_collection()
