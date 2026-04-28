@@ -100,15 +100,3 @@ async def generate_calendar_schedule(query: QueryRequest) -> Dict:
             user_message_id=query.user_message_id,
         )
     print(f"Created bot message with ID: {bot_message_id}")
-
-
-async def _detect_language(query: str) -> str:
-    try:
-        detected_language = detect(query_text)
-        print(f"Detected language: {detected_language}")
-        if detected_language != "en":
-            query_text = await onboarding_service.translate_to_english(query_text, detected_language)
-            print(f"Translated query: {query_text}")
-    except Exception as e:
-        detected_language = "en"
-        print("Language detection failed; defaulting to English")
